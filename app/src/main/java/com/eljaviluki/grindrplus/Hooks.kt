@@ -332,4 +332,40 @@ object Hooks {
         val class_ProfileUtils = XposedHelpers.findClass(GApp.utils.ProfileUtils, Hooker.pkgParam!!.classLoader)
         XposedHelpers.setStaticLongField(class_ProfileUtils, GApp.utils.ProfileUtils_.onlineIndicatorDuration, duration.inWholeMilliseconds)
     }
+
+    /**
+     * Allow unlimited taps on profiles.
+     *
+     * @author ElJaviLuki
+     */
+    fun unlimitedTaps() {
+        val class_TapsAnimLayout = XposedHelpers.findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam!!.classLoader)
+        val class_ChatMessage = XposedHelpers.findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam!!.classLoader)
+
+        val tapTypeToHook = XposedHelpers.getStaticObjectField(class_ChatMessage, GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE)
+
+        //Reset the tap value to allow multitapping.
+        XposedHelpers.findAndHookMethod(
+            class_TapsAnimLayout,
+            GApp.view.TapsAnimLayout_.setTapType,
+            String::class.java,
+            Boolean::class.javaPrimitiveType,
+            object : XC_MethodHook(){
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    XposedHelpers.setObjectField(
+                        param.thisObject,
+                        GApp.view.TapsAnimLayout_.tapType,
+                        tapTypeToHook
+                    )
+                }
+            }
+        )
+
+        //Reset taps on long press (allows using tap variants)
+        XposedHelpers.findAndHookMethod(
+            class_TapsAnimLayout,
+            GApp.view.TapsAnimLayout_.getCanSelectVariants,
+            Constants.Returns.RETURN_TRUE
+        )
+    }
 }

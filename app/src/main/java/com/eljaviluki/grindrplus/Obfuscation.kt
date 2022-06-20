@@ -43,6 +43,11 @@ class Obfuscation {
             object model {
                 private const val _model = "$_persistence.model"
 
+                const val ChatMessage = "$_model.ChatMessage"
+                object ChatMessage_ {
+                    const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
+                }
+
                 const val Profile = "$_model.Profile"
             }
 
@@ -113,6 +118,14 @@ class Obfuscation {
             object ExtendedProfileFieldView_ {
                 const val setLabel = "a"
                 const val setValue = "b"
+            }
+
+            const val TapsAnimLayout = "$_view.TapsAnimLayout"
+            object TapsAnimLayout_ {
+                const val tapType = "g"
+
+                const val getCanSelectVariants = "getCanSelectVariants"
+                const val setTapType = "a"
             }
         }
     }

@@ -31,6 +31,7 @@ class Hooker : IXposedHookLoadPackage {
 
                     //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
                     Hooks.hookOnlineIndicatorDuration(3.minutes)
+                    Hooks.unlimitedTaps()
                 }
             })
     }
