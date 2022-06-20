@@ -32,10 +32,12 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 Check if the module supports the app version. Grindr has lots of obfuscated symbols that change in each app update and the module couldn't work (or couldn't work properly)
 
 ## Contributing
-
-This project is open to any kind of contribution. Feel free to open an issue or a pull request!
+This project is open to any kind of contribution. Feel free to open an issue or a pull request or submit an issue or suggestion!
 
 ## Credits
-As an open source project, you're free to inspire yourself from this code. However, please don't copy it and release it as your own (kanging). Give the proper credit and reference to the original project (https://github.com/ElJaviLuki/GrindrPlus) and its contributors.
+As an open source project, you're free to inspire yourself from this code. However, please **DON'T copy it and release it as your own (kanging)**. Give the proper credit and reference to the original project (https://github.com/ElJaviLuki/GrindrPlus) and its contributors.
+
 Main contributor: [@ElJaviLuki](https://github.com/ElJaviLuki)
-Credits to [@veeti](https://github.com/veeti) for [DisableFlagSecure](https://github.com/veeti/DisableFlagSecure)
+
+Additional credits to:
+- [@veeti](https://github.com/veeti) for [DisableFlagSecure](https://github.com/veeti/DisableFlagSecure)
