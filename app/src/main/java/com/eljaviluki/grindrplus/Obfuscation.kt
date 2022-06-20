@@ -66,6 +66,7 @@ class Obfuscation {
 
             const val color = "$_R\$d"
             object color_ {
+                const val grindr_gold_star_gay = "w"
                 const val grindr_pure_white = "L"
             }
         }
@@ -93,17 +94,14 @@ class Obfuscation {
                 private const val _profileV2 = "$_ui.profileV2"
 
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
+                object ProfileFieldsView_ {
+                    const val setProfile = "setProfile"
+                }
             }
         }
 
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
-
-            const val Styles = "$_utils.bh"
-            object Styles_ {
-                const val INSTANCE = "a"
-                const val _maybe_pureWhite = "f"
-            }
 
             const val ProfileUtils = "$_utils.at"
             object ProfileUtils_ {

@@ -1,6 +1,7 @@
 package com.eljaviluki.grindrplus
 
 import android.app.Application
+import android.content.Context
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
@@ -17,9 +18,10 @@ class Hooker : IXposedHookLoadPackage {
             Application::class.java,
             "onCreate",
             object : XC_MethodHook() {
-                @Throws(Throwable::class)
                 override fun afterHookedMethod(param: MethodHookParam) {
                     Logger.xLog("Application.onCreate()")
+                    appContext = (param.thisObject as Application).applicationContext
+
                     Hooks.hookFeatureGranting()
                     Hooks.allowScreenshotsHook()
                     Hooks.unlimitedExpiringPhotos()
@@ -38,5 +40,6 @@ class Hooker : IXposedHookLoadPackage {
 
     companion object {
         var pkgParam: LoadPackageParam? = null
+        var appContext: Context? = null
     }
 }
