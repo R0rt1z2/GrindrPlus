@@ -388,4 +388,19 @@ object Hooks {
             Constants.Returns.RETURN_TRUE
         )
     }
+
+    /**
+     * Hook the method that returns the duration of the expiring photos.
+     * This way, the photos will not expire and you will be able to see them any time you want.
+     *
+     * @author ElJaviLuki
+     */
+    fun removeExpirationOnExpiringPhotos() {
+        val class_ExpiringImageBody = XposedHelpers.findClass(GApp.model.ExpiringImageBody, Hooker.pkgParam!!.classLoader)
+        XposedHelpers.findAndHookMethod(
+            class_ExpiringImageBody,
+            GApp.model.ExpiringImageBody_.getDuration,
+            Constants.Returns.RETURN_LONG_MAX_VALUE
+        )
+    }
 }

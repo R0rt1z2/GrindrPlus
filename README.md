@@ -11,6 +11,7 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
   -   See 'Read' and 'Typing...' message states.
 - Allow taking screenshots in any part of the app (including albums and expiring photos).
 - Unlimited expiring photos.
+- Remove expiration on incoming expiring photos, allowing to see them any number of times you want.
 - Extra profile fields in the so-called CruiseViewHolder ('Profile ID', and exact time of 'Last seen')
 - Make videocalls even if you didn't start a chat with the recipient.
 - Access to some user-hidden features (developer features)

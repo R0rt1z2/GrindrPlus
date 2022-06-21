@@ -24,6 +24,11 @@ class Obfuscation {
         object model {
             private const val _model = Constants.GRINDR_PKG + ".model"
 
+            const val ExpiringImageBody = "$_model.ExpiringImageBody"
+            object ExpiringImageBody_ {
+                const val getDuration = "getDuration"
+            }
+
             const val ExpiringPhotoStatusResponse = "$_model.ExpiringPhotoStatusResponse"
             object ExpiringPhotoStatusResponse_ {
                 const val getTotal = "getTotal"

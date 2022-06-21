@@ -9,5 +9,6 @@ object Constants {
         val RETURN_TRUE = XC_MethodReplacement.returnConstant(true)
         val RETURN_FALSE = XC_MethodReplacement.returnConstant(false)
         val RETURN_INTEGER_MAX_VALUE = XC_MethodReplacement.returnConstant(Int.MAX_VALUE)
+        val RETURN_LONG_MAX_VALUE = XC_MethodReplacement.returnConstant(Long.MAX_VALUE)
     }
 }
