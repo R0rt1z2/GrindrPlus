@@ -35,7 +35,7 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
    - If it is older than the required version, go to [APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/) and download and install the required version. Check that Grindr works before proceeding.
    - If your version is newer than the required version, you have 2 options:
      - Wait for the Grindr Plus dev to maybe release a newer Plus. In the meantime, your Grindr will continue to work but will not auto update.
-     - Downgrade your Grindr. You are likely rooted, so maybe you have a recent local app backup to restore. Or you can take a backup, install the older version, and restore only the app data afterwards (which might or might not explode in your face). Or you can simply do a clean install of the older version. Consider backing up messages using the grindr backup service before uninstalling. And you might want to take a local app backup too, just in case. **However you downgrade Grindr, you probably need to immediately disable Play Store auto update again afterwards.** And double-check that Grindr works before continuing.
+     - Downgrade your Grindr. You are likely rooted, so maybe you have a recent local app backup to restore. Or you can take a backup, install the older version, and restore only the app data afterwards (which might or might not explode in your face). Or you can simply do a clean install of the older version. Consider backing up messages using the Grindr backup service before uninstalling. And you might want to take a local app backup too, just in case. **However you downgrade Grindr, you probably need to immediately disable Play Store auto update again afterwards.** And double-check that Grindr works before continuing.
 
 ### Plus installation
 1. Download your chosen Grindr Plus release and install it.
@@ -47,7 +47,10 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
 Check if the module supports the app version. Grindr has lots of obfuscated symbols that change in each app update and the module couldn't work (or couldn't work properly)
 
 ## Contributing
-This project is open to any kind of contribution. Feel free to open an issue or a pull request or submit an issue or suggestion!
+This project is open to any kind of contribution. Feel free to open a pull request or submit an issue or suggestion!
+
+## Interesting links
+- [XDA Official Thread](https://forum.xda-developers.com/t/mod-xposed-new-grindr-plus.4461857/#post-87076193)
 
 ## Credits
 As an open source project, you're free to inspire yourself from this code. However, please **DON'T copy it and release it as your own (kanging)**. Give the proper credit and reference to the original project (https://github.com/ElJaviLuki/GrindrPlus) and its contributors.
