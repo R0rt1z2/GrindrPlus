@@ -52,6 +52,9 @@ This project is open to any kind of contribution. Feel free to open a pull reque
 ## Interesting links
 - [XDA Official Thread](https://forum.xda-developers.com/t/mod-xposed-new-grindr-plus.4461857/#post-87076193)
 
+## Disclaimer
+This module is neither affiliated with nor endorsed by the official Grindr app. It is provided for free with no warranty of any kind. Use at your own risk! I am not responsible for lost chats, user data, unexpected bans or any other problems incurred from the use of this module. This mod does not collect any personal data nor does it display ads of any kind. No earnings are generated or collected from the use of this software. This project is open source so you can check all these facts by your own!
+
 ## Credits
 As an open source project, you're free to inspire yourself from this code. However, please **DON'T copy it and release it as your own (kanging)**. Give the proper credit and reference to the original project (https://github.com/ElJaviLuki/GrindrPlus) and its contributors.
 
