@@ -47,7 +47,7 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
 Check if the module supports the app version. Grindr has lots of obfuscated symbols that change in each app update and the module couldn't work (or couldn't work properly)
 
 ## Contributing
-This project is open to any kind of contribution. Feel free to open a pull request or submit an issue or suggestion!
+This project is open to any kind of contribution. Feel free to [open a pull request](https://github.com/ElJaviLuki/GrindrPlus/pulls) or [submit an issue](https://github.com/ElJaviLuki/GrindrPlus/issues)! [Discussions section](https://github.com/ElJaviLuki/GrindrPlus/discussions) also available!
 
 ## Interesting links
 - [XDA Official Thread](https://forum.xda-developers.com/t/mod-xposed-new-grindr-plus.4461857/#post-87076193)
