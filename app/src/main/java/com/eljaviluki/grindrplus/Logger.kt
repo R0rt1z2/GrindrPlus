@@ -9,7 +9,7 @@ object Logger {
         XposedBridge.log("$TAG: $msg")
     }
 
-    fun log(msg: String?) {
-        Log.i(TAG, msg!!)
+    fun log(msg: String) {
+        Log.i(TAG, msg)
     }
 }
