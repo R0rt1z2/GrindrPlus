@@ -22,12 +22,25 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 * Incognito mode is kinda buggy (it turns off after a little while)
 
 ## How to install
+Each Grindr Plus release supports only a specific Grindr app version and quite possibly will not work with any other. Before installing Grindr Plus, some prep work is needed to make sure that you are currenly running and will remain on a supported Grindr version.
 
-1. Install the Xposed Framework and its app (Xposed, EDXposed, etc.)
-3. Download the Grindr Plus module.
-4. Activate the module in the Xposed Installer.
-5. Reboot your device.
-6. Done!
+### Prep work
+1. Install an Xposed framework and its management app. (See: Xposed, EdXposed, LSPosed, etc.)
+2. If you use Play Store auto update (most likely), disable auto update for the Grindr app:
+   - Go to the Play Store and open the Grindr app page.
+   - Click on the 3 dots (overflow menu) and untick "enable auto update".
+3. Go to Grindr Plus [releases](https://github.com/ElJaviLuki/GrindrPlus/releases) and pick the latest. Each Grindr Plus release specifies its compatible Grindr app version on its filename. Take note of the required Grindr app version.
+4. Check the Grindr version currently installed on your device.
+   - If it matches the required version, you are ready to install Plus.
+   - If it is older than the required version, go to [APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/) and download and install the required version. Check that Grindr works before proceeding.
+   - If your version is newer than the required version, you have 2 options:
+     - Wait for the Grindr Plus dev to maybe release a newer Plus. In the meantime, your Grindr will continue to work but will not auto update.
+     - Downgrade your Grindr. You are likely rooted, so maybe you have a recent local app backup to restore. Or you can take a backup, install the older version, and restore only the app data afterwards (which might or might not explode in your face). Or you can simply do a clean install of the older version. Consider backing up messages using the grindr backup service before uninstalling. And you might want to take a local app backup too, just in case. **However you downgrade Grindr, you probably need to immediately disable Play Store auto update again afterwards.** And double-check that Grindr works before continuing.
+
+### Plus installation
+1. Download your chosen Grindr Plus release and install it.
+2. Activate the module in your Xposed manager.
+3. Reboot your device.
 
 ## Troubleshooting
 ### My Grindr app suddenly stops when the module is installed.
