@@ -1,7 +1,7 @@
 package com.eljaviluki.grindrplus
 
-class Obfuscation {
-    class GApp {
+object Obfuscation {
+    object GApp {
         object base {
             private const val _base = Constants.GRINDR_PKG + ".base"
 

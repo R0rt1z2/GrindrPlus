@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
+import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import kotlin.time.Duration.Companion.minutes
 
@@ -14,7 +14,7 @@ class Hooker : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         pkgParam = lpparam
-        XposedHelpers.findAndHookMethod(
+        findAndHookMethod(
             Application::class.java,
             "onCreate",
             object : XC_MethodHook() {
