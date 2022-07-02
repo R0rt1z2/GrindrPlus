@@ -1,6 +1,5 @@
 package com.eljaviluki.grindrplus
 
-import de.robv.android.xposed.XposedHelpers
 import android.view.View
 import android.view.Window
 import de.robv.android.xposed.XC_MethodHook
@@ -11,6 +10,7 @@ import com.eljaviluki.grindrplus.Constants.Returns.RETURN_FALSE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
 import com.eljaviluki.grindrplus.Obfuscation.GApp
+import com.eljaviluki.grindrplus.decorated.persistence.model.Profile
 import de.robv.android.xposed.XposedHelpers.*
 import kotlin.time.Duration
 
@@ -68,7 +68,12 @@ object Hooks {
             class_Profile,
             object : XC_MethodHook() {
                 var fieldsViewInstance: Any? = null
-                var context: Any? = null
+                val context: Any? by lazy {
+                    callMethod(
+                        fieldsViewInstance,
+                        "getContext"
+                    )
+                }
 
                 val labelColorRgb = ContextCompat.getColor(
                     Hooker.appContext!!,
@@ -88,27 +93,22 @@ object Hooks {
 
                 override fun afterHookedMethod(param: MethodHookParam) {
                     fieldsViewInstance = param.thisObject
-                    context = callMethod(
-                        fieldsViewInstance,
-                        "getContext"
-                    ) //Call this.getContext()
 
                     //Get profile instance in the 1st parameter
-                    val profile = param.args[0]
+                    val profile = Profile(param.args[0])
 
                     addProfileFieldUi(
                         "Profile ID",
-                        getObjectField(profile, "profileId") as CharSequence,
+                        profile.profileId,
                         where = 0
                     )
 
-                    val lastSeen = getLongField(profile, "seen")
+                    val lastSeen = profile.seen
                     addProfileFieldUi(
                         "Last Seen",
                         if (lastSeen != 0L) Utils.toReadableDate(lastSeen) else "N/A",
                         where = 1
                     )
-
 
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
                     callMethod(fieldsViewInstance, "setVisibility", View.VISIBLE)
