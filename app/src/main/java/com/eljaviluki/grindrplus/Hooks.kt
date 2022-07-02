@@ -102,11 +102,13 @@ object Hooks {
                         where = 0
                     )
 
+                    val lastSeen = getLongField(profile, "seen")
                     addProfileFieldUi(
                         "Last Seen",
-                        Utils.toReadableDate(getLongField(profile, "seen")),
+                        if (lastSeen != 0L) Utils.toReadableDate(lastSeen) else "N/A",
                         where = 1
                     )
+
 
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
                     callMethod(fieldsViewInstance, "setVisibility", View.VISIBLE)
