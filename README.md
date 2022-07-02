@@ -12,7 +12,10 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 - Allow taking screenshots in any part of the app (including albums and expiring photos).
 - Unlimited expiring photos.
 - Remove expiration on incoming expiring photos, allowing to see them any number of times you want.
-- Extra profile fields in the so-called CruiseViewHolder ('Profile ID', and exact time of 'Last seen')
+- Extra profile fields in the so-called CruiseViewHolder
+    -   Profile ID.
+    -   Exact time of 'Last seen'.
+    -   Body mass index (BMI) and its description (underweight, normal, overweight, obesity I, obesity II or obesity III), if both weight and height are available.
 - Make videocalls even if you didn't start a chat with the recipient.
 - Access to some user-hidden features (developer features)
 - More accurate online status from other users. (The green dot from other profiles goes off after 3 minutes of inactivity.)

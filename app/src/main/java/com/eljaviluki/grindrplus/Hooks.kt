@@ -110,6 +110,16 @@ object Hooks {
                         where = 1
                     )
 
+                    val weight : Double = profile.weight
+                    val height : Double = profile.height
+                    if(weight != 0.0 && height != 0.0) {
+                        addProfileFieldUi(
+                            "Body Mass Index",
+                            Utils.getBmiDescription(weight, height),
+                            where = 2
+                        )
+                    }
+
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
                     callMethod(fieldsViewInstance, "setVisibility", View.VISIBLE)
                 }
