@@ -294,7 +294,7 @@ class Profile {
 
     companion object {
         val CLAZZ: Class<*> by lazy {
-            XposedHelpers.findClass(GApp.persistence.model.Profile, Hooker.pkgParam!!.classLoader)
+            XposedHelpers.findClass(GApp.persistence.model.Profile, Hooker.pkgParam.classLoader)
         }
     }
 }

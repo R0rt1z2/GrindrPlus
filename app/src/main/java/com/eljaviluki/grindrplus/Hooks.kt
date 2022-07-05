@@ -44,22 +44,22 @@ object Hooks {
     fun addExtraProfileFields() {
         val class_ProfileFieldsView = findClass(
             GApp.ui.profileV2.ProfileFieldsView,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         val class_Profile = findClass(
             GApp.persistence.model.Profile,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         val class_ExtendedProfileFieldView = findClass(
             GApp.view.ExtendedProfileFieldView,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         val class_R_color = findClass(
             GApp.R.color,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -171,18 +171,18 @@ object Hooks {
     fun hookUserSessionImpl() {
         val class_Feature = findClass(
             GApp.model.Feature,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         listOf(
             findClass(
                 GApp.storage.UserSession,
-                Hooker.pkgParam!!.classLoader
+                Hooker.pkgParam.classLoader
             ),
 
             findClass(
                 GApp.storage.UserSession2,
-                Hooker.pkgParam!!.classLoader
+                Hooker.pkgParam.classLoader
             )
         ).forEach { userSessionImpl ->
             findAndHookMethod(
@@ -221,7 +221,7 @@ object Hooks {
     fun unlimitedExpiringPhotos() {
         val class_ExpiringPhotoStatusResponse = findClass(
             GApp.model.ExpiringPhotoStatusResponse,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -244,7 +244,7 @@ object Hooks {
     fun hookFeatureGranting() {
         val class_Feature = findClass(
             GApp.model.Feature,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -261,7 +261,7 @@ object Hooks {
 
         val class_IUserSession = findClass(
             GApp.storage.IUserSession,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -286,12 +286,12 @@ object Hooks {
     fun allowSomeExperiments() {
         val class_Experiments = findClass(
             GApp.experiment.Experiments,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         val class_IExperimentsManager = findClass(
             GApp.base.Experiment.IExperimentManager,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -311,12 +311,12 @@ object Hooks {
     fun allowVideocallsOnEmptyChats() {
         val class_Continuation = findClass(
             "kotlin.coroutines.Continuation",
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         ) //I tried using Continuation::class.java, but that only gives a different Class instance (does not work)
 
         val class_ChatRepo = findClass(
             GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
 
         findAndHookMethod(
@@ -336,7 +336,7 @@ object Hooks {
     fun allowMockProvider() {
         val class_Location = findClass(
             "android.location.Location",
-            Hooker.pkgParam!!.classLoader
+            Hooker.pkgParam.classLoader
         )
         
         findAndHookMethod(
@@ -365,7 +365,7 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration : Duration){
-        val class_ProfileUtils = findClass(GApp.utils.ProfileUtils, Hooker.pkgParam!!.classLoader)
+        val class_ProfileUtils = findClass(GApp.utils.ProfileUtils, Hooker.pkgParam.classLoader)
         setStaticLongField(class_ProfileUtils, GApp.utils.ProfileUtils_.onlineIndicatorDuration, duration.inWholeMilliseconds)
     }
 
@@ -375,8 +375,8 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun unlimitedTaps() {
-        val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam!!.classLoader)
-        val class_ChatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam!!.classLoader)
+        val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam.classLoader)
+        val class_ChatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
 
         val tapTypeToHook = getStaticObjectField(class_ChatMessage, GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE)
 
@@ -412,7 +412,7 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun removeExpirationOnExpiringPhotos() {
-        val class_ExpiringImageBody = findClass(GApp.model.ExpiringImageBody, Hooker.pkgParam!!.classLoader)
+        val class_ExpiringImageBody = findClass(GApp.model.ExpiringImageBody, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_ExpiringImageBody,
             GApp.model.ExpiringImageBody_.getDuration,

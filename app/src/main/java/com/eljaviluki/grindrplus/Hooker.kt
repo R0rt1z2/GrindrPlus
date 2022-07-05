@@ -41,7 +41,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        var pkgParam: LoadPackageParam? = null
-        var appContext: Context? = null
+        var pkgParam: LoadPackageParam by InitOnce()
+        var appContext: Context by InitOnce()
     }
 }
