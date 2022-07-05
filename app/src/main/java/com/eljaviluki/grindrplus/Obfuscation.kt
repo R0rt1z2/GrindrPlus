@@ -8,7 +8,7 @@ object Obfuscation {
             object Experiment {
                 private const val _experiment = "$_base.g"
 
-                const val IExperimentManager = "$_experiment.b"
+                const val IExperimentsManager = "$_experiment.b"
             }
         }
 

@@ -290,7 +290,7 @@ object Hooks {
         )
 
         val class_IExperimentsManager = findClass(
-            GApp.base.Experiment.IExperimentManager,
+            GApp.base.Experiment.IExperimentsManager,
             Hooker.pkgParam.classLoader
         )
 
