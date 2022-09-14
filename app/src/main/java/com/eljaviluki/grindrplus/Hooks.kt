@@ -331,6 +331,12 @@ object Hooks {
             "isFromMockProvider",
             RETURN_FALSE
         )
+
+        findAndHookMethod(
+            class_Location,
+            "isMock",
+            RETURN_FALSE
+        )
     }
 
 
