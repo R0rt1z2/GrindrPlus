@@ -41,7 +41,7 @@ object Hooks {
      * - Profile ID
      * - Last seen (exact date and time)
      */
-    fun addExtraProfileFields() {
+    fun addExtraProfileFields_DISABLED() {
         val class_ProfileFieldsView = findClass(
             GApp.ui.profileV2.ProfileFieldsView,
             Hooker.pkgParam.classLoader
@@ -53,7 +53,7 @@ object Hooks {
         )
 
         val class_ExtendedProfileFieldView = findClass(
-            GApp.view.ExtendedProfileFieldView,
+            null,   //GApp.view.ExtendedProfileFieldView,
             Hooker.pkgParam.classLoader
         )
 
@@ -64,7 +64,7 @@ object Hooks {
 
         findAndHookMethod(
             class_ProfileFieldsView,
-            GApp.ui.profileV2.ProfileFieldsView_.setProfile,
+            null,    //GApp.ui.profileV2.ProfileFieldsView_.setProfile,
             class_Profile,
             object : XC_MethodHook() {
                 var fieldsViewInstance: Any? = null
@@ -88,7 +88,7 @@ object Hooks {
 
                 val valueColorId = getStaticIntField(
                     class_R_color,
-                    GApp.R.color_.grindr_pure_white
+                    null,   //GApp.R.color_.grindr_pure_white
                 ) //R.color.grindr_pure_white
 
                 override fun afterHookedMethod(param: MethodHookParam) {
@@ -131,14 +131,14 @@ object Hooks {
 
                     callMethod(
                         extendedProfileFieldView,
-                        GApp.view.ExtendedProfileFieldView_.setLabel,
+                        null,   //GApp.view.ExtendedProfileFieldView_.setLabel,
                         label,
                         labelColorRgb
                     )
 
                     callMethod(
                         extendedProfileFieldView,
-                        GApp.view.ExtendedProfileFieldView_.setValue,
+                        null,   //GApp.view.ExtendedProfileFieldView_.setValue,
                         value,
                         valueColorId
                     )
