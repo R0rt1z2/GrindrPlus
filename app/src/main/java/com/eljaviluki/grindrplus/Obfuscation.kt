@@ -38,7 +38,6 @@ object Obfuscation {
             const val Feature = "$_model.Feature"
             object Feature_ {
                 const val isGranted = "isGranted"
-                const val isNotGranted = "isNotGranted"
             }
         }
 

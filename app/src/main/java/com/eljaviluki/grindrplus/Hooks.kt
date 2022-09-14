@@ -253,12 +253,6 @@ object Hooks {
             RETURN_TRUE
         )
 
-        findAndHookMethod(
-            class_Feature,
-            GApp.model.Feature_.isNotGranted,
-            RETURN_FALSE
-        )
-
         val class_IUserSession = findClass(
             GApp.storage.IUserSession,
             Hooker.pkgParam.classLoader
@@ -269,13 +263,6 @@ object Hooks {
             GApp.model.Feature_.isGranted,
             class_IUserSession,
             RETURN_TRUE
-        )
-
-        findAndHookMethod(
-            class_Feature,
-            GApp.model.Feature_.isNotGranted,
-            class_IUserSession,
-            RETURN_FALSE
         )
     }
 
