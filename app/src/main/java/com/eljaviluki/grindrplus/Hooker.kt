@@ -39,7 +39,7 @@ class Hooker : IXposedHookLoadPackage {
                     Hooks.hookFeatureGranting()
                     Hooks.allowScreenshotsHook()
                     Hooks.unlimitedExpiringPhotos()
-                    Hooks.addExtraProfileFields()
+                    //Hooks.addExtraProfileFields()
                     Hooks.hookUserSessionImpl()
                     Hooks.allowMockProvider()
                     Hooks.allowVideocallsOnEmptyChats()
@@ -55,7 +55,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "8.11.0"
+        const val TARGET_PKG_VERSION_NAME = "8.16.0"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()

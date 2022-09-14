@@ -6,18 +6,18 @@ object Obfuscation {
             private const val _base = Constants.GRINDR_PKG + ".base"
 
             object Experiment {
-                private const val _experiment = "$_base.g"
+                private const val _experiment = "$_base.experiment"
 
-                const val IExperimentsManager = "$_experiment.b"
+                const val IExperimentsManager = "$_experiment.c"
             }
         }
 
         object experiment {
             private const val _experiment = Constants.GRINDR_PKG + ".experiment"
 
-            const val Experiments = "$_experiment.Experiments"
+            const val Experiments = "$_experiment.a"
             object Experiments_ {
-                const val uncheckedIsEnabled_expMgr = "a"
+                const val uncheckedIsEnabled_expMgr = "c"
             }
         }
 
@@ -38,7 +38,6 @@ object Obfuscation {
             const val Feature = "$_model.Feature"
             object Feature_ {
                 const val isGranted = "isGranted"
-                const val isNotGranted = "isNotGranted"
             }
         }
 
@@ -67,28 +66,28 @@ object Obfuscation {
         }
 
         object R {
-            private const val _R = Constants.GRINDR_PKG + ".m"
+            private const val _R_base = Constants.GRINDR_PKG
 
-            const val color = "$_R\$d"
+            const val color = "$_R_base.h0"
             object color_ {
-                const val grindr_gold_star_gay = "w"
-                const val grindr_pure_white = "L"
+                const val grindr_gold_star_gay = "u"
+                //const val grindr_pure_white = "L" // seems gone
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.ai"
-            const val UserSession2 = "$_storage.aj"
+            const val UserSession = "$_storage.o0"
+            const val UserSession2 = "$_storage.p0"
 
             const val IUserSession = "$_storage.IUserSession"
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "i"
-                const val isNoXtraUpsell = "j"
-                const val isXtra = "k"
-                const val isUnlimited = "l"
+                const val isFree = "j"
+                const val isNoXtraUpsell = "p"
+                const val isXtra = "g"
+                const val isUnlimited = "q"
             }
         }
 
@@ -100,7 +99,7 @@ object Obfuscation {
 
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
                 object ProfileFieldsView_ {
-                    const val setProfile = "setProfile"
+                    //const val setProfile = "setProfile"   // gone
                 }
             }
         }
@@ -108,7 +107,7 @@ object Obfuscation {
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
-            const val ProfileUtils = "$_utils.at"
+            const val ProfileUtils = "$_utils.w0"
             object ProfileUtils_ {
                 const val onlineIndicatorDuration = "b"
             }
@@ -117,18 +116,20 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
+            /* unused
             const val ExtendedProfileFieldView = "$_view.bv"
             object ExtendedProfileFieldView_ {
                 const val setLabel = "a"
                 const val setValue = "b"
             }
+            */
 
             const val TapsAnimLayout = "$_view.TapsAnimLayout"
             object TapsAnimLayout_ {
-                const val tapType = "g"
+                const val tapType = "h"
 
                 const val getCanSelectVariants = "getCanSelectVariants"
-                const val setTapType = "a"
+                const val setTapType = "S"
             }
         }
     }
