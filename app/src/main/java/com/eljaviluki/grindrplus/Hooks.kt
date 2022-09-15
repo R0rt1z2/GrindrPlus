@@ -41,7 +41,7 @@ object Hooks {
      * - Profile ID
      * - Last seen (exact date and time)
      */
-    fun addExtraProfileFields_DISABLED() {
+    fun addExtraProfileFields() {
         val class_ProfileFieldsView = findClass(
             GApp.ui.profileV2.ProfileFieldsView,
             Hooker.pkgParam.classLoader
@@ -53,7 +53,7 @@ object Hooks {
         )
 
         val class_ExtendedProfileFieldView = findClass(
-            null,   //GApp.view.ExtendedProfileFieldView,
+            GApp.view.ExtendedProfileFieldView,
             Hooker.pkgParam.classLoader
         )
 
@@ -62,10 +62,17 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
+        val class_Continuation = findClass(
+            "kotlin.coroutines.Continuation",
+            Hooker.pkgParam.classLoader
+        ) //I tried using Continuation::class.java, but that only gives a different Class instance (does not work)
+
+
         findAndHookMethod(
             class_ProfileFieldsView,
-            null,    //GApp.ui.profileV2.ProfileFieldsView_.setProfile,
+            GApp.ui.profileV2.ProfileFieldsView_.setProfile,
             class_Profile,
+            class_Continuation,
             object : XC_MethodHook() {
                 var fieldsViewInstance: Any? = null
                 val context: Any? by lazy {
@@ -88,7 +95,7 @@ object Hooks {
 
                 val valueColorId = getStaticIntField(
                     class_R_color,
-                    null,   //GApp.R.color_.grindr_pure_white
+                    GApp.R.color_.grindr_pure_white
                 ) //R.color.grindr_pure_white
 
                 override fun afterHookedMethod(param: MethodHookParam) {
@@ -131,14 +138,14 @@ object Hooks {
 
                     callMethod(
                         extendedProfileFieldView,
-                        null,   //GApp.view.ExtendedProfileFieldView_.setLabel,
+                        GApp.view.ExtendedProfileFieldView_.setLabel,
                         label,
                         labelColorRgb
                     )
 
                     callMethod(
                         extendedProfileFieldView,
-                        null,   //GApp.view.ExtendedProfileFieldView_.setValue,
+                        GApp.view.ExtendedProfileFieldView_.setValue,
                         value,
                         valueColorId
                     )

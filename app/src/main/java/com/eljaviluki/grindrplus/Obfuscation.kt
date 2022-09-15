@@ -66,12 +66,12 @@ object Obfuscation {
         }
 
         object R {
-            private const val _R_base = Constants.GRINDR_PKG
+            private const val _R = Constants.GRINDR_PKG
 
-            const val color = "$_R_base.h0"
+            const val color = "$_R.h0"
             object color_ {
-                const val grindr_gold_star_gay = "u"
-                //const val grindr_pure_white = "L" // seems gone
+                const val grindr_gold_star_gay = "x"
+                const val grindr_pure_white = "M"
             }
         }
 
@@ -99,7 +99,7 @@ object Obfuscation {
 
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
                 object ProfileFieldsView_ {
-                    //const val setProfile = "setProfile"   // gone
+                    const val setProfile = "g"
                 }
             }
         }
@@ -116,13 +116,11 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-            /* unused
-            const val ExtendedProfileFieldView = "$_view.bv"
+            const val ExtendedProfileFieldView = "$_view.b4"
             object ExtendedProfileFieldView_ {
-                const val setLabel = "a"
-                const val setValue = "b"
+                const val setLabel = "l"
+                const val setValue = "n"
             }
-            */
 
             const val TapsAnimLayout = "$_view.TapsAnimLayout"
             object TapsAnimLayout_ {

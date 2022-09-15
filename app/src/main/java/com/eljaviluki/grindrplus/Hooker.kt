@@ -39,7 +39,7 @@ class Hooker : IXposedHookLoadPackage {
                     Hooks.hookFeatureGranting()
                     Hooks.allowScreenshotsHook()
                     Hooks.unlimitedExpiringPhotos()
-                    //Hooks.addExtraProfileFields()
+                    Hooks.addExtraProfileFields()
                     Hooks.hookUserSessionImpl()
                     Hooks.allowMockProvider()
                     Hooks.allowVideocallsOnEmptyChats()
