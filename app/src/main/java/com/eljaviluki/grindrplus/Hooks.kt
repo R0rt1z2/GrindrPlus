@@ -1,5 +1,6 @@
 package com.eljaviluki.grindrplus
 
+import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.Window
@@ -352,11 +353,13 @@ object Hooks {
             RETURN_FALSE
         )
 
-        findAndHookMethod(
-            class_Location,
-            "isMock",
-            RETURN_FALSE
-        )
+        if(Build.VERSION.SDK_INT >= 31) {
+            findAndHookMethod(
+                class_Location,
+                "isMock",
+                RETURN_FALSE
+            )
+        }
     }
 
 
