@@ -1,5 +1,6 @@
 package com.eljaviluki.grindrplus
 
+import android.util.AttributeSet
 import android.view.View
 import android.view.Window
 import de.robv.android.xposed.XC_MethodHook
@@ -11,6 +12,9 @@ import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
 import com.eljaviluki.grindrplus.Obfuscation.GApp
 import com.eljaviluki.grindrplus.decorated.persistence.model.Profile
+import de.robv.android.xposed.XC_MethodReplacement
+import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
 import kotlin.time.Duration
 
@@ -67,6 +71,13 @@ object Hooks {
             Hooker.pkgParam.classLoader
         ) //I tried using Continuation::class.java, but that only gives a different Class instance (does not work)
 
+
+        val class_Intrinsics = findClass(
+            "kotlin.jvm.internal.Intrinsics",
+            Hooker.pkgParam.classLoader
+        )
+
+        val checkNotNullParameterMethod = findMethodExact(class_Intrinsics, "checkNotNullParameter", Object::class.java, String::class.java)
 
         findAndHookMethod(
             class_ProfileFieldsView,
@@ -133,8 +144,10 @@ object Hooks {
 
                 //By default, the views are added to the end of the list.
                 private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) {
+                    val hooked = XposedBridge.hookMethod(checkNotNullParameterMethod, XC_MethodReplacement.DO_NOTHING)
                     val extendedProfileFieldView =
-                        newInstance(class_ExtendedProfileFieldView, context)
+                        newInstance(class_ExtendedProfileFieldView, context, null as AttributeSet?)
+                    hooked.unhook()
 
                     callMethod(
                         extendedProfileFieldView,
