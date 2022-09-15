@@ -36,19 +36,72 @@ class Hooker : IXposedHookLoadPackage {
                         return
                     }
 
-                    Hooks.hookFeatureGranting()
-                    Hooks.allowScreenshotsHook()
-                    Hooks.unlimitedExpiringPhotos()
-                    Hooks.addExtraProfileFields()
-                    Hooks.hookUserSessionImpl()
-                    Hooks.allowMockProvider()
-                    Hooks.allowVideocallsOnEmptyChats()
-                    Hooks.allowSomeExperiments()
+                    try {
+                        Hooks.hookFeatureGranting()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
 
-                    //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
-                    Hooks.hookOnlineIndicatorDuration(3.minutes)
-                    Hooks.unlimitedTaps()
-                    Hooks.removeExpirationOnExpiringPhotos()
+                    try {
+                        Hooks.allowScreenshotsHook()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.unlimitedExpiringPhotos()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.addExtraProfileFields()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.hookUserSessionImpl()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.allowMockProvider()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.allowVideocallsOnEmptyChats()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.allowSomeExperiments()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
+                        Hooks.hookOnlineIndicatorDuration(3.minutes)
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.unlimitedTaps()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.removeExpirationOnExpiringPhotos()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )
