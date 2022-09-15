@@ -78,8 +78,8 @@ object Obfuscation {
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.o0"
-            const val UserSession2 = "$_storage.p0"
+            const val UserSession = "$_storage.w0"
+            const val UserSession2 = "$_storage.x0"
 
             const val IUserSession = "$_storage.IUserSession"
             object IUserSession_ {
@@ -99,7 +99,7 @@ object Obfuscation {
 
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
                 object ProfileFieldsView_ {
-                    const val setProfile = "g"
+                    const val setProfile = "h"
                 }
             }
         }
@@ -107,7 +107,7 @@ object Obfuscation {
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
-            const val ProfileUtils = "$_utils.w0"
+            const val ProfileUtils = "$_utils.u0"
             object ProfileUtils_ {
                 const val onlineIndicatorDuration = "b"
             }
@@ -116,7 +116,7 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-            const val ExtendedProfileFieldView = "$_view.b4"
+            const val ExtendedProfileFieldView = "$_view.d4"
             object ExtendedProfileFieldView_ {
                 const val setLabel = "l"
                 const val setValue = "n"
