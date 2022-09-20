@@ -3,15 +3,30 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+ext.versionMajor = 1
+ext.versionMinor = 1
+ext.versionPatch = 1
+ext.grindrVersion = '8.17.1'
+
+private String genVersionName() {
+    String versionName = "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
+    return versionName
+}
+
+private String getVersionNameSuffix() {
+    return '-' + grindrVersion
+}
+
 android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.eljaviluki.grindrplus"
+        applicationId 'com.eljaviluki.grindrplus'
         minSdk 21
         targetSdk 32
-        versionCode 4
-        versionName "1.1-8.17.1"
+        versionCode 5
+        versionName genVersionName()
+        versionNameSuffix getVersionNameSuffix()
     }
 
     buildTypes {
