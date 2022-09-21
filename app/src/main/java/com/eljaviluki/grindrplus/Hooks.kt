@@ -419,6 +419,12 @@ object Hooks {
             GApp.view.TapsAnimLayout_.getCanSelectVariants,
             RETURN_TRUE
         )
+
+        findAndHookMethod(
+            class_TapsAnimLayout,
+            GApp.view.TapsAnimLayout_.getDisableVariantSelection,
+            RETURN_FALSE
+        )
     }
 
     /**

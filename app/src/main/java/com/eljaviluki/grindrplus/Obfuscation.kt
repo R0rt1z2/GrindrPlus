@@ -127,6 +127,7 @@ object Obfuscation {
                 const val tapType = "h"
 
                 const val getCanSelectVariants = "getCanSelectVariants"
+                const val getDisableVariantSelection = "getDisableVariantSelection"
                 const val setTapType = "S"
             }
         }
