@@ -1,11 +1,16 @@
 package com.eljaviluki.grindrplus
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.Window
 import de.robv.android.xposed.XC_MethodHook
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_FALSE
@@ -116,12 +121,20 @@ object Hooks {
                     //Get profile instance in the 1st parameter
                     val profile = Profile(param.args[0])
 
-                    addProfileFieldUi(
+                    val profileIdField = addProfileFieldUi(
                         "Profile ID",
                         profile.profileId,
                         where = 0
-                    )
+                    ) as FrameLayout
 
+                    profileIdField.setOnLongClickListener {
+                        val clipboard = Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Profile ID", profile.profileId)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(Hooker.appContext, "Profile ID copied to clipboard", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    
                     val lastSeen = profile.seen
                     addProfileFieldUi(
                         "Last Seen",
@@ -144,7 +157,7 @@ object Hooks {
                 }
 
                 //By default, the views are added to the end of the list.
-                private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) {
+                private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) : Any {
                     val hooked = XposedBridge.hookMethod(checkNotNullParameterMethod, XC_MethodReplacement.DO_NOTHING)
                     val extendedProfileFieldView =
                         newInstance(class_ExtendedProfileFieldView, context, null as AttributeSet?)
@@ -178,6 +191,8 @@ object Hooks {
                         extendedProfileFieldView,
                         where
                     )
+
+                    return extendedProfileFieldView
                 }
             })
     }
