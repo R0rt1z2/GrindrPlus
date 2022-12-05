@@ -20,6 +20,7 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 - Access to some user-hidden features (developer features)
 - More accurate online status from other users. (The green dot from other profiles goes off after 3 minutes of inactivity.)
 - Allow unlimited taps (no 24h restriction)
+- Ability to see who viewed your profile even if you have "Show Me In Viewed Me List" disabled.
 
 ## Bugs
 * Incognito mode is kinda buggy (it turns off after a little while)

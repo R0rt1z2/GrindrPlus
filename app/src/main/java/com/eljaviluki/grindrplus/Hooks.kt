@@ -456,4 +456,20 @@ object Hooks {
             RETURN_LONG_MAX_VALUE
         )
     }
+
+    fun preventRecordProfileViews(){
+        val class_Continuation = findClass(
+            "kotlin.coroutines.Continuation",
+            Hooker.pkgParam.classLoader
+        )
+
+        val class_GrindrRestService = findClass(GApp.api.GrindrRestService, Hooker.pkgParam.classLoader)
+        findAndHookMethod(
+            class_GrindrRestService,
+            GApp.api.GrindrRestService_.recordProfileViews,
+            List::class.java,
+            class_Continuation,
+            XC_MethodReplacement.DO_NOTHING
+        )
+    }
 }

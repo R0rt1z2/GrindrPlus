@@ -2,6 +2,15 @@ package com.eljaviluki.grindrplus
 
 object Obfuscation {
     object GApp {
+        object api {
+            private const val _api = Constants.GRINDR_PKG + ".api"
+
+            const val GrindrRestService = "$_api.GrindrRestService"
+            object GrindrRestService_ {
+                const val recordProfileViews = "W"
+            }
+        }
+
         object base {
             private const val _base = Constants.GRINDR_PKG + ".base"
 
