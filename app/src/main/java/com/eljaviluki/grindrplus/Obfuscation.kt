@@ -15,7 +15,7 @@ object Obfuscation {
         object experiment {
             private const val _experiment = Constants.GRINDR_PKG + ".experiment"
 
-            const val Experiments = "$_experiment.a"
+            const val Experiments = "$_experiment.b"
             object Experiments_ {
                 const val uncheckedIsEnabled_expMgr = "c"
             }
@@ -68,26 +68,25 @@ object Obfuscation {
         object R {
             private const val _R = Constants.GRINDR_PKG
 
-            const val color = "$_R.h0"
+            const val color = "$_R.m0"
             object color_ {
-                const val grindr_gold_star_gay = "y"
-                const val grindr_pure_white = "P"
+                const val grindr_gold_star_gay = "z"
+                const val grindr_pure_white = "Q"
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.v0"
-            const val UserSession2 = "$_storage.w0"
+            const val UserSession = "$_storage.z0"
 
-            const val IUserSession = "$_storage.IUserSession"
+            const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "i"
-                const val isNoXtraUpsell = "o"
-                const val isXtra = "f"
-                const val isUnlimited = "p"
+                const val isFree = "k"
+                const val isNoXtraUpsell = "r"
+                const val isXtra = "g"
+                const val isUnlimited = "s"
             }
         }
 
@@ -116,7 +115,7 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-            const val ExtendedProfileFieldView = "$_view.k4"
+            const val ExtendedProfileFieldView = "$_view.v4"
             object ExtendedProfileFieldView_ {
                 const val setLabel = "l"
                 const val setValue = "n"

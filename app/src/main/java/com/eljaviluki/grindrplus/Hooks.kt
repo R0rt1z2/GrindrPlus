@@ -216,10 +216,10 @@ object Hooks {
                 Hooker.pkgParam.classLoader
             ),
 
-            findClass(
+            /*findClass(
                 GApp.storage.UserSession2,
                 Hooker.pkgParam.classLoader
-            )
+            )*/
         ).forEach { userSessionImpl ->
             findAndHookMethod(
                 userSessionImpl,
