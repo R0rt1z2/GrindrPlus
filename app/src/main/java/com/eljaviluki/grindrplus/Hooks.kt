@@ -20,7 +20,6 @@ import com.eljaviluki.grindrplus.Obfuscation.GApp
 import com.eljaviluki.grindrplus.decorated.persistence.model.Profile
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
 import kotlin.time.Duration
 
@@ -470,6 +469,21 @@ object Hooks {
             List::class.java,
             class_Continuation,
             XC_MethodReplacement.DO_NOTHING
+        )
+    }
+
+    fun makeMessagesAlwaysRemovable(){
+        val class_ChatBaseFragmentV2 = findClass(
+            GApp.ui.chat.ChatBaseFragmentV2,
+            Hooker.pkgParam.classLoader
+        )
+
+        val class_ChatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
+        findAndHookMethod(
+            class_ChatBaseFragmentV2,
+            GApp.ui.chat.ChatBaseFragmentV2_._canBeUnsent,
+            class_ChatMessage,
+            RETURN_FALSE
         )
     }
 }

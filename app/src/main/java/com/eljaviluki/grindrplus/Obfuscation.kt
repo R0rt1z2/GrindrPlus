@@ -110,6 +110,15 @@ object Obfuscation {
                     const val setProfile = "h"
                 }
             }
+
+            object chat {
+                private const val _chat = "$_ui.chat"
+
+                const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
+                object ChatBaseFragmentV2_ {
+                    const val _canBeUnsent = "X1"
+                }
+            }
         }
 
         object utils {
