@@ -79,15 +79,15 @@ object Obfuscation {
 
             const val color = "$_R.m0"
             object color_ {
-                const val grindr_gold_star_gay = "z"
-                const val grindr_pure_white = "Q"
+                const val grindr_gold_star_gay = "D"
+                const val grindr_pure_white = "T"
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.z0"
+            const val UserSession = "$_storage.f1"
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
@@ -115,7 +115,7 @@ object Obfuscation {
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
-            const val ProfileUtils = "$_utils.t0"
+            const val ProfileUtils = "$_utils.v0"
             object ProfileUtils_ {
                 const val onlineIndicatorDuration = "b"
             }

@@ -114,7 +114,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "8.22.1"
+        const val TARGET_PKG_VERSION_NAME = "8.23.0"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
