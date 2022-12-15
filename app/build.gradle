@@ -5,7 +5,7 @@ plugins {
 
 ext.versionMajor = 1
 ext.versionMinor = 1
-ext.versionPatch = 5
+ext.versionPatch = 6
 ext.grindrVersion = '8.23.0'
 
 private String genVersionName() {
@@ -24,7 +24,7 @@ android {
         applicationId 'com.eljaviluki.grindrplus'
         minSdk 21
         targetSdk 32
-        versionCode 12
+        versionCode 13
         versionName genVersionName()
         versionNameSuffix getVersionNameSuffix()
     }

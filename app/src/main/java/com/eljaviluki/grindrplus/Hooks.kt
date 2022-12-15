@@ -486,4 +486,34 @@ object Hooks {
             RETURN_FALSE
         )
     }
+
+    fun notifyBlockStatusViaToast() {
+        val class_BlockByHelper = findClass(
+            GApp.persistence.cache.BlockByHelper,
+            Hooker.pkgParam.classLoader
+        )
+
+        val class_Toast = findClass(
+            "android.widget.Toast",
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(class_BlockByHelper, GApp.persistence.cache.BlockByHelper_.addBlockByProfile, String::class.java, object : XC_MethodHook(){
+            override fun beforeHookedMethod(param: MethodHookParam?) {
+                val profileId: String = param!!.args[0] as String
+                ContextCompat.getMainExecutor(Hooker.appContext).execute {
+                    Toast.makeText(Hooker.appContext, "Profile [ID: $profileId] has blocked your profile.", Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+
+        findAndHookMethod(class_BlockByHelper, GApp.persistence.cache.BlockByHelper_.removeBlockByProfile, String::class.java, object : XC_MethodHook(){
+            override fun beforeHookedMethod(param: MethodHookParam?) {
+                val profileId: String = param!!.args[0] as String
+                ContextCompat.getMainExecutor(Hooker.appContext).execute {
+                    Toast.makeText(Hooker.appContext, "Profile [ID: $profileId] has unblocked your profile.", Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
 }

@@ -114,6 +114,12 @@ class Hooker : IXposedHookLoadPackage {
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.notifyBlockStatusViaToast()
+                    } catch (e : Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )

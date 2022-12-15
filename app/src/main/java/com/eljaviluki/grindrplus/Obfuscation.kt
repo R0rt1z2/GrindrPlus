@@ -53,6 +53,17 @@ object Obfuscation {
         object persistence {
             private const val _persistence = Constants.GRINDR_PKG + ".persistence"
 
+            object cache {
+                private const val _cache = "$_persistence.cache"
+
+                const val BlockByHelper = "$_cache.BlockByHelper"
+                object BlockByHelper_ {
+                    const val addBlockByProfile = "addBlockByProfile"
+                    const val removeBlockByProfile = "removeBlockByProfile"
+                }
+
+            }
+
             object model {
                 private const val _model = "$_persistence.model"
 
