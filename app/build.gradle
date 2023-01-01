@@ -24,7 +24,7 @@ android {
         applicationId 'com.eljaviluki.grindrplus'
         minSdk 21
         targetSdk 32
-        versionCode 13
+        versionCode 14
         versionName genVersionName()
         versionNameSuffix getVersionNameSuffix()
     }

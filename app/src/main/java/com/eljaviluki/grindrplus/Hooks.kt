@@ -117,38 +117,22 @@ object Hooks {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     fieldsViewInstance = param.thisObject
 
-                    //Get profile instance in the 1st parameter
-                    val profile = Profile(param.args[0])
+                    param.args[0]?.let {
+                        val profile = Profile(it)
+                        addProfileFieldUi("Profile ID", profile.profileId, 0).also { view ->
+                            view.setOnLongClickListener {
+                                val clipboard = Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("Profile ID", profile.profileId)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(Hooker.appContext, "Profile ID copied to clipboard", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
 
-                    val profileIdField = addProfileFieldUi(
-                        "Profile ID",
-                        profile.profileId,
-                        where = 0
-                    ) as FrameLayout
+                        addProfileFieldUi("Last Seen", if (profile.seen != 0L) Utils.toReadableDate(profile.seen) else "N/A", 1)
 
-                    profileIdField.setOnLongClickListener {
-                        val clipboard = Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Profile ID", profile.profileId)
-                        clipboard.setPrimaryClip(clip)
-                        Toast.makeText(Hooker.appContext, "Profile ID copied to clipboard", Toast.LENGTH_SHORT).show()
-                        true
-                    }
-                    
-                    val lastSeen = profile.seen
-                    addProfileFieldUi(
-                        "Last Seen",
-                        if (lastSeen != 0L) Utils.toReadableDate(lastSeen) else "N/A",
-                        where = 1
-                    )
-
-                    val weight : Double = profile.weight
-                    val height : Double = profile.height
-                    if(weight != 0.0 && height != 0.0) {
-                        addProfileFieldUi(
-                            "Body Mass Index",
-                            Utils.getBmiDescription(weight, height),
-                            where = 2
-                        )
+                        if (profile.weight != 0.0 && profile.height != 0.0)
+                            addProfileFieldUi("Body Mass Index", Utils.getBmiDescription(profile.weight, profile.height), 2)
                     }
 
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
@@ -156,7 +140,7 @@ object Hooks {
                 }
 
                 //By default, the views are added to the end of the list.
-                private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) : Any {
+                private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) : FrameLayout {
                     val hooked = XposedBridge.hookMethod(checkNotNullParameterMethod, XC_MethodReplacement.DO_NOTHING)
                     val extendedProfileFieldView =
                         newInstance(class_ExtendedProfileFieldView, context, null as AttributeSet?)
@@ -191,7 +175,7 @@ object Hooks {
                         where
                     )
 
-                    return extendedProfileFieldView
+                    return extendedProfileFieldView as FrameLayout
                 }
             })
     }
