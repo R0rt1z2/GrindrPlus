@@ -512,11 +512,6 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
-        val class_Toast = findClass(
-            "android.widget.Toast",
-            Hooker.pkgParam.classLoader
-        )
-
         findAndHookMethod(class_BlockByHelper, GApp.persistence.cache.BlockByHelper_.addBlockByProfile, String::class.java, object : XC_MethodHook(){
             override fun beforeHookedMethod(param: MethodHookParam?) {
                 val profileId: String = param!!.args[0] as String
