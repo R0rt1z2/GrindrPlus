@@ -48,6 +48,18 @@ object Obfuscation {
             object Feature_ {
                 const val isGranted = "isGranted"
             }
+
+            const val UpsellsV8 = "$_model.UpsellsV8"
+            object UpsellsV8_ {
+                const val getMpuFree = "getMpuFree"
+                const val getMpuXtra = "getMpuXtra"
+            }
+
+            const val Inserts = "$_model.Inserts"
+            object Inserts_ {
+                const val getMpuFree = "getMpuFree"
+                const val getMpuXtra = "getMpuXtra"
+            }
         }
 
         object persistence {
