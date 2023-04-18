@@ -54,11 +54,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
+                    /*try {
                         Hooks.addExtraProfileFields()
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }
+                    }*/
 
                     try {
                         Hooks.hookUserSessionImpl()
@@ -103,11 +103,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
+                    /*try {
                         Hooks.preventRecordProfileViews()
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }
+                    }*/
 
                     try {
                         Hooks.makeMessagesAlwaysRemovable()
@@ -126,7 +126,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "8.23.0"
+        const val TARGET_PKG_VERSION_NAME = "9.6.0"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()

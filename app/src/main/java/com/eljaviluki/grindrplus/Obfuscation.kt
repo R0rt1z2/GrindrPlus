@@ -17,14 +17,14 @@ object Obfuscation {
             object Experiment {
                 private const val _experiment = "$_base.experiment"
 
-                const val IExperimentsManager = "$_experiment.c"
+                const val IExperimentsManager = "$_experiment.a"
             }
         }
 
         object experiment {
             private const val _experiment = Constants.GRINDR_PKG + ".experiment"
 
-            const val Experiments = "$_experiment.b"
+            const val Experiments = "$_experiment.f"
             object Experiments_ {
                 const val uncheckedIsEnabled_expMgr = "c"
             }
@@ -110,15 +110,15 @@ object Obfuscation {
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.f1"
+            const val UserSession = "$_storage.z0"
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "k"
-                const val isNoXtraUpsell = "r"
-                const val isXtra = "g"
-                const val isUnlimited = "s"
+                const val isFree = "g"
+                const val isNoXtraUpsell = "y"
+                const val isXtra = "o"
+                const val isUnlimited = "x"
             }
         }
 
@@ -147,7 +147,7 @@ object Obfuscation {
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
-            const val ProfileUtils = "$_utils.v0"
+            const val ProfileUtils = "$_utils.n0"
             object ProfileUtils_ {
                 const val onlineIndicatorDuration = "b"
             }
