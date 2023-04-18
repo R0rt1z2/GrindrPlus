@@ -54,11 +54,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    /*try {
+                    try {
                         Hooks.addExtraProfileFields()
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }*/
+                    }
 
                     try {
                         Hooks.hookUserSessionImpl()

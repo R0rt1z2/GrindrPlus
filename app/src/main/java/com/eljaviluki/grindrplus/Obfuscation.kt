@@ -68,7 +68,7 @@ object Obfuscation {
             object cache {
                 private const val _cache = "$_persistence.cache"
 
-                const val BlockByHelper = "$_cache.BlockByHelper"
+                const val BlockedByHelper = "$_cache.BlockedByHelper"
                 object BlockByHelper_ {
                     const val addBlockByProfile = "addBlockByProfile"
                     const val removeBlockByProfile = "removeBlockByProfile"
@@ -102,8 +102,8 @@ object Obfuscation {
 
             const val color = "$_R.m0"
             object color_ {
-                const val grindr_gold_star_gay = "D"
-                const val grindr_pure_white = "T"
+                const val grindr_gold_star_gay = "F"
+                const val grindr_pure_white = "V"
             }
         }
 
@@ -115,8 +115,8 @@ object Obfuscation {
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "g"
-                const val isNoXtraUpsell = "y"
+                const val isFree = "r"
+                const val isNoXtraUpsell = "g"
                 const val isXtra = "o"
                 const val isUnlimited = "x"
             }
@@ -139,7 +139,7 @@ object Obfuscation {
 
                 const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "X1"
+                    const val _canBeUnsent = "w1"
                 }
             }
         }
@@ -156,7 +156,7 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-            const val ExtendedProfileFieldView = "$_view.v4"
+            const val ExtendedProfileFieldView = "$_view.z4"
             object ExtendedProfileFieldView_ {
                 const val setLabel = "l"
                 const val setValue = "n"

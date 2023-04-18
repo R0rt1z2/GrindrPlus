@@ -507,12 +507,17 @@ object Hooks {
     }
 
     fun notifyBlockStatusViaToast() {
-        val class_BlockByHelper = findClass(
-            GApp.persistence.cache.BlockByHelper,
+        val class_BlockedByHelper = findClass(
+            GApp.persistence.cache.BlockedByHelper,
             Hooker.pkgParam.classLoader
         )
 
-        findAndHookMethod(class_BlockByHelper, GApp.persistence.cache.BlockByHelper_.addBlockByProfile, String::class.java, object : XC_MethodHook(){
+        val class_Continuation = findClass(
+            "kotlin.coroutines.Continuation",
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(class_BlockedByHelper, GApp.persistence.cache.BlockByHelper_.addBlockByProfile, String::class.java, class_Continuation, object : XC_MethodHook(){
             override fun beforeHookedMethod(param: MethodHookParam?) {
                 val profileId: String = param!!.args[0] as String
                 ContextCompat.getMainExecutor(Hooker.appContext).execute {
@@ -521,7 +526,7 @@ object Hooks {
             }
         })
 
-        findAndHookMethod(class_BlockByHelper, GApp.persistence.cache.BlockByHelper_.removeBlockByProfile, String::class.java, object : XC_MethodHook(){
+        findAndHookMethod(class_BlockedByHelper, GApp.persistence.cache.BlockByHelper_.removeBlockByProfile, String::class.java, class_Continuation, object : XC_MethodHook(){
             override fun beforeHookedMethod(param: MethodHookParam?) {
                 val profileId: String = param!!.args[0] as String
                 ContextCompat.getMainExecutor(Hooker.appContext).execute {
