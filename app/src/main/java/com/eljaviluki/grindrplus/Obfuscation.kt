@@ -139,7 +139,7 @@ object Obfuscation {
 
                 const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "w1"
+                    const val _canBeUnsent = "Y1"
                 }
             }
         }
