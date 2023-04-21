@@ -506,6 +506,7 @@ object Hooks {
         )
     }
 
+    /*
     fun notifyBlockStatusViaToast() {
         val class_BlockedByHelper = findClass(
             GApp.persistence.cache.BlockedByHelper,
@@ -534,5 +535,37 @@ object Hooks {
                 }
             }
         })
+    }
+    */
+
+    fun showBlocksInChat() {
+        val chatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
+
+        findAndHookMethod(GApp.model.ChatMessageParserCoroutine,
+            Hooker.pkgParam.classLoader,
+            "invokeSuspend",
+            Any::class.java,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                }
+
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val result = param.result
+                    if (!chatMessage.isInstance(result)) return
+                    val type = callMethod(result, GApp.persistence.model.ChatMessage_.getType) as String
+                    when (type) {
+                        "block" -> {
+                            callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
+                            callMethod(result, GApp.persistence.model.ChatMessage_.setBody, "[You have been blocked.]")
+                        }
+                        "unblock" -> {
+                            callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
+                            callMethod(result, GApp.persistence.model.ChatMessage_.setBody, "[You have been unblocked.]")
+                        }
+                    }
+                }
+            })
     }
 }

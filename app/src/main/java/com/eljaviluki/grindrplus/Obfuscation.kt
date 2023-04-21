@@ -60,6 +60,8 @@ object Obfuscation {
                 const val getMpuFree = "getMpuFree"
                 const val getMpuXtra = "getMpuXtra"
             }
+
+            const val ChatMessageParserCoroutine = "$_model.ChatMessageParser\$parseXmppMessage$2"
         }
 
         object persistence {
@@ -82,6 +84,9 @@ object Obfuscation {
                 const val ChatMessage = "$_model.ChatMessage"
                 object ChatMessage_ {
                     const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
+                    const val getType = "getType"
+                    const val setType = "setType"
+                    const val setBody = "setBody"
                 }
 
                 const val Profile = "$_model.Profile"

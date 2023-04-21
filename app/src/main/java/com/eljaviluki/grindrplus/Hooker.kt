@@ -116,7 +116,7 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
-                        Hooks.notifyBlockStatusViaToast()
+                        Hooks.showBlocksInChat()
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
