@@ -7,18 +7,19 @@ import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.Window
-import de.robv.android.xposed.XC_MethodHook
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_FALSE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
+import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
+import com.eljaviluki.grindrplus.Constants.Returns.RETURN_UNIT
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_ZERO
 import com.eljaviluki.grindrplus.Obfuscation.GApp
 import com.eljaviluki.grindrplus.decorated.persistence.model.Profile
+import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
@@ -83,7 +84,12 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
-        val checkNotNullParameterMethod = findMethodExact(class_Intrinsics, "checkNotNullParameter", Object::class.java, String::class.java)
+        val checkNotNullParameterMethod = findMethodExact(
+            class_Intrinsics,
+            "checkNotNullParameter",
+            Object::class.java,
+            String::class.java
+        )
 
         findAndHookMethod(
             class_ProfileFieldsView,
@@ -122,18 +128,31 @@ object Hooks {
                         val profile = Profile(it)
                         addProfileFieldUi("Profile ID", profile.profileId, 0).also { view ->
                             view.setOnLongClickListener {
-                                val clipboard = Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clipboard =
+                                    Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("Profile ID", profile.profileId)
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(Hooker.appContext, "Profile ID copied to clipboard", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    Hooker.appContext,
+                                    "Profile ID copied to clipboard",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 true
                             }
                         }
 
-                        addProfileFieldUi("Last Seen", if (profile.seen != 0L) Utils.toReadableDate(profile.seen) else "N/A", 1)
+                        addProfileFieldUi(
+                            "Last Seen",
+                            if (profile.seen != 0L) Utils.toReadableDate(profile.seen) else "N/A",
+                            1
+                        )
 
                         if (profile.weight != 0.0 && profile.height != 0.0)
-                            addProfileFieldUi("Body Mass Index", Utils.getBmiDescription(profile.weight, profile.height), 2)
+                            addProfileFieldUi(
+                                "Body Mass Index",
+                                Utils.getBmiDescription(profile.weight, profile.height),
+                                2
+                            )
                     }
 
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
@@ -141,8 +160,15 @@ object Hooks {
                 }
 
                 //By default, the views are added to the end of the list.
-                private fun addProfileFieldUi(label: CharSequence, value: CharSequence, where: Int = -1) : FrameLayout {
-                    val hooked = XposedBridge.hookMethod(checkNotNullParameterMethod, XC_MethodReplacement.DO_NOTHING)
+                private fun addProfileFieldUi(
+                    label: CharSequence,
+                    value: CharSequence,
+                    where: Int = -1
+                ): FrameLayout {
+                    val hooked = XposedBridge.hookMethod(
+                        checkNotNullParameterMethod,
+                        XC_MethodReplacement.DO_NOTHING
+                    )
                     val extendedProfileFieldView =
                         newInstance(class_ExtendedProfileFieldView, context, null as AttributeSet?)
                     hooked.unhook()
@@ -379,14 +405,14 @@ object Hooks {
             "android.location.Location",
             Hooker.pkgParam.classLoader
         )
-        
+
         findAndHookMethod(
             class_Location,
             "isFromMockProvider",
             RETURN_FALSE
         )
 
-        if(Build.VERSION.SDK_INT >= 31) {
+        if (Build.VERSION.SDK_INT >= 31) {
             findAndHookMethod(
                 class_Location,
                 "isMock",
@@ -413,9 +439,13 @@ object Hooks {
      *
      * @author ElJaviLuki
      */
-    fun hookOnlineIndicatorDuration(duration : Duration){
+    fun hookOnlineIndicatorDuration(duration: Duration) {
         val class_ProfileUtils = findClass(GApp.utils.ProfileUtils, Hooker.pkgParam.classLoader)
-        setStaticLongField(class_ProfileUtils, GApp.utils.ProfileUtils_.onlineIndicatorDuration, duration.inWholeMilliseconds)
+        setStaticLongField(
+            class_ProfileUtils,
+            GApp.utils.ProfileUtils_.onlineIndicatorDuration,
+            duration.inWholeMilliseconds
+        )
     }
 
     /**
@@ -425,9 +455,13 @@ object Hooks {
      */
     fun unlimitedTaps() {
         val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam.classLoader)
-        val class_ChatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
+        val class_ChatMessage =
+            findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
 
-        val tapTypeToHook = getStaticObjectField(class_ChatMessage, GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE)
+        val tapTypeToHook = getStaticObjectField(
+            class_ChatMessage,
+            GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE
+        )
 
         //Reset the tap value to allow multitapping.
         findAndHookMethod(
@@ -435,7 +469,7 @@ object Hooks {
             GApp.view.TapsAnimLayout_.setTapType,
             String::class.java,
             Boolean::class.javaPrimitiveType,
-            object : XC_MethodHook(){
+            object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     setObjectField(
                         param.thisObject,
@@ -467,7 +501,8 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun removeExpirationOnExpiringPhotos() {
-        val class_ExpiringImageBody = findClass(GApp.model.ExpiringImageBody, Hooker.pkgParam.classLoader)
+        val class_ExpiringImageBody =
+            findClass(GApp.model.ExpiringImageBody, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_ExpiringImageBody,
             GApp.model.ExpiringImageBody_.getDuration,
@@ -475,13 +510,14 @@ object Hooks {
         )
     }
 
-    fun preventRecordProfileViews(){
+    fun preventRecordProfileViews() {
         val class_Continuation = findClass(
             "kotlin.coroutines.Continuation",
             Hooker.pkgParam.classLoader
         )
 
-        val class_GrindrRestService = findClass(GApp.api.GrindrRestService, Hooker.pkgParam.classLoader)
+        val class_GrindrRestService =
+            findClass(GApp.api.GrindrRestService, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_GrindrRestService,
             GApp.api.GrindrRestService_.recordProfileViews,
@@ -491,13 +527,14 @@ object Hooks {
         )
     }
 
-    fun makeMessagesAlwaysRemovable(){
+    fun makeMessagesAlwaysRemovable() {
         val class_ChatBaseFragmentV2 = findClass(
             GApp.ui.chat.ChatBaseFragmentV2,
             Hooker.pkgParam.classLoader
         )
 
-        val class_ChatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
+        val class_ChatMessage =
+            findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_ChatBaseFragmentV2,
             GApp.ui.chat.ChatBaseFragmentV2_._canBeUnsent,
@@ -546,25 +583,114 @@ object Hooks {
             "invokeSuspend",
             Any::class.java,
             object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                }
-
-                @Throws(Throwable::class)
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val result = param.result
                     if (!chatMessage.isInstance(result)) return
-                    val type = callMethod(result, GApp.persistence.model.ChatMessage_.getType) as String
+                    val type =
+                        callMethod(result, GApp.persistence.model.ChatMessage_.getType) as String
                     when (type) {
                         "block" -> {
                             callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
-                            callMethod(result, GApp.persistence.model.ChatMessage_.setBody, "[You have been blocked.]")
+                            callMethod(
+                                result,
+                                GApp.persistence.model.ChatMessage_.setBody,
+                                "[You have been blocked.]"
+                            )
                         }
                         "unblock" -> {
                             callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
-                            callMethod(result, GApp.persistence.model.ChatMessage_.setBody, "[You have been unblocked.]")
+                            callMethod(
+                                result,
+                                GApp.persistence.model.ChatMessage_.setBody,
+                                "[You have been unblocked.]"
+                            )
                         }
                     }
+                }
+            })
+    }
+
+    fun keepChatsOfBlockedProfiles() {
+        val class_Continuation = findClass(
+            "kotlin.coroutines.Continuation",
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(
+            GApp.manager.BlockInteractor,
+            Hooker.pkgParam.classLoader,
+            GApp.manager.BlockInteractor_.blockstream,
+            String::class.java,
+            Boolean::class.javaPrimitiveType,
+            class_Continuation,
+            RETURN_UNIT
+        )
+
+        findAndHookMethod(
+            GApp.manager.BlockInteractor,
+            Hooker.pkgParam.classLoader,
+            GApp.manager.BlockInteractor_.processAndRemoveBlockedProfiles,
+            List::class.java,
+            Boolean::class.javaPrimitiveType,
+            class_Continuation,
+            RETURN_UNIT
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.ProfileRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ProfileRepo_.delete,
+            List::class.java,
+            class_Continuation,
+            RETURN_UNIT
+        )
+
+        val queries = mapOf(
+            "\n" +
+                    "        SELECT * FROM conversation \n" +
+                    "        LEFT JOIN blocks ON blocks.profileId = conversation_id\n" +
+                    "        LEFT JOIN banned ON banned.profileId = conversation_id\n" +
+                    "        WHERE blocks.profileId is NULL AND banned.profileId is NULL\n" +
+                    "        ORDER BY conversation.pin DESC, conversation.last_message_timestamp DESC, conversation.conversation_id DESC\n" +
+                    "        "
+                    to "\n" +
+                    "        SELECT * FROM conversation \n" +
+                    "        LEFT JOIN blocks ON blocks.profileId = conversation_id\n" +
+                    "        LEFT JOIN banned ON banned.profileId = conversation_id\n" +
+                    "        WHERE banned.profileId is NULL\n" +
+                    "        ORDER BY conversation.pin DESC, conversation.last_message_timestamp DESC, conversation.conversation_id DESC\n" +
+                    "        ",
+            "\n" +
+                    "        SELECT * FROM conversation\n" +
+                    "        LEFT JOIN profile ON profile.profile_id = conversation.conversation_id\n" +
+                    "        LEFT JOIN blocks ON blocks.profileId = conversation_id\n" +
+                    "        LEFT JOIN banned ON banned.profileId = conversation_id\n" +
+                    "        WHERE blocks.profileId is NULL AND banned.profileId is NULL AND unread >= :minUnreadCount AND is_group_chat in (:isGroupChat)\n" +
+                    "            AND (:minLastSeen = 0 OR seen > :minLastSeen)\n" +
+                    "            AND (1 IN (:isFavorite) AND 0 IN (:isFavorite) OR is_favorite in (:isFavorite))\n" +
+                    "        ORDER BY conversation.pin DESC, conversation.last_message_timestamp DESC, conversation.conversation_id DESC\n" +
+                    "        "
+                    to "\n" +
+                    "        SELECT * FROM conversation\n" +
+                    "        LEFT JOIN profile ON profile.profile_id = conversation.conversation_id\n" +
+                    "        LEFT JOIN blocks ON blocks.profileId = conversation_id\n" +
+                    "        LEFT JOIN banned ON banned.profileId = conversation_id\n" +
+                    "        WHERE banned.profileId is NULL AND unread >= :minUnreadCount AND is_group_chat in (:isGroupChat)\n" +
+                    "            AND (:minLastSeen = 0 OR seen > :minLastSeen)\n" +
+                    "            AND (1 IN (:isFavorite) AND 0 IN (:isFavorite) OR is_favorite in (:isFavorite))\n" +
+                    "        ORDER BY conversation.pin DESC, conversation.last_message_timestamp DESC, conversation.conversation_id DESC\n" +
+                    "        "
+        )
+
+        findAndHookMethod("androidx.room.RoomSQLiteQuery",
+            Hooker.pkgParam.classLoader,
+            "acquire",
+            String::class.java,
+            Int::class.javaPrimitiveType,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val query = param.args[0]
+                    param.args[0] = queries.getOrDefault(query, query)
                 }
             })
     }

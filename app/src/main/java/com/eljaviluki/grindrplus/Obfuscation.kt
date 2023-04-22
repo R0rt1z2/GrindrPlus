@@ -30,6 +30,15 @@ object Obfuscation {
             }
         }
 
+        object manager {
+            private const val _manager = Constants.GRINDR_PKG + ".manager"
+            const val BlockInteractor = "$_manager.o"
+            object BlockInteractor_ {
+                const val blockstream = "n"
+                const val processAndRemoveBlockedProfiles = "D"
+            }
+        }
+
         object model {
             private const val _model = Constants.GRINDR_PKG + ".model"
 
@@ -98,6 +107,11 @@ object Obfuscation {
                 const val ChatRepo = "$_repository.ChatRepo"
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
+                }
+
+                const val ProfileRepo = "$_repository.ProfileRepo"
+                object ProfileRepo_ {
+                    const val delete = "delete"
                 }
             }
         }

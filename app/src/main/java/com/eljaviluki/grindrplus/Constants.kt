@@ -12,5 +12,6 @@ object Constants {
         val RETURN_INTEGER_MAX_VALUE: XC_MethodReplacement  = returnConstant(Int.MAX_VALUE)
         val RETURN_LONG_MAX_VALUE: XC_MethodReplacement  = returnConstant(Long.MAX_VALUE)
         val RETURN_ZERO: XC_MethodReplacement  = returnConstant(0)
+        val RETURN_UNIT: XC_MethodReplacement  = returnConstant(Unit)
     }
 }
