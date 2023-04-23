@@ -699,7 +699,6 @@ object Hooks {
     }
 
     fun localSavedPhrases() {
-
         val class_ChatRestService =
             findClass(GApp.api.ChatRestService, Hooker.pkgParam.classLoader)
 
@@ -837,6 +836,44 @@ object Hooks {
                         class_PhrasesRestService.isInstance(service) -> hookPhrasesRestService(
                             service
                         )
+                        else -> service
+                    }
+                }
+            }
+        )
+    }
+
+    fun disableAnalytics() {
+        val class_AnalyticsRestService =
+            findClass(GApp.api.AnalyticsRestService, Hooker.pkgParam.classLoader)
+
+        val createSuccessResult = findMethodExact(
+            GApp.network.either.ResultHelper,
+            Hooker.pkgParam.classLoader,
+            GApp.network.either.ResultHelper_.createSuccess,
+            Any::class.java
+        )
+
+        findAndHookMethod(
+            "retrofit2.Retrofit",
+            Hooker.pkgParam.classLoader,
+            "create",
+            Class::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val service = param.result
+                    param.result = when {
+                        class_AnalyticsRestService.isInstance(service) -> {
+                            Proxy.newProxyInstance(
+                                Hooker.pkgParam.classLoader,
+                                arrayOf(class_AnalyticsRestService)
+                            ) { proxy, method, args ->
+                                XposedBridge.log(args[0].toString())
+                                //Just block all methods for now,
+                                //in the future we might need to if they change service interface.
+                                createSuccessResult(Unit)
+                            }
+                        }
                         else -> service
                     }
                 }

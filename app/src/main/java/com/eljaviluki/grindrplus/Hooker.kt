@@ -132,6 +132,12 @@ class Hooker : IXposedHookLoadPackage {
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.disableAnalytics()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )

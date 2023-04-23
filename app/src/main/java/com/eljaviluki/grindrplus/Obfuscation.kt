@@ -16,6 +16,8 @@ object Obfuscation {
             object PhrasesRestService_ {
                 const val getSavedPhrases = "a"
             }
+
+            const val AnalyticsRestService = "$_api.d"
         }
 
         object base {
