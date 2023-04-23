@@ -23,6 +23,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
+import java.lang.reflect.Proxy
 import kotlin.time.Duration
 
 object Hooks {
@@ -733,6 +734,96 @@ object Hooks {
             Int::class.javaPrimitiveType
         )
 
+        fun hookChatRestService(service: Any): Any {
+            val invocationHandler = Proxy.getInvocationHandler(service)
+            return Proxy.newProxyInstance(
+                Hooker.pkgParam.classLoader,
+                arrayOf(class_ChatRestService)
+            ) { proxy, method, args ->
+                when (method.name) {
+                    GApp.api.ChatRestService_.addSavedPhrase -> {
+                        val phrase =
+                            getObjectField(args[0], "phrase") as String
+                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
+                        val currentPhrases =
+                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                        Hooker.sharedPref.edit()
+                            .putInt("id_counter", id)
+                            .putStringSet("phrases", currentPhrases + id.toString())
+                            .putString("phrase_${id}_text", phrase)
+                            .putInt("phrase_${id}_frequency", 0)
+                            .putLong("phrase_${id}_timestamp", 0)
+                            .apply()
+                        val response =
+                            constructor_AddSavedPhraseResponse.newInstance(id.toString())
+                        createSuccessResult.invoke(null, response)
+                    }
+                    GApp.api.ChatRestService_.deleteSavedPhrase -> {
+                        val id = args[0] as String
+                        val currentPhrases =
+                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                        Hooker.sharedPref.edit()
+                            .putStringSet("phrases", currentPhrases - id)
+                            .remove("phrase_${id}_text")
+                            .remove("phrase_${id}_frequency")
+                            .remove("phrase_${id}_timestamp")
+                            .apply()
+                        createSuccessResult.invoke(null, Unit)
+                    }
+                    GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
+                        val id = args[0] as String
+                        val currentFrequency =
+                            Hooker.sharedPref.getInt("phrase_${id}_text", 0)
+                        Hooker.sharedPref.edit()
+                            .putInt("phrase_${id}_text", currentFrequency + 1)
+                            .apply()
+                        createSuccessResult.invoke(null, Unit)
+                    }
+                    else -> invocationHandler.invoke(proxy, method, args)
+                }
+            }
+        }
+
+        fun hookPhrasesRestService(service: Any): Any {
+            val invocationHandler = Proxy.getInvocationHandler(service)
+            return Proxy.newProxyInstance(
+                Hooker.pkgParam.classLoader,
+                arrayOf(class_PhrasesRestService)
+            ) { proxy, method, args ->
+                when (method.name) {
+                    GApp.api.PhrasesRestService_.getSavedPhrases -> {
+                        val phrases =
+                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                                .map { id ->
+                                    val text = Hooker.sharedPref.getString(
+                                        "phrase_${id}_text",
+                                        ""
+                                    )
+                                    val timestamp = Hooker.sharedPref.getLong(
+                                        "phrase_${id}_timestamp",
+                                        0
+                                    )
+                                    val frequency = Hooker.sharedPref.getInt(
+                                        "phrase_${id}_frequency",
+                                        0
+                                    )
+                                    id to constructor_Phrase.newInstance(
+                                        id,
+                                        text,
+                                        timestamp,
+                                        frequency
+                                    )
+                                }
+                                .toMap()
+                        val phrasesResponse =
+                            constructor_PhrasesResponse.newInstance(phrases)
+                        createSuccessResult.invoke(null, phrasesResponse)
+                    }
+                    else -> invocationHandler.invoke(proxy, method, args)
+                }
+            }
+        }
+
         findAndHookMethod(
             "retrofit2.Retrofit",
             Hooker.pkgParam.classLoader,
@@ -741,109 +832,12 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val service = param.result
-                    val proxyClass = service::class.java
-                    when {
-                        class_ChatRestService.isInstance(service) -> {
-                            findAndHookMethod(
-                                proxyClass,
-                                GApp.api.ChatRestService_.addSavedPhrase,
-                                GApp.model.AddSavedPhraseResponse,
-                                "kotlin.coroutines.Continuation",
-                                object : XC_MethodReplacement() {
-                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                                        val phrase =
-                                            getObjectField(param.args[0], "phrase") as String
-                                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
-                                        val currentPhrases =
-                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                        Hooker.sharedPref.edit()
-                                            .putInt("id_counter", id)
-                                            .putStringSet("phrases", currentPhrases + id.toString())
-                                            .putString("phrase_${id}_text", phrase)
-                                            .putInt("phrase_${id}_frequency", 0)
-                                            .putLong("phrase_${id}_timestamp", 0)
-                                            .apply()
-                                        val response =
-                                            constructor_AddSavedPhraseResponse.newInstance(id.toString())
-                                        return createSuccessResult.invoke(null, response)
-                                    }
-                                }
-                            )
-                            findAndHookMethod(
-                                proxyClass,
-                                GApp.api.ChatRestService_.deleteSavedPhrase,
-                                String::class.java,
-                                "kotlin.coroutines.Continuation",
-                                object : XC_MethodReplacement() {
-                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                                        val id = param.args[0] as String
-                                        val currentPhrases =
-                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                        Hooker.sharedPref.edit()
-                                            .putStringSet("phrases", currentPhrases - id)
-                                            .remove("phrase_${id}_text")
-                                            .remove("phrase_${id}_frequency")
-                                            .remove("phrase_${id}_timestamp")
-                                            .apply()
-                                        return createSuccessResult.invoke(null, Unit)
-                                    }
-                                }
-                            )
-                            findAndHookMethod(
-                                proxyClass,
-                                GApp.api.ChatRestService_.increaseSavedPhraseClickCount,
-                                String::class.java,
-                                "kotlin.coroutines.Continuation",
-                                object : XC_MethodReplacement() {
-                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                                        val id = param.args[0] as String
-                                        val currentFrequency =
-                                            Hooker.sharedPref.getInt("phrase_${id}_text", 0)
-                                        Hooker.sharedPref.edit()
-                                            .putInt("phrase_${id}_text", currentFrequency + 1)
-                                            .apply()
-                                        return createSuccessResult.invoke(null, Unit)
-                                    }
-                                }
-                            )
-                        }
-                        class_PhrasesRestService.isInstance(service) -> {
-                            findAndHookMethod(
-                                proxyClass,
-                                GApp.api.PhrasesRestService_.getSavedPhrases,
-                                "kotlin.coroutines.Continuation",
-                                object : XC_MethodReplacement() {
-                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                                        val phrases =
-                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                                .map { id ->
-                                                    val text = Hooker.sharedPref.getString(
-                                                        "phrase_${id}_text",
-                                                        ""
-                                                    )
-                                                    val timestamp = Hooker.sharedPref.getLong(
-                                                        "phrase_${id}_timestamp",
-                                                        0
-                                                    )
-                                                    val frequency = Hooker.sharedPref.getInt(
-                                                        "phrase_${id}_frequency",
-                                                        0
-                                                    )
-                                                    id to constructor_Phrase.newInstance(
-                                                        id,
-                                                        text,
-                                                        timestamp,
-                                                        frequency
-                                                    )
-                                                }
-                                                .toMap()
-                                        val phrasesResponse =
-                                            constructor_PhrasesResponse.newInstance(phrases)
-                                        return createSuccessResult.invoke(null, phrasesResponse)
-                                    }
-                                }
-                            )
-                        }
+                    param.result = when {
+                        class_ChatRestService.isInstance(service) -> hookChatRestService(service)
+                        class_PhrasesRestService.isInstance(service) -> hookPhrasesRestService(
+                            service
+                        )
+                        else -> service
                     }
                 }
             }
