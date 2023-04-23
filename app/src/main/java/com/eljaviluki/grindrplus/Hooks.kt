@@ -842,7 +842,6 @@ object Hooks {
             }
         )
     }
-
     fun disableAnalytics() {
         val class_AnalyticsRestService =
             findClass(GApp.api.AnalyticsRestService, Hooker.pkgParam.classLoader)
@@ -868,9 +867,8 @@ object Hooks {
                                 Hooker.pkgParam.classLoader,
                                 arrayOf(class_AnalyticsRestService)
                             ) { proxy, method, args ->
-                                XposedBridge.log(args[0].toString())
                                 //Just block all methods for now,
-                                //in the future we might need to differentiate if they change service interface.
+                                //in the future we might need to differentiate if they change the service interface.
                                 createSuccessResult(Unit)
                             }
                         }
