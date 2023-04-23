@@ -698,46 +698,155 @@ object Hooks {
     }
 
     fun localSavedPhrases() {
-        /*val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
+
+        val class_ChatRestService =
+            findClass(GApp.api.ChatRestService, Hooker.pkgParam.classLoader)
+
+        val class_PhrasesRestService =
+            findClass(GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
+
+        val createSuccessResult = findMethodExact(
+            GApp.network.either.ResultHelper,
+            Hooker.pkgParam.classLoader,
+            GApp.network.either.ResultHelper_.createSuccess,
+            Any::class.java
+        )
+
+        val constructor_AddSavedPhraseResponse = findConstructorExact(
+            GApp.model.AddSavedPhraseResponse,
+            Hooker.pkgParam.classLoader,
+            String::class.java
+        )
+
+        val constructor_PhrasesResponse = findConstructorExact(
+            GApp.model.PhrasesResponse,
+            Hooker.pkgParam.classLoader,
+            Map::class.java
+        )
+
+        val constructor_Phrase = findConstructorExact(
+            GApp.persistence.model.Phrase,
+            Hooker.pkgParam.classLoader,
+            String::class.java,
+            String::class.java,
+            Long::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType
         )
 
         findAndHookMethod(
-            GApp.interactor.phrase.PhraseInteractor,
+            "retrofit2.Retrofit",
             Hooker.pkgParam.classLoader,
-            GApp.interactor.phrase.PhraseInteractor_.addSavedPhrase,
-            String::class.java,
-            Boolean::class.javaPrimitiveType,
-            Boolean::class.javaPrimitiveType,
-            "kotlin.jvm.functions.Function0",
-            class_Continuation,
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    XposedBridge.log(param.args[0].toString())
-                    Hooker.sharedPref.get
-                    callMethod(param.args[3], "invoke")
-                    return callStaticMethod(
-                        findClass("com.grindrapp.android.network.either.b", Hooker.pkgParam.classLoader),
-                        "b",
-                        getStaticObjectField(findClass("kotlin.Unit", Hooker.pkgParam.classLoader), "INSTANCE")
-                    )
+            "create",
+            Class::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val service = param.result
+                    val proxyClass = service::class.java
+                    when {
+                        class_ChatRestService.isInstance(service) -> {
+                            findAndHookMethod(
+                                proxyClass,
+                                GApp.api.ChatRestService_.addSavedPhrase,
+                                GApp.model.AddSavedPhraseResponse,
+                                "kotlin.coroutines.Continuation",
+                                object : XC_MethodReplacement() {
+                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                                        val phrase =
+                                            getObjectField(param.args[0], "phrase") as String
+                                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
+                                        val currentPhrases =
+                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                                        Hooker.sharedPref.edit()
+                                            .putInt("id_counter", id)
+                                            .putStringSet("phrases", currentPhrases + id.toString())
+                                            .putString("phrase_${id}_text", phrase)
+                                            .putInt("phrase_${id}_frequency", 0)
+                                            .putLong("phrase_${id}_timestamp", 0)
+                                            .apply()
+                                        val response =
+                                            constructor_AddSavedPhraseResponse.newInstance(id.toString())
+                                        return createSuccessResult.invoke(null, response)
+                                    }
+                                }
+                            )
+                            findAndHookMethod(
+                                proxyClass,
+                                GApp.api.ChatRestService_.deleteSavedPhrase,
+                                String::class.java,
+                                "kotlin.coroutines.Continuation",
+                                object : XC_MethodReplacement() {
+                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                                        val id = param.args[0] as String
+                                        val currentPhrases =
+                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                                        Hooker.sharedPref.edit()
+                                            .putStringSet("phrases", currentPhrases - id)
+                                            .remove("phrase_${id}_text")
+                                            .remove("phrase_${id}_frequency")
+                                            .remove("phrase_${id}_timestamp")
+                                            .apply()
+                                        return createSuccessResult.invoke(null, Unit)
+                                    }
+                                }
+                            )
+                            findAndHookMethod(
+                                proxyClass,
+                                GApp.api.ChatRestService_.increaseSavedPhraseClickCount,
+                                String::class.java,
+                                "kotlin.coroutines.Continuation",
+                                object : XC_MethodReplacement() {
+                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                                        val id = param.args[0] as String
+                                        val currentFrequency =
+                                            Hooker.sharedPref.getInt("phrase_${id}_text", 0)
+                                        Hooker.sharedPref.edit()
+                                            .putInt("phrase_${id}_text", currentFrequency + 1)
+                                            .apply()
+                                        return createSuccessResult.invoke(null, Unit)
+                                    }
+                                }
+                            )
+                        }
+                        class_PhrasesRestService.isInstance(service) -> {
+                            findAndHookMethod(
+                                proxyClass,
+                                GApp.api.PhrasesRestService_.getSavedPhrases,
+                                "kotlin.coroutines.Continuation",
+                                object : XC_MethodReplacement() {
+                                    override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                                        val phrases =
+                                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                                                .map { id ->
+                                                    val text = Hooker.sharedPref.getString(
+                                                        "phrase_${id}_text",
+                                                        ""
+                                                    )
+                                                    val timestamp = Hooker.sharedPref.getLong(
+                                                        "phrase_${id}_timestamp",
+                                                        0
+                                                    )
+                                                    val frequency = Hooker.sharedPref.getInt(
+                                                        "phrase_${id}_frequency",
+                                                        0
+                                                    )
+                                                    id to constructor_Phrase.newInstance(
+                                                        id,
+                                                        text,
+                                                        timestamp,
+                                                        frequency
+                                                    )
+                                                }
+                                                .toMap()
+                                        val phrasesResponse =
+                                            constructor_PhrasesResponse.newInstance(phrases)
+                                        return createSuccessResult.invoke(null, phrasesResponse)
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
-            })
-
-        findAndHookMethod(
-            GApp.interactor.phrase.PhraseInteractor,
-            Hooker.pkgParam.classLoader,
-            GApp.interactor.phrase.PhraseInteractor_.deleteSavedPhrase,
-            String::class.java,
-            Boolean::class.javaPrimitiveType,
-            Boolean::class.javaPrimitiveType,
-            class_Continuation,
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    XposedBridge.log(param.args[0].toString())
-                    return Unit
-                }
-            })*/
+            }
+        )
     }
 }

@@ -4,6 +4,18 @@ object Obfuscation {
     object GApp {
         object api {
             private const val _api = Constants.GRINDR_PKG + ".api"
+
+            const val ChatRestService = "$_api.ChatRestService"
+            object ChatRestService_ {
+                const val addSavedPhrase = "a"
+                const val deleteSavedPhrase = "r"
+                const val increaseSavedPhraseClickCount = "G"
+            }
+
+            const val PhrasesRestService = "$_api.o"
+            object PhrasesRestService_ {
+                const val getSavedPhrases = "a"
+            }
         }
 
         object base {
@@ -80,6 +92,22 @@ object Obfuscation {
             }
 
             const val ChatMessageParserCoroutine = "$_model.ChatMessageParser\$parseXmppMessage$2"
+
+            const val AddSavedPhraseRequest = "$_model.AddSavedPhraseRequest"
+            const val AddSavedPhraseResponse = "$_model.AddSavedPhraseResponse"
+            const val PhrasesResponse = "$_model.PhrasesResponse"
+        }
+        object network {
+            private const val _network = Constants.GRINDR_PKG + ".network"
+
+            object either {
+                private const val _either = "$_network.either"
+
+                const val ResultHelper = "$_either.b"
+                object ResultHelper_ {
+                    const val createSuccess = "b"
+                }
+            }
         }
 
         object persistence {
@@ -108,6 +136,7 @@ object Obfuscation {
                 }
 
                 const val Profile = "$_model.Profile"
+                const val Phrase = "$_model.Phrase"
             }
 
             object repository {
