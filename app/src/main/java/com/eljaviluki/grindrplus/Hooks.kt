@@ -870,7 +870,7 @@ object Hooks {
                             ) { proxy, method, args ->
                                 XposedBridge.log(args[0].toString())
                                 //Just block all methods for now,
-                                //in the future we might need to if they change service interface.
+                                //in the future we might need to differentiate if they change service interface.
                                 createSuccessResult(Unit)
                             }
                         }
