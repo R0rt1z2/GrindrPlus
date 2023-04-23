@@ -103,11 +103,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    /*try {
+                    try {
                         Hooks.preventRecordProfileViews()
                     } catch (e : Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }*/
+                    }
 
                     try {
                         Hooks.makeMessagesAlwaysRemovable()
@@ -126,6 +126,12 @@ class Hooker : IXposedHookLoadPackage {
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.localSavedPhrases()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )
@@ -137,5 +143,6 @@ class Hooker : IXposedHookLoadPackage {
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
         var pkgVersionName: String by InitOnce()
+        val sharedPref by lazy { appContext.getSharedPreferences("phrases", Context.MODE_PRIVATE) }
     }
 }

@@ -511,19 +511,21 @@ object Hooks {
     }
 
     fun preventRecordProfileViews() {
-        val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
+        findAndHookMethod(
+            GApp.ui.profileV2.CruiseProfilesViewModel,
+            Hooker.pkgParam.classLoader,
+            GApp.ui.profileV2.CruiseProfilesViewModel_.recordProfileViews,
+            List::class.java,
+            XC_MethodReplacement.DO_NOTHING
         )
 
-        val class_GrindrRestService =
-            findClass(GApp.api.GrindrRestService, Hooker.pkgParam.classLoader)
         findAndHookMethod(
-            class_GrindrRestService,
-            GApp.api.GrindrRestService_.recordProfileViews,
-            List::class.java,
-            class_Continuation,
-            XC_MethodReplacement.DO_NOTHING
+            GApp.persistence.repository.ProfileRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ProfileRepo_.recordProfileView,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            RETURN_UNIT
         )
     }
 
@@ -693,5 +695,49 @@ object Hooks {
                     param.args[0] = queries.getOrDefault(query, query)
                 }
             })
+    }
+
+    fun localSavedPhrases() {
+        /*val class_Continuation = findClass(
+            "kotlin.coroutines.Continuation",
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(
+            GApp.interactor.phrase.PhraseInteractor,
+            Hooker.pkgParam.classLoader,
+            GApp.interactor.phrase.PhraseInteractor_.addSavedPhrase,
+            String::class.java,
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            "kotlin.jvm.functions.Function0",
+            class_Continuation,
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    XposedBridge.log(param.args[0].toString())
+                    Hooker.sharedPref.get
+                    callMethod(param.args[3], "invoke")
+                    return callStaticMethod(
+                        findClass("com.grindrapp.android.network.either.b", Hooker.pkgParam.classLoader),
+                        "b",
+                        getStaticObjectField(findClass("kotlin.Unit", Hooker.pkgParam.classLoader), "INSTANCE")
+                    )
+                }
+            })
+
+        findAndHookMethod(
+            GApp.interactor.phrase.PhraseInteractor,
+            Hooker.pkgParam.classLoader,
+            GApp.interactor.phrase.PhraseInteractor_.deleteSavedPhrase,
+            String::class.java,
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            class_Continuation,
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    XposedBridge.log(param.args[0].toString())
+                    return Unit
+                }
+            })*/
     }
 }

@@ -4,11 +4,6 @@ object Obfuscation {
     object GApp {
         object api {
             private const val _api = Constants.GRINDR_PKG + ".api"
-
-            const val GrindrRestService = "$_api.GrindrRestService"
-            object GrindrRestService_ {
-                const val recordProfileViews = "W"
-            }
         }
 
         object base {
@@ -27,6 +22,20 @@ object Obfuscation {
             const val Experiments = "$_experiment.f"
             object Experiments_ {
                 const val uncheckedIsEnabled_expMgr = "c"
+            }
+        }
+
+        object interactor {
+            private const val _interactor = Constants.GRINDR_PKG + ".interactor"
+
+            object phrase {
+                private const val _phrase = "$_interactor.phrase"
+
+                const val PhraseInteractor = "$_phrase.a"
+                object PhraseInteractor_ {
+                    const val addSavedPhrase = "c"
+                    const val deleteSavedPhrase = "e"
+                }
             }
         }
 
@@ -112,6 +121,7 @@ object Obfuscation {
                 const val ProfileRepo = "$_repository.ProfileRepo"
                 object ProfileRepo_ {
                     const val delete = "delete"
+                    const val recordProfileView = "recordProfileView"
                 }
             }
         }
@@ -150,6 +160,11 @@ object Obfuscation {
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
                 object ProfileFieldsView_ {
                     const val setProfile = "h"
+                }
+
+                const val CruiseProfilesViewModel = "$_profileV2.CruiseProfilesViewModel"
+                object CruiseProfilesViewModel_ {
+                    const val recordProfileViews = "a1"
                 }
             }
 
