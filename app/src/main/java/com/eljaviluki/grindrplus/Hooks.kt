@@ -772,9 +772,9 @@ object Hooks {
                     GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
                         val id = args[0] as String
                         val currentFrequency =
-                            Hooker.sharedPref.getInt("phrase_${id}_text", 0)
+                            Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
                         Hooker.sharedPref.edit()
-                            .putInt("phrase_${id}_text", currentFrequency + 1)
+                            .putInt("phrase_${id}_frequency", currentFrequency + 1)
                             .apply()
                         createSuccessResult.invoke(null, Unit)
                     }
