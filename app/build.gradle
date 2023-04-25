@@ -4,9 +4,9 @@ plugins {
 }
 
 ext.versionMajor = 1
-ext.versionMinor = 1
-ext.versionPatch = 6
-ext.grindrVersion = '9.6.0'
+ext.versionMinor = 2
+ext.versionPatch = 0
+ext.grindrVersion = '9.7.0'
 
 private String genVersionName() {
     String versionName = "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
@@ -42,6 +42,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'com.eljaviluki.grindrplus'
 }
 
 dependencies {

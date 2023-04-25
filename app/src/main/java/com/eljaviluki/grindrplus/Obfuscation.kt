@@ -6,18 +6,27 @@ object Obfuscation {
             private const val _api = Constants.GRINDR_PKG + ".api"
 
             const val ChatRestService = "$_api.ChatRestService"
+
             object ChatRestService_ {
+                //Annotated with @POST("v3/me/prefs/phrases")
                 const val addSavedPhrase = "a"
+
+                //Annotated with @DELETE("v3/me/prefs/phrases/{id}")
                 const val deleteSavedPhrase = "r"
+
+                //Annotated with @POST("v4/phrases/frequency/{id}")
                 const val increaseSavedPhraseClickCount = "G"
             }
 
-            const val PhrasesRestService = "$_api.o"
+            const val PhrasesRestService = "$_api.n"
+
             object PhrasesRestService_ {
+                //Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
                 const val getSavedPhrases = "a"
             }
 
-            const val AnalyticsRestService = "$_api.d"
+            //Contains @POST("/v3/logging/mobile/logs")
+            const val AnalyticsRestService = "$_api.c"
         }
 
         object base {
@@ -34,30 +43,21 @@ object Obfuscation {
             private const val _experiment = Constants.GRINDR_PKG + ".experiment"
 
             const val Experiments = "$_experiment.f"
+
             object Experiments_ {
                 const val uncheckedIsEnabled_expMgr = "c"
-            }
-        }
-
-        object interactor {
-            private const val _interactor = Constants.GRINDR_PKG + ".interactor"
-
-            object phrase {
-                private const val _phrase = "$_interactor.phrase"
-
-                const val PhraseInteractor = "$_phrase.a"
-                object PhraseInteractor_ {
-                    const val addSavedPhrase = "c"
-                    const val deleteSavedPhrase = "e"
-                }
             }
         }
 
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
             const val BlockInteractor = "$_manager.o"
+
             object BlockInteractor_ {
+                //Calls blockstream$2
                 const val blockstream = "n"
+
+                //Calls removeProfilesFromDbTables$2$1
                 const val processAndRemoveBlockedProfiles = "D"
             }
         }
@@ -66,28 +66,33 @@ object Obfuscation {
             private const val _model = Constants.GRINDR_PKG + ".model"
 
             const val ExpiringImageBody = "$_model.ExpiringImageBody"
+
             object ExpiringImageBody_ {
                 const val getDuration = "getDuration"
             }
 
             const val ExpiringPhotoStatusResponse = "$_model.ExpiringPhotoStatusResponse"
+
             object ExpiringPhotoStatusResponse_ {
                 const val getTotal = "getTotal"
                 const val getAvailable = "getAvailable"
             }
 
             const val Feature = "$_model.Feature"
+
             object Feature_ {
                 const val isGranted = "isGranted"
             }
 
             const val UpsellsV8 = "$_model.UpsellsV8"
+
             object UpsellsV8_ {
                 const val getMpuFree = "getMpuFree"
                 const val getMpuXtra = "getMpuXtra"
             }
 
             const val Inserts = "$_model.Inserts"
+
             object Inserts_ {
                 const val getMpuFree = "getMpuFree"
                 const val getMpuXtra = "getMpuXtra"
@@ -99,6 +104,7 @@ object Obfuscation {
             const val AddSavedPhraseResponse = "$_model.AddSavedPhraseResponse"
             const val PhrasesResponse = "$_model.PhrasesResponse"
         }
+
         object network {
             private const val _network = Constants.GRINDR_PKG + ".network"
 
@@ -106,6 +112,7 @@ object Obfuscation {
                 private const val _either = "$_network.either"
 
                 const val ResultHelper = "$_either.b"
+
                 object ResultHelper_ {
                     const val createSuccess = "b"
                 }
@@ -115,21 +122,11 @@ object Obfuscation {
         object persistence {
             private const val _persistence = Constants.GRINDR_PKG + ".persistence"
 
-            object cache {
-                private const val _cache = "$_persistence.cache"
-
-                const val BlockedByHelper = "$_cache.BlockedByHelper"
-                object BlockByHelper_ {
-                    const val addBlockByProfile = "addBlockByProfile"
-                    const val removeBlockByProfile = "removeBlockByProfile"
-                }
-
-            }
-
             object model {
                 private const val _model = "$_persistence.model"
 
                 const val ChatMessage = "$_model.ChatMessage"
+
                 object ChatMessage_ {
                     const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
                     const val getType = "getType"
@@ -145,11 +142,13 @@ object Obfuscation {
                 private const val _repository = "$_persistence.repository"
 
                 const val ChatRepo = "$_repository.ChatRepo"
+
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
                 }
 
                 const val ProfileRepo = "$_repository.ProfileRepo"
+
                 object ProfileRepo_ {
                     const val delete = "delete"
                     const val recordProfileView = "recordProfileView"
@@ -161,18 +160,20 @@ object Obfuscation {
             private const val _R = Constants.GRINDR_PKG
 
             const val color = "$_R.m0"
+
             object color_ {
-                const val grindr_gold_star_gay = "F"
-                const val grindr_pure_white = "V"
+                const val grindr_gold_star_gay = "G"
+                const val grindr_pure_white = "W"
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.z0"
+            const val UserSession = "$_storage.x0"
 
             const val IUserSession = "$_storage.UserSession"
+
             object IUserSession_ {
                 const val hasFeature_feature = "a"
                 const val isFree = "r"
@@ -189,13 +190,25 @@ object Obfuscation {
                 private const val _profileV2 = "$_ui.profileV2"
 
                 const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
+
                 object ProfileFieldsView_ {
-                    const val setProfile = "h"
+                    const val setProfile = "setProfile"
                 }
 
-                const val CruiseProfilesViewModel = "$_profileV2.CruiseProfilesViewModel"
-                object CruiseProfilesViewModel_ {
-                    const val recordProfileViews = "a1"
+                const val ProfilesViewModel = "$_profileV2.ProfilesViewModel"
+
+                object ProfilesViewModel_ {
+                    const val recordProfileViewsForViewedMeService = "X1"
+                }
+
+                object model {
+                    private const val _model = "$_profileV2.model"
+
+                    const val Profile = "$_model.h"
+
+                    object Profile_ {
+                        const val getProfileId = "Z"
+                    }
                 }
             }
 
@@ -203,8 +216,9 @@ object Obfuscation {
                 private const val _chat = "$_ui.chat"
 
                 const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
+
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "Y1"
+                    const val _canBeUnsent = "X1"
                 }
             }
         }
@@ -212,22 +226,26 @@ object Obfuscation {
         object utils {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
-            const val ProfileUtils = "$_utils.n0"
+            const val ProfileUtils = "$_utils.ProfileUtilsV2"
+
             object ProfileUtils_ {
-                const val onlineIndicatorDuration = "b"
+                //Look for value of 600000
+                const val onlineIndicatorDuration = "g"
             }
         }
 
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-            const val ExtendedProfileFieldView = "$_view.z4"
+            const val ExtendedProfileFieldView = "$_view.y4"
+
             object ExtendedProfileFieldView_ {
                 const val setLabel = "l"
                 const val setValue = "n"
             }
 
             const val TapsAnimLayout = "$_view.TapsAnimLayout"
+
             object TapsAnimLayout_ {
                 const val tapType = "i"
 

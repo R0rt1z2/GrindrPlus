@@ -18,7 +18,6 @@ import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_UNIT
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_ZERO
 import com.eljaviluki.grindrplus.Obfuscation.GApp
-import com.eljaviluki.grindrplus.decorated.persistence.model.Profile
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -95,8 +94,7 @@ object Hooks {
         findAndHookMethod(
             class_ProfileFieldsView,
             GApp.ui.profileV2.ProfileFieldsView_.setProfile,
-            class_Profile,
-            class_Continuation,
+            GApp.ui.profileV2.model.Profile,
             object : XC_MethodHook() {
                 var fieldsViewInstance: Any? = null
                 val context: Any? by lazy {
@@ -125,13 +123,18 @@ object Hooks {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     fieldsViewInstance = param.thisObject
 
+                    val profileId = callMethod(
+                        param.args[0],
+                        GApp.ui.profileV2.model.Profile_.getProfileId
+                    ) as String
+
                     param.args[0]?.let {
-                        val profile = Profile(it)
-                        addProfileFieldUi("Profile ID", profile.profileId, 0).also { view ->
+                        //val profile = Profile(it)
+                        addProfileFieldUi("Profile ID", profileId, 0).also { view ->
                             view.setOnLongClickListener {
                                 val clipboard =
                                     Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Profile ID", profile.profileId)
+                                val clip = ClipData.newPlainText("Profile ID", profileId)
                                 clipboard.setPrimaryClip(clip)
                                 Toast.makeText(
                                     Hooker.appContext,
@@ -142,7 +145,7 @@ object Hooks {
                             }
                         }
 
-                        addProfileFieldUi(
+                        /*addProfileFieldUi(
                             "Last Seen",
                             if (profile.seen != 0L) Utils.toReadableDate(profile.seen) else "N/A",
                             1
@@ -153,7 +156,7 @@ object Hooks {
                                 "Body Mass Index",
                                 Utils.getBmiDescription(profile.weight, profile.height),
                                 2
-                            )
+                            )*/
                     }
 
                     //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
@@ -513,9 +516,9 @@ object Hooks {
 
     fun preventRecordProfileViews() {
         findAndHookMethod(
-            GApp.ui.profileV2.CruiseProfilesViewModel,
+            GApp.ui.profileV2.ProfilesViewModel,
             Hooker.pkgParam.classLoader,
-            GApp.ui.profileV2.CruiseProfilesViewModel_.recordProfileViews,
+            GApp.ui.profileV2.ProfilesViewModel_.recordProfileViewsForViewedMeService,
             List::class.java,
             XC_MethodReplacement.DO_NOTHING
         )
@@ -842,6 +845,7 @@ object Hooks {
             }
         )
     }
+
     fun disableAnalytics() {
         val class_AnalyticsRestService =
             findClass(GApp.api.AnalyticsRestService, Hooker.pkgParam.classLoader)
