@@ -27,6 +27,7 @@ import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
 import java.lang.reflect.Proxy
+import java.util.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 
@@ -590,7 +591,7 @@ object Hooks {
         val receiveChatMessage = findMethodExact(
             GApp.xmpp.ChatMessageManager,
             Hooker.pkgParam.classLoader,
-            GApp.xmpp.ChatMessageManager_.handleChatMessage,
+            GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
             GApp.persistence.model.ChatMessage,
             Boolean::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType,
@@ -600,15 +601,18 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val chatMessage = param.args[0]
-                    XposedBridge.log(chatMessage.toString())
-                    val type = callMethod(chatMessage, GApp.persistence.model.ChatMessage_.getType) as String
+                    val type = callMethod(
+                        chatMessage,
+                        GApp.persistence.model.ChatMessage_.getType
+                    ) as String
                     val syntheticMessage = when (type) {
                         "block" -> "[You have been blocked.]"
                         "unblock" -> "[You have been unblocked.]"
                         else -> null
                     }
                     if (syntheticMessage != null) {
-                        val clone = callMethod(chatMessage, "clone")
+                        val clone =
+                            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.clone)
                         callMethod(clone, GApp.persistence.model.ChatMessage_.setType, "text")
                         callMethod(
                             clone,
@@ -632,6 +636,66 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
+        val Constructor_ChatMessage = findConstructorExact(
+            GApp.persistence.model.ChatMessage,
+            Hooker.pkgParam.classLoader
+        )
+
+        var ownProfileId: String? = null
+
+        findAndHookMethod(
+            GApp.storage.UserSession,
+            Hooker.pkgParam.classLoader,
+            GApp.storage.IUserSession_.getProfileId,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    ownProfileId = param.result as String
+                }
+            }
+        )
+
+        var chatMessageManager: Any? = null
+
+        XposedBridge.hookAllConstructors(
+            findClass(
+                GApp.xmpp.ChatMessageManager,
+                Hooker.pkgParam.classLoader
+            ),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    chatMessageManager = param.thisObject
+                }
+            }
+        )
+
+        fun logChatMessage(from: String, text: String) {
+            val chatMessage = Constructor_ChatMessage.newInstance()
+            callMethod(
+                chatMessage,
+                GApp.persistence.model.ChatMessage_.setMessageId,
+                UUID.randomUUID().toString()
+            )
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setSender, ownProfileId)
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setRecipient, from)
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setStanzaId, from)
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setConversationId, from)
+            callMethod(
+                chatMessage,
+                GApp.persistence.model.ChatMessage_.setTimestamp,
+                System.currentTimeMillis()
+            )
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setType, "text")
+            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setBody, text)
+            callMethod(
+                chatMessageManager,
+                GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
+                chatMessage,
+                false,
+                false
+            )
+        }
+
+
         findAndHookMethod(
             GApp.manager.BlockInteractor,
             Hooker.pkgParam.classLoader,
@@ -639,7 +703,27 @@ object Hooks {
             String::class.java,
             Boolean::class.javaPrimitiveType,
             class_Continuation,
-            RETURN_UNIT
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val otherProfileId = param.args[0] as String
+                    logChatMessage(otherProfileId, "[You have blocked this profile.]")
+                    return Unit
+                }
+            }
+        )
+
+        findAndHookMethod(
+            GApp.manager.BlockInteractor,
+            Hooker.pkgParam.classLoader,
+            GApp.manager.BlockInteractor_.unblockProfile,
+            String::class.java,
+            class_Continuation,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val otherProfileId = param.args[0] as String
+                    logChatMessage(otherProfileId, "[You have unblocked this profile.]")
+                }
+            }
         )
 
         findAndHookMethod(

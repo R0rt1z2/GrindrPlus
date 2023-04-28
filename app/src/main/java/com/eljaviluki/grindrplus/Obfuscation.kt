@@ -65,6 +65,9 @@ object Obfuscation {
 
                 //Calls removeProfilesFromDbTables$2$1
                 const val processAndRemoveBlockedProfiles = "D"
+
+                //Calls unblockProfile$2
+                const val unblockProfile = "G"
             }
         }
 
@@ -135,6 +138,12 @@ object Obfuscation {
                     const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
                     const val getType = "getType"
                     const val setType = "setType"
+                    const val setMessageId = "setMessageId"
+                    const val setSender = "setSender"
+                    const val setRecipient = "setRecipient"
+                    const val setStanzaId = "setStanzaId"
+                    const val setConversationId = "setConversationId"
+                    const val setTimestamp = "setTimestamp"
                     const val setBody = "setBody"
 
                     const val clone = "clone"
@@ -198,6 +207,7 @@ object Obfuscation {
                 const val isNoXtraUpsell = "g"
                 const val isXtra = "o"
                 const val isUnlimited = "x"
+                const val getProfileId = "e"
             }
         }
 
@@ -279,7 +289,8 @@ object Obfuscation {
             const val ChatMessageManager = "$_xmpp.ChatMessageManager"
 
             object ChatMessageManager_ {
-                const val handleChatMessage = "p"
+                const val handleIncomingChatMessage = "p"
+                const val handleRetryChatMessage = "B"
             }
         }
     }
