@@ -151,6 +151,7 @@ object Obfuscation {
 
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
+                    const val deleteChatMessageFromLessThanOrEqualToTimestamp = "deleteChatMessageFromLessThanOrEqualToTimestamp"
                 }
 
                 const val ProfileRepo = "$_repository.ProfileRepo"

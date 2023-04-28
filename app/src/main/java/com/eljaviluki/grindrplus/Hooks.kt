@@ -1024,4 +1024,15 @@ object Hooks {
             }
         )
     }
+
+    fun disableAutomaticMessageDeletion() {
+        findAndHookMethod(
+            GApp.favorites.FavoritesFragment,
+            Hooker.pkgParam.classLoader,
+            "onViewCreated",
+            Long::class.java,
+            "kotlin.coroutines.Continuation",
+            Constants.Returns.RETURN_UNIT
+        )
+    }
 }
