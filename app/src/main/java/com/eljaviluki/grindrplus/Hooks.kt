@@ -587,35 +587,40 @@ object Hooks {
     */
 
     fun showBlocksInChat() {
-        val chatMessage = findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
-
-        findAndHookMethod(GApp.model.ChatMessageParserCoroutine,
+        val receiveChatMessage = findMethodExact(
+            GApp.xmpp.ChatMessageManager,
             Hooker.pkgParam.classLoader,
-            "invokeSuspend",
-            Any::class.java,
+            GApp.xmpp.ChatMessageManager_.handleChatMessage,
+            GApp.persistence.model.ChatMessage,
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+        )
+
+        XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val result = param.result
-                    if (!chatMessage.isInstance(result)) return
-                    val type =
-                        callMethod(result, GApp.persistence.model.ChatMessage_.getType) as String
-                    when (type) {
-                        "block" -> {
-                            callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
-                            callMethod(
-                                result,
-                                GApp.persistence.model.ChatMessage_.setBody,
-                                "[You have been blocked.]"
-                            )
-                        }
-                        "unblock" -> {
-                            callMethod(result, GApp.persistence.model.ChatMessage_.setType, "text")
-                            callMethod(
-                                result,
-                                GApp.persistence.model.ChatMessage_.setBody,
-                                "[You have been unblocked.]"
-                            )
-                        }
+                    val chatMessage = param.args[0]
+                    XposedBridge.log(chatMessage.toString())
+                    val type = callMethod(chatMessage, GApp.persistence.model.ChatMessage_.getType) as String
+                    val syntheticMessage = when (type) {
+                        "block" -> "[You have been blocked.]"
+                        "unblock" -> "[You have been unblocked.]"
+                        else -> null
+                    }
+                    if (syntheticMessage != null) {
+                        val clone = callMethod(chatMessage, "clone")
+                        callMethod(clone, GApp.persistence.model.ChatMessage_.setType, "text")
+                        callMethod(
+                            clone,
+                            GApp.persistence.model.ChatMessage_.setBody,
+                            syntheticMessage
+                        )
+                        receiveChatMessage.invoke(
+                            param.thisObject,
+                            clone,
+                            param.args[1],
+                            param.args[2]
+                        )
                     }
                 }
             })

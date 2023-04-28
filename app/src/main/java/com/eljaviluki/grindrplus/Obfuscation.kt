@@ -104,8 +104,6 @@ object Obfuscation {
                 const val getMpuXtra = "getMpuXtra"
             }
 
-            const val ChatMessageParserCoroutine = "$_model.ChatMessageParser\$parseXmppMessage$2"
-
             const val AddSavedPhraseRequest = "$_model.AddSavedPhraseRequest"
             const val AddSavedPhraseResponse = "$_model.AddSavedPhraseResponse"
             const val PhrasesResponse = "$_model.PhrasesResponse"
@@ -138,6 +136,8 @@ object Obfuscation {
                     const val getType = "getType"
                     const val setType = "setType"
                     const val setBody = "setBody"
+
+                    const val clone = "clone"
                 }
 
                 const val Profile = "$_model.Profile"
@@ -270,6 +270,16 @@ object Obfuscation {
                 const val getCanSelectVariants = "getCanSelectVariants"
                 const val getDisableVariantSelection = "getDisableVariantSelection"
                 const val setTapType = "S"
+            }
+        }
+
+        object xmpp {
+            private const val _xmpp = Constants.GRINDR_PKG + ".xmpp"
+
+            const val ChatMessageManager = "$_xmpp.ChatMessageManager"
+
+            object ChatMessageManager_ {
+                const val handleChatMessage = "p"
             }
         }
     }
