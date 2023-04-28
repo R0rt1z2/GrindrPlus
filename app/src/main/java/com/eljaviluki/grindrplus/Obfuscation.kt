@@ -58,17 +58,6 @@ object Obfuscation {
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
             const val BlockInteractor = "$_manager.o"
-
-            object BlockInteractor_ {
-                //Calls blockstream$2
-                const val blockstream = "n"
-
-                //Calls removeProfilesFromDbTables$2$1
-                const val processAndRemoveBlockedProfiles = "D"
-
-                //Calls unblockProfile$2
-                const val unblockProfile = "G"
-            }
         }
 
         object model {
@@ -149,6 +138,12 @@ object Obfuscation {
                     const val clone = "clone"
                 }
 
+                const val BlockedProfile = "$_model.BlockedProfile"
+
+                object BlockedProfile_ {
+                    const val getProfileId = "getProfileId"
+                }
+
                 const val Profile = "$_model.Profile"
                 const val Phrase = "$_model.Phrase"
             }
@@ -161,6 +156,8 @@ object Obfuscation {
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
                     const val deleteChatMessageFromLessThanOrEqualToTimestamp = "deleteChatMessageFromLessThanOrEqualToTimestamp"
+                    const val deleteChatMessageFromConversationId = "deleteChatMessageFromConversationId"
+                    const val deleteChatMessageListFromConversationId = "deleteChatMessageListFromConversationId"
                 }
 
                 const val ProfileRepo = "$_repository.ProfileRepo"
@@ -168,6 +165,23 @@ object Obfuscation {
                 object ProfileRepo_ {
                     const val delete = "delete"
                     const val recordProfileView = "recordProfileView"
+                }
+
+                const val ConversationRepo = "$_repository.ConversationRepo"
+                object ConversationRepo_ {
+                    const val deleteConversation = "deleteConversation"
+                    const val deleteConversations = "deleteConversations"
+                }
+
+                const val IncomingChatMarkerRepo = "$_repository.IncomingChatMarkerRepo"
+                object IncomingChatMarkerRepo_ {
+                    const val deleteIncomingChatMarker = "deleteIncomingChatMarker"
+                }
+
+                const val BlockRepo = "$_repository.BlockRepo"
+                object BlockRepo_ {
+                    const val add = "add"
+                    const val delete = "delete"
                 }
             }
         }
@@ -247,6 +261,16 @@ object Obfuscation {
 
                 object ChatBaseFragmentV2_ {
                     const val _canBeUnsent = "X1"
+                }
+
+                object individual {
+                    private const val _individual = "$_chat.individual"
+
+                    const val ChatIndividualFragment = "$_individual.ChatIndividualFragment"
+
+                    object ChatIndividualFragment_ {
+                        const val showBlockDialog = "A3"
+                    }
                 }
             }
         }

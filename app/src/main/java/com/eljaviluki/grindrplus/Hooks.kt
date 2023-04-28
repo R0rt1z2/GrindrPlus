@@ -628,13 +628,8 @@ object Hooks {
                     }
                 }
             })
-    }
 
-    fun keepChatsOfBlockedProfiles() {
-        val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
-        )
+
 
         val Constructor_ChatMessage = findConstructorExact(
             GApp.persistence.model.ChatMessage,
@@ -695,45 +690,62 @@ object Hooks {
             )
         }
 
-
         findAndHookMethod(
-            GApp.manager.BlockInteractor,
+            GApp.persistence.repository.BlockRepo,
             Hooker.pkgParam.classLoader,
-            GApp.manager.BlockInteractor_.blockstream,
-            String::class.java,
-            Boolean::class.javaPrimitiveType,
-            class_Continuation,
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val otherProfileId = param.args[0] as String
-                    logChatMessage(otherProfileId, "[You have blocked this profile.]")
-                    return Unit
-                }
-            }
-        )
-
-        findAndHookMethod(
-            GApp.manager.BlockInteractor,
-            Hooker.pkgParam.classLoader,
-            GApp.manager.BlockInteractor_.unblockProfile,
-            String::class.java,
-            class_Continuation,
+            GApp.persistence.repository.BlockRepo_.add,
+            GApp.persistence.model.BlockedProfile,
+            "kotlin.coroutines.Continuation",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val otherProfileId = param.args[0] as String
-                    logChatMessage(otherProfileId, "[You have unblocked this profile.]")
+                    val otherProfileId = callMethod(param.args[0], GApp.persistence.model.BlockedProfile_.getProfileId) as String
+                    logChatMessage(otherProfileId, "[You have blocked this profile.]")
                 }
             }
         )
 
         findAndHookMethod(
-            GApp.manager.BlockInteractor,
+            GApp.persistence.repository.BlockRepo,
             Hooker.pkgParam.classLoader,
-            GApp.manager.BlockInteractor_.processAndRemoveBlockedProfiles,
-            List::class.java,
-            Boolean::class.javaPrimitiveType,
-            class_Continuation,
-            RETURN_UNIT
+            GApp.persistence.repository.BlockRepo_.delete,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val otherProfileId = param.args[0] as? String
+                    if (otherProfileId != null) {
+                        logChatMessage(otherProfileId, "[You have unblocked this profile.]")
+                    }
+                }
+            }
+        )
+    }
+
+    fun keepChatsOfBlockedProfiles() {
+        val ignoreIfBlockInteractor = object : XC_MethodReplacement() {
+            override fun replaceHookedMethod(param: MethodHookParam): Any {
+                //We still want to allow deleting chats etc.,
+                //so only ignore if BlockInteractor is calling
+                val isBlockInteractor =
+                    Thread.currentThread().stackTrace.any { it.className.contains(GApp.manager.BlockInteractor) }
+                if (isBlockInteractor) {
+                    return Unit
+                }
+                return XposedBridge.invokeOriginalMethod(
+                    param.method,
+                    param.thisObject,
+                    param.args
+                )
+            }
+        }
+
+        findAndHookMethod(
+            GApp.persistence.repository.ProfileRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ProfileRepo_.delete,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
         )
 
         findAndHookMethod(
@@ -741,8 +753,61 @@ object Hooks {
             Hooker.pkgParam.classLoader,
             GApp.persistence.repository.ProfileRepo_.delete,
             List::class.java,
-            class_Continuation,
-            RETURN_UNIT
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.ConversationRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ConversationRepo_.deleteConversation,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.ConversationRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ConversationRepo_.deleteConversations,
+            List::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.ChatRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ChatRepo_.deleteChatMessageFromConversationId,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.ChatRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.ChatRepo_.deleteChatMessageListFromConversationId,
+            List::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.persistence.repository.IncomingChatMarkerRepo,
+            Hooker.pkgParam.classLoader,
+            GApp.persistence.repository.IncomingChatMarkerRepo_.deleteIncomingChatMarker,
+            String::class.java,
+            "kotlin.coroutines.Continuation",
+            ignoreIfBlockInteractor
+        )
+
+        findAndHookMethod(
+            GApp.ui.chat.individual.ChatIndividualFragment,
+            Hooker.pkgParam.classLoader,
+            GApp.ui.chat.individual.ChatIndividualFragment_.showBlockDialog,
+            Boolean::class.javaPrimitiveType,
+            XC_MethodReplacement.DO_NOTHING
         )
 
         val queries = mapOf(
