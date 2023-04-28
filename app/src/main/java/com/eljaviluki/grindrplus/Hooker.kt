@@ -152,6 +152,18 @@ class Hooker : IXposedHookLoadPackage {
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.dontSendChatMarkers()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.dontSendTypingIndicator()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )

@@ -630,7 +630,6 @@ object Hooks {
             })
 
 
-
         val Constructor_ChatMessage = findConstructorExact(
             GApp.persistence.model.ChatMessage,
             Hooker.pkgParam.classLoader
@@ -698,7 +697,10 @@ object Hooks {
             "kotlin.coroutines.Continuation",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val otherProfileId = callMethod(param.args[0], GApp.persistence.model.BlockedProfile_.getProfileId) as String
+                    val otherProfileId = callMethod(
+                        param.args[0],
+                        GApp.persistence.model.BlockedProfile_.getProfileId
+                    ) as String
                     logChatMessage(otherProfileId, "[You have blocked this profile.]")
                 }
             }
@@ -1187,6 +1189,35 @@ object Hooks {
             Long::class.java,
             "kotlin.coroutines.Continuation",
             RETURN_UNIT
+        )
+    }
+
+    fun dontSendChatMarkers() {
+        findAndHookMethod(
+            "org.jivesoftware.smack.packet.Stanza",
+            Hooker.pkgParam.classLoader,
+            "addExtension",
+            "org.jivesoftware.smack.packet.ExtensionElement",
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (param.args[0] == null) return
+                    val elementName = callMethod(param.args[0], "getElementName") as String
+                    if (elementName in arrayOf("received", "displayed")) {
+                        param.args[0] = null
+                    }
+                }
+            }
+        )
+    }
+
+    fun dontSendTypingIndicator() {
+        findAndHookMethod(
+            "org.jivesoftware.smackx.chatstates.ChatStateManager",
+            Hooker.pkgParam.classLoader,
+            "setCurrentState",
+            "org.jivesoftware.smackx.chatstates.ChatState",
+            "org.jivesoftware.smack.chat2.Chat",
+            XC_MethodReplacement.DO_NOTHING
         )
     }
 }

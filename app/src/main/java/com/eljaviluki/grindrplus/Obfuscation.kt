@@ -314,7 +314,6 @@ object Obfuscation {
 
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "p"
-                const val handleRetryChatMessage = "B"
             }
         }
     }
