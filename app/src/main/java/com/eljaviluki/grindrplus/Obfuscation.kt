@@ -49,6 +49,12 @@ object Obfuscation {
             }
         }
 
+        object favorites {
+            private const val _favorites = Constants.GRINDR_PKG + ".favorites"
+
+            const val FavoritesFragment = "$_favorites.FavoritesFragment"
+        }
+
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
             const val BlockInteractor = "$_manager.o"
@@ -164,6 +170,17 @@ object Obfuscation {
             object color_ {
                 const val grindr_gold_star_gay = "G"
                 const val grindr_pure_white = "W"
+            }
+
+            const val id = "$_R.q0"
+
+            object id_ {
+                const val fragment_favorite_recycler_view = "Ib"
+                const val profile_distance = "rk"
+                const val profile_online_now_icon = "pl"
+                const val profile_last_seen = "Tk"
+                const val profile_note_icon = "nl"
+                const val profile_display_name = "nk"
             }
         }
 

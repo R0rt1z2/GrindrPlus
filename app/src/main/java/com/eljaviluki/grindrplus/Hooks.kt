@@ -4,13 +4,17 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
+import android.os.Bundle
 import android.util.AttributeSet
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
-import android.widget.FrameLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_FALSE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
@@ -23,6 +27,7 @@ import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
 import java.lang.reflect.Proxy
+import kotlin.math.roundToInt
 import kotlin.time.Duration
 
 object Hooks {
@@ -878,6 +883,143 @@ object Hooks {
                         }
                         else -> service
                     }
+                }
+            }
+        )
+    }
+
+    fun useThreeColumnLayoutForFavorites() {
+        val R_id = findClass(
+            GApp.R.id,
+            Hooker.pkgParam.classLoader
+        )
+
+        val recyclerViewId = getStaticIntField(
+            R_id,
+            GApp.R.id_.fragment_favorite_recycler_view
+        )
+        val profileDistanceId = getStaticIntField(
+            R_id,
+            GApp.R.id_.profile_distance
+        )
+        val profileOnlineNowIconId = getStaticIntField(
+            R_id,
+            GApp.R.id_.profile_online_now_icon
+        )
+        val profileLastSeenId = getStaticIntField(
+            R_id,
+            GApp.R.id_.profile_last_seen
+        )
+        val profileNoteIconId = getStaticIntField(
+            R_id,
+            GApp.R.id_.profile_note_icon
+        )
+        val profileDisplayNameId = getStaticIntField(
+            R_id,
+            GApp.R.id_.profile_display_name
+        )
+
+        val Constructor_LayoutParamsRecyclerView = findConstructorExact(
+            "androidx.recyclerview.widget.RecyclerView\$LayoutParams",
+            Hooker.pkgParam.classLoader,
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType
+        )
+
+        findAndHookMethod(
+            GApp.favorites.FavoritesFragment,
+            Hooker.pkgParam.classLoader,
+            "onViewCreated",
+            View::class.java,
+            Bundle::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val view = param.args[0] as View
+                    val recyclerView = view.findViewById<View>(recyclerViewId)
+                    val gridLayoutManager = callMethod(recyclerView, "getLayoutManager")
+                    callMethod(gridLayoutManager, "setSpanCount", 3)
+
+                    val adapter = callMethod(recyclerView, "getAdapter")
+
+                    findAndHookMethod(
+                        adapter::class.java,
+                        "onBindViewHolder",
+                        "androidx.recyclerview.widget.RecyclerView\$ViewHolder",
+                        Int::class.javaPrimitiveType,
+                        object : XC_MethodHook() {
+                            override fun afterHookedMethod(param: MethodHookParam) {
+                                //Adjust grid item size
+                                val size =
+                                    Hooker.appContext.resources.displayMetrics.widthPixels / 3
+                                val rootLayoutParams =
+                                    Constructor_LayoutParamsRecyclerView.newInstance(
+                                        size,
+                                        size
+                                    ) as LayoutParams
+
+                                val viewHolder = param.args[0]
+                                val itemView = getObjectField(viewHolder, "itemView") as View
+
+                                itemView.layoutParams = rootLayoutParams
+                                val distanceTextView =
+                                    itemView.findViewById<TextView>(profileDistanceId)
+
+                                //Make online status and distance appear below each other
+                                //because theres not enough space anymore to show them in a single row
+                                val linearLayout = distanceTextView.parent as LinearLayout
+                                linearLayout.orientation = LinearLayout.VERTICAL
+
+                                //Adjust layout params because of different orientation of LinearLayout
+                                linearLayout.children.forEach { child ->
+                                    child.layoutParams = LinearLayout.LayoutParams(
+                                        LayoutParams.MATCH_PARENT,
+                                        LayoutParams.WRAP_CONTENT
+                                    )
+                                }
+
+                                //Align distance TextView left now that it's displayed in its own row
+                                distanceTextView.gravity = Gravity.START
+
+                                //Remove ugly margin before last seen text when online indicator is invisible
+
+                                val profileOnlineNowIcon =
+                                    itemView.findViewById<ImageView>(profileOnlineNowIconId)
+                                val profileLastSeen =
+                                    itemView.findViewById<TextView>(profileLastSeenId)
+                                val lastSeenLayoutParams =
+                                    profileLastSeen.layoutParams as LinearLayout.LayoutParams
+                                if (profileOnlineNowIcon.visibility == View.GONE) {
+                                    lastSeenLayoutParams.marginStart = 0
+                                } else {
+                                    lastSeenLayoutParams.marginStart = TypedValue.applyDimension(
+                                        TypedValue.COMPLEX_UNIT_DIP,
+                                        5f,
+                                        profileLastSeen.resources.displayMetrics
+                                    ).roundToInt()
+                                }
+                                profileLastSeen.layoutParams = lastSeenLayoutParams
+
+                                //Remove ugly margin before display name when note icon is invisible
+
+                                val profileNoteIcon =
+                                    itemView.findViewById<ImageView>(profileNoteIconId)
+                                val profileDisplayName =
+                                    itemView.findViewById<TextView>(profileDisplayNameId)
+                                val displayNameLayoutParams =
+                                    profileDisplayName.layoutParams as LinearLayout.LayoutParams
+                                if (profileNoteIcon.visibility == View.GONE) {
+                                    displayNameLayoutParams.marginStart = 0
+                                } else {
+                                    displayNameLayoutParams.marginStart = TypedValue.applyDimension(
+                                        TypedValue.COMPLEX_UNIT_DIP,
+                                        4f,
+                                        profileLastSeen.resources.displayMetrics
+                                    ).roundToInt()
+                                }
+                                profileDisplayName.layoutParams = displayNameLayoutParams
+                            }
+                        }
+                    )
                 }
             }
         )

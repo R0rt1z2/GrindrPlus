@@ -140,6 +140,12 @@ class Hooker : IXposedHookLoadPackage {
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.useThreeColumnLayoutForFavorites()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
                 }
             }
         )
