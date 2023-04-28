@@ -1027,12 +1027,12 @@ object Hooks {
 
     fun disableAutomaticMessageDeletion() {
         findAndHookMethod(
-            GApp.favorites.FavoritesFragment,
+            GApp.persistence.repository.ChatRepo,
             Hooker.pkgParam.classLoader,
-            "onViewCreated",
+            GApp.persistence.repository.ChatRepo_.deleteChatMessageFromLessThanOrEqualToTimestamp,
             Long::class.java,
             "kotlin.coroutines.Continuation",
-            Constants.Returns.RETURN_UNIT
+            RETURN_UNIT
         )
     }
 }
