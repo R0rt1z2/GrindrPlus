@@ -317,6 +317,13 @@ object Obfuscation {
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "p"
             }
+
+            const val ChatMarkersManager = "$_xmpp.i"
+
+            object ChatMarkersManager_ {
+                const val addDisplayedExtension = "d"
+                const val addReceivedExtension = "f"
+            }
         }
     }
 }

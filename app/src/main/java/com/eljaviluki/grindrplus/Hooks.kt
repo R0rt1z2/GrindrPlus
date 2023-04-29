@@ -1197,19 +1197,20 @@ object Hooks {
 
     fun dontSendChatMarkers() {
         findAndHookMethod(
-            "org.jivesoftware.smack.packet.Stanza",
+            GApp.xmpp.ChatMarkersManager,
             Hooker.pkgParam.classLoader,
-            "addExtension",
-            "org.jivesoftware.smack.packet.ExtensionElement",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (param.args[0] == null) return
-                    val elementName = callMethod(param.args[0], "getElementName") as String
-                    if (elementName in arrayOf("received", "displayed")) {
-                        param.args[0] = null
-                    }
-                }
-            }
+            GApp.xmpp.ChatMarkersManager_.addDisplayedExtension,
+            "org.jivesoftware.smack.chat2.Chat",
+            "org.jivesoftware.smack.packet.Message",
+            XC_MethodReplacement.DO_NOTHING
+        )
+        findAndHookMethod(
+            GApp.xmpp.ChatMarkersManager,
+            Hooker.pkgParam.classLoader,
+            GApp.xmpp.ChatMarkersManager_.addReceivedExtension,
+            "org.jivesoftware.smack.chat2.Chat",
+            "org.jivesoftware.smack.packet.Message",
+            XC_MethodReplacement.DO_NOTHING
         )
     }
 
