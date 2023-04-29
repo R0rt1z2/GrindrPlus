@@ -729,7 +729,10 @@ object Hooks {
                 //We still want to allow deleting chats etc.,
                 //so only ignore if BlockInteractor is calling
                 val isBlockInteractor =
-                    Thread.currentThread().stackTrace.any { it.className.contains(GApp.manager.BlockInteractor) }
+                    Thread.currentThread().stackTrace.any {
+                        it.className.contains(GApp.manager.BlockInteractor) ||
+                                it.className.contains(GApp.ui.chat.BlockViewModel)
+                    }
                 if (isBlockInteractor) {
                     return Unit
                 }

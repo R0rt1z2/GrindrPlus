@@ -257,6 +257,8 @@ object Obfuscation {
             object chat {
                 private const val _chat = "$_ui.chat"
 
+                const val BlockViewModel = "$_chat.BlockViewModel"
+
                 const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
 
                 object ChatBaseFragmentV2_ {
