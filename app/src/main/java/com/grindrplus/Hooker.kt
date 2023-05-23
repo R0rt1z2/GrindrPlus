@@ -1,4 +1,4 @@
-package com.eljaviluki.grindrplus
+package com.grindrplus
 
 import android.app.Application
 import android.content.Context
@@ -170,7 +170,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "9.7.0"
+        const val TARGET_PKG_VERSION_NAME = "9.9.1"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()

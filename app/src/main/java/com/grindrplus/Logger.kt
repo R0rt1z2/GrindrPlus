@@ -1,4 +1,4 @@
-package com.eljaviluki.grindrplus
+package com.grindrplus
 
 import android.util.Log
 import de.robv.android.xposed.XposedBridge

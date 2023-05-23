@@ -1,8 +1,8 @@
-package com.eljaviluki.grindrplus.decorated.persistence.model
+package com.grindrplus.decorated.persistence.model
 
 import de.robv.android.xposed.XposedHelpers
-import com.eljaviluki.grindrplus.Hooker
-import com.eljaviluki.grindrplus.Obfuscation.GApp
+import com.grindrplus.Hooker
+import com.grindrplus.Obfuscation.GApp
 
 class Profile {
     var instance: Any

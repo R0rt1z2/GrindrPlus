@@ -1,4 +1,4 @@
-package com.eljaviluki.grindrplus
+package com.grindrplus
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -15,13 +15,13 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_FALSE
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_UNIT
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_ZERO
-import com.eljaviluki.grindrplus.Obfuscation.GApp
+import com.grindrplus.Constants.Returns.RETURN_FALSE
+import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
+import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
+import com.grindrplus.Constants.Returns.RETURN_TRUE
+import com.grindrplus.Constants.Returns.RETURN_UNIT
+import com.grindrplus.Constants.Returns.RETURN_ZERO
+import com.grindrplus.Obfuscation.GApp
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge

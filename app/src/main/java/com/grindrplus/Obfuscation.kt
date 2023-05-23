@@ -1,4 +1,4 @@
-package com.eljaviluki.grindrplus
+package com.grindrplus
 
 object Obfuscation {
     object GApp {

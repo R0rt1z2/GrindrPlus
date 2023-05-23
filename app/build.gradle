@@ -21,7 +21,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId 'com.eljaviluki.grindrplus'
+        applicationId 'com.grindrplus'
         minSdk 21
         targetSdk 33
         versionCode 14
@@ -42,7 +42,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    namespace 'com.eljaviluki.grindrplus'
+    namespace 'com.grindrplus'
 }
 
 dependencies {

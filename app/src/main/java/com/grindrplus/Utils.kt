@@ -1,5 +1,5 @@
 
-package com.eljaviluki.grindrplus
+package com.grindrplus
 
 import java.text.SimpleDateFormat
 import java.util.*
