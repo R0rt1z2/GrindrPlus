@@ -208,6 +208,15 @@ object Obfuscation {
         object ui {
             private const val _ui = Constants.GRINDR_PKG + ".ui"
 
+            object browse {
+                private const val _browse = "$_ui.browse"
+
+                const val CascadeFragment = "$_browse.CascadeFragment"
+                object CascadeFragment_ {
+                    const val useServerDrivenCascadeViewModel = "z1"
+                }
+            }
+
             object profileV2 {
                 private const val _profileV2 = "$_ui.profileV2"
 

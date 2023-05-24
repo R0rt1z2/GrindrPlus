@@ -13,6 +13,7 @@ import androidx.core.view.children
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
+import com.grindrplus.Constants.Returns.RETURN_NULL
 import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
@@ -27,6 +28,7 @@ import java.util.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import com.grindrplus.decorated.R
+import de.robv.android.xposed.XposedHelpers
 
 object Hooks {
     /**
@@ -1168,6 +1170,19 @@ object Hooks {
             "org.jivesoftware.smackx.chatstates.ChatState",
             "org.jivesoftware.smack.chat2.Chat",
             XC_MethodReplacement.DO_NOTHING
+        )
+    }
+
+    fun fullCascade() {
+        val class_CascadeFragment = findClass(
+            GApp.ui.browse.CascadeFragment,
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(
+            class_CascadeFragment,
+            GApp.ui.browse.CascadeFragment_.useServerDrivenCascadeViewModel,
+            RETURN_FALSE
         )
     }
 }

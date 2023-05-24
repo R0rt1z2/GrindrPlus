@@ -45,6 +45,12 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
+                        Hooks.fullCascade()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
                         Hooks.allowScreenshotsHook()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
