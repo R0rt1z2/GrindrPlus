@@ -5,8 +5,8 @@ plugins {
 
 ext.versionMajor = 1
 ext.versionMinor = 2
-ext.versionPatch = 4
-ext.grindrVersion = '9.7.0'
+ext.versionPatch = 5
+ext.grindrVersion = '9.9.1'
 
 private String genVersionName() {
     String versionName = "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
