@@ -26,6 +26,7 @@ import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration
+import com.grindrplus.decorated.R
 
 object Hooks {
     /**
@@ -1024,36 +1025,6 @@ object Hooks {
     }
 
     fun useThreeColumnLayoutForFavorites() {
-        val R_id = findClass(
-            GApp.R.id,
-            Hooker.pkgParam.classLoader
-        )
-
-        val recyclerViewId = getStaticIntField(
-            R_id,
-            GApp.R.id_.fragment_favorite_recycler_view
-        )
-        val profileDistanceId = getStaticIntField(
-            R_id,
-            GApp.R.id_.profile_distance
-        )
-        val profileOnlineNowIconId = getStaticIntField(
-            R_id,
-            GApp.R.id_.profile_online_now_icon
-        )
-        val profileLastSeenId = getStaticIntField(
-            R_id,
-            GApp.R.id_.profile_last_seen
-        )
-        val profileNoteIconId = getStaticIntField(
-            R_id,
-            GApp.R.id_.profile_note_icon
-        )
-        val profileDisplayNameId = getStaticIntField(
-            R_id,
-            GApp.R.id_.profile_display_name
-        )
-
         val Constructor_LayoutParamsRecyclerView = findConstructorExact(
             "androidx.recyclerview.widget.RecyclerView\$LayoutParams",
             Hooker.pkgParam.classLoader,
@@ -1070,7 +1041,7 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val view = param.args[0] as View
-                    val recyclerView = view.findViewById<View>(recyclerViewId)
+                    val recyclerView = view.findViewById<View>(R.id.fragment_favorite_recycler_view)
                     val gridLayoutManager = callMethod(recyclerView, "getLayoutManager")
                     callMethod(gridLayoutManager, "setSpanCount", 3)
 
@@ -1097,7 +1068,7 @@ object Hooks {
 
                                 itemView.layoutParams = rootLayoutParams
                                 val distanceTextView =
-                                    itemView.findViewById<TextView>(profileDistanceId)
+                                    itemView.findViewById<TextView>(R.id.profile_distance)
 
                                 //Make online status and distance appear below each other
                                 //because theres not enough space anymore to show them in a single row
@@ -1116,11 +1087,10 @@ object Hooks {
                                 distanceTextView.gravity = Gravity.START
 
                                 //Remove ugly margin before last seen text when online indicator is invisible
-
                                 val profileOnlineNowIcon =
-                                    itemView.findViewById<ImageView>(profileOnlineNowIconId)
+                                    itemView.findViewById<ImageView>(R.id.profile_online_now_icon)
                                 val profileLastSeen =
-                                    itemView.findViewById<TextView>(profileLastSeenId)
+                                    itemView.findViewById<TextView>(R.id.profile_last_seen)
                                 val lastSeenLayoutParams =
                                     profileLastSeen.layoutParams as LinearLayout.LayoutParams
                                 if (profileOnlineNowIcon.visibility == View.GONE) {
@@ -1135,11 +1105,10 @@ object Hooks {
                                 profileLastSeen.layoutParams = lastSeenLayoutParams
 
                                 //Remove ugly margin before display name when note icon is invisible
-
                                 val profileNoteIcon =
-                                    itemView.findViewById<ImageView>(profileNoteIconId)
+                                    itemView.findViewById<ImageView>(R.id.profile_note_icon)
                                 val profileDisplayName =
-                                    itemView.findViewById<TextView>(profileDisplayNameId)
+                                    itemView.findViewById<TextView>(R.id.profile_display_name)
                                 val displayNameLayoutParams =
                                     profileDisplayName.layoutParams as LinearLayout.LayoutParams
                                 if (profileNoteIcon.visibility == View.GONE) {
@@ -1180,6 +1149,7 @@ object Hooks {
             "org.jivesoftware.smack.packet.Message",
             XC_MethodReplacement.DO_NOTHING
         )
+
         findAndHookMethod(
             GApp.xmpp.ChatMarkersManager,
             Hooker.pkgParam.classLoader,
