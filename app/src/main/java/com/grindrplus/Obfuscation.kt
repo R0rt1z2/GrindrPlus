@@ -109,17 +109,6 @@ object Obfuscation {
                     const val TAP_TYPE_LOOKING = "TAP_TYPE_LOOKING"
                     const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
                     const val tapTypes = "tapTypes"
-
-                    const val getType = "getType"
-                    const val setType = "setType"
-                    const val setMessageId = "setMessageId"
-                    const val setSender = "setSender"
-                    const val setRecipient = "setRecipient"
-                    const val setStanzaId = "setStanzaId"
-                    const val setConversationId = "setConversationId"
-                    const val setTimestamp = "setTimestamp"
-                    const val setBody = "setBody"
-
                     const val clone = "clone"
                 }
 
