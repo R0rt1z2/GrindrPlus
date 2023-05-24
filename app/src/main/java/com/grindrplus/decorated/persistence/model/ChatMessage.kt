@@ -6,9 +6,16 @@ import com.grindrplus.Obfuscation;
 import de.robv.android.xposed.XposedHelpers
 
 class ChatMessage {
-    var instance: Any = XposedHelpers.newInstance(
-        CLAZZ
-    )
+
+    var instance: Any
+
+    constructor(
+        instance: Any = XposedHelpers.newInstance(
+            CLAZZ
+        )
+    ) {
+        this.instance = instance
+    }
 
     companion object {
         val CLAZZ: Class<*> by lazy {
@@ -214,5 +221,8 @@ class ChatMessage {
     var unread: java.lang.Boolean?
         get() = XposedHelpers.getObjectField(instance, "unread") as java.lang.Boolean?
         set(value) = XposedHelpers.setObjectField(instance, "unread", value)
+
+    public fun clone() : ChatMessage =
+        ChatMessage(XposedHelpers.callMethod(instance, Obfuscation.GApp.persistence.model.ChatMessage_.clone))
 }
 

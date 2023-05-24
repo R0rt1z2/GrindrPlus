@@ -1,11 +1,7 @@
 package com.grindrplus
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -13,7 +9,6 @@ import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
@@ -22,6 +17,7 @@ import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
+import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -470,13 +466,8 @@ object Hooks {
      */
     fun unlimitedTaps() {
         val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam.classLoader)
-        val class_ChatMessage =
-            findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
 
-        val tapTypeToHook = getStaticObjectField(
-            class_ChatMessage,
-            GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE
-        )
+        val tapTypeToHook = ChatMessage.TAP_TYPE_NONE
 
         //Reset the tap value to allow multitapping.
         findAndHookMethod(
@@ -550,12 +541,10 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
-        val class_ChatMessage =
-            findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_ChatBaseFragmentV2,
             GApp.ui.chat.ChatBaseFragmentV2_.canBeUnsent,
-            class_ChatMessage,
+            ChatMessage.CLAZZ,
             RETURN_FALSE
         )
     }
@@ -605,28 +594,21 @@ object Hooks {
         XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val chatMessage = param.args[0]
-                    val type = callMethod(
-                        chatMessage,
-                        GApp.persistence.model.ChatMessage_.getType
-                    ) as String
-                    val syntheticMessage = when (type) {
+                    val chatMessage = ChatMessage(param.args[0])
+
+                    when (chatMessage.type) {
                         "block" -> "[You have been blocked.]"
                         "unblock" -> "[You have been unblocked.]"
                         else -> null
-                    }
-                    if (syntheticMessage != null) {
-                        val clone =
-                            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.clone)
-                        callMethod(clone, GApp.persistence.model.ChatMessage_.setType, "text")
-                        callMethod(
-                            clone,
-                            GApp.persistence.model.ChatMessage_.setBody,
-                            syntheticMessage
-                        )
+                    }?.let {msg ->
+                        val clone = chatMessage.clone().apply {
+                            type = "text"
+                            body = msg
+                        }
+
                         receiveChatMessage.invoke(
                             param.thisObject,
-                            clone,
+                            clone.instance,
                             param.args[1],
                             param.args[2]
                         )
@@ -634,11 +616,6 @@ object Hooks {
                 }
             })
 
-
-        val Constructor_ChatMessage = findConstructorExact(
-            GApp.persistence.model.ChatMessage,
-            Hooker.pkgParam.classLoader
-        )
 
         var ownProfileId: String? = null
 
@@ -668,27 +645,21 @@ object Hooks {
         )
 
         fun logChatMessage(from: String, text: String) {
-            val chatMessage = Constructor_ChatMessage.newInstance()
-            callMethod(
-                chatMessage,
-                GApp.persistence.model.ChatMessage_.setMessageId,
-                UUID.randomUUID().toString()
-            )
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setSender, ownProfileId)
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setRecipient, from)
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setStanzaId, from)
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setConversationId, from)
-            callMethod(
-                chatMessage,
-                GApp.persistence.model.ChatMessage_.setTimestamp,
-                System.currentTimeMillis()
-            )
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setType, "text")
-            callMethod(chatMessage, GApp.persistence.model.ChatMessage_.setBody, text)
+            val chatMessage = ChatMessage().apply {
+                messageId = UUID.randomUUID().toString()
+                sender = ownProfileId
+                recipient = from
+                stanzaId = from
+                conversationId = from
+                timestamp = System.currentTimeMillis()
+                type = "text"
+                body = text
+            }
+
             callMethod(
                 chatMessageManager,
                 GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
-                chatMessage,
+                chatMessage.instance,
                 false,
                 false
             )
