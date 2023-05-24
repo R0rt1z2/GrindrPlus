@@ -103,7 +103,13 @@ object Obfuscation {
                 const val ChatMessage = "$_model.ChatMessage"
 
                 object ChatMessage_ {
+                    const val TABLE_NAME = "TABLE_NAME"
+                    const val TAP_TYPE_FRIENDLY = "TAP_TYPE_FRIENDLY"
+                    const val TAP_TYPE_HOT = "TAP_TYPE_HOT"
+                    const val TAP_TYPE_LOOKING = "TAP_TYPE_LOOKING"
                     const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
+                    const val tapTypes = "tapTypes"
+
                     const val getType = "getType"
                     const val setType = "setType"
                     const val setMessageId = "setMessageId"

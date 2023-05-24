@@ -28,7 +28,7 @@ class Profile {
          lookingFor: List<Int>,
          relationshipStatus: Int,
          grindrTribes: List<Int>,
-         identity: Any?, //TODO Implement com.grindrapp.android.model.Identity? decorator
+         identity: Any?, //TODO: Identity
          genderCategory: Int,
          pronounsCategory: Int,
          genderDisplay: String?,
