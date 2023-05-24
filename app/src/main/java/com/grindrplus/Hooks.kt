@@ -53,11 +53,10 @@ object Hooks {
             })
     }
 
-    /**
+    /*
      * Add extra profile fields with more information:
      * - Profile ID
      * - Last seen (exact date and time)
-     */
     fun addExtraProfileFields() {
         val class_ProfileFieldsView = findClass(
             GApp.ui.profileV2.ProfileFieldsView,
@@ -215,13 +214,15 @@ object Hooks {
                     return extendedProfileFieldView as FrameLayout
                 }
             })
-    }
+    }*/
 
     /**
      * Hook these methods in all the classes that implement IUserSession.
      * isFree()Z (return false)
      * isNoXtraUpsell()Z (return false)
+     * isNoPlusUpsell()Z (return false)
      * isXtra()Z to give Xtra account features.
+     * isPlus()Z to give Plus account features.
      * isUnlimited()Z to give Unlimited account features.
      */
     fun hookUserSessionImpl() {
@@ -230,45 +231,50 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
-        listOf(
-            findClass(
-                GApp.storage.UserSession,
-                Hooker.pkgParam.classLoader
-            ),
-
-            /*findClass(
-                GApp.storage.UserSession2,
-                Hooker.pkgParam.classLoader
-            )*/
-        ).forEach { userSessionImpl ->
+        findClass(
+            GApp.storage.UserSession,
+            Hooker.pkgParam.classLoader
+        ).let {
             findAndHookMethod(
-                userSessionImpl,
+                it,
                 GApp.storage.IUserSession_.hasFeature_feature,
                 class_Feature,
                 RETURN_TRUE
             )
 
             findAndHookMethod(
-                userSessionImpl,
+                it,
                 GApp.storage.IUserSession_.isFree,
                 RETURN_FALSE
             )
 
             findAndHookMethod(
-                userSessionImpl,
+                it,
                 GApp.storage.IUserSession_.isNoXtraUpsell,
                 RETURN_FALSE
-            ) //Not sure what is this for
+            )
 
             findAndHookMethod(
-                userSessionImpl,
+                it,
+                GApp.storage.IUserSession_.isNoPlusUpsell,
+                RETURN_FALSE
+            )
+
+            findAndHookMethod(
+                it,
                 GApp.storage.IUserSession_.isXtra,
                 RETURN_TRUE
             )
 
             findAndHookMethod(
-                userSessionImpl,
+                it,
                 GApp.storage.IUserSession_.isUnlimited,
+                RETURN_TRUE
+            )
+
+            findAndHookMethod(
+                it,
+                GApp.storage.IUserSession_.isPlus,
                 RETURN_TRUE
             )
         }
@@ -356,10 +362,9 @@ object Hooks {
         )
     }
 
-    /**
+    /*
      * Allow to use SOME (not all of them) hidden features that Grindr developers have not yet made public
      * or they are just testing.
-     */
     fun allowSomeExperiments() {
         val class_Experiments = findClass(
             GApp.experiment.Experiments,
@@ -377,7 +382,7 @@ object Hooks {
             class_IExperimentsManager,
             RETURN_TRUE
         )
-    }
+    }*/
 
     /**
      * Allow videocalls on empty chats: Grindr checks that both users have chatted with each other
@@ -549,7 +554,7 @@ object Hooks {
             findClass(GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
         findAndHookMethod(
             class_ChatBaseFragmentV2,
-            GApp.ui.chat.ChatBaseFragmentV2_._canBeUnsent,
+            GApp.ui.chat.ChatBaseFragmentV2_.canBeUnsent,
             class_ChatMessage,
             RETURN_FALSE
         )

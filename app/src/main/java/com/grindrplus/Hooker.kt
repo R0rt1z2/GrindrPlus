@@ -56,11 +56,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
+                    /*try {
                         Hooks.addExtraProfileFields()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }
+                    }*/
 
                     try {
                         Hooks.hookUserSessionImpl()
@@ -80,11 +80,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
+                    /*try {
                         Hooks.allowSomeExperiments()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }
+                    }*/
 
                     try {
                         //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
@@ -93,77 +93,78 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
-                        Hooks.unlimitedTaps()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
 
-                    try {
-                        Hooks.removeExpirationOnExpiringPhotos()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.unlimitedTaps()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.preventRecordProfileViews()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.removeExpirationOnExpiringPhotos()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.makeMessagesAlwaysRemovable()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.preventRecordProfileViews()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.showBlocksInChat()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.makeMessagesAlwaysRemovable()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.keepChatsOfBlockedProfiles()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.showBlocksInChat()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.localSavedPhrases()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.keepChatsOfBlockedProfiles()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.disableAnalytics()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.localSavedPhrases()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.useThreeColumnLayoutForFavorites()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.disableAnalytics()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.disableAutomaticMessageDeletion()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.useThreeColumnLayoutForFavorites()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.dontSendChatMarkers()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.disableAutomaticMessageDeletion()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
 
-                    try {
-                        Hooks.dontSendTypingIndicator()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                   try {
+                       Hooks.dontSendChatMarkers()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
+
+                   try {
+                       Hooks.dontSendTypingIndicator()
+                   } catch (e: Exception) {
+                       e.message?.let { Logger.xLog(it) }
+                   }
                 }
             }
         )
