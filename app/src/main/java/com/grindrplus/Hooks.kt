@@ -250,13 +250,13 @@ object Hooks {
             findAndHookMethod(
                 it,
                 GApp.storage.IUserSession_.isNoXtraUpsell,
-                RETURN_FALSE
+                RETURN_TRUE
             )
 
             findAndHookMethod(
                 it,
                 GApp.storage.IUserSession_.isNoPlusUpsell,
-                RETURN_FALSE
+                RETURN_TRUE
             )
 
             findAndHookMethod(
