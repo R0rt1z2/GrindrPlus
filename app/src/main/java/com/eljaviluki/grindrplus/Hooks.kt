@@ -26,6 +26,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
+import java.io.File
 import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
@@ -422,6 +423,46 @@ object Hooks {
             RETURN_FALSE
         )
 
+        findAndHookMethod(
+            class_Location,
+            "getLatitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+                    if (!locationFile.exists()) {
+                        locationFile.createNewFile()
+                    }
+                    val content = locationFile.readText()
+                    val result = regex.find(content)
+                   return if (result == null) {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        result.groups[1]!!.value.toDouble()
+                    }
+                }
+            }
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "getLongitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+                    if (!locationFile.exists()) {
+                        locationFile.createNewFile()
+                    }
+                    val content = locationFile.readText()
+                    val result = regex.find(content)
+                    return if (result == null) {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        result.groups[2]!!.value.toDouble()
+                    }
+                }
+            }
+        )
+
         if (Build.VERSION.SDK_INT >= 31) {
             findAndHookMethod(
                 class_Location,
@@ -587,6 +628,22 @@ object Hooks {
     }
     */
 
+    var chatMessageManager: Any? = null
+
+    fun storeChatMessageManager() {
+        XposedBridge.hookAllConstructors(
+            findClass(
+                GApp.xmpp.ChatMessageManager,
+                Hooker.pkgParam.classLoader
+            ),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    chatMessageManager = param.thisObject
+                }
+            }
+        )
+    }
+
     fun showBlocksInChat() {
         val receiveChatMessage = findMethodExact(
             GApp.xmpp.ChatMessageManager,
@@ -644,20 +701,6 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     ownProfileId = param.result as String
-                }
-            }
-        )
-
-        var chatMessageManager: Any? = null
-
-        XposedBridge.hookAllConstructors(
-            findClass(
-                GApp.xmpp.ChatMessageManager,
-                Hooker.pkgParam.classLoader
-            ),
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    chatMessageManager = param.thisObject
                 }
             }
         )
@@ -763,56 +806,12 @@ object Hooks {
         )
 
         findAndHookMethod(
-            GApp.persistence.repository.ConversationRepo,
+            GApp.manager.persistence.ChatPersistenceManager,
             Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ConversationRepo_.deleteConversation,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ConversationRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ConversationRepo_.deleteConversations,
+            GApp.manager.persistence.ChatPersistenceManager_.deleteConversationsByProfileIds,
             List::class.java,
             "kotlin.coroutines.Continuation",
             ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ChatRepo_.deleteChatMessageFromConversationId,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ChatRepo_.deleteChatMessageListFromConversationId,
-            List::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.IncomingChatMarkerRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.IncomingChatMarkerRepo_.deleteIncomingChatMarker,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.ui.chat.individual.ChatIndividualFragment,
-            Hooker.pkgParam.classLoader,
-            GApp.ui.chat.individual.ChatIndividualFragment_.showBlockDialog,
-            Boolean::class.javaPrimitiveType,
-            XC_MethodReplacement.DO_NOTHING
         )
 
         val queries = mapOf(
@@ -1224,4 +1223,7 @@ object Hooks {
             XC_MethodReplacement.DO_NOTHING
         )
     }
+
+    val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
+
 }

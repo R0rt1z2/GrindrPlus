@@ -12,13 +12,13 @@ object Obfuscation {
                 const val addSavedPhrase = "a"
 
                 //Annotated with @DELETE("v3/me/prefs/phrases/{id}")
-                const val deleteSavedPhrase = "r"
+                const val deleteSavedPhrase = "s"
 
                 //Annotated with @POST("v4/phrases/frequency/{id}")
-                const val increaseSavedPhraseClickCount = "G"
+                const val increaseSavedPhraseClickCount = "H"
             }
 
-            const val PhrasesRestService = "$_api.n"
+            const val PhrasesRestService = "$_api.m"
 
             object PhrasesRestService_ {
                 //Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
@@ -26,7 +26,7 @@ object Obfuscation {
             }
 
             //Contains @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "$_api.c"
+            const val AnalyticsRestService = "$_api.b"
         }
 
         object base {
@@ -58,6 +58,16 @@ object Obfuscation {
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
             const val BlockInteractor = "$_manager.o"
+
+            object persistence {
+                private const val _persistence = "$_manager.persistence"
+
+                const val ChatPersistenceManager = "$_persistence.a"
+
+                object ChatPersistenceManager_ {
+                    const val deleteConversationsByProfileIds = "r"
+                }
+            }
         }
 
         object model {
@@ -189,39 +199,39 @@ object Obfuscation {
         object R {
             private const val _R = Constants.GRINDR_PKG
 
-            const val color = "$_R.m0"
+            const val color = "$_R.o0"
 
             object color_ {
-                const val grindr_gold_star_gay = "G"
-                const val grindr_pure_white = "W"
+                const val grindr_gold_star_gay = "I"
+                const val grindr_pure_white = "X"
             }
 
-            const val id = "$_R.q0"
+            const val id = "$_R.s0"
 
             object id_ {
-                const val fragment_favorite_recycler_view = "Ib"
-                const val profile_distance = "rk"
-                const val profile_online_now_icon = "pl"
-                const val profile_last_seen = "Tk"
-                const val profile_note_icon = "nl"
-                const val profile_display_name = "nk"
+                const val fragment_favorite_recycler_view = "Fb"
+                const val profile_distance = "Gk"
+                const val profile_online_now_icon = "Ul"
+                const val profile_last_seen = "Cl"
+                const val profile_note_icon = "Sl"
+                const val profile_display_name = "Bk"
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.x0"
+            const val UserSession = "$_storage.t0"
 
             const val IUserSession = "$_storage.UserSession"
 
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "r"
-                const val isNoXtraUpsell = "g"
-                const val isXtra = "o"
+                const val isFree = "i"
+                const val isNoXtraUpsell = "A"
+                const val isXtra = "p"
                 const val isUnlimited = "x"
-                const val getProfileId = "e"
+                const val getProfileId = "f"
             }
         }
 
@@ -240,7 +250,7 @@ object Obfuscation {
                 const val ProfilesViewModel = "$_profileV2.ProfilesViewModel"
 
                 object ProfilesViewModel_ {
-                    const val recordProfileViewsForViewedMeService = "X1"
+                    const val recordProfileViewsForViewedMeService = "l2"
                 }
 
                 object model {
@@ -257,12 +267,11 @@ object Obfuscation {
             object chat {
                 private const val _chat = "$_ui.chat"
 
+                const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
                 const val BlockViewModel = "$_chat.BlockViewModel"
 
-                const val ChatBaseFragmentV2 = "$_chat.ChatBaseFragmentV2"
-
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "X1"
+                    const val _canBeUnsent = "t1"
                 }
 
                 object individual {
@@ -284,7 +293,7 @@ object Obfuscation {
 
             object ProfileUtils_ {
                 //Look for value of 600000
-                const val onlineIndicatorDuration = "g"
+                const val onlineIndicatorDuration = "d"
             }
         }
 

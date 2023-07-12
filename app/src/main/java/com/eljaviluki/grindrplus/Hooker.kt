@@ -23,6 +23,20 @@ class Hooker : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         pkgParam = lpparam
+
+        //This is a quick and dirty fix, but these should be called before the application context is created.
+
+        try {
+            Hooks.storeChatMessageManager()
+        } catch (e: Exception) {
+            e.message?.let { Logger.xLog(it) }
+        }
+
+        try {
+            Hooks.localSavedPhrases()
+        } catch (e: Exception) {
+            e.message?.let { Logger.xLog(it) }
+        }
         findAndHookMethod(
             Application::class.java,
             "onCreate",
@@ -39,31 +53,7 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
-                        Hooks.hookFeatureGranting()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
                         Hooks.allowScreenshotsHook()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
-                        Hooks.unlimitedExpiringPhotos()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
-                        Hooks.addExtraProfileFields()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
-                        Hooks.hookUserSessionImpl()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
@@ -75,13 +65,19 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
-                        Hooks.allowVideocallsOnEmptyChats()
+                        Hooks.hookUserSessionImpl()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
 
                     try {
-                        Hooks.allowSomeExperiments()
+                        Hooks.hookFeatureGranting()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.allowVideocallsOnEmptyChats()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
@@ -89,6 +85,12 @@ class Hooker : IXposedHookLoadPackage {
                     try {
                         //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
                         Hooks.hookOnlineIndicatorDuration(3.minutes)
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.unlimitedExpiringPhotos()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
@@ -118,31 +120,13 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
-                        Hooks.showBlocksInChat()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
                         Hooks.keepChatsOfBlockedProfiles()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
 
                     try {
-                        Hooks.localSavedPhrases()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
-                        Hooks.disableAnalytics()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
-
-                    try {
-                        Hooks.useThreeColumnLayoutForFavorites()
+                        Hooks.showBlocksInChat()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
@@ -154,23 +138,47 @@ class Hooker : IXposedHookLoadPackage {
                     }
 
                     try {
+                        Hooks.dontSendTypingIndicator()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
                         Hooks.dontSendChatMarkers()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
 
                     try {
-                        Hooks.dontSendTypingIndicator()
+                        Hooks.useThreeColumnLayoutForFavorites()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
                     }
+
+                    try {
+                        Hooks.disableAnalytics()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    /*try {
+                        Hooks.addExtraProfileFields()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
+
+                    try {
+                        Hooks.allowSomeExperiments()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }*/
                 }
             }
         )
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "9.7.0"
+        const val TARGET_PKG_VERSION_NAME = "9.12.0"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
