@@ -366,6 +366,14 @@ object Hooks {
             }
         )
 
+        //Once you uncheck "precise", the option will disappear normally (not sure if that's a bug). This fix prevents that.
+        findAndHookMethod(
+            "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$f",
+            Hooker.pkgParam.classLoader,
+            "e",
+            RETURN_FALSE
+        )
+
         /*val class_UpsellsV8 = findClass(
             GApp.model.UpsellsV8,
             Hooker.pkgParam.classLoader
