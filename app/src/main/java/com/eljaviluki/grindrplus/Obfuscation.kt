@@ -227,8 +227,10 @@ object Obfuscation {
 
             object IUserSession_ {
                 const val hasFeature_feature = "a"
-                const val isFree = "i"
-                const val isNoXtraUpsell = "A"
+                const val isFree = "r"
+                const val isNoPlusUpsell = "A"
+                const val isNoXtraUpsell = "i"
+                const val isPlus = "y"
                 const val isXtra = "p"
                 const val isUnlimited = "x"
                 const val getProfileId = "f"

@@ -20,7 +20,6 @@ import com.eljaviluki.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_TRUE
 import com.eljaviluki.grindrplus.Constants.Returns.RETURN_UNIT
-import com.eljaviluki.grindrplus.Constants.Returns.RETURN_ZERO
 import com.eljaviluki.grindrplus.Obfuscation.GApp
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
@@ -258,12 +257,24 @@ object Hooks {
             findAndHookMethod(
                 userSessionImpl,
                 GApp.storage.IUserSession_.isNoXtraUpsell,
-                RETURN_FALSE
+                RETURN_TRUE
             ) //Not sure what is this for
 
             findAndHookMethod(
                 userSessionImpl,
                 GApp.storage.IUserSession_.isXtra,
+                RETURN_TRUE
+            )
+
+            findAndHookMethod(
+                userSessionImpl,
+                GApp.storage.IUserSession_.isPlus,
+                RETURN_TRUE
+            )
+
+            findAndHookMethod(
+                userSessionImpl,
+                GApp.storage.IUserSession_.isNoPlusUpsell,
                 RETURN_TRUE
             )
 
@@ -322,7 +333,40 @@ object Hooks {
             RETURN_TRUE
         )
 
-        val class_UpsellsV8 = findClass(
+        findAndHookMethod(
+            "com.grindrapp.android.flags.featureflags.g",
+            Hooker.pkgParam.classLoader,
+            "b",
+            object :  XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val feature = getObjectField(param.thisObject, "b") as String
+                    return when (feature) {
+                        "profile-redesign-20230214" -> true
+                        "notification-action-chat-20230206" -> true
+                        "gender-updates" -> true
+                        "gender-filter" -> true
+                        "gender-exclusion" -> true
+                        "calendar-ui" -> true
+                        "vaccine-profile-field" -> true
+                        "tag-search" -> true
+                        "approximate-distance" -> true
+                        "spectrum_solicitation_sex" -> true
+                        "allow-mock-location" -> true
+                        "spectrum-solicitation-of-drugs" -> true
+                        "reporting-lag-time" -> true
+                        "side-profile-link" -> true
+                        "sift-kill-switch" -> true
+                        "canceled-screen" -> true
+                        "takemehome-button" -> true
+                        "download-my-data" -> true
+                        "face-auth-android" -> true
+                        else -> XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    }
+                }
+            }
+        )
+
+        /*val class_UpsellsV8 = findClass(
             GApp.model.UpsellsV8,
             Hooker.pkgParam.classLoader
         )
@@ -354,6 +398,45 @@ object Hooks {
             class_Inserts,
             GApp.model.Inserts_.getMpuXtra,
             RETURN_ZERO
+        )*/
+    }
+
+    fun unlimitedProfiles() {
+        //Enforce usage of InaccessibleProfileManager...
+        findAndHookMethod(
+            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            Hooker.pkgParam.classLoader,
+            "b",
+            RETURN_TRUE
+        )
+
+        //...and then just never ask for upsells
+        findAndHookMethod(
+            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            Hooker.pkgParam.classLoader,
+            "c",
+            Int::class.javaPrimitiveType,
+            Int::class.javaObjectType,
+            Int::class.javaObjectType,
+            GApp.storage.IUserSession,
+            "com.grindrapp.android.base.model.profile.ReferrerType",
+            RETURN_FALSE
+        )
+
+        //Remove all ads and upsells from the cascade
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
+            Hooker.pkgParam.classLoader,
+            "getItems",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val items = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>
+                    return items.filterNotNull().filter {
+                        it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
+                    }
+                }
+
+            }
         )
     }
 
@@ -542,6 +625,18 @@ object Hooks {
             class_TapsAnimLayout,
             GApp.view.TapsAnimLayout_.getDisableVariantSelection,
             RETURN_FALSE
+        )
+
+        findAndHookMethod(
+            "com.grindrapp.android.ui.profileV2.ChatTapsQuickbarView",
+            Hooker.pkgParam.classLoader,
+            "u",
+            Boolean::class.javaPrimitiveType,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.args[0] = true
+                }
+            }
         )
     }
 

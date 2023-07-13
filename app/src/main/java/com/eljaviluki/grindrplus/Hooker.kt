@@ -37,6 +37,7 @@ class Hooker : IXposedHookLoadPackage {
         } catch (e: Exception) {
             e.message?.let { Logger.xLog(it) }
         }
+
         findAndHookMethod(
             Application::class.java,
             "onCreate",
@@ -50,6 +51,12 @@ class Hooker : IXposedHookLoadPackage {
                     if (pkgVersionName != TARGET_PKG_VERSION_NAME) {
                         toastInvalidVersionName()
                         return
+                    }
+
+                    try {
+                        Hooks.unlimitedProfiles()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
                     }
 
                     try {
