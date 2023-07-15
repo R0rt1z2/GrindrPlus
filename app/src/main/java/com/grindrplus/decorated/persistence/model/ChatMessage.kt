@@ -5,24 +5,19 @@ import com.grindrplus.Obfuscation;
 
 import de.robv.android.xposed.XposedHelpers
 
-class ChatMessage {
-
-    var instance: Any
-
-    constructor(
-        instance: Any = XposedHelpers.newInstance(
-            CLAZZ
-        )
-    ) {
-        this.instance = instance
-    }
+class ChatMessage(
+    var instance: Any = XposedHelpers.newInstance(
+        CLAZZ
+    )
+) {
 
     companion object {
         val CLAZZ: Class<*> by lazy {
             XposedHelpers.findClass(Obfuscation.GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
         }
 
-        val TABLE_NAME: String? by lazy {
+        //TODO: Fix obfuscation mapping for these variable names:
+        /*val TABLE_NAME: String? by lazy {
             XposedHelpers.getStaticObjectField(
                 CLAZZ,
                 Obfuscation.GApp.persistence.model.ChatMessage_.TABLE_NAME
@@ -48,7 +43,7 @@ class ChatMessage {
                 CLAZZ,
                 Obfuscation.GApp.persistence.model.ChatMessage_.TAP_TYPE_LOOKING
             ) as String?
-        }
+        }*/
 
         val TAP_TYPE_NONE: String? by lazy {
             XposedHelpers.getStaticObjectField(
@@ -57,12 +52,13 @@ class ChatMessage {
             ) as String?
         }
 
+        /*
         val tapTypes: java.util.List<java.lang.String>? by lazy {
             XposedHelpers.getStaticObjectField(
                 CLAZZ,
                 Obfuscation.GApp.persistence.model.ChatMessage_.tapTypes
             ) as java.util.List<java.lang.String>?
-        }
+        }*/
     }
 
 

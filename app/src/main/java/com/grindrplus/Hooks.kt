@@ -1,7 +1,11 @@
 package com.grindrplus
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -9,26 +13,25 @@ import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
-import com.grindrplus.Constants.Returns.RETURN_NULL
 import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
-import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
 import com.grindrplus.decorated.persistence.model.ChatMessage
+import com.grindrplus.decorated.R
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
+import java.io.File
 import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration
-import com.grindrplus.decorated.R
-import de.robv.android.xposed.XposedHelpers
 
 object Hooks {
     /**
@@ -52,18 +55,14 @@ object Hooks {
             })
     }
 
-    /*
+    /**
      * Add extra profile fields with more information:
      * - Profile ID
      * - Last seen (exact date and time)
+     */
     fun addExtraProfileFields() {
         val class_ProfileFieldsView = findClass(
             GApp.ui.profileV2.ProfileFieldsView,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_Profile = findClass(
-            GApp.persistence.model.Profile,
             Hooker.pkgParam.classLoader
         )
 
@@ -213,15 +212,13 @@ object Hooks {
                     return extendedProfileFieldView as FrameLayout
                 }
             })
-    }*/
+    }
 
     /**
      * Hook these methods in all the classes that implement IUserSession.
      * isFree()Z (return false)
      * isNoXtraUpsell()Z (return false)
-     * isNoPlusUpsell()Z (return false)
      * isXtra()Z to give Xtra account features.
-     * isPlus()Z to give Plus account features.
      * isUnlimited()Z to give Unlimited account features.
      */
     fun hookUserSessionImpl() {
@@ -230,50 +227,57 @@ object Hooks {
             Hooker.pkgParam.classLoader
         )
 
-        findClass(
-            GApp.storage.UserSession,
-            Hooker.pkgParam.classLoader
-        ).let {
+        listOf(
+            findClass(
+                GApp.storage.UserSession,
+                Hooker.pkgParam.classLoader
+            ),
+
+            /*findClass(
+                GApp.storage.UserSession2,
+                Hooker.pkgParam.classLoader
+            )*/
+        ).forEach { userSessionImpl ->
             findAndHookMethod(
-                it,
+                userSessionImpl,
                 GApp.storage.IUserSession_.hasFeature_feature,
                 class_Feature,
                 RETURN_TRUE
             )
 
             findAndHookMethod(
-                it,
+                userSessionImpl,
                 GApp.storage.IUserSession_.isFree,
                 RETURN_FALSE
             )
 
             findAndHookMethod(
-                it,
+                userSessionImpl,
                 GApp.storage.IUserSession_.isNoXtraUpsell,
                 RETURN_TRUE
-            )
+            ) //Not sure what is this for
 
             findAndHookMethod(
-                it,
-                GApp.storage.IUserSession_.isNoPlusUpsell,
-                RETURN_TRUE
-            )
-
-            findAndHookMethod(
-                it,
+                userSessionImpl,
                 GApp.storage.IUserSession_.isXtra,
                 RETURN_TRUE
             )
 
             findAndHookMethod(
-                it,
-                GApp.storage.IUserSession_.isUnlimited,
+                userSessionImpl,
+                GApp.storage.IUserSession_.isPlus,
                 RETURN_TRUE
             )
 
             findAndHookMethod(
-                it,
-                GApp.storage.IUserSession_.isPlus,
+                userSessionImpl,
+                GApp.storage.IUserSession_.isNoPlusUpsell,
+                RETURN_TRUE
+            )
+
+            findAndHookMethod(
+                userSessionImpl,
+                GApp.storage.IUserSession_.isUnlimited,
                 RETURN_TRUE
             )
         }
@@ -326,7 +330,48 @@ object Hooks {
             RETURN_TRUE
         )
 
-        val class_UpsellsV8 = findClass(
+        findAndHookMethod(
+            "com.grindrapp.android.flags.featureflags.g",
+            Hooker.pkgParam.classLoader,
+            "b",
+            object :  XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val feature = getObjectField(param.thisObject, "b") as String
+                    return when (feature) {
+                        "profile-redesign-20230214" -> true
+                        "notification-action-chat-20230206" -> true
+                        "gender-updates" -> true
+                        "gender-filter" -> true
+                        "gender-exclusion" -> true
+                        "calendar-ui" -> true
+                        "vaccine-profile-field" -> true
+                        "tag-search" -> true
+                        "approximate-distance" -> true
+                        "spectrum_solicitation_sex" -> true
+                        "allow-mock-location" -> true
+                        "spectrum-solicitation-of-drugs" -> true
+                        "reporting-lag-time" -> true
+                        "side-profile-link" -> true
+                        "sift-kill-switch" -> true
+                        "canceled-screen" -> true
+                        "takemehome-button" -> true
+                        "download-my-data" -> true
+                        "face-auth-android" -> true
+                        else -> XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    }
+                }
+            }
+        )
+
+        //Once you uncheck "precise", the option will disappear normally (not sure if that's a bug). This fix prevents that.
+        findAndHookMethod(
+            "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$f",
+            Hooker.pkgParam.classLoader,
+            "e",
+            RETURN_FALSE
+        )
+
+        /*val class_UpsellsV8 = findClass(
             GApp.model.UpsellsV8,
             Hooker.pkgParam.classLoader
         )
@@ -358,12 +403,52 @@ object Hooks {
             class_Inserts,
             GApp.model.Inserts_.getMpuXtra,
             RETURN_ZERO
+        )*/
+    }
+
+    fun unlimitedProfiles() {
+        //Enforce usage of InaccessibleProfileManager...
+        findAndHookMethod(
+            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            Hooker.pkgParam.classLoader,
+            "b",
+            RETURN_TRUE
+        )
+
+        //...and then just never ask for upsells
+        findAndHookMethod(
+            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            Hooker.pkgParam.classLoader,
+            "c",
+            Int::class.javaPrimitiveType,
+            Int::class.javaObjectType,
+            Int::class.javaObjectType,
+            GApp.storage.IUserSession,
+            "com.grindrapp.android.base.model.profile.ReferrerType",
+            RETURN_FALSE
+        )
+
+        //Remove all ads and upsells from the cascade
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
+            Hooker.pkgParam.classLoader,
+            "getItems",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val items = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>
+                    return items.filterNotNull().filter {
+                        it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
+                    }
+                }
+
+            }
         )
     }
 
-    /*
+    /**
      * Allow to use SOME (not all of them) hidden features that Grindr developers have not yet made public
      * or they are just testing.
+     */
     fun allowSomeExperiments() {
         val class_Experiments = findClass(
             GApp.experiment.Experiments,
@@ -381,7 +466,7 @@ object Hooks {
             class_IExperimentsManager,
             RETURN_TRUE
         )
-    }*/
+    }
 
     /**
      * Allow videocalls on empty chats: Grindr checks that both users have chatted with each other
@@ -424,6 +509,46 @@ object Hooks {
             class_Location,
             "isFromMockProvider",
             RETURN_FALSE
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "getLatitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+                    if (!locationFile.exists()) {
+                        locationFile.createNewFile()
+                    }
+                    val content = locationFile.readText()
+                    val result = regex.find(content)
+                    return if (result == null) {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        result.groups[1]!!.value.toDouble()
+                    }
+                }
+            }
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "getLongitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+                    if (!locationFile.exists()) {
+                        locationFile.createNewFile()
+                    }
+                    val content = locationFile.readText()
+                    val result = regex.find(content)
+                    return if (result == null) {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        result.groups[2]!!.value.toDouble()
+                    }
+                }
+            }
         )
 
         if (Build.VERSION.SDK_INT >= 31) {
@@ -501,6 +626,18 @@ object Hooks {
             GApp.view.TapsAnimLayout_.getDisableVariantSelection,
             RETURN_FALSE
         )
+
+        findAndHookMethod(
+            "com.grindrapp.android.ui.profileV2.ChatTapsQuickbarView",
+            Hooker.pkgParam.classLoader,
+            "u",
+            Boolean::class.javaPrimitiveType,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.args[0] = true
+                }
+            }
+        )
     }
 
     /**
@@ -546,7 +683,7 @@ object Hooks {
 
         findAndHookMethod(
             class_ChatBaseFragmentV2,
-            GApp.ui.chat.ChatBaseFragmentV2_.canBeUnsent,
+            GApp.ui.chat.ChatBaseFragmentV2_._canBeUnsent,
             ChatMessage.CLAZZ,
             RETURN_FALSE
         )
@@ -584,6 +721,22 @@ object Hooks {
     }
     */
 
+    var chatMessageManager: Any? = null
+
+    fun storeChatMessageManager() {
+        XposedBridge.hookAllConstructors(
+            findClass(
+                GApp.xmpp.ChatMessageManager,
+                Hooker.pkgParam.classLoader
+            ),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    chatMessageManager = param.thisObject
+                }
+            }
+        )
+    }
+
     fun showBlocksInChat() {
         val receiveChatMessage = findMethodExact(
             GApp.xmpp.ChatMessageManager,
@@ -597,21 +750,21 @@ object Hooks {
         XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val chatMessage = ChatMessage(param.args[0])
-
-                    when (chatMessage.type) {
+                    val chatMessage = param.args[0] as ChatMessage
+                    val type = chatMessage.type
+                    val syntheticMessage = when (type) {
                         "block" -> "[You have been blocked.]"
                         "unblock" -> "[You have been unblocked.]"
                         else -> null
-                    }?.let {msg ->
-                        val clone = chatMessage.clone().apply {
-                            type = "text"
-                            body = msg
-                        }
+                    }
+                    if (syntheticMessage != null) {
+                        val clone = chatMessage.clone()
+                        clone.type = "text"
+                        clone.body = syntheticMessage
 
                         receiveChatMessage.invoke(
                             param.thisObject,
-                            clone.instance,
+                            clone,
                             param.args[1],
                             param.args[2]
                         )
@@ -633,31 +786,16 @@ object Hooks {
             }
         )
 
-        var chatMessageManager: Any? = null
-
-        XposedBridge.hookAllConstructors(
-            findClass(
-                GApp.xmpp.ChatMessageManager,
-                Hooker.pkgParam.classLoader
-            ),
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    chatMessageManager = param.thisObject
-                }
-            }
-        )
-
         fun logChatMessage(from: String, text: String) {
-            val chatMessage = ChatMessage().apply {
-                messageId = UUID.randomUUID().toString()
-                sender = ownProfileId
-                recipient = from
-                stanzaId = from
-                conversationId = from
-                timestamp = System.currentTimeMillis()
-                type = "text"
-                body = text
-            }
+            val chatMessage = ChatMessage()
+            chatMessage.messageId = UUID.randomUUID().toString()
+            chatMessage.sender = ownProfileId
+            chatMessage.recipient = from
+            chatMessage.stanzaId = from
+            chatMessage.conversationId = from
+            chatMessage.timestamp = System.currentTimeMillis()
+            chatMessage.type = "text"
+            chatMessage.body = text
 
             callMethod(
                 chatMessageManager,
@@ -742,56 +880,12 @@ object Hooks {
         )
 
         findAndHookMethod(
-            GApp.persistence.repository.ConversationRepo,
+            GApp.manager.persistence.ChatPersistenceManager,
             Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ConversationRepo_.deleteConversation,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ConversationRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ConversationRepo_.deleteConversations,
+            GApp.manager.persistence.ChatPersistenceManager_.deleteConversationsByProfileIds,
             List::class.java,
             "kotlin.coroutines.Continuation",
             ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ChatRepo_.deleteChatMessageFromConversationId,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ChatRepo_.deleteChatMessageListFromConversationId,
-            List::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.persistence.repository.IncomingChatMarkerRepo,
-            Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.IncomingChatMarkerRepo_.deleteIncomingChatMarker,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            ignoreIfBlockInteractor
-        )
-
-        findAndHookMethod(
-            GApp.ui.chat.individual.ChatIndividualFragment,
-            Hooker.pkgParam.classLoader,
-            GApp.ui.chat.individual.ChatIndividualFragment_.showBlockDialog,
-            Boolean::class.javaPrimitiveType,
-            XC_MethodReplacement.DO_NOTHING
         )
 
         val queries = mapOf(
@@ -939,7 +1033,7 @@ object Hooks {
                     GApp.api.PhrasesRestService_.getSavedPhrases -> {
                         val phrases =
                             Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                .associateWith { id ->
+                                .map { id ->
                                     val text = Hooker.sharedPref.getString(
                                         "phrase_${id}_text",
                                         ""
@@ -952,13 +1046,14 @@ object Hooks {
                                         "phrase_${id}_frequency",
                                         0
                                     )
-                                    constructor_Phrase.newInstance(
+                                    id to constructor_Phrase.newInstance(
                                         id,
                                         text,
                                         timestamp,
                                         frequency
                                     )
                                 }
+                                .toMap()
                         val phrasesResponse =
                             constructor_PhrasesResponse.newInstance(phrases)
                         createSuccessResult.invoke(null, phrasesResponse)
@@ -1026,6 +1121,14 @@ object Hooks {
     }
 
     fun useThreeColumnLayoutForFavorites() {
+
+        val recyclerViewId = R.id.fragment_favorite_recycler_view;
+        val profileDistanceId = R.id.profile_distance
+        val profileOnlineNowIconId = R.id.profile_online_now_icon
+        val profileLastSeenId = R.id.profile_last_seen
+        val profileNoteIconId = R.id.profile_note_icon
+        val profileDisplayNameId = R.id.profile_display_name
+
         val Constructor_LayoutParamsRecyclerView = findConstructorExact(
             "androidx.recyclerview.widget.RecyclerView\$LayoutParams",
             Hooker.pkgParam.classLoader,
@@ -1042,7 +1145,7 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val view = param.args[0] as View
-                    val recyclerView = view.findViewById<View>(R.id.fragment_favorite_recycler_view)
+                    val recyclerView = view.findViewById<View>(recyclerViewId)
                     val gridLayoutManager = callMethod(recyclerView, "getLayoutManager")
                     callMethod(gridLayoutManager, "setSpanCount", 3)
 
@@ -1069,7 +1172,7 @@ object Hooks {
 
                                 itemView.layoutParams = rootLayoutParams
                                 val distanceTextView =
-                                    itemView.findViewById<TextView>(R.id.profile_distance)
+                                    itemView.findViewById<TextView>(profileDistanceId)
 
                                 //Make online status and distance appear below each other
                                 //because theres not enough space anymore to show them in a single row
@@ -1088,10 +1191,11 @@ object Hooks {
                                 distanceTextView.gravity = Gravity.START
 
                                 //Remove ugly margin before last seen text when online indicator is invisible
+
                                 val profileOnlineNowIcon =
-                                    itemView.findViewById<ImageView>(R.id.profile_online_now_icon)
+                                    itemView.findViewById<ImageView>(profileOnlineNowIconId)
                                 val profileLastSeen =
-                                    itemView.findViewById<TextView>(R.id.profile_last_seen)
+                                    itemView.findViewById<TextView>(profileLastSeenId)
                                 val lastSeenLayoutParams =
                                     profileLastSeen.layoutParams as LinearLayout.LayoutParams
                                 if (profileOnlineNowIcon.visibility == View.GONE) {
@@ -1106,10 +1210,11 @@ object Hooks {
                                 profileLastSeen.layoutParams = lastSeenLayoutParams
 
                                 //Remove ugly margin before display name when note icon is invisible
+
                                 val profileNoteIcon =
-                                    itemView.findViewById<ImageView>(R.id.profile_note_icon)
+                                    itemView.findViewById<ImageView>(profileNoteIconId)
                                 val profileDisplayName =
-                                    itemView.findViewById<TextView>(R.id.profile_display_name)
+                                    itemView.findViewById<TextView>(profileDisplayNameId)
                                 val displayNameLayoutParams =
                                     profileDisplayName.layoutParams as LinearLayout.LayoutParams
                                 if (profileNoteIcon.visibility == View.GONE) {
@@ -1150,7 +1255,6 @@ object Hooks {
             "org.jivesoftware.smack.packet.Message",
             XC_MethodReplacement.DO_NOTHING
         )
-
         findAndHookMethod(
             GApp.xmpp.ChatMarkersManager,
             Hooker.pkgParam.classLoader,
@@ -1172,16 +1276,6 @@ object Hooks {
         )
     }
 
-    fun fullCascade() {
-        val class_CascadeFragment = findClass(
-            GApp.ui.browse.CascadeFragment,
-            Hooker.pkgParam.classLoader
-        )
+    val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
 
-        findAndHookMethod(
-            class_CascadeFragment,
-            GApp.ui.browse.CascadeFragment_.useServerDrivenCascadeViewModel,
-            RETURN_FALSE
-        )
-    }
 }
