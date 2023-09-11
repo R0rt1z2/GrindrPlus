@@ -47,7 +47,7 @@ class Hooker : IXposedHookLoadPackage {
                     appContext = (param.thisObject as Application).applicationContext
                     pkgVersionName = appContext.packageManager
                         .getPackageInfo(appContext.packageName, 0).versionName
-
+                    
                     if (pkgVersionName != TARGET_PKG_VERSION_NAME) {
                         toastInvalidVersionName()
                         return
@@ -185,7 +185,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "9.12.0"
+        const val TARGET_PKG_VERSION_NAME = "9.16.1"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()

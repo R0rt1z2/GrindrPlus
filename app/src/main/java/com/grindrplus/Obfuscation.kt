@@ -202,26 +202,26 @@ object Obfuscation {
             const val color = "$_R.o0"
 
             object color_ {
-                const val grindr_gold_star_gay = "I"
-                const val grindr_pure_white = "X"
+                const val grindr_gold_star_gay = "G"
+                const val grindr_pure_white = "V"
             }
 
             const val id = "$_R.s0"
 
             object id_ {
-                const val fragment_favorite_recycler_view = "Fb"
-                const val profile_distance = "Gk"
-                const val profile_online_now_icon = "Ul"
-                const val profile_last_seen = "Cl"
-                const val profile_note_icon = "Sl"
-                const val profile_display_name = "Bk"
+                const val fragment_favorite_recycler_view = "ob"
+                const val profile_distance = "fk"
+                const val profile_online_now_icon = "tl"
+                const val profile_last_seen = "bl"
+                const val profile_note_icon = "rl"
+                const val profile_display_name = "ak"
             }
         }
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.t0"
+            const val UserSession = "$_storage.r0"
 
             const val IUserSession = "$_storage.UserSession"
 
@@ -229,11 +229,11 @@ object Obfuscation {
                 const val hasFeature_feature = "a"
                 const val isFree = "r"
                 const val isNoPlusUpsell = "A"
-                const val isNoXtraUpsell = "i"
+                const val isNoXtraUpsell = "h"
                 const val isPlus = "y"
                 const val isXtra = "p"
                 const val isUnlimited = "x"
-                const val getProfileId = "f"
+                const val getProfileId = "v"
             }
         }
 
@@ -252,7 +252,7 @@ object Obfuscation {
                 const val ProfilesViewModel = "$_profileV2.ProfilesViewModel"
 
                 object ProfilesViewModel_ {
-                    const val recordProfileViewsForViewedMeService = "l2"
+                    const val recordProfileViewsForViewedMeService = "t2"
                 }
 
                 object model {
@@ -273,7 +273,7 @@ object Obfuscation {
                 const val BlockViewModel = "$_chat.BlockViewModel"
 
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "t1"
+                    const val _canBeUnsent = "x1"
                 }
 
                 object individual {

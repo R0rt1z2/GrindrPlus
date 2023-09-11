@@ -251,11 +251,14 @@ object Hooks {
                 RETURN_FALSE
             )
 
+            // This likely checking whether the user doesn't have specific roles
+            // (XTRA, FREE_XTRA, UNLIMITED, FREE_UNLIMITED). If the user has none
+            // of these roles, the method returns true by default.
             findAndHookMethod(
                 userSessionImpl,
                 GApp.storage.IUserSession_.isNoXtraUpsell,
                 RETURN_TRUE
-            ) //Not sure what is this for
+            )
 
             findAndHookMethod(
                 userSessionImpl,
@@ -330,13 +333,15 @@ object Hooks {
             RETURN_TRUE
         )
 
+        // Method and field names were previously obfuscated here. As of version
+        // 9.16.1 they switched to human-readable names.
         findAndHookMethod(
             "com.grindrapp.android.flags.featureflags.g",
             Hooker.pkgParam.classLoader,
-            "b",
+            "isEnabled",
             object :  XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val feature = getObjectField(param.thisObject, "b") as String
+                    val feature = getObjectField(param.thisObject, "featureFlagName") as String
                     return when (feature) {
                         "profile-redesign-20230214" -> true
                         "notification-action-chat-20230206" -> true
@@ -407,19 +412,19 @@ object Hooks {
     }
 
     fun unlimitedProfiles() {
-        //Enforce usage of InaccessibleProfileManager...
+        // Enforce usage of InaccessibleProfileManager...
+        findAndHookMethod(
+            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            Hooker.pkgParam.classLoader,
+            "a",
+            RETURN_TRUE
+        )
+
+        // ...and then just never ask for upsells
         findAndHookMethod(
             "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
             Hooker.pkgParam.classLoader,
             "b",
-            RETURN_TRUE
-        )
-
-        //...and then just never ask for upsells
-        findAndHookMethod(
-            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
-            Hooker.pkgParam.classLoader,
-            "c",
             Int::class.javaPrimitiveType,
             Int::class.javaObjectType,
             Int::class.javaObjectType,
@@ -428,7 +433,7 @@ object Hooks {
             RETURN_FALSE
         )
 
-        //Remove all ads and upsells from the cascade
+        // Remove all ads and upsells from the cascade
         findAndHookMethod(
             "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
             Hooker.pkgParam.classLoader,
@@ -627,8 +632,10 @@ object Hooks {
             RETURN_FALSE
         )
 
+        // This class got renamed in version 9.16.1. It was previously called
+        // com.grindrapp.android.ui.profileV2.ChatTapsQuickbarView.
         findAndHookMethod(
-            "com.grindrapp.android.ui.profileV2.ChatTapsQuickbarView",
+            "com.grindrapp.android.ui.profileV2.ProfileQuickbarView",
             Hooker.pkgParam.classLoader,
             "u",
             Boolean::class.javaPrimitiveType,
@@ -661,7 +668,9 @@ object Hooks {
             GApp.ui.profileV2.ProfilesViewModel,
             Hooker.pkgParam.classLoader,
             GApp.ui.profileV2.ProfilesViewModel_.recordProfileViewsForViewedMeService,
-            List::class.java,
+            String::class.java,
+            String::class.java,
+            "com.grindrapp.android.base.model.profile.ReferrerType",
             XC_MethodReplacement.DO_NOTHING
         )
 
