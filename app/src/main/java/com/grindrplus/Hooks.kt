@@ -759,21 +759,21 @@ object Hooks {
         XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val chatMessage = param.args[0] as ChatMessage
-                    val type = chatMessage.type
-                    val syntheticMessage = when (type) {
+                    val chatMessage = ChatMessage(param.args[0])
+
+                    when (chatMessage.type) {
                         "block" -> "[You have been blocked.]"
                         "unblock" -> "[You have been unblocked.]"
                         else -> null
-                    }
-                    if (syntheticMessage != null) {
-                        val clone = chatMessage.clone()
-                        clone.type = "text"
-                        clone.body = syntheticMessage
+                    }?.let {msg ->
+                        val clone = chatMessage.clone().apply {
+                            type = "text"
+                            body = msg
+                        }
 
                         receiveChatMessage.invoke(
                             param.thisObject,
-                            clone,
+                            clone.instance,
                             param.args[1],
                             param.args[2]
                         )
