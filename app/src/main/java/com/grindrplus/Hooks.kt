@@ -1,11 +1,7 @@
 package com.grindrplus
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -13,8 +9,8 @@ import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.core.view.children
+import com.grindrplus.decorated.tabs.model.TapType
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
@@ -51,165 +47,6 @@ object Hooks {
                     var flags = param.args[0] as Int
                     flags = flags and WindowManager.LayoutParams.FLAG_SECURE.inv()
                     param.args[0] = flags
-                }
-            })
-    }
-
-    /**
-     * Add extra profile fields with more information:
-     * - Profile ID
-     * - Last seen (exact date and time)
-     */
-    fun addExtraProfileFields() {
-        val class_ProfileFieldsView = findClass(
-            GApp.ui.profileV2.ProfileFieldsView,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_ExtendedProfileFieldView = findClass(
-            GApp.view.ExtendedProfileFieldView,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_R_color = findClass(
-            GApp.R.color,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
-        ) //I tried using Continuation::class.java, but that only gives a different Class instance (does not work)
-
-
-        val class_Intrinsics = findClass(
-            "kotlin.jvm.internal.Intrinsics",
-            Hooker.pkgParam.classLoader
-        )
-
-        val checkNotNullParameterMethod = findMethodExact(
-            class_Intrinsics,
-            "checkNotNullParameter",
-            Object::class.java,
-            String::class.java
-        )
-
-        findAndHookMethod(
-            class_ProfileFieldsView,
-            GApp.ui.profileV2.ProfileFieldsView_.setProfile,
-            GApp.ui.profileV2.model.Profile,
-            object : XC_MethodHook() {
-                var fieldsViewInstance: Any? = null
-                val context: Any? by lazy {
-                    callMethod(
-                        fieldsViewInstance,
-                        "getContext"
-                    )
-                }
-
-                val labelColorRgb = ContextCompat.getColor(
-                    Hooker.appContext!!,
-                    getStaticIntField(
-                        class_R_color,
-
-                        //Original color for vanilla labels: grindr_gray_2
-                        //to differentiate a normal field from a special one, the name of the special one will be golden.
-                        GApp.R.color_.grindr_gold_star_gay
-                    )
-                )
-
-                val valueColorId = getStaticIntField(
-                    class_R_color,
-                    GApp.R.color_.grindr_pure_white
-                ) //R.color.grindr_pure_white
-
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    fieldsViewInstance = param.thisObject
-
-                    val profileId = callMethod(
-                        param.args[0],
-                        GApp.ui.profileV2.model.Profile_.getProfileId
-                    ) as String
-
-                    param.args[0]?.let {
-                        //val profile = Profile(it)
-                        addProfileFieldUi("Profile ID", profileId, 0).also { view ->
-                            view.setOnLongClickListener {
-                                val clipboard =
-                                    Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Profile ID", profileId)
-                                clipboard.setPrimaryClip(clip)
-                                Toast.makeText(
-                                    Hooker.appContext,
-                                    "Profile ID copied to clipboard",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                true
-                            }
-                        }
-
-                        /*addProfileFieldUi(
-                            "Last Seen",
-                            if (profile.seen != 0L) Utils.toReadableDate(profile.seen) else "N/A",
-                            1
-                        )
-
-                        if (profile.weight != 0.0 && profile.height != 0.0)
-                            addProfileFieldUi(
-                                "Body Mass Index",
-                                Utils.getBmiDescription(profile.weight, profile.height),
-                                2
-                            )*/
-                    }
-
-                    //.setVisibility() of param.thisObject to always VISIBLE (otherwise if the profile has no fields, the additional ones will not be shown)
-                    callMethod(fieldsViewInstance, "setVisibility", View.VISIBLE)
-                }
-
-                //By default, the views are added to the end of the list.
-                private fun addProfileFieldUi(
-                    label: CharSequence,
-                    value: CharSequence,
-                    where: Int = -1
-                ): FrameLayout {
-                    val hooked = XposedBridge.hookMethod(
-                        checkNotNullParameterMethod,
-                        XC_MethodReplacement.DO_NOTHING
-                    )
-                    val extendedProfileFieldView =
-                        newInstance(class_ExtendedProfileFieldView, context, null as AttributeSet?)
-                    hooked.unhook()
-
-                    callMethod(
-                        extendedProfileFieldView,
-                        GApp.view.ExtendedProfileFieldView_.setLabel,
-                        label,
-                        labelColorRgb
-                    )
-
-                    callMethod(
-                        extendedProfileFieldView,
-                        GApp.view.ExtendedProfileFieldView_.setValue,
-                        value,
-                        valueColorId
-                    )
-
-                    //From View.setContentDescription(...)
-                    callMethod(
-                        extendedProfileFieldView,
-                        "setContentDescription",
-                        value
-                    )
-
-                    //(ProfileFieldsView).addView(Landroid/view/View;)V
-                    callMethod(
-                        fieldsViewInstance,
-                        "addView",
-                        extendedProfileFieldView,
-                        where
-                    )
-
-                    return extendedProfileFieldView as FrameLayout
                 }
             })
     }
@@ -333,32 +170,27 @@ object Hooks {
         findAndHookMethod(
             "com.grindrapp.android.flags.featureflags.g",
             Hooker.pkgParam.classLoader,
-            "b",
-            object :  XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val feature = getObjectField(param.thisObject, "b") as String
-                    return when (feature) {
-                        "profile-redesign-20230214" -> true
-                        "notification-action-chat-20230206" -> true
-                        "gender-updates" -> true
-                        "gender-filter" -> true
-                        "gender-exclusion" -> true
-                        "calendar-ui" -> true
-                        "vaccine-profile-field" -> true
-                        "tag-search" -> true
-                        "approximate-distance" -> true
-                        "spectrum_solicitation_sex" -> true
-                        "allow-mock-location" -> true
-                        "spectrum-solicitation-of-drugs" -> true
-                        "reporting-lag-time" -> true
-                        "side-profile-link" -> true
-                        "sift-kill-switch" -> true
-                        "canceled-screen" -> true
-                        "takemehome-button" -> true
-                        "download-my-data" -> true
-                        "face-auth-android" -> true
-                        else -> XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    }
+            "isEnabled",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Boolean {
+                    return mapFeature(
+                        getObjectField(param.thisObject, "featureFlagName") as String,
+                        param
+                    )
+                }
+            }
+        )
+
+        findAndHookMethod(
+            "com.grindrapp.android.flags.featureflags.g",
+            Hooker.pkgParam.classLoader,
+            "isDisabled",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Boolean {
+                    return !mapFeature(
+                        getObjectField(param.thisObject, "featureFlagName") as String,
+                        param
+                    )
                 }
             }
         )
@@ -406,12 +238,42 @@ object Hooks {
         )*/
     }
 
+    private fun mapFeature(
+        feature: String,
+        param: XC_MethodHook.MethodHookParam
+    ): Boolean = when (feature) {
+        "profile-redesign-20230214" -> true
+        "notification-action-chat-20230206" -> true
+        "gender-updates" -> true
+        "gender-filter" -> true
+        "gender-exclusion" -> true
+        "calendar-ui" -> true
+        "vaccine-profile-field" -> true
+        "tag-search" -> true
+        "approximate-distance" -> true
+        "spectrum_solicitation_sex" -> true
+        "allow-mock-location" -> true
+        "spectrum-solicitation-of-drugs" -> true
+        "reporting-lag-time" -> true
+        "side-profile-link" -> true
+        "sift-kill-switch" -> true
+        "canceled-screen" -> true
+        "takemehome-button" -> true
+        "download-my-data" -> true
+        "face-auth-android" -> true
+        else -> XposedBridge.invokeOriginalMethod(
+            param.method,
+            param.thisObject,
+            param.args
+        ) as Boolean
+    }
+
     fun unlimitedProfiles() {
         //Enforce usage of InaccessibleProfileManager...
         findAndHookMethod(
             "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
             Hooker.pkgParam.classLoader,
-            "b",
+            "a",
             RETURN_TRUE
         )
 
@@ -419,7 +281,7 @@ object Hooks {
         findAndHookMethod(
             "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
             Hooker.pkgParam.classLoader,
-            "c",
+            "b",
             Int::class.javaPrimitiveType,
             Int::class.javaObjectType,
             Int::class.javaObjectType,
@@ -428,7 +290,7 @@ object Hooks {
             RETURN_FALSE
         )
 
-        //Remove all ads and upsells from the cascade
+        //Remove all ads and upsells from the cascade - ServerDrivenCascadeCacheState
         findAndHookMethod(
             "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
             Hooker.pkgParam.classLoader,
@@ -442,29 +304,6 @@ object Hooks {
                 }
 
             }
-        )
-    }
-
-    /**
-     * Allow to use SOME (not all of them) hidden features that Grindr developers have not yet made public
-     * or they are just testing.
-     */
-    fun allowSomeExperiments() {
-        val class_Experiments = findClass(
-            GApp.experiment.Experiments,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_IExperimentsManager = findClass(
-            GApp.base.Experiment.IExperimentsManager,
-            Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(
-            class_Experiments,
-            GApp.experiment.Experiments_.uncheckedIsEnabled_expMgr,
-            class_IExperimentsManager,
-            RETURN_TRUE
         )
     }
 
@@ -595,13 +434,13 @@ object Hooks {
     fun unlimitedTaps() {
         val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam.classLoader)
 
-        val tapTypeToHook = ChatMessage.TAP_TYPE_NONE
+        val tapTypeToHook = TapType.NONE
 
         //Reset the tap value to allow multitapping.
         findAndHookMethod(
             class_TapsAnimLayout,
             GApp.view.TapsAnimLayout_.setTapType,
-            String::class.java,
+            TapType.CLAZZ,
             Boolean::class.javaPrimitiveType,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
@@ -628,7 +467,7 @@ object Hooks {
         )
 
         findAndHookMethod(
-            "com.grindrapp.android.ui.profileV2.ChatTapsQuickbarView",
+            "com.grindrapp.android.ui.profileV2.ProfileQuickbarView",
             Hooker.pkgParam.classLoader,
             "u",
             Boolean::class.javaPrimitiveType,
@@ -750,7 +589,7 @@ object Hooks {
         XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val chatMessage = param.args[0] as ChatMessage
+                    val chatMessage = ChatMessage(param.args[0])
                     val type = chatMessage.type
                     val syntheticMessage = when (type) {
                         "block" -> "[You have been blocked.]"
@@ -880,9 +719,9 @@ object Hooks {
         )
 
         findAndHookMethod(
-            GApp.manager.persistence.ChatPersistenceManager,
+            GApp.persistence.repository.ChatRepo,
             Hooker.pkgParam.classLoader,
-            GApp.manager.persistence.ChatPersistenceManager_.deleteConversationsByProfileIds,
+            GApp.persistence.repository.ChatRepo_.deleteMessagesByConversationIds,
             List::class.java,
             "kotlin.coroutines.Continuation",
             ignoreIfBlockInteractor
