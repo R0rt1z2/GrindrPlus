@@ -370,22 +370,23 @@ object Hooks {
             RETURN_FALSE
         )
 
+        fun getFixedLocationParam(param: XC_MethodHook.MethodHookParam, latOrLon: Boolean): Any {
+            val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
+            val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+            if (!locationFile.exists()) {
+                locationFile.createNewFile()
+            }
+            val content = locationFile.readText()
+            return regex.find(content)?.groups?.get(if (latOrLon) 1 else 2)?.value?.toDouble()
+                ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+        }
+
         findAndHookMethod(
             class_Location,
             "getLatitude",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
-                    if (!locationFile.exists()) {
-                        locationFile.createNewFile()
-                    }
-                    val content = locationFile.readText()
-                    val result = regex.find(content)
-                    return if (result == null) {
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    } else {
-                        result.groups[1]!!.value.toDouble()
-                    }
+                    return getFixedLocationParam(param, true)
                 }
             }
         )
@@ -395,17 +396,7 @@ object Hooks {
             "getLongitude",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val locationFile = File(Hooker.appContext.filesDir, "location.txt")
-                    if (!locationFile.exists()) {
-                        locationFile.createNewFile()
-                    }
-                    val content = locationFile.readText()
-                    val result = regex.find(content)
-                    return if (result == null) {
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    } else {
-                        result.groups[2]!!.value.toDouble()
-                    }
+                    return getFixedLocationParam(param, false)
                 }
             }
         )
@@ -418,6 +409,8 @@ object Hooks {
             )
         }
     }
+
+
 
 
     /**
@@ -1104,6 +1097,6 @@ object Hooks {
         )
     }
 
-    val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
+
 
 }
