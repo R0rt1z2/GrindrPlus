@@ -873,7 +873,7 @@ object Hooks {
                     GApp.api.PhrasesRestService_.getSavedPhrases -> {
                         val phrases =
                             Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                .map { id ->
+                                .associateWith { id ->
                                     val text = Hooker.sharedPref.getString(
                                         "phrase_${id}_text",
                                         ""
@@ -886,14 +886,13 @@ object Hooks {
                                         "phrase_${id}_frequency",
                                         0
                                     )
-                                    id to constructor_Phrase.newInstance(
+                                    constructor_Phrase.newInstance(
                                         id,
                                         text,
                                         timestamp,
                                         frequency
                                     )
                                 }
-                                .toMap()
                         val phrasesResponse =
                             constructor_PhrasesResponse.newInstance(phrases)
                         createSuccessResult.invoke(null, phrasesResponse)
