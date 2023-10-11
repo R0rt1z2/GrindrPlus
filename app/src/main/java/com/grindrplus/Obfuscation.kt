@@ -235,6 +235,11 @@ object Obfuscation {
                 val _experiments = "$_profile.experiments"
 
                 val InaccessibleProfileManager =  "$_experiments.InaccessibleProfileManager"
+                object InaccessibleProfileManager_ {
+
+                    val isProfileEnabled =  "a"
+                    val shouldShowProfile = "b"
+                }
             }
         }
         object ui {
@@ -274,7 +279,7 @@ object Obfuscation {
                 const val BlockViewModel = "$_chat.BlockViewModel"
 
                 object ChatBaseFragmentV2_ {
-                    const val _canBeUnsent = "x1"
+                    const val _canBeUnsent = "B1"
                 }
             }
         }
@@ -297,11 +302,11 @@ object Obfuscation {
             const val TapsAnimLayout = "$_view.TapsAnimLayout"
 
             object TapsAnimLayout_ {
-                const val tapType = "i" //cuidado ahora es un model
+                const val tapType = "i"
 
                 const val getCanSelectVariants = "getCanSelectVariants"
                 const val getDisableVariantSelection = "getDisableVariantSelection"
-                const val setTapType = "S" //cuidado ahora es un model
+                const val setTapType = "S"
             }
         }
 

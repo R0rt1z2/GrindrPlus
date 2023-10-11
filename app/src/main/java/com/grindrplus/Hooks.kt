@@ -293,7 +293,7 @@ object Hooks {
         findAndHookMethod(
             GApp.profile.experiments.InaccessibleProfileManager,
             Hooker.pkgParam.classLoader,
-            "a",
+            GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
             RETURN_TRUE
         )
 
@@ -301,7 +301,7 @@ object Hooks {
         findAndHookMethod(
             GApp.profile.experiments.InaccessibleProfileManager,
             Hooker.pkgParam.classLoader,
-            "b",
+            GApp.profile.experiments.InaccessibleProfileManager_.shouldShowProfile,
             Int::class.javaPrimitiveType,
             Int::class.javaObjectType,
             Int::class.javaObjectType,
