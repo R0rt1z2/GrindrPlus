@@ -173,7 +173,7 @@ object Hooks {
             "isEnabled",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
-                    return mapFeature(
+                    return mapFeatureFlag(
                         getObjectField(param.thisObject, "featureFlagName") as String,
                         param
                     )
@@ -187,7 +187,7 @@ object Hooks {
             "isDisabled",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
-                    return !mapFeature(
+                    return !mapFeatureFlag(
                         getObjectField(param.thisObject, "featureFlagName") as String,
                         param
                     )
@@ -238,7 +238,7 @@ object Hooks {
         )*/
     }
 
-    private fun mapFeature(
+    private fun mapFeatureFlag(
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
@@ -254,13 +254,33 @@ object Hooks {
         "spectrum_solicitation_sex" -> true
         "allow-mock-location" -> true
         "spectrum-solicitation-of-drugs" -> true
-        "reporting-lag-time" -> true
         "side-profile-link" -> true
-        "sift-kill-switch" -> true
         "canceled-screen" -> true
         "takemehome-button" -> true
         "download-my-data" -> true
         "face-auth-android" -> true
+
+        // The following features are either not working properly, useless, privacy-invasive or not tested.
+        //"cookie-tap" -> true // Changes the fire icon into a cookie icon in the tap button
+        //"sift-kill-switch" -> true
+        //"reporting-lag-time" -> true
+        //"store-default-product" -> true
+        //"upgrade-prompt-interval" -> true
+        //"custom-dns" -> true
+        //"favorite-profile-notes-server" -> true
+        //"intro-offer-free-trial-20221222" -> true
+        //"ad-identifier" -> true
+        //"ads-quality-edu" -> true
+        //"android-circuitbreaker" -> true
+        //"verbose-ad-analytics" -> true
+        //"viewed-me-count-via-websocket-android-20230906" -> true
+        //"sk-pipa-password" -> true
+        //"passwordLength" -> true
+        //"sk-privacy-policy-20230130" -> true
+        //"ad-backfill" -> true
+        //"android-purchase-and-restore-endpoint-migration-20230711" -> true
+        //"server-driven-taps" -> true
+
         else -> XposedBridge.invokeOriginalMethod(
             param.method,
             param.thisObject,
@@ -763,7 +783,7 @@ object Hooks {
                     "            AND (1 IN (:isFavorite) AND 0 IN (:isFavorite) OR is_favorite in (:isFavorite))\n" +
                     "        ORDER BY conversation.pin DESC, conversation.last_message_timestamp DESC, conversation.conversation_id DESC\n" +
                     "        "
-        )
+        ) // We just remove the "AND blocks.profileId is NULL" part to allow blocked profiles
 
         findAndHookMethod("androidx.room.RoomSQLiteQuery",
             Hooker.pkgParam.classLoader,
