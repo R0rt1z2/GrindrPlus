@@ -549,38 +549,6 @@ object Hooks {
         )
     }
 
-    /*
-    fun notifyBlockStatusViaToast() {
-        val class_BlockedByHelper = findClass(
-            GApp.persistence.cache.BlockedByHelper,
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(class_BlockedByHelper, GApp.persistence.cache.BlockByHelper_.addBlockByProfile, String::class.java, class_Continuation, object : XC_MethodHook(){
-            override fun beforeHookedMethod(param: MethodHookParam?) {
-                val profileId: String = param!!.args[0] as String
-                ContextCompat.getMainExecutor(Hooker.appContext).execute {
-                    Toast.makeText(Hooker.appContext, "Profile [ID: $profileId] has blocked your profile.", Toast.LENGTH_LONG).show()
-                }
-            }
-        })
-
-        findAndHookMethod(class_BlockedByHelper, GApp.persistence.cache.BlockByHelper_.removeBlockByProfile, String::class.java, class_Continuation, object : XC_MethodHook(){
-            override fun beforeHookedMethod(param: MethodHookParam?) {
-                val profileId: String = param!!.args[0] as String
-                ContextCompat.getMainExecutor(Hooker.appContext).execute {
-                    Toast.makeText(Hooker.appContext, "Profile [ID: $profileId] has unblocked your profile.", Toast.LENGTH_LONG).show()
-                }
-            }
-        })
-    }
-    */
-
     var chatMessageManager: Any? = null
 
     fun storeChatMessageManager() {
@@ -1006,7 +974,8 @@ object Hooks {
                     val view = param.args[0] as View
                     val recyclerView = view.findViewById<View>(recyclerViewId)
                     val gridLayoutManager = callMethod(recyclerView, "getLayoutManager")
-                    callMethod(gridLayoutManager, "setSpanCount", 3)
+                    val NUMBER_OF_COLS = 3
+                    callMethod(gridLayoutManager, "setSpanCount", NUMBER_OF_COLS)
 
                     val adapter = callMethod(recyclerView, "getAdapter")
 
@@ -1019,7 +988,7 @@ object Hooks {
                             override fun afterHookedMethod(param: MethodHookParam) {
                                 //Adjust grid item size
                                 val size =
-                                    Hooker.appContext.resources.displayMetrics.widthPixels / 3
+                                    Hooker.appContext.resources.displayMetrics.widthPixels / NUMBER_OF_COLS
                                 val rootLayoutParams =
                                     Constructor_LayoutParamsRecyclerView.newInstance(
                                         size,
