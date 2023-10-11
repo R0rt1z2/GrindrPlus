@@ -1,6 +1,13 @@
 # Grindr Plus
 Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr.
 
+## Join Our Discord Community
+
+[![Discord](https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord&style=for-the-badge)](https://discord.gg/SPb6Kc7S4C)
+
+Welcome to our Discord community! This is the place to discuss [Grindr Plus], get support, and collaborate with other contributors.
+Feel free to join and become a part of our growing community!
+
 ## Extra features
 (Depending on the version of the client and module you're using, some features may not be available or may work buggy.)
 - Allow mocking locations.
