@@ -229,13 +229,22 @@ object Obfuscation {
             }
         }
 
+        object profile {
+            val _profile = "com.grindrapp.android.profile"
+            object experiments {
+                val _experiments = "$_profile.experiments"
+
+                val InaccessibleProfileManager =  "$_experiments.InaccessibleProfileManager"
+            }
+        }
         object ui {
             private const val _ui = Constants.GRINDR_PKG + ".ui"
 
             object profileV2 {
                 private const val _profileV2 = "$_ui.profileV2"
 
-                const val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
+                val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
+                val ProfileQuickbarView = "$_profileV2.ProfileQuickbarView"
 
                 object ProfileFieldsView_ {
                     const val setProfile = "setProfile"

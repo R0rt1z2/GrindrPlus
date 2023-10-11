@@ -271,7 +271,7 @@ object Hooks {
     fun unlimitedProfiles() {
         //Enforce usage of InaccessibleProfileManager...
         findAndHookMethod(
-            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            GApp.profile.experiments.InaccessibleProfileManager,
             Hooker.pkgParam.classLoader,
             "a",
             RETURN_TRUE
@@ -279,7 +279,7 @@ object Hooks {
 
         //...and then just never ask for upsells
         findAndHookMethod(
-            "com.grindrapp.android.profile.experiments.InaccessibleProfileManager",
+            GApp.profile.experiments.InaccessibleProfileManager,
             Hooker.pkgParam.classLoader,
             "b",
             Int::class.javaPrimitiveType,
@@ -466,8 +466,9 @@ object Hooks {
             RETURN_FALSE
         )
 
+
         findAndHookMethod(
-            "com.grindrapp.android.ui.profileV2.ProfileQuickbarView",
+            GApp.ui.profileV2.ProfileQuickbarView,
             Hooker.pkgParam.classLoader,
             "u",
             Boolean::class.javaPrimitiveType,
