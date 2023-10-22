@@ -1,24 +1,28 @@
 package com.grindrplus
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
 import android.widget.*
 import androidx.core.view.children
-import com.grindrplus.decorated.tabs.model.TapType
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
+import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
-import com.grindrplus.decorated.persistence.model.ChatMessage
 import com.grindrplus.decorated.R
+import com.grindrplus.decorated.persistence.model.ChatMessage
+import com.grindrplus.decorated.tabs.model.TapType
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -28,6 +32,7 @@ import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
 import kotlin.time.Duration
+
 
 object Hooks {
     /**
@@ -203,7 +208,7 @@ object Hooks {
             RETURN_FALSE
         )
 
-        /*val class_UpsellsV8 = findClass(
+        val class_UpsellsV8 = findClass(
             GApp.model.UpsellsV8,
             Hooker.pkgParam.classLoader
         )
@@ -235,7 +240,7 @@ object Hooks {
             class_Inserts,
             GApp.model.Inserts_.getMpuXtra,
             RETURN_ZERO
-        )*/
+        )
     }
 
     private fun mapFeatureFlag(
