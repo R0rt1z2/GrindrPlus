@@ -84,7 +84,18 @@ object Hooks {
                 userSessionImpl,
                 GApp.storage.IUserSession_.hasFeature_feature,
                 class_Feature,
-                RETURN_TRUE
+                object :  XC_MethodReplacement() {
+                    override fun replaceHookedMethod(param: MethodHookParam): Any {
+                        // R0rt1z2:
+                        // For whatever reason, enabling this feature causes the "Send Video"
+                        // button to disappear. This does not seem to affect screenshots so we
+                        // just disable this feature.
+                        if (param.args[0].toString() == "DisableScreenshot") {
+                            return false
+                        }
+                        return true
+                    }
+                }
             )
 
             findAndHookMethod(
@@ -157,18 +168,6 @@ object Hooks {
         findAndHookMethod(
             class_Feature,
             GApp.model.Feature_.isGranted,
-            RETURN_TRUE
-        )
-
-        val class_IUserSession = findClass(
-            GApp.storage.IUserSession,
-            Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(
-            class_Feature,
-            GApp.model.Feature_.isGranted,
-            class_IUserSession,
             RETURN_TRUE
         )
 
