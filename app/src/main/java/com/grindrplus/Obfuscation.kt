@@ -27,7 +27,7 @@ object Obfuscation {
                 const val increaseSavedPhraseClickCount = "H"
             }
 
-            const val PhrasesRestService = "$_api.l"
+            const val PhrasesRestService = "v3.j"
 
             object PhrasesRestService_ {
                 //Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
@@ -35,7 +35,7 @@ object Obfuscation {
             }
 
             //Contains @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "$_api.b"
+            const val AnalyticsRestService = "v3.b"
         }
 
         object experiment {
@@ -163,6 +163,7 @@ object Obfuscation {
                 }
 
                 const val ProfileRepo = "$_repository.ProfileRepo"
+                // com.grindrapp.android.persistence.repository.ProfileRepo
 
                 object ProfileRepo_ {
                     const val delete = "delete"
@@ -181,6 +182,8 @@ object Obfuscation {
                 }
 
                 const val BlockRepo = "$_repository.BlockRepo"
+
+                // com.grindrapp.android.persistence.repository.BlockRepo
                 object BlockRepo_ {
                     const val add = "add"
                     const val delete = "delete"
@@ -213,7 +216,7 @@ object Obfuscation {
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
 
-            const val UserSession = "$_storage.q0"
+            const val UserSession = "$_storage.b"
 
             const val IUserSession = "$_storage.UserSession"
 
@@ -235,6 +238,7 @@ object Obfuscation {
                 val _experiments = "$_profile.experiments"
 
                 val InaccessibleProfileManager =  "$_experiments.InaccessibleProfileManager"
+
                 object InaccessibleProfileManager_ {
 
                     val isProfileEnabled =  "a"
@@ -256,6 +260,8 @@ object Obfuscation {
                 }
 
                 const val ProfilesViewModel = "$_profileV2.ProfilesViewModel"
+
+                // com.grindrapp.android.ui.profileV2.ProfilesViewModel
 
                 object ProfilesViewModel_ {
                     const val recordProfileViewsForViewedMeService = "r2"
@@ -288,6 +294,7 @@ object Obfuscation {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
             const val ProfileUtils = "$_utils.ProfileUtilsV2"
+            // com.grindrapp.android.utils.ProfileUtilsV2
 
             object ProfileUtils_ {
                 //Look for value of 600000
@@ -306,7 +313,7 @@ object Obfuscation {
 
                 const val getCanSelectVariants = "getCanSelectVariants"
                 const val getDisableVariantSelection = "getDisableVariantSelection"
-                const val setTapType = "S"
+                const val setTapType = "k"
             }
         }
 
@@ -316,10 +323,10 @@ object Obfuscation {
             const val ChatMessageManager = "$_xmpp.ChatMessageManager"
 
             object ChatMessageManager_ {
-                const val handleIncomingChatMessage = "p"
+                const val handleIncomingChatMessage = "a"
             }
 
-            const val ChatMarkersManager = "$_xmpp.i"
+            const val ChatMarkersManager = "$_xmpp.a"
 
             object ChatMarkersManager_ {
                 const val addDisplayedExtension = "d"

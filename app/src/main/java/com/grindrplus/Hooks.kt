@@ -3,6 +3,7 @@ package com.grindrplus
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -172,7 +173,7 @@ object Hooks {
         )
 
         findAndHookMethod(
-            "com.grindrapp.android.flags.featureflags.g",
+            "s5.g",
             Hooker.pkgParam.classLoader,
             "isEnabled",
             object : XC_MethodReplacement() {
@@ -186,7 +187,7 @@ object Hooks {
         )
 
         findAndHookMethod(
-            "com.grindrapp.android.flags.featureflags.g",
+            "s5.g",
             Hooker.pkgParam.classLoader,
             "isDisabled",
             object : XC_MethodReplacement() {
@@ -199,12 +200,21 @@ object Hooks {
             }
         )
 
-        //Once you uncheck "precise", the option will disappear normally (not sure if that's a bug). This fix prevents that.
-        findAndHookMethod(
-            "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$f",
+        // Once you uncheck "precise", the option will disappear normally (not sure if that's a bug). This fix prevents that.
+        findAndHookConstructor(
+            "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$e",
             Hooker.pkgParam.classLoader,
-            "e",
-            RETURN_FALSE
+            Int::class.java,
+            Boolean::class.java,
+            Boolean::class.java,
+            Boolean::class.java,
+            Boolean::class.java,
+            Set::class.java,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam?) {
+                    param?.args?.set(4, false)
+                }
+            }
         )
 
         val class_UpsellsV8 = findClass(
@@ -246,7 +256,7 @@ object Hooks {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> true
+        "profile-redesign-20230214" -> false
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
@@ -299,19 +309,6 @@ object Hooks {
             Hooker.pkgParam.classLoader,
             GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
             RETURN_TRUE
-        )
-
-        //...and then just never ask for upsells
-        findAndHookMethod(
-            GApp.profile.experiments.InaccessibleProfileManager,
-            Hooker.pkgParam.classLoader,
-            GApp.profile.experiments.InaccessibleProfileManager_.shouldShowProfile,
-            Int::class.javaPrimitiveType,
-            Int::class.javaObjectType,
-            Int::class.javaObjectType,
-            GApp.storage.IUserSession,
-            "com.grindrapp.android.base.model.profile.ReferrerType",
-            RETURN_FALSE
         )
 
         //Remove all ads and upsells from the cascade - ServerDrivenCascadeCacheState
@@ -451,25 +448,6 @@ object Hooks {
     fun unlimitedTaps() {
         val class_TapsAnimLayout = findClass(GApp.view.TapsAnimLayout, Hooker.pkgParam.classLoader)
 
-        val tapTypeToHook = TapType.NONE
-
-        //Reset the tap value to allow multitapping.
-        findAndHookMethod(
-            class_TapsAnimLayout,
-            GApp.view.TapsAnimLayout_.setTapType,
-            TapType.CLAZZ,
-            Boolean::class.javaPrimitiveType,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    setObjectField(
-                        param.thisObject,
-                        GApp.view.TapsAnimLayout_.tapType,
-                        tapTypeToHook
-                    )
-                }
-            }
-        )
-
         //Reset taps on long press (allows using tap variants)
         findAndHookMethod(
             class_TapsAnimLayout,
@@ -481,19 +459,6 @@ object Hooks {
             class_TapsAnimLayout,
             GApp.view.TapsAnimLayout_.getDisableVariantSelection,
             RETURN_FALSE
-        )
-
-
-        findAndHookMethod(
-            GApp.ui.profileV2.ProfileQuickbarView,
-            Hooker.pkgParam.classLoader,
-            "u",
-            Boolean::class.javaPrimitiveType,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    param.args[0] = true
-                }
-            }
         )
     }
 
@@ -514,13 +479,13 @@ object Hooks {
     }
 
     fun preventRecordProfileViews() {
-        findAndHookMethod(
+        /*findAndHookMethod(
             GApp.ui.profileV2.ProfilesViewModel,
             Hooker.pkgParam.classLoader,
             GApp.ui.profileV2.ProfilesViewModel_.recordProfileViewsForViewedMeService,
             List::class.java,
             XC_MethodReplacement.DO_NOTHING
-        )
+        )*/
 
         findAndHookMethod(
             GApp.persistence.repository.ProfileRepo,
@@ -1100,7 +1065,4 @@ object Hooks {
             XC_MethodReplacement.DO_NOTHING
         )
     }
-
-
-
 }
