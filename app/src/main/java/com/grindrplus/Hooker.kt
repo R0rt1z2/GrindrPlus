@@ -32,11 +32,12 @@ class Hooker : IXposedHookLoadPackage {
             e.message?.let { Logger.xLog(it) }
         }
 
+        /*
         try {
             Hooks.localSavedPhrases()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog(it) }
-        }
+        }*/
 
         findAndHookMethod(
             Application::class.java,
@@ -89,12 +90,12 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
-                        //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
-                        Hooks.hookOnlineIndicatorDuration(3.minutes)
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                    //try {
+                    //    //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
+                    //    Hooks.hookOnlineIndicatorDuration(3.minutes)
+                    //} catch (e: Exception) {
+                    //    e.message?.let { Logger.xLog(it) }
+                    //}
 
                     try {
                         Hooks.unlimitedExpiringPhotos()
@@ -120,11 +121,11 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
-                        Hooks.makeMessagesAlwaysRemovable()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                    //try {
+                    //    Hooks.makeMessagesAlwaysRemovable()
+                    //} catch (e: Exception) {
+                    //    e.message?.let { Logger.xLog(it) }
+                    //}
 
                     try {
                         Hooks.keepChatsOfBlockedProfiles()
@@ -150,23 +151,26 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    try {
-                        Hooks.dontSendChatMarkers()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                    // R0rt1z2: This is not required as of 9.17.4 because
+                    // both `addDisplayedExtension` and `addReceivedExtension`
+                    // have been dropped from `ChatMarkersManager`.
+                    // try {
+                    //     Hooks.dontSendChatMarkers()
+                    // } catch (e: Exception) {
+                    //     e.message?.let { Logger.xLog(it) }
+                    // }*/
 
-                    try {
-                        Hooks.useThreeColumnLayoutForFavorites()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                    //try {
+                    //    Hooks.useThreeColumnLayoutForFavorites()
+                    //} catch (e: Exception) {
+                    //    e.message?.let { Logger.xLog(it) }
+                    //}
 
-                    try {
-                        Hooks.disableAnalytics()
-                    } catch (e: Exception) {
-                        e.message?.let { Logger.xLog(it) }
-                    }
+                    //try {
+                    //    Hooks.disableAnalytics()
+                    //} catch (e: Exception) {
+                    //    e.message?.let { Logger.xLog(it) }
+                    //}
 
                     /*try {
                         Hooks.addExtraProfileFields()
@@ -185,7 +189,7 @@ class Hooker : IXposedHookLoadPackage {
     }
 
     companion object {
-        const val TARGET_PKG_VERSION_NAME = "9.17.3"
+        const val TARGET_PKG_VERSION_NAME = "9.17.4"
 
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
