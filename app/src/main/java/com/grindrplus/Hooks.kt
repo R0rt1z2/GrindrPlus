@@ -1065,4 +1065,35 @@ object Hooks {
             XC_MethodReplacement.DO_NOTHING
         )
     }
+
+    /**
+     * Hook the method that returns the update availability
+     * and spoof the app version. Inspired by @Tebbe's idea.
+     */
+    fun hookAppUpdates() {
+        findAndHookMethod(
+            "com.google.android.play.core.appupdate.AppUpdateInfo",
+            Hooker.pkgParam.classLoader,
+            "updateAvailability",
+            RETURN_ZERO
+        )
+
+        findAndHookConstructor(
+            "com.grindrapp.android.base.config.AppConfiguration",
+            Hooker.pkgParam.classLoader,
+            findClass("com.grindrapp.android.base.config.AppConfiguration.b", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.config.AppConfiguration.f", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.config.AppConfiguration.d", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.config.AppConfiguration.e", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.config.AppConfiguration.c", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.config.AppConfiguration.a", Hooker.pkgParam.classLoader),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    setObjectField(param.thisObject, "a", "9.17.4")
+                    setObjectField(param.thisObject, "b", 118992)
+                    setObjectField(param.thisObject, "u", "9.17.4.118992")
+                }
+            }
+        )
+    }
 }
