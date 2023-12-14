@@ -38,12 +38,12 @@ class Hooker : IXposedHookLoadPackage {
             e.message?.let { Logger.xLog(it) }
         }
 
-        /*
+
         try {
             Hooks.localSavedPhrases()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog(it) }
-        }*/
+        }
 
         findAndHookMethod(
             Application::class.java,
@@ -172,11 +172,11 @@ class Hooker : IXposedHookLoadPackage {
                     //    e.message?.let { Logger.xLog(it) }
                     //}
 
-                    //try {
-                    //    Hooks.disableAnalytics()
-                    //} catch (e: Exception) {
-                    //    e.message?.let { Logger.xLog(it) }
-                    //}
+                    try {
+                        Hooks.disableAnalytics()
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
 
                     /*try {
                         Hooks.addExtraProfileFields()

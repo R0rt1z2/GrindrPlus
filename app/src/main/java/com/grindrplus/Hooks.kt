@@ -1,14 +1,10 @@
 package com.grindrplus
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
@@ -23,7 +19,6 @@ import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
 import com.grindrplus.decorated.R
 import com.grindrplus.decorated.persistence.model.ChatMessage
-import com.grindrplus.decorated.tabs.model.TapType
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -735,10 +730,9 @@ object Hooks {
         val class_PhrasesRestService =
             findClass(GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
-        val createSuccessResult = findMethodExact(
-            GApp.network.either.ResultHelper,
+        val constructor_createSuccessResult = findConstructorExact(
+            "h7.a.b",
             Hooker.pkgParam.classLoader,
-            GApp.network.either.ResultHelper_.createSuccess,
             Any::class.java
         )
 
@@ -785,7 +779,7 @@ object Hooks {
                             .apply()
                         val response =
                             constructor_AddSavedPhraseResponse.newInstance(id.toString())
-                        createSuccessResult.invoke(null, response)
+                        constructor_createSuccessResult.newInstance(response)
                     }
                     GApp.api.ChatRestService_.deleteSavedPhrase -> {
                         val id = args[0] as String
@@ -797,7 +791,7 @@ object Hooks {
                             .remove("phrase_${id}_frequency")
                             .remove("phrase_${id}_timestamp")
                             .apply()
-                        createSuccessResult.invoke(null, Unit)
+                        constructor_createSuccessResult.newInstance(Unit)
                     }
                     GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
                         val id = args[0] as String
@@ -806,7 +800,7 @@ object Hooks {
                         Hooker.sharedPref.edit()
                             .putInt("phrase_${id}_frequency", currentFrequency + 1)
                             .apply()
-                        createSuccessResult.invoke(null, Unit)
+                        constructor_createSuccessResult.newInstance(Unit)
                     }
                     else -> invocationHandler.invoke(proxy, method, args)
                 }
@@ -845,7 +839,7 @@ object Hooks {
                                 }
                         val phrasesResponse =
                             constructor_PhrasesResponse.newInstance(phrases)
-                        createSuccessResult.invoke(null, phrasesResponse)
+                        constructor_createSuccessResult.newInstance( phrasesResponse)
                     }
                     else -> invocationHandler.invoke(proxy, method, args)
                 }
@@ -876,10 +870,9 @@ object Hooks {
         val class_AnalyticsRestService =
             findClass(GApp.api.AnalyticsRestService, Hooker.pkgParam.classLoader)
 
-        val createSuccessResult = findMethodExact(
-            GApp.network.either.ResultHelper,
+        val constructor_createSuccessResult = findConstructorExact(
+            "h7.a.b",
             Hooker.pkgParam.classLoader,
-            GApp.network.either.ResultHelper_.createSuccess,
             Any::class.java
         )
 
@@ -899,7 +892,7 @@ object Hooks {
                             ) { proxy, method, args ->
                                 //Just block all methods for now,
                                 //in the future we might need to differentiate if they change the service interface.
-                                createSuccessResult(Unit)
+                                constructor_createSuccessResult.newInstance(Unit)
                             }
                         }
                         else -> service
