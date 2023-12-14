@@ -1,5 +1,6 @@
 package com.grindrplus
 
+import android.R.attr.classLoader
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -428,12 +429,12 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        val class_ProfileUtils = findClass(GApp.utils.ProfileUtils, Hooker.pkgParam.classLoader)
-        setStaticLongField(
-            class_ProfileUtils,
-            GApp.utils.ProfileUtils_.onlineIndicatorDuration,
-            duration.inWholeMilliseconds
-        )
+        findAndHookMethod(findClass("k6.p", Hooker.pkgParam.classLoader),
+            "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Boolean {
+                    return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
+                }
+            })
     }
 
     /**

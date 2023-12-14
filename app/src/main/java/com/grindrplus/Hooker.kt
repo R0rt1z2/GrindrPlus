@@ -96,12 +96,12 @@ class Hooker : IXposedHookLoadPackage {
                         e.message?.let { Logger.xLog(it) }
                     }
 
-                    //try {
-                    //    //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
-                    //    Hooks.hookOnlineIndicatorDuration(3.minutes)
-                    //} catch (e: Exception) {
-                    //    e.message?.let { Logger.xLog(it) }
-                    //}
+                    try {
+                        //I've set this to max 3 min. If we make an UI for Hook Settings, we'll let the user to change this.
+                        Hooks.hookOnlineIndicatorDuration(3.minutes)
+                    } catch (e: Exception) {
+                        e.message?.let { Logger.xLog(it) }
+                    }
 
                     try {
                         Hooks.unlimitedExpiringPhotos()
