@@ -24,6 +24,12 @@ class Hooker : IXposedHookLoadPackage {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         pkgParam = lpparam
 
+        try {
+            Hooks.hookAppUpdates()
+        } catch (e: Exception) {
+            e.message?.let { Logger.xLog(it) }
+        }
+
         //This is a quick and dirty fix, but these should be called before the application context is created.
 
         try {
