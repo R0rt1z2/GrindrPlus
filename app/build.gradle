@@ -52,4 +52,7 @@ dependencies {
 
     //AndroidX Core
     implementation 'androidx.core:core-ktx:1.8.0'
+
+    // OkHttp
+    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 }
