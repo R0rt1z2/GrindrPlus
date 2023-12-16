@@ -17,6 +17,7 @@ import androidx.core.view.children
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
+import com.grindrplus.Constants.Returns.RETURN_ONE
 import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
@@ -1075,7 +1076,7 @@ object Hooks {
             "com.google.android.play.core.appupdate.AppUpdateInfo",
             Hooker.pkgParam.classLoader,
             "updateAvailability",
-            RETURN_ZERO
+            RETURN_ONE // UPDATE_NOT_AVAILABLE
         )
 
         findAndHookConstructor(
