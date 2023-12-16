@@ -911,13 +911,41 @@ object Hooks {
     }
 
     fun useThreeColumnLayoutForFavorites() {
+        val recyclerViewId = Hooker.appContext.resources.getIdentifier(
+            "fragment_favorite_recycler_view",
+            "id",
+            Hooker.pkgParam.packageName
+        )
 
-        val recyclerViewId = R.id.fragment_favorite_recycler_view;
-        val profileDistanceId = R.id.profile_distance
-        val profileOnlineNowIconId = R.id.profile_online_now_icon
-        val profileLastSeenId = R.id.profile_last_seen
-        val profileNoteIconId = R.id.profile_note_icon
-        val profileDisplayNameId = R.id.profile_display_name
+        val profileDistanceId = Hooker.appContext.resources.getIdentifier(
+            "profile_distance",
+            "id",
+            Hooker.pkgParam.packageName
+        )
+
+        val profileOnlineNowIconId = Hooker.appContext.resources.getIdentifier(
+            "profile_online_now_icon",
+            "id",
+            Hooker.pkgParam.packageName
+        )
+
+        val profileLastSeenId = Hooker.appContext.resources.getIdentifier(
+            "profile_last_seen",
+            "id",
+            Hooker.pkgParam.packageName
+        )
+
+        val profileNoteIconId = Hooker.appContext.resources.getIdentifier(
+            "profile_note_icon",
+            "id",
+            Hooker.pkgParam.packageName
+        )
+
+        val profileDisplayNameId = Hooker.appContext.resources.getIdentifier(
+            "profile_display_name",
+            "id",
+            Hooker.pkgParam.packageName
+        )
 
         val Constructor_LayoutParamsRecyclerView = findConstructorExact(
             "androidx.recyclerview.widget.RecyclerView\$LayoutParams",
