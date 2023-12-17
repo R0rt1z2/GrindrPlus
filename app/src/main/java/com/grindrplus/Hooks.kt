@@ -1,11 +1,14 @@
 package com.grindrplus
 
-import android.R.attr.classLoader
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
@@ -19,19 +22,18 @@ import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
-import com.grindrplus.decorated.R
 import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
-import java.io.IOException
 import java.io.File
+import java.io.IOException
 import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
@@ -259,7 +261,7 @@ object Hooks {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> false
+        "profile-redesign-20230214" -> true
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
@@ -1133,6 +1135,64 @@ object Hooks {
         })
     }
 
+    fun addExtraProfileFields() {
+        findAndHookMethod(
+            "com.grindrapp.android.ui.profileV2.ProfileExpandedDetailsView",
+            Hooker.pkgParam.classLoader,
+            "a", // setProfile
+            findClass("com.grindrapp.android.ui.profileV2.model.ProfileViewState", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.analytics.GrindrAnalyticsV2", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.base.model.profile.ReferrerType", Hooker.pkgParam.classLoader),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val profile = getObjectField(param.thisObject, "c")
+                    val profileId = getObjectField(param.args[0], "profileId") as String
+                    val rootView = getObjectField(profile, "a") as ViewGroup
+                    val socialsView = rootView.getChildAt(6) as ViewGroup
+
+                    // This is such an ugly hack and breaks the socials section but eh,
+                    // it's the only way I found so far to add custom fields to the profile.
+                    (socialsView.getChildAt(0) as TextView).text = "Extra"
+                    (socialsView.getChildAt(1) as ViewGroup).removeAllViews()
+
+                    val customFields = LinearLayout(Hooker.appContext).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutParams = LinearLayout.LayoutParams(
+                            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+                    }
+
+                    addField("Profile ID", profileId, customFields, View.OnClickListener{
+                        val clipboard = Hooker.appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Profile ID", profileId)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(Hooker.appContext, "Copied profile ID to clipboard", Toast.LENGTH_SHORT).show()
+                    })
+
+                    (socialsView.getChildAt(1) as ViewGroup).addView(customFields)
+                    callMethod(socialsView, "setVisibility", View.VISIBLE)
+                }
+            }
+        )
+    }
+
+    fun addField(name: String, value: String, customFields: LinearLayout,
+                 onClickListener : View.OnClickListener? = null) {
+        val textView = TextView(Hooker.appContext).apply {
+            text = "$name: $value"
+            textSize = 16f
+            setTextColor(-986637)
+            layoutParams = LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+            height = 50
+        }
+
+        if (onClickListener != null) {
+            textView.setOnClickListener(onClickListener)
+        }
+
+        customFields.addView(textView)
+    }
+
     fun hookUpdateInfo(versionName: String, versionCode: Int) {
         Logger.xLog("Hooking update info with version $versionName ($versionCode)")
         findAndHookMethod(
@@ -1160,4 +1220,5 @@ object Hooks {
             }
         )
     }
+
 }

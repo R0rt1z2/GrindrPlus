@@ -55,4 +55,6 @@ dependencies {
 
     // OkHttp
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha07")
 }

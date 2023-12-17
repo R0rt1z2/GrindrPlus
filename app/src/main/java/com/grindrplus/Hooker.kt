@@ -182,9 +182,9 @@ class Hooker : IXposedHookLoadPackage {
                         Hooks.addExtraProfileFields()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
-                    }
+                    }*/
 
-                    try {
+                    /*try {
                         Hooks.allowSomeExperiments()
                     } catch (e: Exception) {
                         e.message?.let { Logger.xLog(it) }
