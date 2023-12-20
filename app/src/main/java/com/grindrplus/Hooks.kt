@@ -1194,31 +1194,32 @@ object Hooks {
     }
 
     fun hookUpdateInfo(versionName: String, versionCode: Int) {
-        Logger.xLog("Hooking update info with version $versionName ($versionCode)")
-        findAndHookMethod(
-            "com.google.android.play.core.appupdate.AppUpdateInfo",
-            Hooker.pkgParam.classLoader,
-            "updateAvailability",
-            RETURN_ONE // UPDATE_NOT_AVAILABLE
-        )
+        if (Hooker.TARGET_PKG_VERSION_NAME.compareTo(versionName) < 0) {
+            Logger.xLog("Hooking update info with version $versionName ($versionCode)")
+            findAndHookMethod(
+                "com.google.android.play.core.appupdate.AppUpdateInfo",
+                Hooker.pkgParam.classLoader,
+                "updateAvailability",
+                RETURN_ONE // UPDATE_NOT_AVAILABLE
+            )
 
-        findAndHookConstructor(
-            "com.grindrapp.android.base.config.AppConfiguration",
-            Hooker.pkgParam.classLoader,
-            findClass("com.grindrapp.android.base.config.AppConfiguration.b", Hooker.pkgParam.classLoader),
-            findClass("com.grindrapp.android.base.config.AppConfiguration.f", Hooker.pkgParam.classLoader),
-            findClass("com.grindrapp.android.base.config.AppConfiguration.d", Hooker.pkgParam.classLoader),
-            findClass("com.grindrapp.android.base.config.AppConfiguration.e", Hooker.pkgParam.classLoader),
-            findClass("com.grindrapp.android.base.config.AppConfiguration.c", Hooker.pkgParam.classLoader),
-            findClass("com.grindrapp.android.base.config.AppConfiguration.a", Hooker.pkgParam.classLoader),
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    setObjectField(param.thisObject, "a", versionName)
-                    setObjectField(param.thisObject, "b", versionCode)
-                    setObjectField(param.thisObject, "u", "$versionName.$versionCode")
+            findAndHookConstructor(
+                "com.grindrapp.android.base.config.AppConfiguration",
+                Hooker.pkgParam.classLoader,
+                findClass("com.grindrapp.android.base.config.AppConfiguration.b", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.f", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.d", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.e", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.c", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.a", Hooker.pkgParam.classLoader),
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        setObjectField(param.thisObject, "a", versionName)
+                        setObjectField(param.thisObject, "b", versionCode)
+                        setObjectField(param.thisObject, "u", "$versionName.$versionCode")
+                    }
                 }
-            }
-        )
+            )
+        }
     }
-
 }
