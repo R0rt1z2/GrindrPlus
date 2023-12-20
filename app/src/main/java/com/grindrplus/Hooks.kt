@@ -537,7 +537,7 @@ object Hooks {
             GApp.xmpp.ChatMessageManager,
             Hooker.pkgParam.classLoader,
             GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
-            GApp.persistence.model.ChatMessage,
+            findClass("com.grindrapp.android.persistence.model.ChatMessage", Hooker.pkgParam.classLoader),
             Boolean::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType,
         )
@@ -545,17 +545,18 @@ object Hooks {
         XposedBridge.hookMethod(receiveChatMessage,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val chatMessage = ChatMessage(param.args[0])
-                    val type = chatMessage.type
-                    val syntheticMessage = when (type) {
+                    val syntheticMessage = when (getObjectField(
+                        param.args[0], "type")) {
                         "block" -> "[You have been blocked.]"
                         "unblock" -> "[You have been unblocked.]"
                         else -> null
                     }
                     if (syntheticMessage != null) {
-                        val clone = chatMessage.clone()
-                        clone.type = "text"
-                        clone.body = syntheticMessage
+                        val clone = param.args[0].javaClass
+                            .getMethod("clone").invoke(param.args[0])
+
+                        setObjectField(clone, "body", syntheticMessage)
+                        setObjectField(clone, "type", "text")
 
                         receiveChatMessage.invoke(
                             param.thisObject,
