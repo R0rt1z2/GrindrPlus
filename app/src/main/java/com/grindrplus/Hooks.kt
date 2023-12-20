@@ -178,7 +178,7 @@ object Hooks {
         )
 
         findAndHookMethod(
-            "s5.g",
+            "u5.g",
             Hooker.pkgParam.classLoader,
             "isEnabled",
             object : XC_MethodReplacement() {
@@ -192,7 +192,7 @@ object Hooks {
         )
 
         findAndHookMethod(
-            "s5.g",
+            "u5.g",
             Hooker.pkgParam.classLoader,
             "isDisabled",
             object : XC_MethodReplacement() {
@@ -437,8 +437,8 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("k6.p", Hooker.pkgParam.classLoader),
-            "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+        findAndHookMethod(findClass("f3.e0", Hooker.pkgParam.classLoader),
+            "h", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
                     return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
                 }
@@ -741,7 +741,7 @@ object Hooks {
             findClass(GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val constructor_createSuccessResult = findConstructorExact(
-            "h7.a.b",
+            "j7.a.b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
@@ -881,7 +881,7 @@ object Hooks {
             findClass(GApp.api.AnalyticsRestService, Hooker.pkgParam.classLoader)
 
         val constructor_createSuccessResult = findConstructorExact(
-            "h7.a.b",
+            "j7.a.b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
