@@ -3,6 +3,7 @@ package com.grindrplus
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -533,59 +534,12 @@ object Hooks {
     }
 
     fun showBlocksInChat() {
-        val receiveChatMessage = findMethodExact(
-            GApp.xmpp.ChatMessageManager,
-            Hooker.pkgParam.classLoader,
-            GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
-            findClass("com.grindrapp.android.persistence.model.ChatMessage", Hooker.pkgParam.classLoader),
-            Boolean::class.javaPrimitiveType,
-            Boolean::class.javaPrimitiveType,
-        )
-
-        XposedBridge.hookMethod(receiveChatMessage,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val syntheticMessage = when (getObjectField(
-                        param.args[0], "type")) {
-                        "block" -> "[You have been blocked.]"
-                        "unblock" -> "[You have been unblocked.]"
-                        else -> null
-                    }
-                    if (syntheticMessage != null) {
-                        val clone = param.args[0].javaClass
-                            .getMethod("clone").invoke(param.args[0])
-
-                        setObjectField(clone, "body", syntheticMessage)
-                        setObjectField(clone, "type", "text")
-
-                        receiveChatMessage.invoke(
-                            param.thisObject,
-                            clone,
-                            param.args[1],
-                            param.args[2]
-                        )
-                    }
-                }
-            })
-
-
         var ownProfileId: String? = null
 
-        findAndHookMethod(
-            GApp.storage.UserSession,
-            Hooker.pkgParam.classLoader,
-            GApp.storage.IUserSession_.getProfileId,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    ownProfileId = param.result as String
-                }
-            }
-        )
-
-        fun logChatMessage(from: String, text: String) {
+        fun logChatMessage(text: String, from: String, sender: String? = null) {
             val chatMessage = ChatMessage()
             chatMessage.messageId = UUID.randomUUID().toString()
-            chatMessage.sender = ownProfileId
+            chatMessage.sender = sender ?: ownProfileId ?: return
             chatMessage.recipient = from
             chatMessage.stanzaId = from
             chatMessage.conversationId = from
@@ -602,6 +556,151 @@ object Hooks {
             )
         }
 
+        /**
+         * Open a profile by its ID.
+         * Based on yukkerike's work.
+         *
+         * @param id The profile ID.
+         */
+        fun openProfile(id: String) {
+            val generalDeepLinksClass = findClass("com.grindrapp.android.deeplink.GeneralDeepLinks", Hooker.pkgParam.classLoader)
+            val profilesActivityClass = findClass("com.grindrapp.android.ui.profileV2.ProfilesActivity", Hooker.pkgParam.classLoader)
+            val profilesActivityInstance = profilesActivityClass.getField("u0").get(null)
+            val referrerTypeClass = findClass("com.grindrapp.android.base.model.profile.ReferrerType", Hooker.pkgParam.classLoader)
+            val referrerType = referrerTypeClass.getField("NOTIFICATION").get(null)
+            val profilesActivityInnerClass = findClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a", Hooker.pkgParam.classLoader)
+
+            var intent: Intent? = null
+            for (method in profilesActivityInnerClass.declaredMethods) {
+                if (method.parameterTypes.size == 3 && method.parameterTypes[2] == referrerTypeClass) {
+                    intent = method.invoke(
+                        profilesActivityInstance,
+                        Hooker.appContext, id, referrerType
+                    ) as Intent
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    break
+                }
+            }
+
+            if (intent != null) {
+                for (method in generalDeepLinksClass.declaredMethods) {
+                    if (method.name == "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6") {
+                        method.invoke(null, Hooker.appContext, intent)
+                        return
+                    }
+                }
+            }
+        }
+
+        val receiveChatMessage = findMethodExact(
+            GApp.xmpp.ChatMessageManager,
+            Hooker.pkgParam.classLoader,
+            GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
+            findClass("com.grindrapp.android.persistence.model.ChatMessage", Hooker.pkgParam.classLoader),
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+        )
+
+        val sendChatMessage = findMethodExact(
+            GApp.xmpp.ChatMessageManager,
+            Hooker.pkgParam.classLoader,
+            GApp.xmpp.ChatMessageManager_.handleOutgoingChatMessage,
+            findClass("hc.p0", Hooker.pkgParam.classLoader), // ChatWrapper
+        )
+
+        XposedBridge.hookMethod(receiveChatMessage,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val syntheticMessage = when (getObjectField(
+                        param.args[0], "type")) {
+                        "block" -> "[You have been blocked.]"
+                        "unblock" -> "[You have been unblocked.]"
+                        else -> null
+                    }
+
+                    if (syntheticMessage != null) {
+                        val clone = param.args[0].javaClass
+                            .getMethod("clone").invoke(param.args[0])
+
+                        setObjectField(clone, "body", syntheticMessage)
+                        setObjectField(clone, "type", "text")
+
+                        receiveChatMessage.invoke(
+                            param.thisObject,
+                            clone,
+                            param.args[1],
+                            param.args[2]
+                        )
+                    }
+                }
+            }
+        )
+
+        XposedBridge.hookMethod(sendChatMessage,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val chatMessage = getObjectField(param.args[0], "a")
+                    val text = getObjectField(chatMessage, "body") as String
+                    val recipient = getObjectField(chatMessage, "recipient") as String
+
+                    if (text.startsWith("/")) {
+                        param.result = null // This prevents the command from being sent
+                        val args = text.substring(1).split(" ")
+                        when (args[0]) {
+                            "help" -> {
+                                logChatMessage(
+                                    """
+                                        /help - Show this help message
+                                        /id - Get the user ID of the current profile
+                                        /open <id> - Open a profile by its ID
+                                        /ping - Test if the hook is active
+                                        """.trimIndent(),
+                                    recipient,
+                                    recipient
+                                )
+                                return
+                            }
+                            "id" -> {
+                                logChatMessage(
+                                    """
+                                        Your profile ID is: $ownProfileId
+                                        The profile ID of the other user is: $recipient
+                                    """.trimIndent(),
+                                    recipient,
+                                    recipient
+                                )
+                                return
+                            }
+                            "open" -> {
+                                if (args.size > 1) {
+                                    openProfile(args[1])
+                                } else {
+                                    logChatMessage("Please specify a profile ID.",
+                                        recipient, recipient)
+                                }
+                                return
+                            }
+                            "ping" -> {
+                                logChatMessage("\uD83C\uDFD3 Pong!", recipient, recipient)
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        findAndHookMethod(
+            GApp.storage.UserSession,
+            Hooker.pkgParam.classLoader,
+            GApp.storage.IUserSession_.getProfileId,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    ownProfileId = param.result as String
+                }
+            }
+        )
+
         findAndHookMethod(
             GApp.persistence.repository.BlockRepo,
             Hooker.pkgParam.classLoader,
@@ -614,7 +713,7 @@ object Hooks {
                         param.args[0],
                         GApp.persistence.model.BlockedProfile_.getProfileId
                     ) as String
-                    logChatMessage(otherProfileId, "[You have blocked this profile.]")
+                    logChatMessage("[You have blocked this profile.]", otherProfileId)
                 }
             }
         )
@@ -629,7 +728,7 @@ object Hooks {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val otherProfileId = param.args[0] as? String
                     if (otherProfileId != null) {
-                        logChatMessage(otherProfileId, "[You have unblocked this profile.]")
+                        logChatMessage("[You have unblocked this profile.]", otherProfileId)
                     }
                 }
             }
