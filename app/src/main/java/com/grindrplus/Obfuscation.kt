@@ -27,7 +27,7 @@ object Obfuscation {
                 const val increaseSavedPhraseClickCount = "H"
             }
 
-            const val PhrasesRestService = "v3.j"
+            const val PhrasesRestService = "x3.k"
 
             object PhrasesRestService_ {
                 //Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
