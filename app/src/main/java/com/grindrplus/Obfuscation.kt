@@ -324,6 +324,7 @@ object Obfuscation {
 
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "a"
+                const val handleOutgoingChatMessage = "j"
             }
 
             const val ChatMarkersManager = "$_xmpp.a"
