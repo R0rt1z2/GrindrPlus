@@ -262,7 +262,7 @@ object Hooks {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> true
+        "profile-redesign-20230214" -> false
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
