@@ -5,6 +5,7 @@ import de.robv.android.xposed.XC_MethodReplacement.*
 
 object Constants {
     const val GRINDR_PKG = "com.grindrapp.android"
+    const val GRINDR_PKG_VERSION_NAME = "9.18.0"
 
     object Returns {
         val RETURN_TRUE: XC_MethodReplacement = returnConstant(true)

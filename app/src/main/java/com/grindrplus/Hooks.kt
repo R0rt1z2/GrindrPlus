@@ -15,6 +15,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.*
 import androidx.core.view.children
+import com.grindrplus.Constants.GRINDR_PKG_VERSION_NAME
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
@@ -1294,7 +1295,7 @@ object Hooks {
     }
 
     fun hookUpdateInfo(versionName: String, versionCode: Int) {
-        if (Hooker.TARGET_PKG_VERSION_NAME.compareTo(versionName) < 0) {
+        if (GRINDR_PKG_VERSION_NAME.compareTo(versionName) < 0) {
             Logger.xLog("Hooking update info with version $versionName ($versionCode)")
             findAndHookMethod(
                 "com.google.android.play.core.appupdate.AppUpdateInfo",
