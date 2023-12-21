@@ -1,6 +1,14 @@
 
 package com.grindrplus
 
+import com.grindrplus.Hooks.hookUpdateInfo
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
+
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,5 +36,43 @@ object Utils {
             bmi < 40.0 -> "$bmi (Obesity II)"
             else -> "$bmi (Obesity III)"
         }
+    }
+
+    /**
+     * Fetches the latest version of Grindr from APKPure.
+     * It then spoofs the app version, internally.
+     */
+    fun fetchVersionAndUpdate() {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://apkpure.com/grindr-gay-chat-for-android/com.grindrapp.android/download")
+            .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Logger.xLog("Fetch failed: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful)
+                        return Logger.xLog("Received unexpected response code: ${response.code}")
+
+                    val responseBody = response.body?.string() ?:
+                    return Logger.xLog("Unable to get body from response!")
+                    val versionName = """"versionName":"(.*?)",""".toRegex()
+                        .find(responseBody)?.groups?.get(1)?.value
+                    val versionCode = """"versionCode":(\d+),""".toRegex()
+                        .find(responseBody)?.groups?.get(1)?.value
+
+                    // If both are valid, spoof the app version to prevent the update dialog
+                    // from showing up. This should be enough to disable forced updates.
+                    if (versionName != null && versionCode != null) {
+                        hookUpdateInfo(versionName, versionCode.toInt())
+                    }
+                }
+            }
+        })
     }
 }

@@ -22,7 +22,7 @@ class Hooker : IXposedHookLoadPackage {
     private fun initializePreOnCreateHooks() {
         try {
             Logger.xLog("Starting pre-onCreate hooks...")
-            Hooks.hookAppUpdates()
+            Utils.fetchVersionAndUpdate()
             Hooks.storeChatMessageManager()
             Hooks.localSavedPhrases()
         } catch (e: Exception) {

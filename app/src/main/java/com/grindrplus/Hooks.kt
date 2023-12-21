@@ -15,11 +15,9 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.*
 import androidx.core.view.children
-import com.grindrplus.Constants.GRINDR_PKG_VERSION_NAME
 import com.grindrplus.Constants.Returns.RETURN_FALSE
 import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
 import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
-import com.grindrplus.Constants.Returns.RETURN_ONE
 import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
@@ -29,13 +27,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.*
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 import java.io.File
-import java.io.IOException
 import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
@@ -43,6 +35,48 @@ import kotlin.time.Duration
 
 
 object Hooks {
+    /**
+     * Hook the app updates to prevent the app from updating.
+     * Also spoof the app version with the latest version to
+     * prevent the API from detecting that the app is outdated.
+     *
+     * Inspired by @Tebbe's initial idea.
+     */
+    fun hookUpdateInfo(name: String, code: Int) {
+        if (Constants.GRINDR_PKG_VERSION_NAME.compareTo(name) < 0) {
+            Logger.xLog("Hooking update info with version $name ($code)")
+
+            // `updateAvailability`, as the name suggests, is called to check
+            // if there is an update available. We return UPDATE_NOT_AVAILABLE.
+            findAndHookMethod(
+                "com.google.android.play.core.appupdate.AppUpdateInfo",
+                Hooker.pkgParam.classLoader, "updateAvailability",
+                Constants.Returns.RETURN_ONE // In this specific scenario, 1 means "no updates".
+            )
+
+            // The constructor of `AppConfiguration` has 3 different fields used
+            // to store information regarding the versioning of the app. We use
+            // the newly fetched version name and code to spoof the app version.
+            findAndHookConstructor(
+                "com.grindrapp.android.base.config.AppConfiguration",
+                Hooker.pkgParam.classLoader,
+                findClass("com.grindrapp.android.base.config.AppConfiguration.b", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.f", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.d", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.e", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.c", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.config.AppConfiguration.a", Hooker.pkgParam.classLoader),
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        setObjectField(param.thisObject, "a", name)
+                        setObjectField(param.thisObject, "b", code)
+                        setObjectField(param.thisObject, "u", "$name.$code")
+                    }
+                }
+            )
+        }
+    }
+
     /**
      * Allow screenshots in all the views of the application (including expiring photos, albums, etc.)
      *
@@ -1198,44 +1232,6 @@ object Hooks {
         )
     }
 
-    /**
-     * Hook the method that returns the update availability
-     * and spoof the app version. Inspired by @Tebbe's idea.
-     */
-    fun hookAppUpdates() {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("https://apkpure.com/grindr-gay-chat-for-android/com.grindrapp.android/download")
-            .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Logger.xLog("Fetch failed: ${e.message}")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful)
-                        return Logger.xLog("Received unexpected response code: ${response.code}")
-
-                    val responseBody = response.body?.string() ?:
-                        return Logger.xLog("Unable to get body from response!")
-                    val versionName = """"versionName":"(.*?)",""".toRegex()
-                        .find(responseBody)?.groups?.get(1)?.value
-                    val versionCode = """"versionCode":(\d+),""".toRegex()
-                        .find(responseBody)?.groups?.get(1)?.value
-
-                    // If both are valid, spoof the app version to prevent the update dialog
-                    // from showing up. This should be enough to disable forced updates.
-                    if (versionName != null && versionCode != null) {
-                        hookUpdateInfo(versionName, versionCode.toInt())
-                    }
-                }
-            }
-        })
-    }
-
     fun addExtraProfileFields() {
         findAndHookMethod(
             "com.grindrapp.android.ui.profileV2.ProfileExpandedDetailsView",
@@ -1292,35 +1288,5 @@ object Hooks {
         }
 
         customFields.addView(textView)
-    }
-
-    fun hookUpdateInfo(versionName: String, versionCode: Int) {
-        if (GRINDR_PKG_VERSION_NAME.compareTo(versionName) < 0) {
-            Logger.xLog("Hooking update info with version $versionName ($versionCode)")
-            findAndHookMethod(
-                "com.google.android.play.core.appupdate.AppUpdateInfo",
-                Hooker.pkgParam.classLoader,
-                "updateAvailability",
-                RETURN_ONE // UPDATE_NOT_AVAILABLE
-            )
-
-            findAndHookConstructor(
-                "com.grindrapp.android.base.config.AppConfiguration",
-                Hooker.pkgParam.classLoader,
-                findClass("com.grindrapp.android.base.config.AppConfiguration.b", Hooker.pkgParam.classLoader),
-                findClass("com.grindrapp.android.base.config.AppConfiguration.f", Hooker.pkgParam.classLoader),
-                findClass("com.grindrapp.android.base.config.AppConfiguration.d", Hooker.pkgParam.classLoader),
-                findClass("com.grindrapp.android.base.config.AppConfiguration.e", Hooker.pkgParam.classLoader),
-                findClass("com.grindrapp.android.base.config.AppConfiguration.c", Hooker.pkgParam.classLoader),
-                findClass("com.grindrapp.android.base.config.AppConfiguration.a", Hooker.pkgParam.classLoader),
-                object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
-                        setObjectField(param.thisObject, "a", versionName)
-                        setObjectField(param.thisObject, "b", versionCode)
-                        setObjectField(param.thisObject, "u", "$versionName.$versionCode")
-                    }
-                }
-            )
-        }
     }
 }
