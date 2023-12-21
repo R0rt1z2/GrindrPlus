@@ -353,14 +353,14 @@ object Hooks {
         findAndHookMethod(
             UserSessionClass,
             GApp.storage.IUserSession_.isXtra,
-            RETURN_TRUE
+            RETURN_FALSE
         )
 
         // This method checks whether the user has Plus or not.
         findAndHookMethod(
             UserSessionClass,
             GApp.storage.IUserSession_.isPlus,
-            RETURN_TRUE
+            RETURN_FALSE
         )
 
         // This method checks whether the user has Unlimited or not.
