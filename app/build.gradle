@@ -3,30 +3,31 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-ext.versionMajor = 1
-ext.versionMinor = 3
-ext.versionPatch = 3
-ext.grindrVersion = '9.18.0'
-
-private String genVersionName() {
-    String versionName = "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
-    return versionName
-}
-
-private String getVersionNameSuffix() {
-    return '-' + grindrVersion
+ext {
+    versions = [
+            compileSdk: 33,
+            minSdk    : 21,
+            targetSdk : 33,
+            okhttp    : '4.9.0',
+            coreKtx   : '1.8.0',
+            constraintLayout: '2.2.0-alpha07'
+    ]
+    versionMajor = 1
+    versionMinor = 3
+    versionPatch = 3
+    grindrVersion = '9.18.0'
 }
 
 android {
-    compileSdk 33
+    compileSdk versions.compileSdk
 
     defaultConfig {
         applicationId 'com.grindrplus'
-        minSdk 21
-        targetSdk 33
+        minSdk versions.minSdk
+        targetSdk versions.targetSdk
         versionCode 14
-        versionName genVersionName()
-        versionNameSuffix getVersionNameSuffix()
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionNameSuffix "-$grindrVersion"
     }
 
     buildTypes {
@@ -46,15 +47,15 @@ android {
 }
 
 dependencies {
-    //Xposed Framework Modules
-    compileOnly files('libs/api-82.jar')
-    compileOnly files('libs/api-82-sources.jar')
+    // Xposed
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
-    //AndroidX Core
-    implementation 'androidx.core:core-ktx:1.8.0'
+    // AndroidX Core
+    implementation "androidx.core:core-ktx:${versions.coreKtx}"
 
     // OkHttp
-    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation "com.squareup.okhttp3:okhttp:${versions.okhttp}"
 
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha07")
+    // UI
+    implementation "androidx.constraintlayout:constraintlayout:${versions.constraintLayout}"
 }
