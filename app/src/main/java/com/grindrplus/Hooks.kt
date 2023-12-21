@@ -22,12 +22,13 @@ import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
+import com.grindrplus.Utils.getFixedLocationParam
 import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedHelpers.*
-import java.io.File
 import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.math.roundToInt
@@ -35,6 +36,8 @@ import kotlin.time.Duration
 
 
 object Hooks {
+    var chatMessageManager: Any? = null
+
     /**
      * Hook the app updates to prevent the app from updating.
      * Also spoof the app version with the latest version to
@@ -78,6 +81,152 @@ object Hooks {
     }
 
     /**
+     * Store the `ChatMessageManager` instance in a variable.
+     * This will be used later on to send fake messages.
+     */
+    fun storeChatMessageManager() {
+        hookAllConstructors(findClass(
+            GApp.xmpp.ChatMessageManager,
+            Hooker.pkgParam.classLoader
+        ), object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                chatMessageManager = param.thisObject
+            }
+        })
+    }
+
+    /**
+     * Hooks chat rest service to store the phrases locally.
+     */
+    fun localSavedPhrases() {
+        val ChatRestServiceClass = findClass(
+            GApp.api.ChatRestService, Hooker.pkgParam.classLoader)
+
+        val PhrasesRestServiceClass = findClass(
+            GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
+
+        val createSuccessResultConstructor = findConstructorExact(
+            "j7.a.b", Hooker.pkgParam.classLoader, Any::class.java)
+
+        val AddSavedPhraseResponseConstructor = findConstructorExact(
+            GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
+            String::class.java
+        )
+
+        val PhrasesResponseConstructor = findConstructorExact(
+            GApp.model.PhrasesResponse, Hooker.pkgParam.classLoader, Map::class.java)
+
+        val PhraseConstructor = findConstructorExact(
+            GApp.persistence.model.Phrase,
+            Hooker.pkgParam.classLoader,
+            String::class.java,
+            String::class.java,
+            Long::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType
+        )
+
+        fun hookChatRestService(service: Any): Any {
+            val invocationHandler = Proxy.getInvocationHandler(service)
+            return Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
+                arrayOf(ChatRestServiceClass)) { proxy, method, args ->
+                when (method.name) {
+                    GApp.api.ChatRestService_.addSavedPhrase -> {
+                        val phrase = getObjectField(args[0], "phrase") as String
+                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
+                        val currentPhrases = Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                        Hooker.sharedPref.edit().putInt("id_counter", id).putStringSet("phrases",
+                            currentPhrases + id.toString()).putString("phrase_${id}_text", phrase)
+                            .putInt("phrase_${id}_frequency", 0).putLong("phrase_${id}_timestamp", 0).apply()
+                        val response = AddSavedPhraseResponseConstructor.newInstance(id.toString())
+                        createSuccessResultConstructor.newInstance(response)
+                    }
+                    GApp.api.ChatRestService_.deleteSavedPhrase -> {
+                        val id = args[0] as String
+                        val currentPhrases = Hooker.sharedPref.getStringSet("phrases", emptySet())!!
+                        Hooker.sharedPref.edit().putStringSet("phrases", currentPhrases - id)
+                            .remove("phrase_${id}_text").remove("phrase_${id}_frequency")
+                            .remove("phrase_${id}_timestamp").apply()
+                        createSuccessResultConstructor.newInstance(Unit)
+                    }
+                    GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
+                        val id = args[0] as String
+                        val currentFrequency = Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
+                        Hooker.sharedPref.edit().putInt("phrase_${id}_frequency", currentFrequency + 1).apply()
+                        createSuccessResultConstructor.newInstance(Unit)
+                    }
+                    else -> invocationHandler.invoke(proxy, method, args)
+                }
+            }
+        }
+
+        fun hookPhrasesRestService(service: Any): Any {
+            val invocationHandler = Proxy.getInvocationHandler(service)
+            return Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
+                arrayOf(PhrasesRestServiceClass)) { proxy, method, args ->
+                when (method.name) {
+                    GApp.api.PhrasesRestService_.getSavedPhrases -> {
+                        val phrases = Hooker.sharedPref.getStringSet(
+                            "phrases", emptySet())!!.associateWith { id ->
+                                val text = Hooker.sharedPref.getString("phrase_${id}_text", "")
+                                val timestamp = Hooker.sharedPref.getLong("phrase_${id}_timestamp", 0)
+                                val frequency = Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
+                                PhraseConstructor.newInstance(id, text, timestamp, frequency)
+                            }
+                        val phrasesResponse = PhrasesResponseConstructor.newInstance(phrases)
+                        createSuccessResultConstructor.newInstance( phrasesResponse)
+                    }
+                    else -> invocationHandler.invoke(proxy, method, args)
+                }
+            }
+        }
+
+        findAndHookMethod(
+            "retrofit2.Retrofit",
+            Hooker.pkgParam.classLoader,
+            "create",
+            Class::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val service = param.result
+                    param.result = when {
+                        ChatRestServiceClass.isInstance(service) -> hookChatRestService(service)
+                        PhrasesRestServiceClass.isInstance(service) -> hookPhrasesRestService(service)
+                        else -> service
+                    }
+                }
+            }
+        )
+    }
+
+    /**
+     * Let the user scroll through unlimited profiles.
+     */
+    fun unlimitedProfiles() {
+        // Enforce the usage of `InaccessibleProfileManager`, otherwise the app
+        // will tell the user to restart the app to apply subscription changes.
+        findAndHookMethod(
+            GApp.profile.experiments.InaccessibleProfileManager,
+            Hooker.pkgParam.classLoader,
+            GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
+            RETURN_TRUE
+        )
+
+        // Remove all ads and upsells from the cascade (ServerDrivenCascadeCacheState)
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
+            Hooker.pkgParam.classLoader,
+            "getItems",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val items = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>
+                    return items.filterNotNull().filter {
+                        it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
+                    }
+                }
+            })
+    }
+
+    /**
      * Allow screenshots in all the views of the application (including expiring photos, albums, etc.)
      *
      * Inspired in the project https://github.com/veeti/DisableFlagSecure
@@ -99,6 +248,52 @@ object Hooks {
     }
 
     /**
+     * Allow Fake GPS in order to fake location.
+     *
+     * WARNING: Abusing this feature may result in a permanent ban on your Grindr account.
+     */
+    fun allowMockProvider() {
+        val class_Location = findClass(
+            "android.location.Location",
+            Hooker.pkgParam.classLoader
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "isFromMockProvider",
+            RETURN_FALSE
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "getLatitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    return getFixedLocationParam(param, true)
+                }
+            }
+        )
+
+        findAndHookMethod(
+            class_Location,
+            "getLongitude",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    return getFixedLocationParam(param, false)
+                }
+            }
+        )
+
+        if (Build.VERSION.SDK_INT >= 31) {
+            findAndHookMethod(
+                class_Location,
+                "isMock",
+                RETURN_FALSE
+            )
+        }
+    }
+
+    /**
      * Hook these methods in all the classes that implement IUserSession.
      * isFree()Z (return false)
      * isNoXtraUpsell()Z (return false)
@@ -106,76 +301,74 @@ object Hooks {
      * isUnlimited()Z to give Unlimited account features.
      */
     fun hookUserSessionImpl() {
-        val class_Feature = findClass(
+        val FeatureClass = findClass(
             GApp.model.Feature,
             Hooker.pkgParam.classLoader
         )
 
-        listOf(
-            findClass(
-                GApp.storage.UserSession,
-                Hooker.pkgParam.classLoader
-            ),
+        val UserSessionClass = findClass(
+            GApp.storage.UserSession,
+            Hooker.pkgParam.classLoader
+        )
 
-            /*findClass(
-                GApp.storage.UserSession2,
-                Hooker.pkgParam.classLoader
-            )*/
-        ).forEach { userSessionImpl ->
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.hasFeature_feature,
-                class_Feature,
-                object :  XC_MethodReplacement() {
-                    override fun replaceHookedMethod(param: MethodHookParam): Any {
-                        // R0rt1z2:
-                        // For whatever reason, enabling this feature causes the "Send Video"
-                        // button to disappear. This does not seem to affect screenshots so we
-                        // just disable this feature.
-                        if (param.args[0].toString() == "DisableScreenshot") {
-                            return false
-                        }
-                        return true
-                    }
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.hasFeature_feature,
+            FeatureClass,
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val featuresReturningFalse = setOf("DisableScreenshot")
+                    return (param.args[0].toString() !in featuresReturningFalse)
                 }
-            )
+            })
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isFree,
-                RETURN_FALSE
-            )
+        // This method determines whether a user should be shown an upsell
+        // for Xtra based on their current subscription status. If the user
+        // already has Xtra or Unlimited (or their free versions), the upsell
+        // will not be shown.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isNoXtraUpsell,
+            RETURN_TRUE
+        )
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isNoXtraUpsell,
-                RETURN_TRUE
-            ) //Not sure what is this for
+        // This method determines whether a user should be shown an upsell
+        // for Plus based on their current subscription status. If the user
+        // already has Xtra or Unlimited (or their free versions), the upsell
+        // will not be shown.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isNoPlusUpsell,
+            RETURN_TRUE
+        )
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isXtra,
-                RETURN_TRUE
-            )
+        // This method checks whether the user has Free or not.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isFree,
+            RETURN_FALSE
+        )
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isPlus,
-                RETURN_TRUE
-            )
+        // This method checks whether the user has Xtra or not.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isXtra,
+            RETURN_TRUE
+        )
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isNoPlusUpsell,
-                RETURN_TRUE
-            )
+        // This method checks whether the user has Plus or not.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isPlus,
+            RETURN_TRUE
+        )
 
-            findAndHookMethod(
-                userSessionImpl,
-                GApp.storage.IUserSession_.isUnlimited,
-                RETURN_TRUE
-            )
-        }
+        // This method checks whether the user has Unlimited or not.
+        findAndHookMethod(
+            UserSessionClass,
+            GApp.storage.IUserSession_.isUnlimited,
+            RETURN_TRUE
+        )
     }
 
     fun unlimitedExpiringPhotos() {
@@ -297,7 +490,7 @@ object Hooks {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> false
+        "profile-redesign-20230214" -> true
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
@@ -343,31 +536,6 @@ object Hooks {
         ) as Boolean
     }
 
-    fun unlimitedProfiles() {
-        //Enforce usage of InaccessibleProfileManager...
-        findAndHookMethod(
-            GApp.profile.experiments.InaccessibleProfileManager,
-            Hooker.pkgParam.classLoader,
-            GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
-            RETURN_TRUE
-        )
-
-        //Remove all ads and upsells from the cascade - ServerDrivenCascadeCacheState
-        findAndHookMethod(
-            "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
-            Hooker.pkgParam.classLoader,
-            "getItems",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val items = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>
-                    return items.filterNotNull().filter {
-                        it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
-                    }
-                }
-
-            }
-        )
-    }
 
     /**
      * Allow videocalls on empty chats: Grindr checks that both users have chatted with each other
@@ -394,66 +562,6 @@ object Hooks {
             RETURN_TRUE
         )
     }
-
-    /**
-     * Allow Fake GPS in order to fake location.
-     *
-     * WARNING: Abusing this feature may result in a permanent ban on your Grindr account.
-     */
-    fun allowMockProvider() {
-        val class_Location = findClass(
-            "android.location.Location",
-            Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(
-            class_Location,
-            "isFromMockProvider",
-            RETURN_FALSE
-        )
-
-        fun getFixedLocationParam(param: XC_MethodHook.MethodHookParam, latOrLon: Boolean): Any {
-            val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
-            val locationFile = File(Hooker.appContext.filesDir, "location.txt")
-            if (!locationFile.exists()) {
-                locationFile.createNewFile()
-            }
-            val content = locationFile.readText()
-            return regex.find(content)?.groups?.get(if (latOrLon) 1 else 2)?.value?.toDouble()
-                ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-        }
-
-        findAndHookMethod(
-            class_Location,
-            "getLatitude",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    return getFixedLocationParam(param, true)
-                }
-            }
-        )
-
-        findAndHookMethod(
-            class_Location,
-            "getLongitude",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    return getFixedLocationParam(param, false)
-                }
-            }
-        )
-
-        if (Build.VERSION.SDK_INT >= 31) {
-            findAndHookMethod(
-                class_Location,
-                "isMock",
-                RETURN_FALSE
-            )
-        }
-    }
-
-
-
 
     /**
      * Hook online indicator duration:
@@ -549,22 +657,6 @@ object Hooks {
             GApp.ui.chat.ChatBaseFragmentV2_._canBeUnsent,
             ChatMessage.CLAZZ,
             RETURN_FALSE
-        )
-    }
-
-    var chatMessageManager: Any? = null
-
-    fun storeChatMessageManager() {
-        XposedBridge.hookAllConstructors(
-            findClass(
-                GApp.xmpp.ChatMessageManager,
-                Hooker.pkgParam.classLoader
-            ),
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    chatMessageManager = param.thisObject
-                }
-            }
         )
     }
 
@@ -866,149 +958,6 @@ object Hooks {
                     param.args[0] = queries.getOrDefault(query, query)
                 }
             })
-    }
-
-    fun localSavedPhrases() {
-        val class_ChatRestService =
-            findClass(GApp.api.ChatRestService, Hooker.pkgParam.classLoader)
-
-        val class_PhrasesRestService =
-            findClass(GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
-
-        val constructor_createSuccessResult = findConstructorExact(
-            "j7.a.b",
-            Hooker.pkgParam.classLoader,
-            Any::class.java
-        )
-
-        val constructor_AddSavedPhraseResponse = findConstructorExact(
-            GApp.model.AddSavedPhraseResponse,
-            Hooker.pkgParam.classLoader,
-            String::class.java
-        )
-
-        val constructor_PhrasesResponse = findConstructorExact(
-            GApp.model.PhrasesResponse,
-            Hooker.pkgParam.classLoader,
-            Map::class.java
-        )
-
-        val constructor_Phrase = findConstructorExact(
-            GApp.persistence.model.Phrase,
-            Hooker.pkgParam.classLoader,
-            String::class.java,
-            String::class.java,
-            Long::class.javaPrimitiveType,
-            Int::class.javaPrimitiveType
-        )
-
-        fun hookChatRestService(service: Any): Any {
-            val invocationHandler = Proxy.getInvocationHandler(service)
-            return Proxy.newProxyInstance(
-                Hooker.pkgParam.classLoader,
-                arrayOf(class_ChatRestService)
-            ) { proxy, method, args ->
-                when (method.name) {
-                    GApp.api.ChatRestService_.addSavedPhrase -> {
-                        val phrase =
-                            getObjectField(args[0], "phrase") as String
-                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
-                        val currentPhrases =
-                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                        Hooker.sharedPref.edit()
-                            .putInt("id_counter", id)
-                            .putStringSet("phrases", currentPhrases + id.toString())
-                            .putString("phrase_${id}_text", phrase)
-                            .putInt("phrase_${id}_frequency", 0)
-                            .putLong("phrase_${id}_timestamp", 0)
-                            .apply()
-                        val response =
-                            constructor_AddSavedPhraseResponse.newInstance(id.toString())
-                        constructor_createSuccessResult.newInstance(response)
-                    }
-                    GApp.api.ChatRestService_.deleteSavedPhrase -> {
-                        val id = args[0] as String
-                        val currentPhrases =
-                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                        Hooker.sharedPref.edit()
-                            .putStringSet("phrases", currentPhrases - id)
-                            .remove("phrase_${id}_text")
-                            .remove("phrase_${id}_frequency")
-                            .remove("phrase_${id}_timestamp")
-                            .apply()
-                        constructor_createSuccessResult.newInstance(Unit)
-                    }
-                    GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
-                        val id = args[0] as String
-                        val currentFrequency =
-                            Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
-                        Hooker.sharedPref.edit()
-                            .putInt("phrase_${id}_frequency", currentFrequency + 1)
-                            .apply()
-                        constructor_createSuccessResult.newInstance(Unit)
-                    }
-                    else -> invocationHandler.invoke(proxy, method, args)
-                }
-            }
-        }
-
-        fun hookPhrasesRestService(service: Any): Any {
-            val invocationHandler = Proxy.getInvocationHandler(service)
-            return Proxy.newProxyInstance(
-                Hooker.pkgParam.classLoader,
-                arrayOf(class_PhrasesRestService)
-            ) { proxy, method, args ->
-                when (method.name) {
-                    GApp.api.PhrasesRestService_.getSavedPhrases -> {
-                        val phrases =
-                            Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                                .associateWith { id ->
-                                    val text = Hooker.sharedPref.getString(
-                                        "phrase_${id}_text",
-                                        ""
-                                    )
-                                    val timestamp = Hooker.sharedPref.getLong(
-                                        "phrase_${id}_timestamp",
-                                        0
-                                    )
-                                    val frequency = Hooker.sharedPref.getInt(
-                                        "phrase_${id}_frequency",
-                                        0
-                                    )
-                                    constructor_Phrase.newInstance(
-                                        id,
-                                        text,
-                                        timestamp,
-                                        frequency
-                                    )
-                                }
-                        val phrasesResponse =
-                            constructor_PhrasesResponse.newInstance(phrases)
-                        constructor_createSuccessResult.newInstance( phrasesResponse)
-                    }
-                    else -> invocationHandler.invoke(proxy, method, args)
-                }
-            }
-        }
-
-        findAndHookMethod(
-            "retrofit2.Retrofit",
-            Hooker.pkgParam.classLoader,
-            "create",
-            Class::class.java,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val service = param.result
-                    param.result = when {
-                        class_ChatRestService.isInstance(service) -> hookChatRestService(service)
-                        class_PhrasesRestService.isInstance(service) -> hookPhrasesRestService(
-                            service
-                        )
-                        else -> service
-                    }
-                }
-            }
-        )
     }
 
     fun disableAnalytics() {

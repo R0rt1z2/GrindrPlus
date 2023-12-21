@@ -2,11 +2,14 @@
 package com.grindrplus
 
 import com.grindrplus.Hooks.hookUpdateInfo
+import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedBridge
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.File
 import java.io.IOException
 
 import java.text.SimpleDateFormat
@@ -36,6 +39,20 @@ object Utils {
             bmi < 40.0 -> "$bmi (Obesity II)"
             else -> "$bmi (Obesity III)"
         }
+    }
+
+    /**
+     * Gets the fixed location.
+     */
+    fun getFixedLocationParam(param: XC_MethodHook.MethodHookParam, latOrLon: Boolean): Any {
+        val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
+        val locationFile = File(Hooker.appContext.filesDir, "location.txt")
+        if (!locationFile.exists()) {
+            locationFile.createNewFile()
+        }
+        val content = locationFile.readText()
+        return regex.find(content)?.groups?.get(if (latOrLon) 1 else 2)?.value?.toDouble()
+            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
     }
 
     /**
