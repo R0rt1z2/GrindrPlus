@@ -7,6 +7,8 @@ object Constants {
     const val GRINDR_PKG = "com.grindrapp.android"
     const val GRINDR_PKG_VERSION_NAME = "9.18.0"
 
+    const val NUM_OF_COLUMNS = 3
+
     object Returns {
         val RETURN_TRUE: XC_MethodReplacement = returnConstant(true)
         val RETURN_FALSE: XC_MethodReplacement = returnConstant(false)
