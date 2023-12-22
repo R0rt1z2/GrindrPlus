@@ -92,4 +92,36 @@ object Utils {
             }
         })
     }
+
+    /**
+     * Maps the feature flag to the corresponding value.
+     */
+    fun mapFeatureFlag(
+        feature: String,
+        param: XC_MethodHook.MethodHookParam
+    ): Boolean = when (feature) {
+        "profile-redesign-20230214" -> true
+        "notification-action-chat-20230206" -> true
+        "gender-updates" -> true
+        "gender-filter" -> true
+        "gender-exclusion" -> true
+        "calendar-ui" -> true
+        "vaccine-profile-field" -> true
+        "tag-search" -> true
+        "approximate-distance" -> true
+        "spectrum_solicitation_sex" -> true
+        "allow-mock-location" -> true
+        "spectrum-solicitation-of-drugs" -> true
+        "side-profile-link" -> true
+        "canceled-screen" -> true
+        "takemehome-button" -> true
+        "download-my-data" -> true
+        "face-auth-android" -> true
+        else ->
+            XposedBridge.invokeOriginalMethod(
+                param.method,
+                param.thisObject,
+                param.args
+            ) as Boolean
+    }
 }

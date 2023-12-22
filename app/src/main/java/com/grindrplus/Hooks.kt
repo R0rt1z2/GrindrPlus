@@ -23,11 +23,13 @@ import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
 import com.grindrplus.Utils.getFixedLocationParam
+import com.grindrplus.Utils.mapFeatureFlag
 import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.hookAllConstructors
+import de.robv.android.xposed.XposedBridge.hookMethod
 import de.robv.android.xposed.XposedHelpers.*
 import java.lang.reflect.Proxy
 import java.util.*
@@ -395,46 +397,42 @@ object Hooks {
      * A few more changes may be needed to use all the features.
      */
     fun hookFeatureGranting() {
-        val class_Feature = findClass(
+        val FeatureClass = findClass(
             GApp.model.Feature,
             Hooker.pkgParam.classLoader
         )
 
+        val FeatureFlagsClass = findClass(
+            "u5.g",
+            Hooker.pkgParam.classLoader
+        )
+
         findAndHookMethod(
-            class_Feature,
+            FeatureClass,
             GApp.model.Feature_.isGranted,
             RETURN_TRUE
         )
 
-        findAndHookMethod(
-            "u5.g",
-            Hooker.pkgParam.classLoader,
-            "isEnabled",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Boolean {
-                    return mapFeatureFlag(
-                        getObjectField(param.thisObject, "featureFlagName") as String,
-                        param
+        for (method in FeatureFlagsClass.declaredMethods) {
+            when (method.name) {
+                "isEnabled", "isDisabled" -> {
+                    findAndHookMethod(
+                        FeatureFlagsClass,
+                        method.name,
+                        object : XC_MethodReplacement() {
+                            override fun replaceHookedMethod(param: MethodHookParam): Boolean {
+                                val isEnabled = mapFeatureFlag(getObjectField(param.thisObject,
+                                    "featureFlagName") as String, param)
+                                Logger.xLog("Method ${method.name} called for feature ${getObjectField(param.thisObject,
+                                    "featureFlagName") as String}. Returning $isEnabled")
+                                return if (method.name == "isEnabled") isEnabled else !isEnabled
+                            }
+                        }
                     )
                 }
             }
-        )
+        }
 
-        findAndHookMethod(
-            "u5.g",
-            Hooker.pkgParam.classLoader,
-            "isDisabled",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Boolean {
-                    return !mapFeatureFlag(
-                        getObjectField(param.thisObject, "featureFlagName") as String,
-                        param
-                    )
-                }
-            }
-        )
-
-        // Once you uncheck "precise", the option will disappear normally (not sure if that's a bug). This fix prevents that.
         findAndHookConstructor(
             "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$e",
             Hooker.pkgParam.classLoader,
@@ -451,91 +449,30 @@ object Hooks {
             }
         )
 
-        val class_UpsellsV8 = findClass(
-            GApp.model.UpsellsV8,
-            Hooker.pkgParam.classLoader
-        )
+        listOf(
+            findClass(
+                GApp.model.UpsellsV8,
+                Hooker.pkgParam.classLoader
+            ),
 
-        findAndHookMethod(
-            class_UpsellsV8,
-            GApp.model.UpsellsV8_.getMpuFree,
-            RETURN_INTEGER_MAX_VALUE
-        )
+            findClass(
+                GApp.model.Inserts,
+                Hooker.pkgParam.classLoader
+            )
+        ).forEach { className ->
+            findAndHookMethod(
+                className,
+                "getMpuFree",
+                RETURN_INTEGER_MAX_VALUE
+            )
 
-        findAndHookMethod(
-            class_UpsellsV8,
-            GApp.model.UpsellsV8_.getMpuXtra,
-            RETURN_ZERO
-        )
-
-        val class_Inserts = findClass(
-            GApp.model.Inserts,
-            Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(
-            class_Inserts,
-            GApp.model.Inserts_.getMpuFree,
-            RETURN_INTEGER_MAX_VALUE
-        )
-
-        findAndHookMethod(
-            class_Inserts,
-            GApp.model.Inserts_.getMpuXtra,
-            RETURN_ZERO
-        )
+            findAndHookMethod(
+                className,
+                "getMpuXtra",
+                RETURN_ZERO
+            )
+        }
     }
-
-    private fun mapFeatureFlag(
-        feature: String,
-        param: XC_MethodHook.MethodHookParam
-    ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> true
-        "notification-action-chat-20230206" -> true
-        "gender-updates" -> true
-        "gender-filter" -> true
-        "gender-exclusion" -> true
-        "calendar-ui" -> true
-        "vaccine-profile-field" -> true
-        "tag-search" -> true
-        "approximate-distance" -> true
-        "spectrum_solicitation_sex" -> true
-        "allow-mock-location" -> true
-        "spectrum-solicitation-of-drugs" -> true
-        "side-profile-link" -> true
-        "canceled-screen" -> true
-        "takemehome-button" -> true
-        "download-my-data" -> true
-        "face-auth-android" -> true
-
-        // The following features are either not working properly, useless, privacy-invasive or not tested.
-        //"cookie-tap" -> true // Changes the fire icon into a cookie icon in the tap button
-        //"sift-kill-switch" -> true
-        //"reporting-lag-time" -> true
-        //"store-default-product" -> true
-        //"upgrade-prompt-interval" -> true
-        //"custom-dns" -> true
-        //"favorite-profile-notes-server" -> true
-        //"intro-offer-free-trial-20221222" -> true
-        //"ad-identifier" -> true
-        //"ads-quality-edu" -> true
-        //"android-circuitbreaker" -> true
-        //"verbose-ad-analytics" -> true
-        //"viewed-me-count-via-websocket-android-20230906" -> true
-        //"sk-pipa-password" -> true
-        //"passwordLength" -> true
-        //"sk-privacy-policy-20230130" -> true
-        //"ad-backfill" -> true
-        //"android-purchase-and-restore-endpoint-migration-20230711" -> true
-        //"server-driven-taps" -> true
-
-        else -> XposedBridge.invokeOriginalMethod(
-            param.method,
-            param.thisObject,
-            param.args
-        ) as Boolean
-    }
-
 
     /**
      * Allow videocalls on empty chats: Grindr checks that both users have chatted with each other
