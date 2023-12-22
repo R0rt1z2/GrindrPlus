@@ -787,59 +787,20 @@ object Hooks {
             findClass("hc.p0", Hooker.pkgParam.classLoader), // ChatWrapper
         )
 
-        hookMethod(sendChatMessage,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val chatMessage = getObjectField(param.args[0], "a")
-                    val text = getObjectField(chatMessage, "body") as String
-                    val recipient = getObjectField(chatMessage, "recipient") as String
+        hookMethod(sendChatMessage, object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val chatMessage = getObjectField(param.args[0], "a")
+                val text = getObjectField(chatMessage, "body") as String
+                val recipient = getObjectField(chatMessage, "recipient") as String
 
-                    if (text.startsWith("/")) {
-                        param.result = null // This prevents the command from being sent
-                        val args = text.substring(1).split(" ")
-                        when (args[0]) {
-                            "help" -> {
-                                logChatMessage(
-                                    """
-                                        /help - Show this help message
-                                        /id - Get the user ID of the current profile
-                                        /open <id> - Open a profile by its ID
-                                        /ping - Test if the hook is active
-                                        """.trimIndent(),
-                                    recipient,
-                                    recipient
-                                )
-                                return
-                            }
-                            "id" -> {
-                                logChatMessage(
-                                    """
-                                        Your profile ID is: $ownProfileId
-                                        The profile ID of the other user is: $recipient
-                                    """.trimIndent(),
-                                    recipient,
-                                    recipient
-                                )
-                                return
-                            }
-                            "open" -> {
-                                if (args.size > 1) {
-                                    openProfile(args[1])
-                                } else {
-                                    logChatMessage("Please specify a profile ID.",
-                                        recipient, recipient)
-                                }
-                                return
-                            }
-                            "ping" -> {
-                                logChatMessage("\uD83C\uDFD3 Pong!", recipient, recipient)
-                                return
-                            }
-                        }
-                    }
+                if (text.startsWith("/")) {
+                    param.result = null // Prevents the command from being sent as a message
+                    val commandHandler = CommandHandler(recipient)
+                    commandHandler.handleCommand(text.substring(1))
                 }
             }
-        )
+        })
+
     }
 
     /**
