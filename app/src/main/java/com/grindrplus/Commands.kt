@@ -2,6 +2,10 @@ package com.grindrplus
 
 import com.grindrplus.Utils.logChatMessage
 
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class CommandDescription(val description: String)
+
 class CommandHandler(private val recipient: String) {
     fun handleCommand(command: String) {
         val args = command.split(" ")
@@ -22,15 +26,19 @@ class CommandHandler(private val recipient: String) {
         }
     }
 
+    @CommandDescription("Show this help message.")
     private fun helpCommand(args: List<String>) {
-        logChatMessage("""
-            Available commands:
-            id - Get your profile ID
-            open <profile ID> - Open a profile by its ID
-            ping - Check if the bot is alive
-        """.trimIndent(), this.recipient, this.recipient)
+        val commands = this::class.java.declaredMethods
+            .filter { it.isAnnotationPresent(CommandDescription::class.java) }
+            .joinToString("\n") { method ->
+                val annotation = method.getAnnotation(CommandDescription::class.java)
+                "${method.name.removeSuffix("Command")} - ${annotation.description}"
+            }
+
+        logChatMessage("Available commands:\n$commands", this.recipient, this.recipient)
     }
 
+    @CommandDescription("Get the profile ID of the current profile.")
     private fun idCommand(args: List<String>) {
         logChatMessage("""
             Your profile ID is: ${Hooks.ownProfileId}
@@ -38,6 +46,7 @@ class CommandHandler(private val recipient: String) {
         """.trimIndent(), this.recipient, this.recipient)
     }
 
+    @CommandDescription("Open a profile by its ID.")
     private fun openCommand(args: List<String>) {
         if (args.isNotEmpty()) {
             Utils.openProfile(args[0])
@@ -47,6 +56,7 @@ class CommandHandler(private val recipient: String) {
         }
     }
 
+    @CommandDescription("Test if the module is working.")
     private fun pingCommand(args: List<String>) {
         logChatMessage("\uD83C\uDFD3 Pong!", this.recipient, this.recipient)
     }
