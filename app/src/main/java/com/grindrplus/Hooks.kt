@@ -49,20 +49,19 @@ object Hooks {
      * Inspired by @Tebbe's initial idea.
      */
     fun hookUpdateInfo(name: String, code: Int) {
+        // `updateAvailability`, as the name suggests, is called to check
+        // if there is an update available. We return UPDATE_NOT_AVAILABLE.
+        findAndHookMethod(
+            "com.google.android.play.core.appupdate.AppUpdateInfo",
+            Hooker.pkgParam.classLoader, "updateAvailability",
+            Constants.Returns.RETURN_ONE // In this specific scenario, 1 means "no updates".
+        )
+
         if (Constants.GRINDR_PKG_VERSION_NAME.compareTo(name) < 0) {
-            Logger.xLog("Hooking update info with version $name ($code)")
-
-            // `updateAvailability`, as the name suggests, is called to check
-            // if there is an update available. We return UPDATE_NOT_AVAILABLE.
-            findAndHookMethod(
-                "com.google.android.play.core.appupdate.AppUpdateInfo",
-                Hooker.pkgParam.classLoader, "updateAvailability",
-                Constants.Returns.RETURN_ONE // In this specific scenario, 1 means "no updates".
-            )
-
             // The constructor of `AppConfiguration` has 3 different fields used
             // to store information regarding the versioning of the app. We use
             // the newly fetched version name and code to spoof the app version.
+            Logger.xLog("Hooking update info with version $name ($code)")
             findAndHookConstructor(
                 "com.grindrapp.android.base.config.AppConfiguration",
                 Hooker.pkgParam.classLoader,
