@@ -2,6 +2,7 @@
 package com.grindrplus
 
 import android.content.Intent
+import com.grindrplus.Hooker.Companion.sharedPref
 import com.grindrplus.Hooks.chatMessageManager
 import com.grindrplus.Hooks.hookUpdateInfo
 import com.grindrplus.Hooks.ownProfileId
@@ -106,7 +107,7 @@ object Utils {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> true
+        "profile-redesign-20230214" -> isProfileRedesignEnabled()
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
@@ -192,5 +193,20 @@ object Utils {
             false,
             false
         )
+    }
+
+    /**
+     * Returns whether the profile redesign is enabled.
+     */
+    fun isProfileRedesignEnabled(): Boolean {
+        val value = sharedPref.getString("profile_redesign", "true") ?: "true"
+        return value.toBoolean()
+    }
+
+    /**
+     * Updates the profile redesign value.
+     */
+    fun updateProfileRedesign(value: Boolean) {
+        sharedPref.edit().putString("profile_redesign", value.toString()).apply()
     }
 }

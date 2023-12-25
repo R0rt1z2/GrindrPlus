@@ -60,4 +60,14 @@ class CommandHandler(private val recipient: String) {
     private fun pingCommand(args: List<String>) {
         logChatMessage("\uD83C\uDFD3 Pong!", this.recipient, this.recipient)
     }
+
+    @CommandDescription("Toggle the profile redesign feature.")
+    private fun redesignCommand(args: List<String>) {
+        val newState = !Utils.isProfileRedesignEnabled()
+        Utils.updateProfileRedesign(newState)
+        logChatMessage(
+            "Profile redesign ${if (newState) "enabled" else "disabled"}.",
+            this.recipient, this.recipient
+        )
+    }
 }
