@@ -51,7 +51,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.dontSendTypingIndicator()
             Hooks.useThreeColumnLayoutForFavorites()
             Hooks.disableAnalytics()
-            // Hooks.dontSendChatMarkers()
+            Hooks.dontSendChatMarkers()
             // Hooks.makeMessagesAlwaysRemovable()
             // Hooks.addExtraProfileFields()
             // Hooks.allowSomeExperiments()

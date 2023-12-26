@@ -1,18 +1,16 @@
 package com.grindrplus
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
-import android.widget.*
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.view.children
 import com.grindrplus.Constants.NUM_OF_COLUMNS
 import com.grindrplus.Constants.Returns.RETURN_FALSE
@@ -25,13 +23,19 @@ import com.grindrplus.Obfuscation.GApp
 import com.grindrplus.Utils.getFixedLocationParam
 import com.grindrplus.Utils.logChatMessage
 import com.grindrplus.Utils.mapFeatureFlag
-import com.grindrplus.Utils.openProfile
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedBridge.hookMethod
-import de.robv.android.xposed.XposedHelpers.*
+import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.findAndHookConstructor
+import de.robv.android.xposed.XposedHelpers.findAndHookMethod
+import de.robv.android.xposed.XposedHelpers.findClass
+import de.robv.android.xposed.XposedHelpers.findConstructorExact
+import de.robv.android.xposed.XposedHelpers.findMethodExact
+import de.robv.android.xposed.XposedHelpers.getObjectField
+import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.lang.reflect.Proxy
 import kotlin.math.roundToInt
 import kotlin.time.Duration
@@ -815,6 +819,25 @@ object Hooks {
             "kotlin.coroutines.Continuation",
             RETURN_UNIT
         )
+    }
+
+    fun dontSendChatMarkers() {
+        findAndHookMethod(
+            "org.jivesoftware.smack.AbstractXMPPConnection",
+            Hooker.pkgParam.classLoader,
+            "sendStanza",
+            "org.jivesoftware.smack.packet.Stanza",
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val stanza = param.args[0]
+                    val hasReceivedExtension = callMethod(stanza, "hasExtension", "received", "urn:xmpp:chat-markers:0") as Boolean
+                    val hasDisplayedExtension = callMethod(stanza, "hasExtension", "displayed", "urn:xmpp:chat-markers:0") as Boolean
+                    if (!(hasReceivedExtension || hasDisplayedExtension)) {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    }
+                    return Unit
+                }
+            })
     }
 
     /**
