@@ -56,9 +56,24 @@ object Obfuscation {
 
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
-            const val BlockInteractor = "$_manager.n"
 
+            /*
+            BlockInteractor has multiple coroutines whose state machines are implemented as several subclasses by the Coroutine compiler.
+            These subclasses effectively become independent classes ($ class names) and are renamed by ProGuard.
+            e.g. BlockInteractor$blockstream$2 becomes p6.v
+            So when checking if a call is made by BlockInteractor, we can't rely on a single class name anymore
+             */
+            val BlockInteractor = listOf("p6.a0", "p6.b0", "p6.v", "p6.w", "p6.x", "p6.y", "p6.z")
 
+            object persistence {
+                private const val _persistence = "$_manager.persistence"
+
+                const val ChatPersistenceManager = "v6.a"
+
+                object ChatPersistenceManager_ {
+                    const val deleteConversationsByProfileIds = "e"
+                }
+            }
         }
 
         object model {

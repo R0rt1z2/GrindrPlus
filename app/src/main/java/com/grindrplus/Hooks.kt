@@ -594,9 +594,10 @@ object Hooks {
                 // We still want to allow deleting chats etc.,
                 // so only ignore if BlockInteractor is calling
                 val isBlockInteractor =
-                    Thread.currentThread().stackTrace.any {
-                        it.className.contains(GApp.manager.BlockInteractor) ||
-                                it.className.contains(GApp.ui.chat.BlockViewModel)
+                    Thread.currentThread().stackTrace.any { stackTraceElement ->
+                        GApp.manager.BlockInteractor.any {
+                            stackTraceElement.className.contains(it)
+                        } || stackTraceElement.className.contains(GApp.ui.chat.BlockViewModel)
                     }
                 if (isBlockInteractor) {
                     return Unit
@@ -628,9 +629,9 @@ object Hooks {
         )
 
         findAndHookMethod(
-            GApp.persistence.repository.ChatRepo,
+            GApp.manager.persistence.ChatPersistenceManager,
             Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ChatRepo_.deleteMessagesByConversationIds,
+            GApp.manager.persistence.ChatPersistenceManager_.deleteConversationsByProfileIds,
             List::class.java,
             "kotlin.coroutines.Continuation",
             ignoreIfBlockInteractor
