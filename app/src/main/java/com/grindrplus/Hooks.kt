@@ -827,15 +827,14 @@ object Hooks {
             Hooker.pkgParam.classLoader,
             "sendStanza",
             "org.jivesoftware.smack.packet.Stanza",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
                     val stanza = param.args[0]
                     val hasReceivedExtension = callMethod(stanza, "hasExtension", "received", "urn:xmpp:chat-markers:0") as Boolean
                     val hasDisplayedExtension = callMethod(stanza, "hasExtension", "displayed", "urn:xmpp:chat-markers:0") as Boolean
-                    if (!(hasReceivedExtension || hasDisplayedExtension)) {
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    if (hasReceivedExtension || hasDisplayedExtension) {
+                        param.result = null
                     }
-                    return Unit
                 }
             })
     }
