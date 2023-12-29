@@ -40,10 +40,14 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Get the profile ID of the current profile.")
     private fun idCommand(args: List<String>) {
-        logChatMessage("""
-            Your profile ID is: ${Hooks.ownProfileId}
-            This person's profile ID is: ${this.recipient}
-        """.trimIndent(), this.recipient, this.recipient)
+        logChatMessage("This person's profile ID is: ${this.recipient}",
+            this.recipient, this.recipient)
+    }
+
+    @CommandDescription("Get your own profile ID.")
+    private fun myidCommand(args: List<String>) {
+        logChatMessage("Your profile ID is: ${Hooks.ownProfileId}",
+            this.recipient, this.recipient)
     }
 
     @CommandDescription("Open a profile by its ID.")
