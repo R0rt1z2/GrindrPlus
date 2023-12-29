@@ -4,6 +4,7 @@ object Obfuscation {
     object GApp {
         object taps {
             private const val _taps = Constants.GRINDR_PKG + ".taps"
+
             object model {
                 private const val _model = "$_taps.model"
 
@@ -35,7 +36,17 @@ object Obfuscation {
             }
 
             //Contains @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "v3.b"
+            const val AnalyticsRestService = "x3.b"
+
+            const val ProfileRestService = "$_api.ChatRestService"
+
+            object ProfileRestService_ {
+                //Annotated with @POST("v4/views/{profileId}")
+                const val logView = "n"
+
+                //Annotated with @POST("v4/views")
+                const val logViews = "h"
+            }
         }
 
         object experiment {
@@ -171,9 +182,12 @@ object Obfuscation {
 
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
-                    const val deleteChatMessageFromLessThanOrEqualToTimestamp = "deleteChatMessageFromLessThanOrEqualToTimestamp"
-                    const val deleteChatMessageFromConversationId = "deleteChatMessageFromConversationId"
-                    const val deleteChatMessageListFromConversationId = "deleteChatMessageListFromConversationId"
+                    const val deleteChatMessageFromLessThanOrEqualToTimestamp =
+                        "deleteChatMessageFromLessThanOrEqualToTimestamp"
+                    const val deleteChatMessageFromConversationId =
+                        "deleteChatMessageFromConversationId"
+                    const val deleteChatMessageListFromConversationId =
+                        "deleteChatMessageListFromConversationId"
                     const val deleteMessagesByConversationIds = "deleteMessagesByConversationIds"
                 }
 
@@ -186,12 +200,14 @@ object Obfuscation {
                 }
 
                 const val ConversationRepo = "$_repository.ConversationRepo"
+
                 object ConversationRepo_ {
                     const val deleteConversation = "deleteConversation"
                     const val deleteConversations = "deleteConversations"
                 }
 
                 const val IncomingChatMarkerRepo = "$_repository.IncomingChatMarkerRepo"
+
                 object IncomingChatMarkerRepo_ {
                     const val deleteIncomingChatMarker = "deleteIncomingChatMarker"
                 }
@@ -249,18 +265,20 @@ object Obfuscation {
 
         object profile {
             val _profile = "com.grindrapp.android.profile"
+
             object experiments {
                 val _experiments = "$_profile.experiments"
 
-                val InaccessibleProfileManager =  "$_experiments.InaccessibleProfileManager"
+                val InaccessibleProfileManager = "$_experiments.InaccessibleProfileManager"
 
                 object InaccessibleProfileManager_ {
 
-                    val isProfileEnabled =  "a"
+                    val isProfileEnabled = "a"
                     val shouldShowProfile = "b"
                 }
             }
         }
+
         object ui {
             private const val _ui = Constants.GRINDR_PKG + ".ui"
 

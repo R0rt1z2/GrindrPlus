@@ -28,6 +28,7 @@ import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedBridge.hookMethod
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.findAndHookConstructor
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
@@ -37,6 +38,13 @@ import de.robv.android.xposed.XposedHelpers.findMethodExact
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.lang.reflect.Proxy
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSession
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 
@@ -112,7 +120,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "j7.a.b", Hooker.pkgParam.classLoader, Any::class.java)
+            "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -578,13 +586,36 @@ object Hooks {
      * Prevents people from knowing that you have seen their profile.
      */
     fun preventRecordProfileViews() {
+        val ProfileRestServiceClass = findClass(
+            GApp.api.ProfileRestService, Hooker.pkgParam.classLoader)
+
+        val createSuccessResultConstructor = findConstructorExact(
+            "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+
         findAndHookMethod(
-            GApp.persistence.repository.ProfileRepo,
+            "retrofit2.Retrofit",
             Hooker.pkgParam.classLoader,
-            GApp.persistence.repository.ProfileRepo_.recordProfileView,
-            String::class.java,
-            "kotlin.coroutines.Continuation",
-            RETURN_UNIT
+            "create",
+            Class::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val service = param.result
+                    param.result = when {
+                        ProfileRestServiceClass.isInstance(service) -> {
+                            val invocationHandler = Proxy.getInvocationHandler(service)
+                            Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
+                                arrayOf(ProfileRestServiceClass)) { proxy, method, args ->
+                                if (method.name in arrayOf(GApp.api.ProfileRestService_.logView, GApp.api.ProfileRestService_.logViews)) {
+                                    createSuccessResultConstructor.newInstance(Unit)
+                                } else {
+                                    invocationHandler.invoke(proxy, method, args)
+                                }
+                            }
+                        }
+                        else -> service
+                    }
+                }
+            }
         )
     }
 
@@ -593,8 +624,8 @@ object Hooks {
      * blocks you.
      */
     fun keepChatsOfBlockedProfiles() {
-        val ignoreIfBlockInteractor = object : XC_MethodReplacement() {
-            override fun replaceHookedMethod(param: MethodHookParam): Any {
+        val ignoreIfBlockInteractor = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
                 // We still want to allow deleting chats etc.,
                 // so only ignore if BlockInteractor is calling
                 val isBlockInteractor =
@@ -604,13 +635,8 @@ object Hooks {
                         } || stackTraceElement.className.contains(GApp.ui.chat.BlockViewModel)
                     }
                 if (isBlockInteractor) {
-                    return Unit
+                    param.result = null
                 }
-                return XposedBridge.invokeOriginalMethod(
-                    param.method,
-                    param.thisObject,
-                    param.args
-                )
             }
         }
 
@@ -1003,7 +1029,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "j7.a.b",
+            "j7.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
@@ -1033,5 +1059,50 @@ object Hooks {
                 }
             }
         )
+    }
+
+    /*
+    DO NOT ENABLE THIS IN PRODUCTION BUILDS!
+    This methods disables OkHttp's certificate pinning trusts all certificate.
+    Useful for analyzing network traffic with tools like mitmproxy.
+    THIS COMPLETELY MITIGATES ANY SECURITY AND SHOULD NOT BE USED IN PRODUCTION
+     */
+    fun trustAllCerts() {
+        XposedHelpers.findAndHookConstructor(
+            "okhttp3.OkHttpClient\$Builder",
+            Hooker.pkgParam.classLoader,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val trustAlLCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                        override fun checkClientTrusted(
+                            chain: Array<out X509Certificate>?,
+                            authType: String?
+                        ) {
+                        }
+
+                        override fun checkServerTrusted(
+                            chain: Array<out X509Certificate>?,
+                            authType: String?
+                        ) {
+                        }
+
+                        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+
+                    })
+                    val sslContext = SSLContext.getInstance("TLSv1.3")
+                    sslContext.init(null, trustAlLCerts, SecureRandom())
+                    callMethod(param.thisObject, "sslSocketFactory", sslContext.socketFactory, trustAlLCerts.first() as X509TrustManager)
+                    callMethod(param.thisObject, "hostnameVerifier", object : HostnameVerifier {
+                        override fun verify(hostname: String?, session: SSLSession?): Boolean = true
+                    })
+                }
+            })
+
+        findAndHookMethod(
+            "okhttp3.OkHttpClient\$Builder",
+            Hooker.pkgParam.classLoader,
+            "certificatePinner",
+            "okhttp3.CertificatePinner",
+            XC_MethodReplacement.DO_NOTHING)
     }
 }

@@ -10,6 +10,7 @@ import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import kotlin.time.Duration.Companion.minutes
 
+
 class Hooker : IXposedHookLoadPackage {
 
     companion object {
@@ -25,6 +26,8 @@ class Hooker : IXposedHookLoadPackage {
             Utils.fetchVersionAndUpdate()
             Hooks.storeChatMessageManager()
             Hooks.localSavedPhrases()
+            //DO NOT ENABLE THIS IN PRODUCTION BUILDS!
+            //Hooks.trustAllCerts()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog("Error in pre-onCreate hook: $it") }
         }
@@ -80,7 +83,7 @@ class Hooker : IXposedHookLoadPackage {
                         return Toast.makeText(
                             appContext,
                             "This hook is for client version $GRINDR_PKG_VERSION_NAME. " +
-                                 "(Current: $pkgVersionName) Hook will not be loaded.",
+                                    "(Current: $pkgVersionName) Hook will not be loaded.",
                             Toast.LENGTH_LONG
                         ).show()
                     }
