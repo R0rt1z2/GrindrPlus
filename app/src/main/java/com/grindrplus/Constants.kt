@@ -5,7 +5,7 @@ import de.robv.android.xposed.XC_MethodReplacement.*
 
 object Constants {
     const val GRINDR_PKG = "com.grindrapp.android"
-    const val GRINDR_PKG_VERSION_NAME = "9.18.1"
+    const val GRINDR_PKG_VERSION_NAME = "9.18.2"
 
     const val NUM_OF_COLUMNS = 3
 
