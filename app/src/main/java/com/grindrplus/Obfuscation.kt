@@ -38,7 +38,7 @@ object Obfuscation {
             //Contains @POST("/v3/logging/mobile/logs")
             const val AnalyticsRestService = "x3.b"
 
-            const val ProfileRestService = "$_api.ChatRestService"
+            const val ProfileRestService = "com.grindrapp.android.api.ProfileRestService"
 
             object ProfileRestService_ {
                 //Annotated with @POST("v4/views/{profileId}")
