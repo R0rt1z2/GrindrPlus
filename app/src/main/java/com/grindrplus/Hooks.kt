@@ -880,6 +880,27 @@ object Hooks {
     }
 
     /**
+     * Makes messages always removable, even if they're older than
+     * 24 hours.
+     */
+    fun makeMessagesAlwaysRemovable() {
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.ChatMessage",
+            Hooker.pkgParam.classLoader,
+            "getTimestamp",
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (Thread.currentThread().stackTrace.any {
+                            it.className.contains("q9.a3") }) {
+                        // Only hook if the caller is showMessageLongClickDialog
+                        param.result = System.currentTimeMillis()
+                    }
+                }
+            }
+        )
+    }
+
+    /**
      * Use a three column layout for the favorites tab.
      */
     fun useThreeColumnLayoutForFavorites() {
