@@ -20,7 +20,6 @@ import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
-import com.grindrplus.Utils.getFixedLocationParam
 import com.grindrplus.Utils.logChatMessage
 import com.grindrplus.Utils.mapFeatureFlag
 import de.robv.android.xposed.XC_MethodHook
@@ -278,36 +277,26 @@ object Hooks {
             RETURN_FALSE
         )
 
-        findAndHookMethod(
-            class_Location,
-            "getLatitude",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val teleportEnabled = Utils.getBooleanPreference("teleport_enabled")
-                    return if (teleportEnabled) {
-                        Utils.getLocationPreference("teleport_location")?.first
-                            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    } else {
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+        class LocationMethodHook(private val getCoordinate: () -> Double?) : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                if (Utils.getBooleanPreference("teleport_enabled", true)) {
+                    getCoordinate()?.let { spoofedCoordinate ->
+                        param.result = spoofedCoordinate
                     }
                 }
             }
+        }
+
+        findAndHookMethod(
+            class_Location,
+            "getLatitude",
+            LocationMethodHook { Utils.getLocationPreference("teleport_location")?.first }
         )
 
         findAndHookMethod(
             class_Location,
             "getLongitude",
-            object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val teleportEnabled = Utils.getBooleanPreference("teleport_enabled")
-                    return if (teleportEnabled) {
-                        Utils.getLocationPreference("teleport_location")?.second
-                            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    } else {
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    }
-                }
-            }
+            LocationMethodHook { Utils.getLocationPreference("teleport_location")?.second }
         )
 
         if (Build.VERSION.SDK_INT >= 31) {
