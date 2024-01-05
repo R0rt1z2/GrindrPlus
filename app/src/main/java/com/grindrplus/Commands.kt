@@ -84,4 +84,61 @@ class CommandHandler(private val recipient: String) {
             this.recipient, this.recipient
         )
     }
+
+    @CommandDescription("Teleport to a location.")
+    private fun teleportCommand(args: List<String>) {
+        if (args.isEmpty()) {
+            val newState = !Utils.getBooleanPreference("teleport_enabled", false)
+            Utils.setBooleanPreference("teleport_enabled", newState)
+            return logChatMessage(
+                "Teleport ${if (newState) "enabled" else "disabled"}.",
+                this.recipient, this.recipient
+            )
+        }
+
+        when {
+            !Utils.getBooleanPreference("teleport_enabled", false) -> {
+                Utils.setBooleanPreference("teleport_enabled", true)
+            }
+
+            args.size == 1 && args[0].contains(",") -> {
+                val (lat, lon) = args[0].split(",").map { it.trim().toDouble() }
+                Utils.setLocationPreference("teleport_location", lat, lon)
+                logChatMessage("Teleported to $lat, $lon.", this.recipient, this.recipient)
+            }
+            args.size == 2 && args.all { it.toDoubleOrNull() != null } -> {
+                val lat = args[0].toDouble()
+                val lon = args[1].toDouble()
+                Utils.setLocationPreference("teleport_location", lat, lon)
+                logChatMessage("Teleported to $lat, $lon.", this.recipient, this.recipient)
+            }
+            else -> {
+                val coordinates = Utils.getLatLngFromLocationName(args.joinToString(" "))
+                if (coordinates != null) {
+                    Utils.setLocationPreference("teleport_location", coordinates.first, coordinates.second)
+                    logChatMessage("Teleported to ${coordinates.first}, ${coordinates.second}.",
+                        this.recipient, this.recipient)
+                } else {
+                    logChatMessage("Could not find location.", this.recipient, this.recipient)
+                }
+            }
+        }
+    }
+
+    @CommandDescription("Show the current teleport location.")
+    private fun locationCommand(args: List<String>) {
+        val location = Utils.getLocationPreference("teleport_location")
+        if (!Utils.getBooleanPreference("teleport_enabled", false)) {
+            logChatMessage("Teleport is disabled.", this.recipient, this.recipient)
+        } else {
+            if (location != null) {
+                logChatMessage(
+                    "Current teleport location: ${location.first}, ${location.second}.",
+                    this.recipient, this.recipient
+                )
+            } else {
+                logChatMessage("No teleport location set.", this.recipient, this.recipient)
+            }
+        }
+    }
 }

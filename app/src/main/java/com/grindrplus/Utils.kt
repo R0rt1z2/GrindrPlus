@@ -16,8 +16,11 @@ import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.net.URLEncoder
 
 import java.text.SimpleDateFormat
 import java.util.*
@@ -46,20 +49,6 @@ object Utils {
             bmi < 40.0 -> "$bmi (Obesity II)"
             else -> "$bmi (Obesity III)"
         }
-    }
-
-    /**
-     * Gets the fixed location.
-     */
-    fun getFixedLocationParam(param: XC_MethodHook.MethodHookParam, latOrLon: Boolean): Any {
-        val regex = Regex("([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)")
-        val locationFile = File(Hooker.appContext.filesDir, "location.txt")
-        if (!locationFile.exists()) {
-            locationFile.createNewFile()
-        }
-        val content = locationFile.readText()
-        return regex.find(content)?.groups?.get(if (latOrLon) 1 else 2)?.value?.toDouble()
-            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
     }
 
     /**
@@ -207,5 +196,62 @@ object Utils {
      */
     fun setBooleanPreference(key: String, value: Boolean) {
         sharedPref.edit().putString(key, value.toString()).apply()
+    }
+
+    /**
+     * Sets the mocked location in the preferences.
+     */
+    fun setLocationPreference(key: String, latitude: Double, longitude: Double) {
+        val locationString = "$latitude,$longitude"
+        sharedPref.edit().putString(key, locationString).apply()
+    }
+
+    /**
+     * Returns the mocked location from the preferences.
+     */
+    fun getLocationPreference(key: String): Pair<Double, Double>? {
+        val locationString = sharedPref.getString(key, null)
+        return locationString?.split(',')?.let {
+            if (it.size == 2) {
+                val latitude = it[0].toDoubleOrNull()
+                val longitude = it[1].toDoubleOrNull()
+                if (latitude != null && longitude != null) {
+                    Pair(latitude, longitude)
+                } else null
+            } else null
+        }
+    }
+
+    /**
+     * Get latitude and longitude from name.
+     */
+    fun getLatLngFromLocationName(locationName: String): Pair<Double, Double>? {
+        try {
+            val client = OkHttpClient()
+            val encodedLocation = URLEncoder.encode(locationName, "UTF-8")
+            val url = "https://nominatim.openstreetmap.org/search?format=json&q=$encodedLocation"
+
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "GrindrPlus")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
+
+                responseBody?.let {
+                    val jsonArray = JSONArray(it)
+                    if (jsonArray.length() > 0) {
+                        val jsonObject = jsonArray.getJSONObject(0)
+                        val latitude = jsonObject.getDouble("lat")
+                        val longitude = jsonObject.getDouble("lon")
+                        return Pair(latitude, longitude)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 }

@@ -26,6 +26,7 @@ class Hooker : IXposedHookLoadPackage {
             Utils.fetchVersionAndUpdate()
             Hooks.storeChatMessageManager()
             Hooks.localSavedPhrases()
+            Hooks.allowMockProvider()
             //DO NOT ENABLE THIS IN PRODUCTION BUILDS!
             //Hooks.trustAllCerts()
         } catch (e: Exception) {
@@ -38,7 +39,6 @@ class Hooker : IXposedHookLoadPackage {
             Logger.xLog("Starting post-onCreate hooks...")
             Hooks.unlimitedProfiles()
             Hooks.allowScreenshotsHook()
-            Hooks.allowMockProvider()
             Hooks.hookUserSessionImpl()
             Hooks.hookFeatureGranting()
             Hooks.allowVideocallsOnEmptyChats()

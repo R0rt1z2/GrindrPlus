@@ -283,7 +283,13 @@ object Hooks {
             "getLatitude",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    return getFixedLocationParam(param, true)
+                    val teleportEnabled = Utils.getBooleanPreference("teleport_enabled")
+                    return if (teleportEnabled) {
+                        Utils.getLocationPreference("teleport_location")?.first
+                            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    }
                 }
             }
         )
@@ -293,7 +299,13 @@ object Hooks {
             "getLongitude",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    return getFixedLocationParam(param, false)
+                    val teleportEnabled = Utils.getBooleanPreference("teleport_enabled")
+                    return if (teleportEnabled) {
+                        Utils.getLocationPreference("teleport_location")?.second
+                            ?: XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    }
                 }
             }
         )
