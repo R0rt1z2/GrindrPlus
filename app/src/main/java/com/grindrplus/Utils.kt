@@ -107,7 +107,7 @@ object Utils {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> isProfileRedesignEnabled()
+        "profile-redesign-20230214" -> Utils.getBooleanPreference("profile_redesign", true)
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true
@@ -196,17 +196,16 @@ object Utils {
     }
 
     /**
-     * Returns whether the profile redesign is enabled.
+     * Returns the boolean preference value.
      */
-    fun isProfileRedesignEnabled(): Boolean {
-        val value = sharedPref.getString("profile_redesign", "true") ?: "true"
-        return value.toBoolean()
+    fun getBooleanPreference(key: String, defaultValue: Boolean = false): Boolean {
+        return sharedPref.getString(key, defaultValue.toString())?.toBoolean() ?: defaultValue
     }
 
     /**
-     * Updates the profile redesign value.
+     * Sets the boolean preference value.
      */
-    fun updateProfileRedesign(value: Boolean) {
-        sharedPref.edit().putString("profile_redesign", value.toString()).apply()
+    fun setBooleanPreference(key: String, value: Boolean) {
+        sharedPref.edit().putString(key, value.toString()).apply()
     }
 }

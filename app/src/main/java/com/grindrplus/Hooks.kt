@@ -586,37 +586,48 @@ object Hooks {
      * Prevents people from knowing that you have seen their profile.
      */
     fun preventRecordProfileViews() {
-        val ProfileRestServiceClass = findClass(
-            GApp.api.ProfileRestService, Hooker.pkgParam.classLoader)
+        if (Utils.getBooleanPreference("dont_record_views", true)) {
+            val ProfileRestServiceClass = findClass(
+                GApp.api.ProfileRestService, Hooker.pkgParam.classLoader
+            )
 
-        val createSuccessResultConstructor = findConstructorExact(
-            "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            val createSuccessResultConstructor = findConstructorExact(
+                "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+            )
 
-        findAndHookMethod(
-            "retrofit2.Retrofit",
-            Hooker.pkgParam.classLoader,
-            "create",
-            Class::class.java,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val service = param.result
-                    param.result = when {
-                        ProfileRestServiceClass.isInstance(service) -> {
-                            val invocationHandler = Proxy.getInvocationHandler(service)
-                            Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
-                                arrayOf(ProfileRestServiceClass)) { proxy, method, args ->
-                                if (method.name in arrayOf(GApp.api.ProfileRestService_.logView, GApp.api.ProfileRestService_.logViews)) {
-                                    createSuccessResultConstructor.newInstance(Unit)
-                                } else {
-                                    invocationHandler.invoke(proxy, method, args)
+            findAndHookMethod(
+                "retrofit2.Retrofit",
+                Hooker.pkgParam.classLoader,
+                "create",
+                Class::class.java,
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val service = param.result
+                        param.result = when {
+                            ProfileRestServiceClass.isInstance(service) -> {
+                                val invocationHandler = Proxy.getInvocationHandler(service)
+                                Proxy.newProxyInstance(
+                                    Hooker.pkgParam.classLoader,
+                                    arrayOf(ProfileRestServiceClass)
+                                ) { proxy, method, args ->
+                                    if (method.name in arrayOf(
+                                            GApp.api.ProfileRestService_.logView,
+                                            GApp.api.ProfileRestService_.logViews
+                                        )
+                                    ) {
+                                        createSuccessResultConstructor.newInstance(Unit)
+                                    } else {
+                                        invocationHandler.invoke(proxy, method, args)
+                                    }
                                 }
                             }
+
+                            else -> service
                         }
-                        else -> service
                     }
                 }
-            }
-        )
+            )
+        }
     }
 
     /**

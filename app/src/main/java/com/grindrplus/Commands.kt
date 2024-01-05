@@ -67,10 +67,20 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Toggle the profile redesign feature.")
     private fun redesignCommand(args: List<String>) {
-        val newState = !Utils.isProfileRedesignEnabled()
-        Utils.updateProfileRedesign(newState)
+        val newState = !Utils.getBooleanPreference("profile_redesign", true)
+        Utils.setBooleanPreference("profile_redesign", newState)
         logChatMessage(
             "Profile redesign ${if (newState) "enabled" else "disabled"}.",
+            this.recipient, this.recipient
+        )
+    }
+
+    @CommandDescription("Control whether you want to be hidden from the view list.")
+    private fun viewsCommand(args: List<String>) {
+        val newState = !Utils.getBooleanPreference("dont_record_views", false)
+        Utils.setBooleanPreference("dont_record_views", newState)
+        logChatMessage(
+            "You are ${if (newState) "now" else "no longer"} hidden from the view list.",
             this.recipient, this.recipient
         )
     }
