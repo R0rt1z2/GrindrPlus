@@ -1,5 +1,6 @@
 package com.grindrplus
 
+import ConfigManager
 import android.app.Application
 import android.content.Context
 import android.widget.Toast
@@ -14,6 +15,7 @@ import kotlin.time.Duration.Companion.minutes
 class Hooker : IXposedHookLoadPackage {
 
     companion object {
+        lateinit var configManager: ConfigManager
         lateinit var pkgParam: LoadPackageParam
         lateinit var appContext: Context
         lateinit var pkgVersionName: String
@@ -27,6 +29,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.storeChatMessageManager()
             Hooks.localSavedPhrases()
             Hooks.allowMockProvider()
+            Hooks.preventRecordProfileViews()
             //DO NOT ENABLE THIS IN PRODUCTION BUILDS!
             //Hooks.trustAllCerts()
         } catch (e: Exception) {
@@ -46,7 +49,6 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.unlimitedExpiringPhotos()
             Hooks.unlimitedTaps()
             Hooks.removeExpirationOnExpiringPhotos()
-            Hooks.preventRecordProfileViews()
             Hooks.keepChatsOfBlockedProfiles()
             Hooks.showBlocksInChat()
             Hooks.createChatTerminal()
@@ -66,6 +68,8 @@ class Hooker : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         pkgParam = lpparam
+        configManager = ConfigManager(
+            pkgParam.appInfo.dataDir + "/config.json")
 
         initializePreOnCreateHooks()
 

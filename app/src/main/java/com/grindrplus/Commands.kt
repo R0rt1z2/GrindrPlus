@@ -1,5 +1,6 @@
 package com.grindrplus
 
+import com.grindrplus.Hooker.Companion.configManager
 import com.grindrplus.Utils.logChatMessage
 
 @Retention(AnnotationRetention.RUNTIME)
@@ -77,8 +78,8 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Control whether you want to be hidden from the view list.")
     private fun viewsCommand(args: List<String>) {
-        val newState = !Utils.getBooleanPreference("dont_record_views", false)
-        Utils.setBooleanPreference("dont_record_views", newState)
+        val newState = !configManager.readBoolean("dont_record_views", true)
+        configManager.writeConfig("dont_record_views", newState)
         logChatMessage(
             "You are ${if (newState) "now" else "no longer"} hidden from the view list.",
             this.recipient, this.recipient

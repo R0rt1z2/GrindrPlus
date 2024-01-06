@@ -587,7 +587,7 @@ object Hooks {
      * Prevents people from knowing that you have seen their profile.
      */
     fun preventRecordProfileViews() {
-        if (Utils.getBooleanPreference("dont_record_views", true)) {
+        if (Hooker.configManager.readBoolean("dont_record_views", true)) {
             val ProfileRestServiceClass = findClass(
                 GApp.api.ProfileRestService, Hooker.pkgParam.classLoader
             )
@@ -605,7 +605,7 @@ object Hooks {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val service = param.result
                         param.result = when {
-                            ProfileRestServiceClass.isInstance(service) -> {
+                            ProfileRestServiceClass.isAssignableFrom(service.javaClass) -> {
                                 val invocationHandler = Proxy.getInvocationHandler(service)
                                 Proxy.newProxyInstance(
                                     Hooker.pkgParam.classLoader,
