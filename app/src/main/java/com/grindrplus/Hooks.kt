@@ -279,7 +279,7 @@ object Hooks {
 
         class LocationMethodHook(private val getCoordinate: () -> Double?) : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                if (Utils.getBooleanPreference("teleport_enabled", true)) {
+                if (Hooker.configManager.readBoolean("teleport_enabled", false)) {
                     getCoordinate()?.let { spoofedCoordinate ->
                         param.result = spoofedCoordinate
                     }

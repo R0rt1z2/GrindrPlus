@@ -3,11 +3,17 @@ import java.io.File
 
 class ConfigManager(private val configFilePath: String) {
 
+    private val defaultConfig = JSONObject().apply {
+        put("profile_redesign", true)
+        put("dont_record_views", true)
+        put("teleport_enabled", false)
+    }
+
     private fun getConfigFile(): File {
         val configFile = File(configFilePath)
-        if (!configFile.exists()) {
+        if (!configFile.exists() || configFile.readText().isEmpty()) {
             configFile.createNewFile()
-            configFile.writeText("{}")
+            configFile.writeText(defaultConfig.toString())
         }
         return configFile
     }

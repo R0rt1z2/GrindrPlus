@@ -2,6 +2,7 @@
 package com.grindrplus
 
 import android.content.Intent
+import com.grindrplus.Hooker.Companion.configManager
 import com.grindrplus.Hooker.Companion.sharedPref
 import com.grindrplus.Hooks.chatMessageManager
 import com.grindrplus.Hooks.hookUpdateInfo
@@ -96,7 +97,7 @@ object Utils {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> Utils.getBooleanPreference("profile_redesign", true)
+        "profile-redesign-20230214" -> configManager.readBoolean("profile_redesign", true)
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true

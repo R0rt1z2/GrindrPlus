@@ -68,8 +68,8 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Toggle the profile redesign feature.")
     private fun redesignCommand(args: List<String>) {
-        val newState = !Utils.getBooleanPreference("profile_redesign", true)
-        Utils.setBooleanPreference("profile_redesign", newState)
+        val newState = !configManager.readBoolean("profile_redesign", true)
+        configManager.writeConfig("profile_redesign", newState)
         logChatMessage(
             "Profile redesign ${if (newState) "enabled" else "disabled"}.",
             this.recipient, this.recipient
@@ -89,8 +89,8 @@ class CommandHandler(private val recipient: String) {
     @CommandDescription("Teleport to a location.")
     private fun teleportCommand(args: List<String>) {
         if (args.isEmpty()) {
-            val newState = !Utils.getBooleanPreference("teleport_enabled", false)
-            Utils.setBooleanPreference("teleport_enabled", newState)
+            val newState = !configManager.readBoolean("teleport_enabled", false)
+            configManager.writeConfig("teleport_enabled", newState)
             return logChatMessage(
                 "Teleport ${if (newState) "enabled" else "disabled"}.",
                 this.recipient, this.recipient
@@ -98,8 +98,8 @@ class CommandHandler(private val recipient: String) {
         }
 
         when {
-            !Utils.getBooleanPreference("teleport_enabled", false) -> {
-                Utils.setBooleanPreference("teleport_enabled", true)
+            !configManager.readBoolean("teleport_enabled", false) -> {
+                configManager.writeConfig("teleport_enabled", true)
             }
 
             args.size == 1 && args[0].contains(",") -> {
@@ -129,7 +129,7 @@ class CommandHandler(private val recipient: String) {
     @CommandDescription("Show the current teleport location.")
     private fun locationCommand(args: List<String>) {
         val location = Utils.getLocationPreference("teleport_location")
-        if (!Utils.getBooleanPreference("teleport_enabled", false)) {
+        if (!configManager.readBoolean("teleport_enabled", false)) {
             logChatMessage("Teleport is disabled.", this.recipient, this.recipient)
         } else {
             if (location != null) {
