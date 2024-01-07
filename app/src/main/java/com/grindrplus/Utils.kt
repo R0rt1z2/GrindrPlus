@@ -2,6 +2,9 @@
 package com.grindrplus
 
 import android.content.Intent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import com.grindrplus.Hooker.Companion.configManager
 import com.grindrplus.Hooker.Companion.sharedPref
 import com.grindrplus.Hooks.chatMessageManager
@@ -25,6 +28,7 @@ import java.net.URLEncoder
 
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.regex.Pattern
 
 object Utils {
     fun toReadableDate(timestamp: Long): String = SimpleDateFormat.getDateTimeInstance().format(Date(timestamp))
@@ -32,24 +36,98 @@ object Utils {
     /**
      * Calculates the BMI and returns a description of the BMI.
      *
-     * @param weight in grams
+     * @param weight in kilograms
      * @param height in cm
      * @return BMI in kg/m^2 and its description
      *
      * @see <a href="https://en.wikipedia.org/wiki/Body_mass_index">BMI - Wikipedia</a>
      * @see <a href="https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations">WHO recommendations</a>
      */
-    fun getBmiDescription(weight: Double, height: Double): String {
-        val originalBmi = 10 * (weight / (height * height)) //Multiply by 10 to get kg/m^2
-        val bmi = Math.round(originalBmi * 100.0) / 100.0 //Round to 2 decimal places
-        return when {
-            bmi < 18.5 -> "$bmi (Underweight)"
-            bmi < 25.0 -> "$bmi (Normal weight)"
-            bmi < 30.0 -> "$bmi (Overweight)"
-            bmi < 35.0 -> "$bmi (Obesity I)"
-            bmi < 40.0 -> "$bmi (Obesity II)"
-            else -> "$bmi (Obesity III)"
+    fun getBMIDescription(height: String, weight: String): String {
+        val heightInMeters = convertHeightToMeters(height)
+        val weightInKg = convertWeightToKg(weight)
+
+        return if (heightInMeters != null && weightInKg != null) {
+            val bmi = weightInKg / (heightInMeters * heightInMeters)
+            val roundedBmi = Math.round(bmi * 100.0) / 100.0
+            when {
+                roundedBmi < 18.5 -> "$roundedBmi (Underweight)"
+                roundedBmi < 25.0 -> "$roundedBmi (Normal weight)"
+                roundedBmi < 30.0 -> "$roundedBmi (Overweight)"
+                roundedBmi < 35.0 -> "$roundedBmi (Obesity I)"
+                roundedBmi < 40.0 -> "$roundedBmi (Obesity II)"
+                else -> "$roundedBmi (Obesity III)"
+            }
+        } else {
+            "BMI not available"
         }
+    }
+
+    /**
+     * Converts a height string to meters.
+     */
+    fun convertHeightToMeters(height: String): Double? {
+        val feetAndInchesRegex = """(\d+)'(\d+)"""".toRegex()
+        val cmRegex = """(\d+) cm""".toRegex()
+
+        return when {
+            feetAndInchesRegex.matches(height) -> {
+                val (feet, inches) = feetAndInchesRegex.find(height)!!.destructured
+                ((feet.toInt() * 12 + inches.toInt()) * 2.54) / 100
+            }
+            cmRegex.matches(height) -> {
+                val (cm) = cmRegex.find(height)!!.destructured
+                cm.toInt() / 100.0
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * Converts a weight string to kilograms.
+     */
+    fun convertWeightToKg(weight: String): Double? {
+        val lbsRegex = """(\d+) lbs""".toRegex()
+        val kgRegex = """(\d+) kg""".toRegex()
+
+        return when {
+            lbsRegex.matches(weight) -> {
+                val (lbs) = lbsRegex.find(weight)!!.destructured
+                lbs.toInt() * 0.453592
+            }
+            kgRegex.matches(weight) -> {
+                val (kg) = kgRegex.find(weight)!!.destructured
+                kg.toDouble()
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * Returns the height and weight TextViews from a View.
+     */
+    fun findHeightAndWeightTextViews(view: View): Pair<TextView?, TextView?> {
+        var heightTextView: TextView? = null
+        var weightTextView: TextView? = null
+
+        val heightPattern = Pattern.compile("(\\d+'\\d+\")|(\\d+ cm)")
+        val weightPattern = Pattern.compile("(\\d+ lbs)|(\\d+ kg)")
+
+        if (view is TextView) {
+            if (heightPattern.matcher(view.text).matches()) {
+                heightTextView = view
+            } else if (weightPattern.matcher(view.text).matches()) {
+                weightTextView = view
+            }
+        } else if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val (foundHeightTextView, foundWeightTextView) = findHeightAndWeightTextViews(view.getChildAt(i))
+                if (foundHeightTextView != null) heightTextView = foundHeightTextView
+                if (foundWeightTextView != null) weightTextView = foundWeightTextView
+            }
+        }
+
+        return Pair(heightTextView, weightTextView)
     }
 
     /**

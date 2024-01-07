@@ -58,7 +58,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.disableAnalytics()
             Hooks.dontSendChatMarkers()
             Hooks.makeMessagesAlwaysRemovable()
-            // Hooks.addExtraProfileFields()
+            Hooks.modifyProfileDetails()
             // Hooks.allowSomeExperiments()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog("Error in post-onCreate hook: $it") }

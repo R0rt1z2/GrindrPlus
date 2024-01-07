@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.Window
 import android.view.WindowManager
@@ -20,6 +21,7 @@ import com.grindrplus.Constants.Returns.RETURN_TRUE
 import com.grindrplus.Constants.Returns.RETURN_UNIT
 import com.grindrplus.Constants.Returns.RETURN_ZERO
 import com.grindrplus.Obfuscation.GApp
+import com.grindrplus.Utils.findHeightAndWeightTextViews
 import com.grindrplus.Utils.logChatMessage
 import com.grindrplus.Utils.mapFeatureFlag
 import de.robv.android.xposed.XC_MethodHook
@@ -39,6 +41,7 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.lang.reflect.Proxy
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.regex.Pattern
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
@@ -1137,5 +1140,32 @@ object Hooks {
             "certificatePinner",
             "okhttp3.CertificatePinner",
             XC_MethodReplacement.DO_NOTHING)
+    }
+
+    fun modifyProfileDetails() {
+        if (Hooker.configManager.readBoolean("show_profile_details", true)) {
+            findAndHookMethod(
+                "com.grindrapp.android.ui.profileV2.ProfileExpandedDetailsView",
+                Hooker.pkgParam.classLoader,
+                "a", // setProfile
+                findClass("com.grindrapp.android.ui.profileV2.model.ProfileViewState", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.analytics.GrindrAnalyticsV2", Hooker.pkgParam.classLoader),
+                findClass("com.grindrapp.android.base.model.profile.ReferrerType", Hooker.pkgParam.classLoader),
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val profile = getObjectField(param.thisObject, "c") ?: return
+                        val rootView = getObjectField(profile, "a") as? ViewGroup ?: return
+                        val statsView = rootView.getChildAt(3) as? ViewGroup ?: return
+
+                        findHeightAndWeightTextViews(statsView)?.let { (height, weight) ->
+                            if (height != null && weight != null) {
+                                val bmi = Utils.getBMIDescription(height.text.toString(), weight.text.toString())
+                                weight.text = "${weight.text} - BMI $bmi"
+                            }
+                        }
+                    }
+                }
+            )
+        }
     }
 }

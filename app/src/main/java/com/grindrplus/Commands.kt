@@ -142,4 +142,14 @@ class CommandHandler(private val recipient: String) {
             }
         }
     }
+
+    @CommandDescription("Toggle the profile details feature.")
+    private fun detailsCommand(args: List<String>) {
+        val newState = !configManager.readBoolean("show_profile_details", true)
+        configManager.writeConfig("show_profile_details", newState)
+        logChatMessage(
+            "Profile details ${if (newState) "enabled" else "disabled"}.",
+            this.recipient, this.recipient
+        )
+    }
 }
