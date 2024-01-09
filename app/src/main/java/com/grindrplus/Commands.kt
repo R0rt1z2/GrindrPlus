@@ -97,11 +97,11 @@ class CommandHandler(private val recipient: String) {
             )
         }
 
-        when {
-            !configManager.readBoolean("teleport_enabled", false) -> {
-                configManager.writeConfig("teleport_enabled", true)
-            }
+        if (!configManager.readBoolean("teleport_enabled", false)) {
+            configManager.writeConfig("teleport_enabled", true)
+        }
 
+        when {
             args.size == 1 && args[0].contains(",") -> {
                 val (lat, lon) = args[0].split(",").map { it.trim().toDouble() }
                 Utils.setLocationPreference("teleport_location", lat, lon)
@@ -114,13 +114,23 @@ class CommandHandler(private val recipient: String) {
                 logChatMessage("Teleported to $lat, $lon.", this.recipient, this.recipient)
             }
             else -> {
-                val coordinates = Utils.getLatLngFromLocationName(args.joinToString(" "))
-                if (coordinates != null) {
-                    Utils.setLocationPreference("teleport_location", coordinates.first, coordinates.second)
-                    logChatMessage("Teleported to ${coordinates.first}, ${coordinates.second}.",
-                        this.recipient, this.recipient)
+                val aliases = configManager.readMap("teleport_aliases")
+                if (aliases.has(args.joinToString(" "))) {
+                    val (lat, lon) = aliases.getString(args.joinToString(" "))
+                        .split(",").map { it.trim().toDouble() }
+                    Utils.setLocationPreference("teleport_location", lat, lon)
+                    logChatMessage("Teleported to $lat, $lon.", this.recipient, this.recipient)
                 } else {
-                    logChatMessage("Could not find location.", this.recipient, this.recipient)
+                    val coordinates = Utils.getLatLngFromLocationName(args.joinToString(" "))
+                    if (coordinates != null) {
+                        Utils.setLocationPreference("teleport_location", coordinates.first, coordinates.second)
+                        logChatMessage(
+                            "Teleported to ${coordinates.first}, ${coordinates.second}.",
+                            this.recipient, this.recipient
+                        )
+                    } else {
+                        logChatMessage("Could not find location.", this.recipient, this.recipient)
+                    }
                 }
             }
         }
@@ -151,5 +161,64 @@ class CommandHandler(private val recipient: String) {
             "Profile details ${if (newState) "enabled" else "disabled"}.",
             this.recipient, this.recipient
         )
+    }
+
+    @CommandDescription("Save the current teleport location or alternatively, specify coordinates.")
+    private fun saveCommand(args: List<String>) {
+        when (args.size) {
+            1 -> {
+                val location = Hooker.sharedPref.getString("teleport_location", null)
+                if (location != null) {
+                    configManager.addToMap("teleport_aliases", args[0], location)
+                    logChatMessage("Saved $location as ${args[0]}.", this.recipient, this.recipient)
+                } else {
+                    logChatMessage("No teleport location set.", this.recipient, this.recipient)
+                }
+            }
+            2, 3 -> {
+                val coordinatesString = if (args.size == 2) args[1] else "${args[1]},${args[2]}"
+                val coordinates = coordinatesString.split(",").map { it.trim() }
+                if (coordinates.size == 2 && coordinates.all { it.toDoubleOrNull() != null }) {
+                    configManager.addToMap("teleport_aliases", args[0], coordinates.joinToString(","))
+                    logChatMessage("Saved ${coordinates.joinToString(",")} as ${args[0]}.", this.recipient, this.recipient)
+                } else {
+                    logChatMessage("Invalid coordinates format. Use <lat,lon> or <lat> <lon>.", this.recipient, this.recipient)
+                }
+            }
+            else -> {
+                logChatMessage("Invalid command format. Use /save [alias] or /save [alias] [lat,lon].", this.recipient, this.recipient)
+            }
+        }
+    }
+
+    @CommandDescription("Delete a saved teleport location.")
+    private fun delCommand(args: List<String>) {
+        if (args.isEmpty()) {
+            logChatMessage("Please specify a teleport location alias.", this.recipient, this.recipient)
+        } else {
+            val teleportAliases = configManager.readMap("teleport_aliases")
+            if (teleportAliases.has(args[0])) {
+                teleportAliases.remove(args[0])
+                configManager.writeConfig("teleport_aliases", teleportAliases)
+                logChatMessage("Deleted teleport location ${args[0]}.", this.recipient, this.recipient)
+            } else {
+                logChatMessage("No teleport location with alias ${args[0]} found.", this.recipient, this.recipient)
+            }
+        }
+    }
+
+    @CommandDescription("List all saved teleport locations.")
+    private fun listCommand(args: List<String>) {
+        val teleportAliases = configManager.readMap("teleport_aliases")
+        if (teleportAliases.length() == 0) {
+            logChatMessage("No teleport locations saved.", this.recipient, this.recipient)
+        } else {
+            val teleportLocations = buildString {
+                teleportAliases.keys().forEach { alias ->
+                    append("$alias: ${teleportAliases.getString(alias)}\n")
+                }
+            }.trimEnd()
+            logChatMessage("Saved teleport locations:\n$teleportLocations", this.recipient, this.recipient)
+        }
     }
 }

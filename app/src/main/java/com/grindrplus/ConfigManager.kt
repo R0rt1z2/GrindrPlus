@@ -50,4 +50,24 @@ class ConfigManager(private val configFilePath: String) {
             e.printStackTrace()
         }
     }
+
+    fun addToMap(name: String, key: String, value: Any) {
+        try {
+            val configFile = getConfigFile()
+            val jsonObject = readConfig()
+            val targetMap = jsonObject
+                .optJSONObject(name) ?: JSONObject()
+            targetMap.put(key, value)
+            jsonObject.put(name, targetMap)
+            configFile.writeText(jsonObject.toString())
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun readMap(name: String): JSONObject {
+        val jsonObject = readConfig()
+        return jsonObject.optJSONObject(name) ?: JSONObject()
+    }
 }
