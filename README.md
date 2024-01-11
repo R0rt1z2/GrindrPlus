@@ -43,7 +43,7 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
 2. If you use Play Store auto update (most likely), disable auto update for the Grindr app:
    - Go to the Play Store and open the Grindr app page.
    - Click on the 3 dots (overflow menu) and untick "enable auto update".
-3. Go to Grindr Plus [releases](https://github.com/ElJaviLuki/GrindrPlus/releases) and pick the latest. Each Grindr Plus release specifies its compatible Grindr app version on its filename. Take note of the required Grindr app version.
+3. Go to Grindr Plus [releases](https://github.com/R0rt1z2/GrindrPlus/releases) and pick the latest. Each Grindr Plus release specifies its compatible Grindr app version on its filename. Take note of the required Grindr app version.
 4. Check the Grindr version currently installed on your device.
    - If it matches the required version, you are ready to install Plus.
    - If it is older than the required version, go to [APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/) and download and install the required version. Check that Grindr works before proceeding.
