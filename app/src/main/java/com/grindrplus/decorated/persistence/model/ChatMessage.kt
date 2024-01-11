@@ -1,224 +1,191 @@
-package com.grindrplus.decorated.persistence.model;
+package com.grindrplus.decorated.persistence.model
 
-import com.grindrplus.Hooker;
-import com.grindrplus.Obfuscation;
+import com.grindrplus.Hooker
+import com.grindrplus.Obfuscation
 
 import de.robv.android.xposed.XposedHelpers
 
-class ChatMessage(
-    var instance: Any = XposedHelpers.newInstance(
-        CLAZZ
-    )
-) {
-
+@Suppress(
+    "UNUSED", "UNCHECKED_CAST",
+    "REDUNDANTVISIBILITYMODIFIER",
+    "PLATFORM_CLASS_MAPPED_TO_KOTLIN",
+)
+class ChatMessage(public var instance: Any = XposedHelpers.newInstance(CLAZZ)) {
     companion object {
-        val CLAZZ: Class<*> by lazy {
-            XposedHelpers.findClass(Obfuscation.GApp.persistence.model.ChatMessage, Hooker.pkgParam.classLoader)
+        private val CLAZZ: Class<*> by lazy {
+            XposedHelpers.findClass(Obfuscation.GApp.persistence.model.ChatMessage,
+                Hooker.pkgParam.classLoader)
         }
-
-        //TODO: Fix obfuscation mapping for these variable names:
-        /*val TABLE_NAME: String? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.TABLE_NAME
-            ) as String?
-        }
-
-        val TAP_TYPE_FRIENDLY: String? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.TAP_TYPE_FRIENDLY
-            ) as String?
-        }
-
-        val TAP_TYPE_HOT: String? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.TAP_TYPE_HOT
-            ) as String?
-        }
-
-        val TAP_TYPE_LOOKING: String? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.TAP_TYPE_LOOKING
-            ) as String?
-        }*/
 
         val TAP_TYPE_NONE: String? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.TAP_TYPE_NONE
-            ) as String?
+            getObjectFieldStatic<String>("TAP_TYPE_NONE")
         }
 
-        /*
-        val tapTypes: java.util.List<java.lang.String>? by lazy {
-            XposedHelpers.getStaticObjectField(
-                CLAZZ,
-                Obfuscation.GApp.persistence.model.ChatMessage_.tapTypes
-            ) as java.util.List<java.lang.String>?
-        }*/
+        private inline fun <reified T> getObjectFieldStatic(fieldName: String): T? =
+            XposedHelpers.getStaticObjectField(CLAZZ, fieldName) as? T
     }
 
+    private fun <T> getField(fieldName: String): T? = XposedHelpers.getObjectField(instance, fieldName) as? T
+    private fun setField(fieldName: String, value: Any?) = XposedHelpers.setObjectField(instance, fieldName, value)
 
-    var album: Any? //FIXME: Use a decorator for album
-        get() = XposedHelpers.getObjectField(instance, "album")
-        set(value) = XposedHelpers.setObjectField(instance, "album", value)
+    var album: Any?
+        get() = getField("album")
+        set(value) = setField("album", value)
 
     var body: String?
-        get() = XposedHelpers.getObjectField(instance, "body") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "body", value)
+        get() = getField("body")
+        set(value) = setField("body", value)
 
     var conversationId: String?
-        get() = XposedHelpers.getObjectField(instance, "conversationId") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "conversationId", value)
+        get() = getField("conversationId")
+        set(value) = setField("conversationId", value)
 
     var countryCode: String?
-        get() = XposedHelpers.getObjectField(instance, "countryCode") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "countryCode", value)
+        get() = getField("countryCode")
+        set(value) = setField("countryCode", value)
 
     var countryCodes: List<String>?
-        get() = XposedHelpers.getObjectField(instance, "countryCodes") as List<String>?
-        set(value) = XposedHelpers.setObjectField(instance, "countryCodes", value)
+        get() = getField("countryCodes")
+        set(value) = setField("countryCodes", value)
 
     var dateHeader: String?
-        get() = XposedHelpers.getObjectField(instance, "dateHeader") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "dateHeader", value)
+        get() = getField("dateHeader")
+        set(value) = setField("dateHeader", value)
 
     var foundYouViaType: String?
-        get() = XposedHelpers.getObjectField(instance, "foundYouViaType") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "foundYouViaType", value)
+        get() = getField("foundYouViaType")
+        set(value) = setField("foundYouViaType", value)
 
     var foundYouViaValue: String?
-        get() = XposedHelpers.getObjectField(instance, "foundYouViaValue") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "foundYouViaValue", value)
+        get() = getField("foundYouViaValue")
+        set(value) = setField("foundYouViaValue", value)
 
     var groupChatTips: String?
-        get() = XposedHelpers.getObjectField(instance, "groupChatTips") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "groupChatTips", value)
+        get() = getField("groupChatTips")
+        set(value) = setField("groupChatTips", value)
 
     var groupNewName: String?
-        get() = XposedHelpers.getObjectField(instance, "groupNewName") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "groupNewName", value)
+        get() = getField("groupNewName")
+        set(value) = setField("groupNewName", value)
 
     var inviteesList: List<String>?
-        get() = XposedHelpers.getObjectField(instance, "inviteesList") as List<String>?
-        set(value) = XposedHelpers.setObjectField(instance, "inviteesList", value)
+        get() = getField("inviteesList")
+        set(value) = setField("inviteesList", value)
 
     var isGroupOwnerLeave: java.lang.Boolean?
-        get() = XposedHelpers.getObjectField(instance, "isGroupOwnerLeave") as java.lang.Boolean?
-        set(value) = XposedHelpers.setObjectField(instance, "isGroupOwnerLeave", value)
+        get() = getField("isGroupOwnerLeave")
+        set(value) = setField("isGroupOwnerLeave", value)
 
     var isTimestampShown: java.lang.Boolean?
-        get() = XposedHelpers.getObjectField(instance, "isTimestampShown") as java.lang.Boolean?
-        set(value) = XposedHelpers.setObjectField(instance, "isTimestampShown", value)
+        get() = getField("isTimestampShown")
+        set(value) = setField("isTimestampShown", value)
 
     var latitude: Double
-        get() = XposedHelpers.getDoubleField(instance, "latitude")
-        set(value) = XposedHelpers.setDoubleField(instance, "latitude", value)
+        get() = getField("latitude") ?: 0.0
+        set(value) = setField("latitude", value)
 
     var longitude: Double
-        get() = XposedHelpers.getDoubleField(instance, "longitude")
-        set(value) = XposedHelpers.setDoubleField(instance, "longitude", value)
+        get() = getField("longitude") ?: 0.0
+        set(value) = setField("longitude", value)
 
     var mediaHash: String?
-        get() = XposedHelpers.getObjectField(instance, "mediaHash") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "mediaHash", value)
+        get() = getField("mediaHash")
+        set(value) = setField("mediaHash", value)
 
     var mediaUrl: String?
-        get() = XposedHelpers.getObjectField(instance, "mediaUrl") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "mediaUrl", value)
+        get() = getField("mediaUrl")
+        set(value) = setField("mediaUrl", value)
 
     var messageContext: String?
-        get() = XposedHelpers.getObjectField(instance, "messageContext") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "messageContext", value)
+        get() = getField("messageContext")
+        set(value) = setField("messageContext", value)
 
     var messageId: String?
-        get() = XposedHelpers.getObjectField(instance, "messageId") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "messageId", value)
+        get() = getField("messageId")
+        set(value) = setField("messageId", value)
 
     var pushMetaData: Any?
-        get() = XposedHelpers.getObjectField(instance, "pushMetaData")
-        set(value) = XposedHelpers.setObjectField(instance, "pushMetaData", value)
+        get() = getField("pushMetaData")
+        set(value) = setField("pushMetaData", value)
 
     var reactions: List<Any>?
-        get() = XposedHelpers.getObjectField(instance, "reactions") as List<Any>?
-        set(value) = XposedHelpers.setObjectField(instance, "reactions", value)
+        get() = getField("reactions")
+        set(value) = setField("reactions", value)
 
     var recipient: String?
-        get() = XposedHelpers.getObjectField(instance, "recipient") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "recipient", value)
+        get() = getField("recipient")
+        set(value) = setField("recipient", value)
 
     var repliedMessage: Any?
-        get() = XposedHelpers.getObjectField(instance, "repliedMessage")
-        set(value) = XposedHelpers.setObjectField(instance, "repliedMessage", value)
+        get() = getField("repliedMessage")
+        set(value) = setField("repliedMessage", value)
 
     var reply: String?
-        get() = XposedHelpers.getObjectField(instance, "reply") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "reply", value)
+        get() = getField("reply")
+        set(value) = setField("reply", value)
 
     var replyMessageBody: String?
-        get() = XposedHelpers.getObjectField(instance, "replyMessageBody") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "replyMessageBody", value)
+        get() = getField("replyMessageBody")
+        set(value) = setField("replyMessageBody", value)
 
     var replyMessageEntry: String?
-        get() = XposedHelpers.getObjectField(instance, "replyMessageEntry") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "replyMessageEntry", value)
+        get() = getField("replyMessageEntry")
+        set(value) = setField("replyMessageEntry", value)
 
     var replyMessageId: String?
-        get() = XposedHelpers.getObjectField(instance, "replyMessageId") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "replyMessageId", value)
+        get() = getField("replyMessageId")
+        set(value) = setField("replyMessageId", value)
 
     var replyMessageName: String?
-        get() = XposedHelpers.getObjectField(instance, "replyMessageName") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "replyMessageName", value)
+        get() = getField("replyMessageName")
+        set(value) = setField("replyMessageName", value)
 
     var replyMessageType: String?
-        get() = XposedHelpers.getObjectField(instance, "replyMessageType") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "replyMessageType", value)
+        get() = getField("replyMessageType")
+        set(value) = setField("replyMessageType", value)
 
     var sender: String?
-        get() = XposedHelpers.getObjectField(instance, "sender") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "sender", value)
+        get() = getField("sender")
+        set(value) = setField("sender", value)
 
     var senderPushProfile: Any?
-        get() = XposedHelpers.getObjectField(instance, "senderPushProfile")
-        set(value) = XposedHelpers.setObjectField(instance, "senderPushProfile", value)
+        get() = getField("senderPushProfile")
+        set(value) = setField("senderPushProfile", value)
 
     var sourceOverride: String?
-        get() = XposedHelpers.getObjectField(instance, "sourceOverride") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "sourceOverride", value)
+        get() = getField("sourceOverride")
+        set(value) = setField("sourceOverride", value)
 
     var stanzaId: String?
-        get() = XposedHelpers.getObjectField(instance, "stanzaId") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "stanzaId", value)
+        get() = getField("stanzaId")
+        set(value) = setField("stanzaId", value)
 
     var status: Int
-        get() = XposedHelpers.getIntField(instance, "status")
-        set(value) = XposedHelpers.setIntField(instance, "status", value)
+        get() = getField("status") ?: 0
+        set(value) = setField("status", value)
 
     var tapType: String?
-        get() = XposedHelpers.getObjectField(instance, "tapType") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "tapType", value)
+        get() = getField("tapType")
+        set(value) = setField("tapType", value)
 
     var timestamp: Long
-        get() = XposedHelpers.getLongField(instance, "timestamp")
-        set(value) = XposedHelpers.setLongField(instance, "timestamp", value)
+        get() = getField("timestamp") ?: 0L
+        set(value) = setField("timestamp", value)
 
     var translation: String?
-        get() = XposedHelpers.getObjectField(instance, "translation") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "translation", value)
+        get() = getField("translation")
+        set(value) = setField("translation", value)
 
     var type: String?
-        get() = XposedHelpers.getObjectField(instance, "type") as String?
-        set(value) = XposedHelpers.setObjectField(instance, "type", value)
+        get() = getField("type")
+        set(value) = setField("type", value)
 
     var unread: java.lang.Boolean?
-        get() = XposedHelpers.getObjectField(instance, "unread") as java.lang.Boolean?
-        set(value) = XposedHelpers.setObjectField(instance, "unread", value)
+        get() = getField("unread")
+        set(value) = setField("unread", value)
 
-    public fun clone() : ChatMessage =
-        ChatMessage(XposedHelpers.callMethod(instance, Obfuscation.GApp.persistence.model.ChatMessage_.clone))
+    fun clone(): ChatMessage =
+        ChatMessage(XposedHelpers.callMethod(instance, "clone"))
 }
+
 

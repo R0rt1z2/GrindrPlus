@@ -149,22 +149,6 @@ object Obfuscation {
                 private const val _model = "$_persistence.model"
 
                 const val ChatMessage = "$_model.ChatMessage"
-
-                object ChatMessage_ {
-                    const val TAP_TYPE_NONE = "TAP_TYPE_NONE"
-                    const val getType = "getType"
-                    const val setType = "setType"
-                    const val setMessageId = "setMessageId"
-                    const val setSender = "setSender"
-                    const val setRecipient = "setRecipient"
-                    const val setStanzaId = "setStanzaId"
-                    const val setConversationId = "setConversationId"
-                    const val setTimestamp = "setTimestamp"
-                    const val setBody = "setBody"
-
-                    const val clone = "clone"
-                }
-
                 const val BlockedProfile = "$_model.BlockedProfile"
 
                 object BlockedProfile_ {
