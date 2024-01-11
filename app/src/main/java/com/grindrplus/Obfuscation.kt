@@ -1,5 +1,6 @@
 package com.grindrplus
 
+@Suppress("UNUSED")
 object Obfuscation {
     object GApp {
         object taps {
@@ -7,44 +8,42 @@ object Obfuscation {
 
             object model {
                 private const val _model = "$_taps.model"
-
                 const val TapType = "$_model.TapType"
             }
         }
 
         object api {
             private const val _api = Constants.GRINDR_PKG + ".api"
-
             const val ChatRestService = "$_api.ChatRestService"
 
             object ChatRestService_ {
-                //Annotated with @POST("v3/me/prefs/phrases")
+                // Annotated with @POST("v3/me/prefs/phrases")
                 const val addSavedPhrase = "a"
 
-                //Annotated with @DELETE("v3/me/prefs/phrases/{id}")
+                // Annotated with @DELETE("v3/me/prefs/phrases/{id}")
                 const val deleteSavedPhrase = "s"
 
-                //Annotated with @POST("v4/phrases/frequency/{id}")
+                // Annotated with @POST("v4/phrases/frequency/{id}")
                 const val increaseSavedPhraseClickCount = "H"
             }
 
             const val PhrasesRestService = "x3.k"
 
             object PhrasesRestService_ {
-                //Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
+                // Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
                 const val getSavedPhrases = "a"
             }
 
-            //Contains @POST("/v3/logging/mobile/logs")
+            // Annotated @POST("/v3/logging/mobile/logs")
             const val AnalyticsRestService = "x3.b"
 
             const val ProfileRestService = "com.grindrapp.android.api.ProfileRestService"
 
             object ProfileRestService_ {
-                //Annotated with @POST("v4/views/{profileId}")
+                // Annotated with @POST("v4/views/{profileId}")
                 const val logView = "n"
 
-                //Annotated with @POST("v4/views")
+                // Annotated with @POST("v4/views")
                 const val logViews = "h"
             }
         }
@@ -68,17 +67,17 @@ object Obfuscation {
         object manager {
             private const val _manager = Constants.GRINDR_PKG + ".manager"
 
-            /*
-            BlockInteractor has multiple coroutines whose state machines are implemented as several subclasses by the Coroutine compiler.
-            These subclasses effectively become independent classes ($ class names) and are renamed by ProGuard.
-            e.g. BlockInteractor$blockstream$2 becomes p6.v
-            So when checking if a call is made by BlockInteractor, we can't rely on a single class name anymore
+            /**
+             * BlockInteractor has multiple coroutines whose state machines are implemented
+             * as several subclasses by the Coroutine compiler. These subclasses effectively
+             * become independent classes ($ class names) and are renamed by ProGuard.
+             * (e.g BlockInteractor$blockstream$2 becomes p6.v). So when checking if a call
+             * is made by BlockInteractor, we can't rely on a single class name anymore
              */
             val BlockInteractor = listOf("p6.a0", "p6.b0", "p6.v", "p6.w", "p6.x", "p6.y", "p6.z")
 
             object persistence {
                 private const val _persistence = "$_manager.persistence"
-
                 const val ChatPersistenceManager = "v6.a"
 
                 object ChatPersistenceManager_ {
@@ -89,7 +88,6 @@ object Obfuscation {
 
         object model {
             private const val _model = Constants.GRINDR_PKG + ".model"
-
             const val ExpiringImageBody = "$_model.ExpiringImageBody"
 
             object ExpiringImageBody_ {
@@ -133,7 +131,6 @@ object Obfuscation {
 
             object either {
                 private const val _either = "$_network.either"
-
                 const val ResultHelper = "$_either.b"
 
                 object ResultHelper_ {
@@ -147,7 +144,6 @@ object Obfuscation {
 
             object model {
                 private const val _model = "$_persistence.model"
-
                 const val ChatMessage = "$_model.ChatMessage"
                 const val BlockedProfile = "$_model.BlockedProfile"
 
@@ -163,7 +159,6 @@ object Obfuscation {
                 private const val _repository = "$_persistence.repository"
 
                 const val ChatRepo = "$_repository.ChatRepo"
-
                 object ChatRepo_ {
                     const val checkMessageForVideoCall = "checkMessageForVideoCall"
                     const val deleteChatMessageFromLessThanOrEqualToTimestamp =
@@ -176,29 +171,23 @@ object Obfuscation {
                 }
 
                 const val ProfileRepo = "$_repository.ProfileRepo"
-                // com.grindrapp.android.persistence.repository.ProfileRepo
-
                 object ProfileRepo_ {
                     const val delete = "delete"
                     const val recordProfileView = "recordProfileView"
                 }
 
                 const val ConversationRepo = "$_repository.ConversationRepo"
-
                 object ConversationRepo_ {
                     const val deleteConversation = "deleteConversation"
                     const val deleteConversations = "deleteConversations"
                 }
 
                 const val IncomingChatMarkerRepo = "$_repository.IncomingChatMarkerRepo"
-
                 object IncomingChatMarkerRepo_ {
                     const val deleteIncomingChatMarker = "deleteIncomingChatMarker"
                 }
 
                 const val BlockRepo = "$_repository.BlockRepo"
-
-                // com.grindrapp.android.persistence.repository.BlockRepo
                 object BlockRepo_ {
                     const val add = "add"
                     const val delete = "delete"
@@ -210,14 +199,12 @@ object Obfuscation {
             private const val _R = Constants.GRINDR_PKG
 
             const val color = "$_R.o0"
-
             object color_ {
                 const val grindr_gold_star_gay = "G"
                 const val grindr_pure_white = "V"
             }
 
             const val id = "$_R.s0"
-
             object id_ {
                 const val fragment_favorite_recycler_view = "rb"
                 const val profile_distance = "ik"
@@ -230,11 +217,9 @@ object Obfuscation {
 
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
-
             const val UserSession = "$_storage.b"
 
             const val IUserSession = "$_storage.UserSession"
-
             object IUserSession_ {
                 const val hasFeature_feature = "a"
                 const val isFree = "r"
@@ -254,9 +239,7 @@ object Obfuscation {
                 val _experiments = "$_profile.experiments"
 
                 val InaccessibleProfileManager = "$_experiments.InaccessibleProfileManager"
-
                 object InaccessibleProfileManager_ {
-
                     val isProfileEnabled = "a"
                     val shouldShowProfile = "b"
                 }
@@ -271,14 +254,11 @@ object Obfuscation {
 
                 val ProfileFieldsView = "$_profileV2.ProfileFieldsView"
                 val ProfileQuickbarView = "$_profileV2.ProfileQuickbarView"
-
                 object ProfileFieldsView_ {
                     const val setProfile = "setProfile"
                 }
 
                 const val ProfilesViewModel = "$_profileV2.ProfilesViewModel"
-
-                // com.grindrapp.android.ui.profileV2.ProfilesViewModel
 
                 object ProfilesViewModel_ {
                     const val recordProfileViewsForViewedMeService = "r2"
@@ -311,10 +291,9 @@ object Obfuscation {
             private const val _utils = Constants.GRINDR_PKG + ".utils"
 
             const val ProfileUtils = "$_utils.ProfileUtilsV2"
-            // com.grindrapp.android.utils.ProfileUtilsV2
 
             object ProfileUtils_ {
-                //Look for value of 600000
+                // Use 600000 (ms) as a reference
                 const val onlineIndicatorDuration = "d"
             }
         }
@@ -322,9 +301,7 @@ object Obfuscation {
         object view {
             private const val _view = Constants.GRINDR_PKG + ".view"
 
-
             const val TapsAnimLayout = "$_view.TapsAnimLayout"
-
             object TapsAnimLayout_ {
                 const val tapType = "i"
 
@@ -338,14 +315,12 @@ object Obfuscation {
             private const val _xmpp = Constants.GRINDR_PKG + ".xmpp"
 
             const val ChatMessageManager = "$_xmpp.ChatMessageManager"
-
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "a"
                 const val handleOutgoingChatMessage = "j"
             }
 
             const val ChatMarkersManager = "$_xmpp.a"
-
             object ChatMarkersManager_ {
                 const val addDisplayedExtension = "d"
                 const val addReceivedExtension = "f"
