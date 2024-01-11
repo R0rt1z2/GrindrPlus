@@ -22,8 +22,6 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 - Unlimited expiring photos.
 - Remove expiration on incoming expiring photos, allowing to see them any number of times you want.
 - Extra profile fields in the so-called CruiseViewHolder
-    -   Profile ID.
-    -   Exact time of 'Last seen'.
     -   Body mass index (BMI) and its description (underweight, normal, overweight, obesity I, obesity II or obesity III), if both weight and height are available.
 - Make videocalls even if you didn't start a chat with the recipient.
 - Access to some user-hidden features (developer features)
@@ -31,6 +29,15 @@ Grindr Plus is a Xposed Module that allows you to unlock some features in Grindr
 - Allow unlimited taps (no 24h restriction)
 - Ability to see who viewed your profile even if you have "Show Me In Viewed Me List" disabled.
 - Ability to remove messages from anyone, any time.
+- Block app (forced) updates. (The latest version of Grindr will be always fetched and spoofed internally).
+- Execute commands in any chat to perform various actions:
+    - Use `/teleport` to (virtually) travel to any location by specifying an alias, its name, or coordinates.
+    - Retrieve the profile ID of the person you're chatting by using `/id`.
+    - Find out your own profile ID with `/myId`.
+    - Access any profile directly by its ID using `/open`.
+    - Switch the profile redesign on or off with `/redesign`.
+    - Choose whether to appear in the view list or remain hidden using `/views`.
+    - Discover more functionalities with `/help`, which provides a comprehensive list of available commands.
 
 ## Bugs
 * Incognito mode is kinda buggy (it turns off after a little while)
