@@ -130,15 +130,11 @@ object Utils {
         return Pair(heightTextView, weightTextView)
     }
 
-    /**
-     * Fetches the latest version of Grindr from APKPure.
-     * It then spoofs the app version, internally.
-     */
     fun fetchVersionAndUpdate() {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("https://apkpure.com/grindr-gay-chat-for-android/com.grindrapp.android/download")
-            .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0")
+            .url("https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json")
+            .addHeader("User-Agent", "GrindrPlus")
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -151,17 +147,15 @@ object Utils {
                     if (!response.isSuccessful)
                         return Logger.xLog("Received unexpected response code: ${response.code}")
 
-                    val responseBody = response.body?.string() ?:
-                    return Logger.xLog("Unable to get body from response!")
-                    val versionName = """"versionName":"(.*?)",""".toRegex()
-                        .find(responseBody)?.groups?.get(1)?.value
-                    val versionCode = """"versionCode":(\d+),""".toRegex()
-                        .find(responseBody)?.groups?.get(1)?.value
+                    // Convert the response body to a JSON object
+                    val jsonObject = JSONObject(response.body?.string() ?: return)
+                    val versionName = jsonObject.getString("versionName")
+                    val versionCode = jsonObject.getInt("versionCode")
 
                     // If both are valid, spoof the app version to prevent the update dialog
                     // from showing up. This should be enough to disable forced updates.
                     if (versionName != null && versionCode != null) {
-                        hookUpdateInfo(versionName, versionCode.toInt())
+                        hookUpdateInfo(versionName, versionCode)
                     }
                 }
             }
