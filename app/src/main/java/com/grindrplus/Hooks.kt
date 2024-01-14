@@ -38,6 +38,7 @@ import de.robv.android.xposed.XposedHelpers.findConstructorExact
 import de.robv.android.xposed.XposedHelpers.findMethodExact
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
+import org.json.JSONObject
 import java.lang.reflect.Proxy
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -148,26 +149,35 @@ object Hooks {
                 when (method.name) {
                     GApp.api.ChatRestService_.addSavedPhrase -> {
                         val phrase = getObjectField(args[0], "phrase") as String
-                        val id = Hooker.sharedPref.getInt("id_counter", 0) + 1
-                        val currentPhrases = Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                        Hooker.sharedPref.edit().putInt("id_counter", id).putStringSet("phrases",
-                            currentPhrases + id.toString()).putString("phrase_${id}_text", phrase)
-                            .putInt("phrase_${id}_frequency", 0).putLong("phrase_${id}_timestamp", 0).apply()
+                        val currentPhrases = Hooker.configManager.readMap("phrases")
+                        var id = Hooker.configManager.readInt("id_counter", 0) + 1
+                        while (currentPhrases.has(id.toString())) id++
+                        currentPhrases.put(
+                            id.toString(), JSONObject().apply {
+                                put("text", phrase)
+                                put("frequency", 0)
+                                put("timestamp", 0)
+                            }
+                        )
+                        Hooker.configManager.writeConfig("phrases", currentPhrases)
                         val response = AddSavedPhraseResponseConstructor.newInstance(id.toString())
                         createSuccessResultConstructor.newInstance(response)
                     }
                     GApp.api.ChatRestService_.deleteSavedPhrase -> {
                         val id = args[0] as String
-                        val currentPhrases = Hooker.sharedPref.getStringSet("phrases", emptySet())!!
-                        Hooker.sharedPref.edit().putStringSet("phrases", currentPhrases - id)
-                            .remove("phrase_${id}_text").remove("phrase_${id}_frequency")
-                            .remove("phrase_${id}_timestamp").apply()
+                        val currentPhrases = Hooker.configManager.readMap("phrases")
+                        currentPhrases.remove(id)
+                        Hooker.configManager.writeConfig("phrases", currentPhrases)
                         createSuccessResultConstructor.newInstance(Unit)
                     }
                     GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
                         val id = args[0] as String
-                        val currentFrequency = Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
-                        Hooker.sharedPref.edit().putInt("phrase_${id}_frequency", currentFrequency + 1).apply()
+                        val phrasesMap = Hooker.configManager.readMap("phrases")
+                        phrasesMap.optJSONObject(id)?.apply {
+                            val newFrequency = optInt("frequency", 0) + 1
+                            put("frequency", newFrequency)
+                        } ?: phrasesMap.put(id, JSONObject().put("frequency", 1))
+                        Hooker.configManager.writeMap("phrases", phrasesMap)
                         createSuccessResultConstructor.newInstance(Unit)
                     }
                     else -> invocationHandler.invoke(proxy, method, args)
@@ -181,15 +191,17 @@ object Hooks {
                 arrayOf(PhrasesRestServiceClass)) { proxy, method, args ->
                 when (method.name) {
                     GApp.api.PhrasesRestService_.getSavedPhrases -> {
-                        val phrases = Hooker.sharedPref.getStringSet(
-                            "phrases", emptySet())!!.associateWith { id ->
-                                val text = Hooker.sharedPref.getString("phrase_${id}_text", "")
-                                val timestamp = Hooker.sharedPref.getLong("phrase_${id}_timestamp", 0)
-                                val frequency = Hooker.sharedPref.getInt("phrase_${id}_frequency", 0)
-                                PhraseConstructor.newInstance(id, text, timestamp, frequency)
-                            }
+                        val phrasesMap = Hooker.configManager.readMap("phrases")
+                        val keysSequence = phrasesMap.keys().asSequence().toSet()
+                        val phrases = keysSequence.associateWith { id ->
+                            val phraseDetails = phrasesMap.optJSONObject(id)
+                            val text = phraseDetails?.optString("text", "") ?: ""
+                            val timestamp = phraseDetails?.optLong("timestamp", 0L) ?: 0L
+                            val frequency = phraseDetails?.optInt("frequency", 0) ?: 0
+                            PhraseConstructor.newInstance(id, text, timestamp, frequency)
+                        }
                         val phrasesResponse = PhrasesResponseConstructor.newInstance(phrases)
-                        createSuccessResultConstructor.newInstance( phrasesResponse)
+                        createSuccessResultConstructor.newInstance(phrasesResponse)
                     }
                     else -> invocationHandler.invoke(proxy, method, args)
                 }
