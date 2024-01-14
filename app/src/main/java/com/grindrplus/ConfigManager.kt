@@ -20,35 +20,51 @@ class ConfigManager(private val configFilePath: String) {
     }
 
     private fun readConfig(): JSONObject {
-        val configFile = getConfigFile()
-        val jsonString = configFile.readText()
-        return JSONObject(jsonString)
+        return JSONObject(getConfigFile().readText())
     }
 
     fun readString(key: String, defaultValue: String): String {
-        val jsonObject = readConfig()
-        return if (jsonObject.has(key)) jsonObject.getString(key) else defaultValue
+        return readConfig().optString(key, defaultValue)
     }
 
     fun readBoolean(key: String, defaultValue: Boolean): Boolean {
-        val jsonObject = readConfig()
-        return if (jsonObject.has(key)) jsonObject.getBoolean(key) else defaultValue
+        return readConfig().optBoolean(key, defaultValue)
     }
 
     fun readInt(key: String, defaultValue: Int): Int {
-        val jsonObject = readConfig()
-        return if (jsonObject.has(key)) jsonObject.getInt(key) else defaultValue
+        return readConfig().optInt(key, defaultValue)
     }
 
     fun writeConfig(key: String, value: Any) {
         try {
-            val configFile = getConfigFile()
             val jsonObject = readConfig()
             jsonObject.put(key, value)
-            configFile.writeText(jsonObject.toString())
+            getConfigFile().writeText(
+                jsonObject.toString())
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun readMap(key: String): JSONObject {
+        return readConfig().optJSONObject(key) ?: JSONObject()
+    }
+
+    fun writeMap(key: String, map: JSONObject) {
+        writeConfig(key, map)
+    }
+
+    fun updateMapEntry(mapKey: String, entryKey: String,
+                       value: JSONObject) {
+        val map = readMap(mapKey)
+        map.put(entryKey, value)
+        writeMap(mapKey, map)
+    }
+
+    fun removeMapEntry(mapKey: String, entryKey: String) {
+        val map = readMap(mapKey)
+        map.remove(entryKey)
+        writeMap(mapKey, map)
     }
 
     fun addToMap(name: String, key: String, value: Any) {
@@ -64,10 +80,5 @@ class ConfigManager(private val configFilePath: String) {
         catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    fun readMap(name: String): JSONObject {
-        val jsonObject = readConfig()
-        return jsonObject.optJSONObject(name) ?: JSONObject()
     }
 }
