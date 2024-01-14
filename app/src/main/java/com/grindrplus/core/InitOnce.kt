@@ -1,4 +1,4 @@
-package com.grindrplus
+package com.grindrplus.core
 
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty

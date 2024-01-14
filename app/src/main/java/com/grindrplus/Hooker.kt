@@ -1,10 +1,14 @@
 package com.grindrplus
 
-import ConfigManager
+import com.grindrplus.core.Config
 import android.app.Application
 import android.content.Context
 import android.widget.Toast
-import com.grindrplus.Constants.GRINDR_PKG_VERSION_NAME
+import com.grindrplus.core.Constants
+import com.grindrplus.core.Constants.GRINDR_PKG_VERSION_NAME
+import com.grindrplus.core.Hooks
+import com.grindrplus.core.Logger
+import com.grindrplus.core.Utils
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
@@ -15,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 class Hooker : IXposedHookLoadPackage {
 
     companion object {
-        lateinit var configManager: ConfigManager
+        lateinit var config: Config
         lateinit var pkgParam: LoadPackageParam
         lateinit var appContext: Context
         lateinit var pkgVersionName: String
@@ -68,7 +72,7 @@ class Hooker : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         pkgParam = lpparam
-        configManager = ConfigManager(
+        config = Config(
             pkgParam.appInfo.dataDir + "/config.json")
 
         initializePreOnCreateHooks()

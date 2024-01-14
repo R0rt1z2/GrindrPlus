@@ -1,7 +1,8 @@
-package com.grindrplus
+package com.grindrplus.core
 
-import com.grindrplus.Hooker.Companion.configManager
-import com.grindrplus.Utils.logChatMessage
+import com.grindrplus.Hooker
+import com.grindrplus.Hooker.Companion.config
+import com.grindrplus.core.Utils.logChatMessage
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
@@ -68,8 +69,8 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Toggle the profile redesign feature.")
     private fun redesignCommand(args: List<String>) {
-        val newState = !configManager.readBoolean("profile_redesign", true)
-        configManager.writeConfig("profile_redesign", newState)
+        val newState = !config.readBoolean("profile_redesign", true)
+        config.writeConfig("profile_redesign", newState)
         logChatMessage(
             "Profile redesign ${if (newState) "enabled" else "disabled"}.",
             this.recipient, this.recipient
@@ -78,8 +79,8 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Control whether you want to be hidden from the view list.")
     private fun viewsCommand(args: List<String>) {
-        val newState = !configManager.readBoolean("dont_record_views", true)
-        configManager.writeConfig("dont_record_views", newState)
+        val newState = !config.readBoolean("dont_record_views", true)
+        config.writeConfig("dont_record_views", newState)
         logChatMessage(
             "You are ${if (newState) "now" else "no longer"} hidden from the view list.",
             this.recipient, this.recipient
@@ -89,16 +90,16 @@ class CommandHandler(private val recipient: String) {
     @CommandDescription("Teleport to a location.")
     private fun teleportCommand(args: List<String>) {
         if (args.isEmpty()) {
-            val newState = !configManager.readBoolean("teleport_enabled", false)
-            configManager.writeConfig("teleport_enabled", newState)
+            val newState = !config.readBoolean("teleport_enabled", false)
+            config.writeConfig("teleport_enabled", newState)
             return logChatMessage(
                 "Teleport ${if (newState) "enabled" else "disabled"}.",
                 this.recipient, this.recipient
             )
         }
 
-        if (!configManager.readBoolean("teleport_enabled", false)) {
-            configManager.writeConfig("teleport_enabled", true)
+        if (!config.readBoolean("teleport_enabled", false)) {
+            config.writeConfig("teleport_enabled", true)
         }
 
         when {
@@ -114,7 +115,7 @@ class CommandHandler(private val recipient: String) {
                 logChatMessage("Teleported to $lat, $lon.", this.recipient, this.recipient)
             }
             else -> {
-                val aliases = configManager.readMap("teleport_aliases")
+                val aliases = config.readMap("teleport_aliases")
                 if (aliases.has(args.joinToString(" "))) {
                     val (lat, lon) = aliases.getString(args.joinToString(" "))
                         .split(",").map { it.trim().toDouble() }
@@ -139,7 +140,7 @@ class CommandHandler(private val recipient: String) {
     @CommandDescription("Show the current teleport location.")
     private fun locationCommand(args: List<String>) {
         val location = Utils.getLocationPreference("teleport_location")
-        if (!configManager.readBoolean("teleport_enabled", false)) {
+        if (!config.readBoolean("teleport_enabled", false)) {
             logChatMessage("Teleport is disabled.", this.recipient, this.recipient)
         } else {
             if (location != null) {
@@ -155,8 +156,8 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("Toggle the profile details feature.")
     private fun detailsCommand(args: List<String>) {
-        val newState = !configManager.readBoolean("show_profile_details", true)
-        configManager.writeConfig("show_profile_details", newState)
+        val newState = !config.readBoolean("show_profile_details", true)
+        config.writeConfig("show_profile_details", newState)
         logChatMessage(
             "Profile details ${if (newState) "enabled" else "disabled"}.",
             this.recipient, this.recipient
@@ -169,7 +170,7 @@ class CommandHandler(private val recipient: String) {
             1 -> {
                 val location = Hooker.sharedPref.getString("teleport_location", null)
                 if (location != null) {
-                    configManager.addToMap("teleport_aliases", args[0], location)
+                    config.addToMap("teleport_aliases", args[0], location)
                     logChatMessage("Saved $location as ${args[0]}.", this.recipient, this.recipient)
                 } else {
                     logChatMessage("No teleport location set.", this.recipient, this.recipient)
@@ -179,7 +180,7 @@ class CommandHandler(private val recipient: String) {
                 val coordinatesString = if (args.size == 2) args[1] else "${args[1]},${args[2]}"
                 val coordinates = coordinatesString.split(",").map { it.trim() }
                 if (coordinates.size == 2 && coordinates.all { it.toDoubleOrNull() != null }) {
-                    configManager.addToMap("teleport_aliases", args[0], coordinates.joinToString(","))
+                    config.addToMap("teleport_aliases", args[0], coordinates.joinToString(","))
                     logChatMessage("Saved ${coordinates.joinToString(",")} as ${args[0]}.", this.recipient, this.recipient)
                 } else {
                     logChatMessage("Invalid coordinates format. Use <lat,lon> or <lat> <lon>.", this.recipient, this.recipient)
@@ -196,10 +197,10 @@ class CommandHandler(private val recipient: String) {
         if (args.isEmpty()) {
             logChatMessage("Please specify a teleport location alias.", this.recipient, this.recipient)
         } else {
-            val teleportAliases = configManager.readMap("teleport_aliases")
+            val teleportAliases = config.readMap("teleport_aliases")
             if (teleportAliases.has(args[0])) {
                 teleportAliases.remove(args[0])
-                configManager.writeConfig("teleport_aliases", teleportAliases)
+                config.writeConfig("teleport_aliases", teleportAliases)
                 logChatMessage("Deleted teleport location ${args[0]}.", this.recipient, this.recipient)
             } else {
                 logChatMessage("No teleport location with alias ${args[0]} found.", this.recipient, this.recipient)
@@ -209,7 +210,7 @@ class CommandHandler(private val recipient: String) {
 
     @CommandDescription("List all saved teleport locations.")
     private fun listCommand(args: List<String>) {
-        val teleportAliases = configManager.readMap("teleport_aliases")
+        val teleportAliases = config.readMap("teleport_aliases")
         if (teleportAliases.length() == 0) {
             logChatMessage("No teleport locations saved.", this.recipient, this.recipient)
         } else {

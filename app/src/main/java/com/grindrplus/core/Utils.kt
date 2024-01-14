@@ -1,15 +1,16 @@
 
-package com.grindrplus
+package com.grindrplus.core
 
 import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.grindrplus.Hooker.Companion.configManager
+import com.grindrplus.Hooker
+import com.grindrplus.Hooker.Companion.config
 import com.grindrplus.Hooker.Companion.sharedPref
-import com.grindrplus.Hooks.chatMessageManager
-import com.grindrplus.Hooks.hookUpdateInfo
-import com.grindrplus.Hooks.ownProfileId
+import com.grindrplus.core.Hooks.chatMessageManager
+import com.grindrplus.core.Hooks.hookUpdateInfo
+import com.grindrplus.core.Hooks.ownProfileId
 import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -22,7 +23,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.io.IOException
 import java.net.URLEncoder
 
@@ -169,7 +169,7 @@ object Utils {
         feature: String,
         param: XC_MethodHook.MethodHookParam
     ): Boolean = when (feature) {
-        "profile-redesign-20230214" -> configManager.readBoolean("profile_redesign", true)
+        "profile-redesign-20230214" -> config.readBoolean("profile_redesign", true)
         "notification-action-chat-20230206" -> true
         "gender-updates" -> true
         "gender-filter" -> true

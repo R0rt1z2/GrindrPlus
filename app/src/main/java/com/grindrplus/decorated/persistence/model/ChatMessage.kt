@@ -1,7 +1,7 @@
 package com.grindrplus.decorated.persistence.model
 
 import com.grindrplus.Hooker
-import com.grindrplus.Obfuscation
+import com.grindrplus.core.Obfuscation
 
 import de.robv.android.xposed.XposedHelpers
 
@@ -13,7 +13,8 @@ import de.robv.android.xposed.XposedHelpers
 class ChatMessage(public var instance: Any = XposedHelpers.newInstance(CLAZZ)) {
     companion object {
         private val CLAZZ: Class<*> by lazy {
-            XposedHelpers.findClass(Obfuscation.GApp.persistence.model.ChatMessage,
+            XposedHelpers.findClass(
+                Obfuscation.GApp.persistence.model.ChatMessage,
                 Hooker.pkgParam.classLoader)
         }
 

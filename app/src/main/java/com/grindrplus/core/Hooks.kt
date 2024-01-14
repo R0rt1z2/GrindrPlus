@@ -1,4 +1,4 @@
-package com.grindrplus
+package com.grindrplus.core
 
 import android.os.Build
 import android.os.Bundle
@@ -13,17 +13,18 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.children
-import com.grindrplus.Constants.NUM_OF_COLUMNS
-import com.grindrplus.Constants.Returns.RETURN_FALSE
-import com.grindrplus.Constants.Returns.RETURN_INTEGER_MAX_VALUE
-import com.grindrplus.Constants.Returns.RETURN_LONG_MAX_VALUE
-import com.grindrplus.Constants.Returns.RETURN_TRUE
-import com.grindrplus.Constants.Returns.RETURN_UNIT
-import com.grindrplus.Constants.Returns.RETURN_ZERO
-import com.grindrplus.Obfuscation.GApp
-import com.grindrplus.Utils.findHeightAndWeightTextViews
-import com.grindrplus.Utils.logChatMessage
-import com.grindrplus.Utils.mapFeatureFlag
+import com.grindrplus.Hooker
+import com.grindrplus.core.Constants.NUM_OF_COLUMNS
+import com.grindrplus.core.Constants.Returns.RETURN_FALSE
+import com.grindrplus.core.Constants.Returns.RETURN_INTEGER_MAX_VALUE
+import com.grindrplus.core.Constants.Returns.RETURN_LONG_MAX_VALUE
+import com.grindrplus.core.Constants.Returns.RETURN_TRUE
+import com.grindrplus.core.Constants.Returns.RETURN_UNIT
+import com.grindrplus.core.Constants.Returns.RETURN_ZERO
+import com.grindrplus.core.Obfuscation.GApp
+import com.grindrplus.core.Utils.findHeightAndWeightTextViews
+import com.grindrplus.core.Utils.logChatMessage
+import com.grindrplus.core.Utils.mapFeatureFlag
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -42,7 +43,6 @@ import org.json.JSONObject
 import java.lang.reflect.Proxy
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import java.util.regex.Pattern
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
@@ -144,13 +144,14 @@ object Hooks {
 
         fun hookChatRestService(service: Any): Any {
             val invocationHandler = Proxy.getInvocationHandler(service)
-            return Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
+            return Proxy.newProxyInstance(
+                Hooker.pkgParam.classLoader,
                 arrayOf(ChatRestServiceClass)) { proxy, method, args ->
                 when (method.name) {
                     GApp.api.ChatRestService_.addSavedPhrase -> {
                         val phrase = getObjectField(args[0], "phrase") as String
-                        val currentPhrases = Hooker.configManager.readMap("phrases")
-                        var id = Hooker.configManager.readInt("id_counter", 0) + 1
+                        val currentPhrases = Hooker.config.readMap("phrases")
+                        var id = Hooker.config.readInt("id_counter", 0) + 1
                         while (currentPhrases.has(id.toString())) id++
                         currentPhrases.put(
                             id.toString(), JSONObject().apply {
@@ -159,25 +160,25 @@ object Hooks {
                                 put("timestamp", 0)
                             }
                         )
-                        Hooker.configManager.writeConfig("phrases", currentPhrases)
+                        Hooker.config.writeConfig("phrases", currentPhrases)
                         val response = AddSavedPhraseResponseConstructor.newInstance(id.toString())
                         createSuccessResultConstructor.newInstance(response)
                     }
                     GApp.api.ChatRestService_.deleteSavedPhrase -> {
                         val id = args[0] as String
-                        val currentPhrases = Hooker.configManager.readMap("phrases")
+                        val currentPhrases = Hooker.config.readMap("phrases")
                         currentPhrases.remove(id)
-                        Hooker.configManager.writeConfig("phrases", currentPhrases)
+                        Hooker.config.writeConfig("phrases", currentPhrases)
                         createSuccessResultConstructor.newInstance(Unit)
                     }
                     GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
                         val id = args[0] as String
-                        val phrasesMap = Hooker.configManager.readMap("phrases")
+                        val phrasesMap = Hooker.config.readMap("phrases")
                         phrasesMap.optJSONObject(id)?.apply {
                             val newFrequency = optInt("frequency", 0) + 1
                             put("frequency", newFrequency)
                         } ?: phrasesMap.put(id, JSONObject().put("frequency", 1))
-                        Hooker.configManager.writeMap("phrases", phrasesMap)
+                        Hooker.config.writeMap("phrases", phrasesMap)
                         createSuccessResultConstructor.newInstance(Unit)
                     }
                     else -> invocationHandler.invoke(proxy, method, args)
@@ -187,11 +188,12 @@ object Hooks {
 
         fun hookPhrasesRestService(service: Any): Any {
             val invocationHandler = Proxy.getInvocationHandler(service)
-            return Proxy.newProxyInstance(Hooker.pkgParam.classLoader,
+            return Proxy.newProxyInstance(
+                Hooker.pkgParam.classLoader,
                 arrayOf(PhrasesRestServiceClass)) { proxy, method, args ->
                 when (method.name) {
                     GApp.api.PhrasesRestService_.getSavedPhrases -> {
-                        val phrasesMap = Hooker.configManager.readMap("phrases")
+                        val phrasesMap = Hooker.config.readMap("phrases")
                         val keysSequence = phrasesMap.keys().asSequence().toSet()
                         val phrases = keysSequence.associateWith { id ->
                             val phraseDetails = phrasesMap.optJSONObject(id)
@@ -294,7 +296,7 @@ object Hooks {
 
         class LocationMethodHook(private val getCoordinate: () -> Double?) : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                if (Hooker.configManager.readBoolean("teleport_enabled", false)) {
+                if (Hooker.config.readBoolean("teleport_enabled", false)) {
                     getCoordinate()?.let { spoofedCoordinate ->
                         param.result = spoofedCoordinate
                     }
@@ -602,7 +604,7 @@ object Hooks {
      * Prevents people from knowing that you have seen their profile.
      */
     fun preventRecordProfileViews() {
-        if (Hooker.configManager.readBoolean("dont_record_views", true)) {
+        if (Hooker.config.readBoolean("dont_record_views", true)) {
             val ProfileRestServiceClass = findClass(
                 GApp.api.ProfileRestService, Hooker.pkgParam.classLoader
             )
@@ -1155,7 +1157,7 @@ object Hooks {
     }
 
     fun modifyProfileDetails() {
-        if (Hooker.configManager.readBoolean("show_profile_details", true)) {
+        if (Hooker.config.readBoolean("show_profile_details", true)) {
             findAndHookMethod(
                 "com.grindrapp.android.ui.profileV2.ProfileExpandedDetailsView",
                 Hooker.pkgParam.classLoader,

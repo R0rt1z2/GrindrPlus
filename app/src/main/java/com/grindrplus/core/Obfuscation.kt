@@ -1,4 +1,4 @@
-package com.grindrplus
+package com.grindrplus.core
 
 @Suppress("UNUSED")
 object Obfuscation {

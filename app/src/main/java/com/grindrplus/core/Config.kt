@@ -1,7 +1,9 @@
+package com.grindrplus.core
+
 import org.json.JSONObject
 import java.io.File
 
-class ConfigManager(private val configFilePath: String) {
+class Config(private val configFilePath: String) {
 
     private val defaultConfig = JSONObject().apply {
         put("profile_redesign", true)

@@ -1,4 +1,4 @@
-package com.grindrplus
+package com.grindrplus.core
 
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XC_MethodReplacement.*
