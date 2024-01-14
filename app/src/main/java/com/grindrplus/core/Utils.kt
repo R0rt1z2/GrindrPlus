@@ -327,4 +327,13 @@ object Utils {
         }
         return null
     }
+
+    /**
+     * Toggle specific setting or feature on/off.
+     */
+    public fun toggleSetting(setting: String, description: String): String {
+        val newState = !config.readBoolean(setting, true)
+        config.writeConfig(setting, newState)
+        return "$description ${if (newState) "enabled" else "disabled"}."
+    }
 }

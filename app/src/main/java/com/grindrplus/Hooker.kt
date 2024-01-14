@@ -7,6 +7,7 @@ import android.widget.Toast
 import com.grindrplus.core.Constants
 import com.grindrplus.core.Constants.GRINDR_PKG_VERSION_NAME
 import com.grindrplus.core.Hooks
+import com.grindrplus.core.InitOnce
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils
 import de.robv.android.xposed.IXposedHookLoadPackage
@@ -19,10 +20,10 @@ import kotlin.time.Duration.Companion.minutes
 class Hooker : IXposedHookLoadPackage {
 
     companion object {
-        lateinit var config: Config
-        lateinit var pkgParam: LoadPackageParam
-        lateinit var appContext: Context
-        lateinit var pkgVersionName: String
+        var config: Config by InitOnce()
+        var pkgParam: LoadPackageParam by InitOnce()
+        var appContext: Context by InitOnce()
+        var pkgVersionName: String by InitOnce()
         val sharedPref by lazy { appContext.getSharedPreferences("phrases", Context.MODE_PRIVATE) }
     }
 

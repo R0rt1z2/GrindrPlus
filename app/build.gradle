@@ -10,7 +10,8 @@ ext {
             targetSdk : 33,
             okhttp    : '4.9.0',
             coreKtx   : '1.8.0',
-            constraintLayout: '2.2.0-alpha07'
+            constraintLayout: '2.2.0-alpha07',
+            kotlinReflect: '1.6.21'
     ]
     versionMajor = 1
     versionMinor = 3
@@ -58,4 +59,7 @@ dependencies {
 
     // UI
     implementation "androidx.constraintlayout:constraintlayout:${versions.constraintLayout}"
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlinReflect}"
 }
