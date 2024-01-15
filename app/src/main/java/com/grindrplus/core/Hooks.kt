@@ -1,5 +1,6 @@
 package com.grindrplus.core
 
+import android.R.attr.classLoader
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -254,6 +255,17 @@ object Hooks {
                     }
                 }
             })
+
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile",
+            Hooker.pkgParam.classLoader,
+            "getUpsellType",
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    param.result = null
+                }
+            }
+        )
     }
 
     /**
