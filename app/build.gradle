@@ -11,7 +11,8 @@ ext {
             okhttp    : '4.9.0',
             coreKtx   : '1.8.0',
             constraintLayout: '2.2.0-alpha07',
-            kotlinReflect: '1.6.21'
+            kotlinReflect: '1.6.21',
+            gson: '2.10.1'
     ]
     versionMajor = 1
     versionMinor = 3
@@ -62,4 +63,7 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlinReflect}"
+
+    // Google
+    implementation "com.google.code.gson:gson:${versions.gson}"
 }

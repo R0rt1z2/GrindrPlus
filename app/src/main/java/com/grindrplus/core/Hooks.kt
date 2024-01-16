@@ -1,6 +1,5 @@
 package com.grindrplus.core
 
-import android.R.attr.classLoader
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -26,6 +25,7 @@ import com.grindrplus.core.Obfuscation.GApp
 import com.grindrplus.core.Utils.findHeightAndWeightTextViews
 import com.grindrplus.core.Utils.logChatMessage
 import com.grindrplus.core.Utils.mapFeatureFlag
+import com.grindrplus.decorated.persistence.model.AlbumContent
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -565,6 +565,73 @@ object Hooks {
             class_ExpiringPhotoStatusResponse,
             GApp.model.ExpiringPhotoStatusResponse_.getAvailable,
             RETURN_INTEGER_MAX_VALUE
+        )
+    }
+
+    /**
+     * Create a local cache storage to store valid AlbumContent objects.
+     * This way, we can see all the contents of an album even if it is empty.
+     */
+    fun unlimitedAlbums() {
+        findAndHookConstructor("com.grindrapp.android.model.Album", Hooker.pkgParam.classLoader,
+            Long::class.javaPrimitiveType,
+            String::class.java,
+            Int::class.javaPrimitiveType,
+            String::class.java,
+            String::class.java,
+            List::class.java,
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            String::class.java,
+            String::class.java,
+            findClass("com.grindrapp.android.model.PromoAlbumData", Hooker.pkgParam.classLoader),
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            String::class.java,
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
+            findClass("com.grindrapp.android.model.ContentCount", Hooker.pkgParam.classLoader),
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    // Ignore our own album(s)
+                    val albumId = param.args[0] as Long
+                    if (albumId == -1L) return
+
+                    // Mark all albums as viewable
+                    if (param.args[12] == false) param.args[12] = true
+
+                    // When a user has more than six shared albums on Grindr, the app automatically
+                    // deletes the contents of albums that are older than the sixth one. To prevent
+                    // loss of this content, the workaround is to save the album contents to a local
+                    // device and then restore them to the app as needed.
+                    if ((param.args[5] as List<*>).size > 1) {
+                        val contents = mutableListOf<AlbumContent>()
+                        for (content in param.args[5] as List<*>) {
+                            content?.let { AlbumContent.create(it) }?.
+                            let { contents.add(it as AlbumContent) }
+                        }
+                        Hooker.globalCache.saveAlbumContents(albumId, contents)
+                    }
+
+                    if ((param.args[5] as List<*>).isEmpty()) {
+                        val contents = Hooker.globalCache
+                            .getAlbumContents(albumId)
+                        if (contents != null) {
+                            val albumContentsList = mutableListOf<Any>()
+                            for (albumContent in contents) {
+                                albumContentsList.add(
+                                    AlbumContent.create(albumContent)
+                                )
+                            }
+                            param.args[5] = albumContentsList
+                        } else {
+                            // Album wasn't cached and therefore we can't restore it
+                            Logger.xLog("Album $albumId contents were not cached!")
+                        }
+                    }
+                }
+            }
         )
     }
 

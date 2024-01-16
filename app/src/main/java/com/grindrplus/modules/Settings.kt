@@ -1,5 +1,6 @@
 package com.grindrplus.modules
 
+import com.grindrplus.Hooker
 import com.grindrplus.core.Command
 import com.grindrplus.core.CommandModule
 import com.grindrplus.core.Utils.toggleSetting
@@ -22,5 +23,11 @@ class Settings(recipient: String) : CommandModule(recipient) {
     private fun details(args: List<String>) {
         logChatMessage(toggleSetting("show_profile_details", "Profile details"),
             this.recipient, this.recipient)
+    }
+
+    @Command(name = "clear", aliases = ["cl"], help = "Clear the album cache.")
+    private fun clear(args: List<String>) {
+        Hooker.globalCache.clearCache()
+        logChatMessage("Album cache cleared.", this.recipient, this.recipient)
     }
 }
