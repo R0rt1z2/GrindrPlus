@@ -16,7 +16,7 @@ ext {
     ]
     versionMajor = 1
     versionMinor = 3
-    versionPatch = 7
+    versionPatch = 8
     grindrVersion = '9.18.2'
 }
 
