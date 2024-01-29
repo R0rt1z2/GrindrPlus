@@ -14,8 +14,8 @@ class Profile(recipient: String) : CommandModule(recipient) {
     }
 
     @Command(name = "myId", help = "Get your own profile ID.")
-    private fun mydId(args: List<String>) {
-        logChatMessage("Your profile ID is: ${ownProfileId}",
+    private fun myId(args: List<String>) {
+        logChatMessage("Your profile ID is: $ownProfileId",
             this.recipient, this.recipient)
     }
 
