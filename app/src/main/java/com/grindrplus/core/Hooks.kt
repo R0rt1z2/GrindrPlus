@@ -1262,4 +1262,37 @@ object Hooks {
             )
         }
     }
+
+    fun useMorePreciseDistanceDisplay() {
+        findAndHookMethod(
+            "com.grindrapp.android.utils.DistanceUtils",
+            Hooker.pkgParam.classLoader,
+            "b",
+            Boolean::class.javaPrimitiveType,
+            Double::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType,
+            object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any {
+                    val distance = param.args[1] as Double
+                    val isFeet = param.args[2] as Boolean
+
+                    return if(isFeet){
+                        val feet = (distance * 3.280839895).roundToInt()
+                        if(feet < 5280) {
+                            String.format("%d feet", feet)
+                        } else {
+                            String.format("%d miles %d feet", feet / 5280, feet % 5280)
+                        }
+                    } else {
+                        val meters = distance.roundToInt()
+                        if(meters < 1000) {
+                            String.format("%d meters", meters)
+                        } else {
+                            String.format("%d km %d m", meters / 1000, meters % 1000)
+                        }
+                    }
+                }
+            }
+        )
+    }
 }
