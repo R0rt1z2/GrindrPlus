@@ -195,26 +195,6 @@ object Obfuscation {
             }
         }
 
-        object R {
-            private const val _R = Constants.GRINDR_PKG
-
-            const val color = "$_R.o0"
-            object color_ {
-                const val grindr_gold_star_gay = "G"
-                const val grindr_pure_white = "V"
-            }
-
-            const val id = "$_R.s0"
-            object id_ {
-                const val fragment_favorite_recycler_view = "rb"
-                const val profile_distance = "ik"
-                const val profile_online_now_icon = "wl"
-                const val profile_last_seen = "el"
-                const val profile_note_icon = "ul"
-                const val profile_display_name = "dk"
-            }
-        }
-
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
             const val UserSession = "$_storage.b"
@@ -318,12 +298,6 @@ object Obfuscation {
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "a"
                 const val handleOutgoingChatMessage = "j"
-            }
-
-            const val ChatMarkersManager = "$_xmpp.a"
-            object ChatMarkersManager_ {
-                const val addDisplayedExtension = "d"
-                const val addReceivedExtension = "f"
             }
         }
     }
