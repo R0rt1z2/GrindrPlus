@@ -67,6 +67,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.dontSendChatMarkers()
             Hooks.makeMessagesAlwaysRemovable()
             Hooks.modifyProfileDetails()
+            Hooks.useMorePreciseDistanceDisplay()
             // Hooks.allowSomeExperiments()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog("Error in post-onCreate hook: $it") }
