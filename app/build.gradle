@@ -15,8 +15,8 @@ ext {
             gson: '2.10.1'
     ]
     versionMajor = 1
-    versionMinor = 3
-    versionPatch = 8
+    versionMinor = 4
+    versionPatch = 0
     grindrVersion = '9.18.5'
 }
 
