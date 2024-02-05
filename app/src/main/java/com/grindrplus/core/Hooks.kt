@@ -538,7 +538,7 @@ object Hooks {
     fun hookOnlineIndicatorDuration(duration: Duration) {
         findAndHookMethod(findClass("f3.e0", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
-            "h", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+            "k", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
                     return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
                 }
