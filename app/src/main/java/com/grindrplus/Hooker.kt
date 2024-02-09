@@ -33,12 +33,12 @@ class Hooker : IXposedHookLoadPackage {
         try {
             Logger.xLog("Starting pre-onCreate hooks...")
             Utils.fetchVersionAndUpdate()
-            Hooks.storeChatMessageManager()
+            //Hooks.storeChatMessageManager()
             Hooks.localSavedPhrases()
             Hooks.allowMockProvider()
             Hooks.preventRecordProfileViews()
             //DO NOT ENABLE THIS IN PRODUCTION BUILDS!
-            //Hooks.trustAllCerts()
+            // Hooks.trustAllCerts()
         } catch (e: Exception) {
             e.message?.let { Logger.xLog("Error in pre-onCreate hook: $it") }
         }
@@ -54,18 +54,18 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.allowVideocallsOnEmptyChats()
             Hooks.hookOnlineIndicatorDuration(3.minutes)
             Hooks.unlimitedExpiringPhotos()
-            Hooks.unlimitedAlbums()
+            // Hooks.unlimitedAlbums()
             Hooks.unlimitedTaps()
             Hooks.removeExpirationOnExpiringPhotos()
             Hooks.keepChatsOfBlockedProfiles()
-            Hooks.showBlocksInChat()
+            // Hooks.showBlocksInChat()
             Hooks.createChatTerminal()
-            Hooks.disableAutomaticMessageDeletion()
+            // Hooks.disableAutomaticMessageDeletion()
             Hooks.dontSendTypingIndicator()
             Hooks.useThreeColumnLayoutForFavorites()
             Hooks.disableAnalytics()
             Hooks.dontSendChatMarkers()
-            Hooks.makeMessagesAlwaysRemovable()
+            // Hooks.makeMessagesAlwaysRemovable()
             Hooks.modifyProfileDetails()
             Hooks.useMorePreciseDistanceDisplay()
             // Hooks.allowSomeExperiments()

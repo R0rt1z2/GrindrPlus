@@ -14,20 +14,20 @@ object Obfuscation {
 
         object api {
             private const val _api = Constants.GRINDR_PKG + ".api"
-            const val ChatRestService = "$_api.ChatRestService"
+            const val ChatRestService = "com.grindrapp.android.chat.api.ChatRestService"
 
             object ChatRestService_ {
                 // Annotated with @POST("v3/me/prefs/phrases")
-                const val addSavedPhrase = "a"
+                const val addSavedPhrase = "x"
 
                 // Annotated with @DELETE("v3/me/prefs/phrases/{id}")
-                const val deleteSavedPhrase = "s"
+                const val deleteSavedPhrase = "p"
 
                 // Annotated with @POST("v4/phrases/frequency/{id}")
-                const val increaseSavedPhraseClickCount = "H"
+                const val increaseSavedPhraseClickCount = "D"
             }
 
-            const val PhrasesRestService = "x3.k"
+            const val PhrasesRestService = "n4.k"
 
             object PhrasesRestService_ {
                 // Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
@@ -35,7 +35,7 @@ object Obfuscation {
             }
 
             // Annotated @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "x3.b"
+            const val AnalyticsRestService = "n4.b"
 
             const val ProfileRestService = "com.grindrapp.android.api.ProfileRestService"
 
@@ -78,7 +78,7 @@ object Obfuscation {
 
             object persistence {
                 private const val _persistence = "$_manager.persistence"
-                const val ChatPersistenceManager = "v6.a"
+                const val ChatPersistenceManager = "y7.e"
 
                 object ChatPersistenceManager_ {
                     const val deleteConversationsByProfileIds = "e"
@@ -94,17 +94,17 @@ object Obfuscation {
                 const val getDuration = "getDuration"
             }
 
-            const val ExpiringPhotoStatusResponse = "$_model.ExpiringPhotoStatusResponse"
+            const val ExpiringPhotoStatusResponse = "com.grindrapp.android.chat.api.model.ExpiringPhotoStatusResponse"
 
             object ExpiringPhotoStatusResponse_ {
                 const val getTotal = "getTotal"
                 const val getAvailable = "getAvailable"
             }
 
-            const val Feature = "$_model.Feature"
+            const val Feature = "o8.o"
 
             object Feature_ {
-                const val isGranted = "isGranted"
+                const val isGranted = "e"
             }
 
             const val UpsellsV8 = "$_model.UpsellsV8"
@@ -122,7 +122,7 @@ object Obfuscation {
             }
 
             const val AddSavedPhraseRequest = "$_model.AddSavedPhraseRequest"
-            const val AddSavedPhraseResponse = "$_model.AddSavedPhraseResponse"
+            const val AddSavedPhraseResponse = "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
             const val PhrasesResponse = "$_model.PhrasesResponse"
         }
 
@@ -201,13 +201,13 @@ object Obfuscation {
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
-                const val hasFeature_feature = "a"
+                const val hasFeature_feature = "u"
                 const val isFree = "r"
-                const val isNoPlusUpsell = "A"
-                const val isNoXtraUpsell = "h"
-                const val isPlus = "y"
+                const val isNoPlusUpsell = "B"
+                const val isNoXtraUpsell = "g"
+                const val isPlus = "z"
                 const val isXtra = "p"
-                const val isUnlimited = "x"
+                const val isUnlimited = "y"
                 const val getProfileId = "e"
             }
         }
@@ -295,6 +295,7 @@ object Obfuscation {
             private const val _xmpp = Constants.GRINDR_PKG + ".xmpp"
 
             const val ChatMessageManager = "$_xmpp.ChatMessageManager"
+
             object ChatMessageManager_ {
                 const val handleIncomingChatMessage = "a"
                 const val handleOutgoingChatMessage = "j"
