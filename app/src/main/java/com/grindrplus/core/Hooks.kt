@@ -99,7 +99,7 @@ object Hooks {
     }
 
     /**
-     * Store the `ChatMessageManager` instance in a variable.
+     * Store the `ChatMessageHandler` instance in a variable.
      * This will be used later on to send fake messages.
      */
     fun storeChatMessageManager() {
@@ -124,7 +124,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            "t8.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -423,7 +423,7 @@ object Hooks {
         )
 
         val FeatureFlagsClass = findClass(
-            "u5.g",
+            "v6.g",
             Hooker.pkgParam.classLoader
         )
 
@@ -499,21 +499,12 @@ object Hooks {
      * This hook allows the user to bypass this restriction.
      */
     fun allowVideocallsOnEmptyChats() {
-        val class_Continuation = findClass(
-            "kotlin.coroutines.Continuation",
-            Hooker.pkgParam.classLoader
-        )
-
-        val class_ChatRepo = findClass(
-            GApp.persistence.repository.ChatRepo,
-            Hooker.pkgParam.classLoader
-        )
-
         findAndHookMethod(
-            class_ChatRepo,
-            GApp.persistence.repository.ChatRepo_.checkMessageForVideoCall,
+            findClass("com.grindrapp.android.ui.chat.individual.IndividualChatNavViewModel", Hooker.pkgParam.classLoader),
+            "d", // pseudoname: checkMessageForVideoCall
             String::class.java,
-            class_Continuation,
+            String::class.java,
+            findClass("kotlin.coroutines.Continuation", Hooker.pkgParam.classLoader),
             RETURN_TRUE
         )
     }
@@ -536,9 +527,9 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("f3.e0", Hooker.pkgParam.classLoader),
+        findAndHookMethod(findClass("pd.s0", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
-            "k", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+            "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
                     return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
                 }
@@ -690,7 +681,7 @@ object Hooks {
             )
 
             val createSuccessResultConstructor = findConstructorExact(
-                "j7.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+                "t8.a\$b", Hooker.pkgParam.classLoader, Any::class.java
             )
 
             findAndHookMethod(
@@ -919,23 +910,32 @@ object Hooks {
      * in any chat by using the '/' prefix.
      */
     fun createChatTerminal() {
-        val sendChatMessage = findMethodExact(
-            GApp.xmpp.ChatMessageManager,
+        findAndHookMethod(
+            "com.grindrapp.android.persistence.model.ChatMessageContent",
             Hooker.pkgParam.classLoader,
-            GApp.xmpp.ChatMessageManager_.handleOutgoingChatMessage,
-            findClass("hc.p0", Hooker.pkgParam.classLoader), // ChatWrapper
+            "getBody",
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    // Print stack trace to find out who's calling this method
+                    Logger.xLog("Called from: ${Thread.currentThread().stackTrace.joinToString("\n") { it.toString() }}")
+                }
+            })
+
+        val sendChatMessage = findMethodExact("r5.b", Hooker.pkgParam.classLoader, "q",
+            findClass("com.grindrapp.android.chat.model.ChatMessageMetaData", Hooker.pkgParam.classLoader)
         )
 
         hookMethod(sendChatMessage, object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                val chatMessage = getObjectField(param.args[0], "a")
-                val text = getObjectField(chatMessage, "body") as String
-                val recipient = getObjectField(chatMessage, "recipient") as String
-
+                val chatMessage = getObjectField(param.args[0], "chatMessage")
+                val content = getObjectField(chatMessage, "content")
+                val recipient = getObjectField(content, "recipient") as String
+                val body = getObjectField(content, "body") as String
+                val text = JSONObject(body).getString("text")
                 if (text.startsWith("/")) {
                     param.result = null // Prevents the command from being sent as a message
                     val commandHandler = CommandHandler(recipient)
-                    commandHandler.handleCommand(text.substring(1))
+                    //commandHandler.handleCommand(text.substring(1))
                 }
             }
         })
@@ -1159,7 +1159,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "j7.a\$b",
+            "t8.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
