@@ -56,7 +56,6 @@ import kotlin.time.Duration
 object Hooks {
     var ownProfileId: String? = null
     var chatMessageManager: Any? = null
-
     /**
      * Hook the app updates to prevent the app from updating.
      * Also spoof the app version with the latest version to
@@ -124,7 +123,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "t8.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            "u8.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -423,7 +422,7 @@ object Hooks {
         )
 
         val FeatureFlagsClass = findClass(
-            "v6.g",
+            "w6.g",
             Hooker.pkgParam.classLoader
         )
 
@@ -527,7 +526,7 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("pd.s0", Hooker.pkgParam.classLoader),
+        findAndHookMethod(findClass("qd.s0", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
             "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
@@ -681,7 +680,7 @@ object Hooks {
             )
 
             val createSuccessResultConstructor = findConstructorExact(
-                "t8.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+                "u8.a\$b", Hooker.pkgParam.classLoader, Any::class.java
             )
 
             findAndHookMethod(
@@ -910,18 +909,7 @@ object Hooks {
      * in any chat by using the '/' prefix.
      */
     fun createChatTerminal() {
-        findAndHookMethod(
-            "com.grindrapp.android.persistence.model.ChatMessageContent",
-            Hooker.pkgParam.classLoader,
-            "getBody",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    // Print stack trace to find out who's calling this method
-                    Logger.xLog("Called from: ${Thread.currentThread().stackTrace.joinToString("\n") { it.toString() }}")
-                }
-            })
-
-        val sendChatMessage = findMethodExact("r5.b", Hooker.pkgParam.classLoader, "q",
+        val sendChatMessage = findMethodExact("s5.b", Hooker.pkgParam.classLoader, "q",
             findClass("com.grindrapp.android.chat.model.ChatMessageMetaData", Hooker.pkgParam.classLoader)
         )
 
@@ -1159,7 +1147,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "t8.a\$b",
+            "u8.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
