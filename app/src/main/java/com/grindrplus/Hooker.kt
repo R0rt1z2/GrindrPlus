@@ -34,7 +34,7 @@ class Hooker : IXposedHookLoadPackage {
         try {
             Logger.xLog("Starting pre-onCreate hooks...")
             Utils.fetchVersionAndUpdate()
-            //Hooks.storeChatMessageManager()
+            Hooks.storechatMessageReceivedPluginManager()
             Hooks.localSavedPhrases()
             Hooks.allowMockProvider()
             Hooks.preventRecordProfileViews()

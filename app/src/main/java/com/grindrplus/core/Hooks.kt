@@ -55,7 +55,7 @@ import kotlin.time.Duration
 
 object Hooks {
     var ownProfileId: String? = null
-    var chatMessageManager: Any? = null
+    var chatMessageReceivedPluginManager: Any? = null
     /**
      * Hook the app updates to prevent the app from updating.
      * Also spoof the app version with the latest version to
@@ -101,13 +101,13 @@ object Hooks {
      * Store the `ChatMessageHandler` instance in a variable.
      * This will be used later on to send fake messages.
      */
-    fun storeChatMessageManager() {
+    fun storechatMessageReceivedPluginManager() {
         hookAllConstructors(findClass(
-            GApp.xmpp.ChatMessageManager,
+            "p5.r",
             Hooker.pkgParam.classLoader
         ), object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                chatMessageManager = param.thisObject
+                chatMessageReceivedPluginManager = param.thisObject
             }
         })
     }
@@ -917,13 +917,15 @@ object Hooks {
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val chatMessage = getObjectField(param.args[0], "chatMessage")
                 val content = getObjectField(chatMessage, "content")
+                val sender = getObjectField(content, "sender") as String
                 val recipient = getObjectField(content, "recipient") as String
                 val body = getObjectField(content, "body") as String
                 val text = JSONObject(body).getString("text")
+
                 if (text.startsWith("/")) {
                     param.result = null // Prevents the command from being sent as a message
-                    val commandHandler = CommandHandler(recipient)
-                    //commandHandler.handleCommand(text.substring(1))
+                    val commandHandler = CommandHandler(recipient, sender)
+                    commandHandler.handleCommand(text.substring(1))
                 }
             }
         })

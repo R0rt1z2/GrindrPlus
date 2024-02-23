@@ -6,7 +6,7 @@ import com.grindrplus.core.CommandModule
 import com.grindrplus.core.Utils.toggleSetting
 import com.grindrplus.core.Utils.logChatMessage
 
-class Settings(recipient: String) : CommandModule(recipient) {
+class Settings(recipient: String, sender: String) : CommandModule(recipient, sender) {
     @Command(name = "redesign", aliases = ["rd"], help = "Toggle the new Grindr design.")
     private fun redesign(args: List<String>) {
         logChatMessage(toggleSetting("profile_redesign", "Profile redesign"),
