@@ -26,6 +26,7 @@ class Hooker : IXposedHookLoadPackage {
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
         var pkgVersionName: String by InitOnce()
+        var coroutineHelper: CoroutineHelper by InitOnce()
         val sharedPref by lazy { appContext.getSharedPreferences("phrases", Context.MODE_PRIVATE) }
     }
 
@@ -76,6 +77,7 @@ class Hooker : IXposedHookLoadPackage {
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
+        coroutineHelper = CoroutineHelper(lpparam)
         pkgParam = lpparam
         config = Config(
             pkgParam.appInfo.dataDir + "/config.json")
