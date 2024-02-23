@@ -8,13 +8,12 @@ import android.widget.TextView
 import com.grindrplus.Hooker
 import com.grindrplus.Hooker.Companion.config
 import com.grindrplus.Hooker.Companion.sharedPref
-import com.grindrplus.core.Hooks.chatMessageManager
+import com.grindrplus.core.Hooks.chatMessageReceivedPluginManager
 import com.grindrplus.core.Hooks.hookUpdateInfo
 import com.grindrplus.core.Hooks.ownProfileId
-import com.grindrplus.decorated.persistence.model.ChatMessage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.findClass
 import okhttp3.Call
 import okhttp3.Callback
@@ -238,23 +237,56 @@ object Utils {
      * @param sender The profile ID of the sender. If null, the own profile ID is used.
      */
     fun logChatMessage(text: String, from: String, sender: String? = null) {
-        val chatMessage = ChatMessage()
-        chatMessage.messageId = UUID.randomUUID().toString()
-        chatMessage.sender = sender ?: ownProfileId ?: return
-        chatMessage.recipient = from
-        chatMessage.stanzaId = from
-        chatMessage.conversationId = from
-        chatMessage.timestamp = System.currentTimeMillis()
-        chatMessage.type = "text"
-        chatMessage.body = text
+        val typeValue = "chat.v1.message_sent"
+        val refValue = null
+        val status = 0
+        val payload = JSONObject().apply {
+            put("messageId", "${System.currentTimeMillis()}:${UUID.randomUUID()}")
+            put("conversationId", "${sender ?: ownProfileId}:$from")
+            put("senderId", sender ?: ownProfileId)
+            put("timestamp", System.currentTimeMillis())
+            put("unsent", false)
+            put("reactions", JSONArray())
+            put("type", "Text")
+            put("body", JSONObject().apply {
+                put("text", text)
+            })
+            put("replyToMessage", null)
+            put("dynamic", false)
+            put("chat1Type", "text")
+            put("replyPreview", null)
+        }
 
-        callMethod(
-            chatMessageManager,
-            Obfuscation.GApp.xmpp.ChatMessageManager_.handleIncomingChatMessage,
-            chatMessage.instance,
-            false,
-            false
+        val serverNotificationClass = findClass(
+            "com.grindrapp.android.network.websocket.model.WebSocketNotification\$ServerNotification",
+            Hooker.pkgParam.classLoader
         )
+
+        val constructor = serverNotificationClass.constructors.firstOrNull {
+            it.parameterTypes.size == 4 &&
+                    it.parameterTypes[0] == String::class.java &&
+                    it.parameterTypes[1] == String::class.java &&
+                    it.parameterTypes[2] == Integer::class.java &&
+                    it.parameterTypes[3] == JSONObject::class.java
+        }
+
+        val serverNotificationInstance = constructor?.newInstance(
+            typeValue, refValue, status, payload) ?: throw NoSuchMethodError("Constructor not found.")
+        
+        Hooker.coroutineHelper.callSuspendFunction { coroutineScope ->
+            XposedHelpers.findMethodExact(
+                "p5.r", Hooker.pkgParam.classLoader, "b",
+                findClass(
+                    "com.grindrapp.android.network.websocket.model.WebSocketNotification\$ServerNotification",
+                    Hooker.pkgParam.classLoader
+                ),
+                findClass("kotlin.coroutines.Continuation", Hooker.pkgParam.classLoader)
+            ).invoke(
+                chatMessageReceivedPluginManager,
+                serverNotificationInstance,
+                coroutineScope
+            )
+        }
     }
 
     /**

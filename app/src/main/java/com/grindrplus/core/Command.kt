@@ -13,7 +13,7 @@ import kotlin.reflect.jvm.javaMethod
 @Target(AnnotationTarget.FUNCTION)
 annotation class Command(val name: String, val aliases: Array<String> = [], val help: String = "")
 
-abstract class CommandModule(protected val recipient: String) {
+abstract class CommandModule(protected val recipient: String, protected val sender: String) {
     fun handleCommand(inputCommand: String, args: List<String>): Boolean {
         val commandMethod = this::class.declaredMemberFunctions
             .firstOrNull { function ->
@@ -32,7 +32,7 @@ abstract class CommandModule(protected val recipient: String) {
             } catch (e: Exception) {
                 Log.e("CommandModule", "Error executing command: $inputCommand", e)
                 logChatMessage("Error executing command: $inputCommand",
-                    this.recipient, this.recipient)
+                    recipient, sender)
                 false
             }
         } ?: false
@@ -53,13 +53,13 @@ abstract class CommandModule(protected val recipient: String) {
     }
 }
 
-class CommandHandler(private val recipient: String) {
+class CommandHandler(private val recipient: String, private val sender: String = "") {
     private val commandModules: MutableList<CommandModule> = mutableListOf()
 
     init {
-        commandModules.add(Location(recipient))
-        commandModules.add(Settings(recipient))
-        commandModules.add(Profile(recipient))
+        commandModules.add(Location(recipient, sender))
+        commandModules.add(Settings(recipient, sender))
+        commandModules.add(Profile(recipient, sender))
     }
 
     fun handleCommand(input: String) {
@@ -68,7 +68,7 @@ class CommandHandler(private val recipient: String) {
 
         if (command == "help") {
             logChatMessage((commandModules.joinToString(
-                "") { it.getHelp() }).drop(2), recipient, recipient)
+                "") { it.getHelp() }).drop(2), recipient, sender)
         }
 
         for (module in commandModules) {
