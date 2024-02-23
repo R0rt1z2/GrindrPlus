@@ -61,7 +61,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.keepChatsOfBlockedProfiles()
             // Hooks.showBlocksInChat()
             Hooks.createChatTerminal()
-            // Hooks.disableAutomaticMessageDeletion()
+            Hooks.disableAutomaticMessageDeletion()
             Hooks.dontSendTypingIndicator()
             Hooks.useThreeColumnLayoutForFavorites()
             Hooks.disableAnalytics()
