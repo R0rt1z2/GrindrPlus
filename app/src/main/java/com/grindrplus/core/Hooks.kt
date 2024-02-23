@@ -984,13 +984,13 @@ object Hooks {
      */
     fun makeMessagesAlwaysRemovable() {
         findAndHookMethod(
-            "com.grindrapp.android.persistence.model.ChatMessage",
+            "com.grindrapp.android.persistence.model.ChatMessageContent",
             Hooker.pkgParam.classLoader,
             "getTimestamp",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (Thread.currentThread().stackTrace.any {
-                            it.className.contains("q9.a3") }) {
+                            it.className.contains("lb.w2") }) {
                         // Only hook if the caller is showMessageLongClickDialog
                         param.result = System.currentTimeMillis()
                     }
@@ -998,6 +998,7 @@ object Hooks {
             }
         )
     }
+
 
     /**
      * Use a three column layout for the favorites tab.
