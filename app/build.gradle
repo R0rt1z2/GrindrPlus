@@ -14,10 +14,10 @@ ext {
             kotlinReflect: '1.6.21',
             gson: '2.10.1'
     ]
-    versionMajor = 1
-    versionMinor = 4
+    versionMajor = 2
+    versionMinor = 1
     versionPatch = 0
-    grindrVersion = '24.0.4'
+    grindrVersion = '24.0.8'
 }
 
 android {
