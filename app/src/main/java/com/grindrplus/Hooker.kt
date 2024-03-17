@@ -84,8 +84,8 @@ class Hooker : IXposedHookLoadPackage {
 
         initializePreOnCreateHooks()
 
-        findAndHookMethod(
-            Application::class.java,
+        findAndHookMethod("com.grindrapp.android.RealApplication",
+            lpparam.classLoader,
             "onCreate",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
