@@ -93,7 +93,6 @@ class Hooker : IXposedHookLoadPackage {
                         .applicationContext
                     pkgVersionName = appContext.packageManager
                         .getPackageInfo(appContext.packageName, 0).versionName
-                    globalCache = GlobalCache(appContext)
 
                     if (pkgVersionName != GRINDR_PKG_VERSION_NAME) {
                         return Toast.makeText(
