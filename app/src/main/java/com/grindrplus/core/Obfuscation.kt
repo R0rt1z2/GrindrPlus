@@ -92,6 +92,7 @@ object Obfuscation {
 
             object ExpiringImageBody_ {
                 const val getDuration = "getDuration"
+                const val getViewsRemaining = "getViewsRemaining"
             }
 
             const val ExpiringPhotoStatusResponse = "com.grindrapp.android.chat.api.model.ExpiringPhotoStatusResponse"

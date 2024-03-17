@@ -668,6 +668,12 @@ object Hooks {
             GApp.model.ExpiringImageBody_.getDuration,
             RETURN_LONG_MAX_VALUE
         )
+
+        findAndHookMethod(
+            class_ExpiringImageBody,
+            GApp.model.ExpiringImageBody_.getViewsRemaining,
+            RETURN_INTEGER_MAX_VALUE
+        )
     }
 
     /**
