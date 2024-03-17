@@ -27,7 +27,7 @@ object Obfuscation {
                 const val increaseSavedPhraseClickCount = "D"
             }
 
-            const val PhrasesRestService = "o4.k"
+            const val PhrasesRestService = "v4.k"
 
             object PhrasesRestService_ {
                 // Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
@@ -35,7 +35,7 @@ object Obfuscation {
             }
 
             // Annotated @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "o4.b"
+            const val AnalyticsRestService = "v4.b"
 
             const val ProfileRestService = "com.grindrapp.android.api.ProfileRestService"
 
@@ -78,7 +78,7 @@ object Obfuscation {
 
             object persistence {
                 private const val _persistence = "$_manager.persistence"
-                const val ChatPersistenceManager = "z7.e"
+                const val ChatPersistenceManager = "g8.e"
 
                 object ChatPersistenceManager_ {
                     const val deleteConversationsByProfileIds = "e"
@@ -101,7 +101,7 @@ object Obfuscation {
                 const val getAvailable = "getAvailable"
             }
 
-            const val Feature = "p8.o"
+            const val Feature = "x8.o"
 
             object Feature_ {
                 const val isGranted = "e"
@@ -201,13 +201,13 @@ object Obfuscation {
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
-                const val hasFeature_feature = "m"
-                const val isFree = "s"
-                const val isNoPlusUpsell = "B"
+                const val hasFeature_feature = "B"
+                const val isFree = "r"
+                const val isNoPlusUpsell = "A"
                 const val isNoXtraUpsell = "g"
-                const val isPlus = "z"
-                const val isXtra = "q"
-                const val isUnlimited = "y"
+                const val isPlus = "y"
+                const val isXtra = "p"
+                const val isUnlimited = "x"
                 const val getProfileId = "e"
             }
         }
