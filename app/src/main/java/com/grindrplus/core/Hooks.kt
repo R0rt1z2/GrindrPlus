@@ -103,7 +103,7 @@ object Hooks {
      */
     fun storechatMessageReceivedPluginManager() {
         hookAllConstructors(findClass(
-            "p5.r",
+            "w5.r",
             Hooker.pkgParam.classLoader
         ), object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
@@ -123,7 +123,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "u8.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            "c9.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -526,7 +526,7 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("qd.s0", Hooker.pkgParam.classLoader),
+        findAndHookMethod(findClass("zd.s0", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
             "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
@@ -680,7 +680,7 @@ object Hooks {
             )
 
             val createSuccessResultConstructor = findConstructorExact(
-                "u8.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+                "c9.a\$b", Hooker.pkgParam.classLoader, Any::class.java
             )
 
             findAndHookMethod(
@@ -909,7 +909,7 @@ object Hooks {
      * in any chat by using the '/' prefix.
      */
     fun createChatTerminal() {
-        val sendChatMessage = findMethodExact("s5.b", Hooker.pkgParam.classLoader, "q",
+        val sendChatMessage = findMethodExact("z5.b", Hooker.pkgParam.classLoader, "r",
             findClass("com.grindrapp.android.chat.model.ChatMessageMetaData", Hooker.pkgParam.classLoader)
         )
 
@@ -990,7 +990,7 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (Thread.currentThread().stackTrace.any {
-                            it.className.contains("lb.w2") }) {
+                            it.className.contains("ub.x2") }) {
                         // Only hook if the caller is showMessageLongClickDialog
                         param.result = System.currentTimeMillis()
                     }
@@ -1150,7 +1150,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "u8.a\$b",
+            "c9.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
