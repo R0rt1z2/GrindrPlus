@@ -14,7 +14,9 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
+import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.runBlocking
 
 
 class Hooker : IXposedHookLoadPackage {
@@ -100,7 +102,13 @@ class Hooker : IXposedHookLoadPackage {
                         ).show()
                     }
 
-                    initializePostOnCreateHooks()
+                    runBlocking {
+                        measureTimeMillis {
+                            initializePostOnCreateHooks()
+                        }.also {
+                            Logger.xLog("Post-onCreate hooks executed in $it ms.")
+                        }
+                    }
                 }
             }
         )
