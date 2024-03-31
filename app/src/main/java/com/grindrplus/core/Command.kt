@@ -1,7 +1,13 @@
 package com.grindrplus.core
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
 import android.util.Log
-import com.grindrplus.core.Utils.logChatMessage
+import android.widget.Toast
+import com.grindrplus.Hooker
+import com.grindrplus.core.Utils.showDialog
+import com.grindrplus.core.Utils.showToast
 import com.grindrplus.modules.Location
 import com.grindrplus.modules.Profile
 import com.grindrplus.modules.Settings
@@ -30,26 +36,37 @@ abstract class CommandModule(protected val recipient: String, protected val send
                 method.call(this, args)
                 true
             } catch (e: Exception) {
-                Log.e("CommandModule", "Error executing command: $inputCommand", e)
-                logChatMessage("Error executing command: $inputCommand",
-                    recipient, sender)
+                Logger.xLog(Log.getStackTraceString(e))
+                showDialog("Error", "Error executing command: $inputCommand\n${e.message}",
+                    "OK", {}, "Copy error", {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Error", Log.getStackTraceString(e)))
+                        }
+                        showToast(Toast.LENGTH_LONG, "Error copied to clipboard.")
+                    }
+                )
                 false
             }
         } ?: false
     }
 
     fun getHelp(): String {
-        val commands = this::class.declaredMemberFunctions
-            .mapNotNull { function ->
-                val command = function.findAnnotation<Command>()
-                command?.let {
-                    val aliasPart = if (it.aliases.isNotEmpty()) " (${it.aliases.joinToString(", ")})" else ""
-                    "${it.name}$aliasPart: ${it.help}"
+        try {
+            val commands = this::class.declaredMemberFunctions
+                .mapNotNull { function ->
+                    val command = function.findAnnotation<Command>()
+                    command?.let {
+                        val aliasPart = if (it.aliases.isNotEmpty()) " (${it.aliases.joinToString(", ")})" else ""
+                        "${it.name}$aliasPart: ${it.help}"
+                    }
                 }
-            }
 
-        return "\n\nHelp for ${this::class.simpleName}:\n" +
-                commands.joinToString("\n") { command -> "- $command" }
+            return "\nHelp for ${this::class.simpleName}:\n" +
+                    commands.joinToString("\n") { command -> "- $command" }
+        } catch (e: Exception) {
+            return ""
+        }
     }
 }
 
@@ -67,8 +84,9 @@ class CommandHandler(private val recipient: String, private val sender: String =
         val command = args.firstOrNull() ?: return
 
         if (command == "help") {
-            logChatMessage((commandModules.joinToString(
-                "") { it.getHelp() }).drop(2), recipient, sender)
+            showDialog("Available commands",
+                commandModules.joinToString("\n") {
+                    it.getHelp() }.drop(1), "OK", {})
         }
 
         for (module in commandModules) {

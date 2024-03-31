@@ -376,14 +376,24 @@ object Utils {
     /*
      * Shows a dialog using the current activity.
      */
-    fun showDialog(title: String, message: String) {
+    fun showDialog(
+        title: String,
+        message: String,
+        positiveButton: String,
+        positiveCallback: () -> Unit,
+        negativeButton: String = "",
+        negativeCallback: () -> Unit = {}
+    ) {
         val activity = Hooker.activityHook.getCurrentActivity()
         activity?.runOnUiThread {
-            AlertDialog.Builder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                .show()
+            val builder = AlertDialog.Builder(activity)
+            builder.setTitle(title)
+            builder.setMessage(message)
+            builder.setPositiveButton(positiveButton) { _, _ -> positiveCallback() }
+            if (negativeButton.isNotEmpty()) {
+                builder.setNegativeButton(negativeButton) { _, _ -> negativeCallback() }
+            }
+            builder.show()
         }
     }
 
