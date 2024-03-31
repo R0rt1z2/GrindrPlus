@@ -12,6 +12,7 @@ ext {
             coreKtx   : '1.8.0',
             constraintLayout: '2.2.0-alpha07',
             kotlinReflect: '1.6.21',
+            kotlinCoRoutines: '1.6.4',
             gson: '2.10.1'
     ]
     versionMajor = 2
@@ -63,6 +64,7 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlinReflect}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.kotlinCoRoutines}"
 
     // Google
     implementation "com.google.code.gson:gson:${versions.gson}"
