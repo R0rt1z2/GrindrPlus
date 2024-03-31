@@ -74,6 +74,19 @@ object Hooks {
             Constants.Returns.RETURN_ONE // In this specific scenario, 1 means "no updates".
         )
 
+        // This method shows the deprecation dialog when the app is outdated.
+        // We prevent this dialog from showing by  blocking the method from
+        // being executed.
+        findAndHookMethod("com.grindrapp.android.manager.AppUpgradeManager",
+            Hooker.pkgParam.classLoader, "e",
+            findClass("vb.p", Hooker.pkgParam.classLoader),
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.result = null
+                }
+            }
+        )
+
         if (Constants.GRINDR_PKG_VERSION_NAME.compareTo(name) < 0) {
             // The constructor of `AppConfiguration` has 3 different fields used
             // to store information regarding the versioning of the app. We use
