@@ -1,10 +1,14 @@
 
 package com.grindrplus.core
 
+import android.app.AlertDialog
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import com.grindrplus.Hooker
 import com.grindrplus.Hooker.Companion.config
 import com.grindrplus.Hooker.Companion.sharedPref
@@ -367,5 +371,29 @@ object Utils {
         val newState = !config.readBoolean(setting, true)
         config.writeConfig(setting, newState)
         return "$description ${if (newState) "enabled" else "disabled"}."
+    }
+
+    /*
+     * Shows a dialog using the current activity.
+     */
+    fun showDialog(title: String, message: String) {
+        val activity = Hooker.activityHook.getCurrentActivity()
+        activity?.runOnUiThread {
+            AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
+    }
+
+    /**
+     * Shows a toast using the current activity.
+     */
+    fun showToast(type: Int, message: String) {
+        val activity = Hooker.activityHook.getCurrentActivity()
+        activity?.runOnUiThread {
+            Toast.makeText(activity, message, type).show()
+        }
     }
 }
