@@ -24,10 +24,4 @@ class Settings(recipient: String, sender: String) : CommandModule(recipient, sen
         logChatMessage(toggleSetting("show_profile_details", "Profile details"),
             this.recipient, this.recipient)
     }
-
-    @Command(name = "clear", aliases = ["cl"], help = "Clear the album cache.")
-    private fun clear(args: List<String>) {
-        Hooker.globalCache.clearCache()
-        logChatMessage("Album cache cleared.", this.recipient, this.recipient)
-    }
 }

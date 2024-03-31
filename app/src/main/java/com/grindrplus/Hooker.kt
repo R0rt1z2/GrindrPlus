@@ -6,7 +6,6 @@ import android.content.Context
 import android.widget.Toast
 import com.grindrplus.core.Constants
 import com.grindrplus.core.Constants.GRINDR_PKG_VERSION_NAME
-import com.grindrplus.core.GlobalCache
 import com.grindrplus.core.Hooks
 import com.grindrplus.core.InitOnce
 import com.grindrplus.core.Logger
@@ -22,7 +21,6 @@ class Hooker : IXposedHookLoadPackage {
 
     companion object {
         var config: Config by InitOnce()
-        var globalCache: GlobalCache by InitOnce()
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
         var pkgVersionName: String by InitOnce()
@@ -55,7 +53,6 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.allowVideocallsOnEmptyChats()
             Hooks.hookOnlineIndicatorDuration(3.minutes)
             Hooks.unlimitedExpiringPhotos()
-            // Hooks.unlimitedAlbums()
             Hooks.unlimitedTaps()
             Hooks.removeExpirationOnExpiringPhotos()
             Hooks.keepChatsOfBlockedProfiles()
