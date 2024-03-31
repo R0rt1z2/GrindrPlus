@@ -18,16 +18,16 @@ object Obfuscation {
 
             object ChatRestService_ {
                 // Annotated with @POST("v3/me/prefs/phrases")
-                const val addSavedPhrase = "x"
+                const val addSavedPhrase = "w"
 
                 // Annotated with @DELETE("v3/me/prefs/phrases/{id}")
-                const val deleteSavedPhrase = "p"
+                const val deleteSavedPhrase = "o"
 
                 // Annotated with @POST("v4/phrases/frequency/{id}")
-                const val increaseSavedPhraseClickCount = "D"
+                const val increaseSavedPhraseClickCount = "C"
             }
 
-            const val PhrasesRestService = "v4.k"
+            const val PhrasesRestService = "u4.k"
 
             object PhrasesRestService_ {
                 // Annotated with @GET("v3/me/prefs"), returns PhrasesResponse
@@ -35,7 +35,7 @@ object Obfuscation {
             }
 
             // Annotated @POST("/v3/logging/mobile/logs")
-            const val AnalyticsRestService = "v4.b"
+            const val AnalyticsRestService = "u4.b"
 
             const val ProfileRestService = "com.grindrapp.android.api.ProfileRestService"
 
@@ -78,10 +78,10 @@ object Obfuscation {
 
             object persistence {
                 private const val _persistence = "$_manager.persistence"
-                const val ChatPersistenceManager = "g8.e"
+                const val ChatPersistenceManager = "i8.a"
 
                 object ChatPersistenceManager_ {
-                    const val deleteConversationsByProfileIds = "e"
+                    const val deleteConversationsByProfileIds = "f"
                 }
             }
         }
@@ -102,7 +102,7 @@ object Obfuscation {
                 const val getAvailable = "getAvailable"
             }
 
-            const val Feature = "x8.o"
+            const val Feature = "z8.o"
 
             object Feature_ {
                 const val isGranted = "e"
@@ -199,17 +199,18 @@ object Obfuscation {
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
             const val UserSession = "$_storage.b"
+            //
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
-                const val hasFeature_feature = "B"
-                const val isFree = "r"
-                const val isNoPlusUpsell = "A"
-                const val isNoXtraUpsell = "g"
-                const val isPlus = "y"
-                const val isXtra = "p"
-                const val isUnlimited = "x"
-                const val getProfileId = "e"
+                const val hasFeature_feature = "e"
+                const val isFree = "u"
+                const val isNoPlusUpsell = "D"
+                const val isNoXtraUpsell = "j"
+                const val isPlus = "B"
+                const val isXtra = "s"
+                const val isUnlimited = "A"
+                const val getProfileId = "h"
             }
         }
 

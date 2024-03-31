@@ -1,5 +1,6 @@
 package com.grindrplus.core
 
+import android.R.attr.classLoader
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -49,6 +50,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.Continuation
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 
@@ -98,18 +100,28 @@ object Hooks {
     }
 
     /**
-     * Store the `ChatMessageHandler` instance in a variable.
-     * This will be used later on to send fake messages.
+     * Store variables required by other hooks.
      */
-    fun storechatMessageReceivedPluginManager() {
+    fun storeRequiredVariables() {
         hookAllConstructors(findClass(
-            "w5.r",
+            "v5.r",
             Hooker.pkgParam.classLoader
         ), object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 chatMessageReceivedPluginManager = param.thisObject
             }
         })
+
+        findAndHookMethod(
+            GApp.storage.UserSession,
+            Hooker.pkgParam.classLoader,
+            GApp.storage.IUserSession_.getProfileId,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    ownProfileId = param.result as String
+                }
+            }
+        )
     }
 
     /**
@@ -123,7 +135,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "c9.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            "e9.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -165,14 +177,14 @@ object Hooks {
                         createSuccessResultConstructor.newInstance(response)
                     }
                     GApp.api.ChatRestService_.deleteSavedPhrase -> {
-                        val id = args[0] as String
+                        val id = Hooker.config.readString("id_counter", "0")
                         val currentPhrases = Hooker.config.readMap("phrases")
                         currentPhrases.remove(id)
                         Hooker.config.writeConfig("phrases", currentPhrases)
                         createSuccessResultConstructor.newInstance(Unit)
                     }
                     GApp.api.ChatRestService_.increaseSavedPhraseClickCount -> {
-                        val id = args[0] as String
+                        val id = Hooker.config.readString("id_counter", "0")
                         val phrasesMap = Hooker.config.readMap("phrases")
                         phrasesMap.optJSONObject(id)?.apply {
                             val newFrequency = optInt("frequency", 0) + 1
@@ -422,14 +434,8 @@ object Hooks {
         )
 
         val FeatureFlagsClass = findClass(
-            "w6.g",
+            "f7.g",
             Hooker.pkgParam.classLoader
-        )
-
-        findAndHookMethod(
-            FeatureClass,
-            GApp.model.Feature_.isGranted,
-            RETURN_TRUE
         )
 
         for (method in FeatureFlagsClass.declaredMethods) {
@@ -526,9 +532,9 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("zd.s0", Hooker.pkgParam.classLoader),
+        findAndHookMethod(findClass("a8.o", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
-            "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+            "b", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
                     return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
                 }
@@ -686,7 +692,7 @@ object Hooks {
             )
 
             val createSuccessResultConstructor = findConstructorExact(
-                "c9.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+                "e9.a\$b", Hooker.pkgParam.classLoader, Any::class.java
             )
 
             findAndHookMethod(
@@ -866,17 +872,6 @@ object Hooks {
         )
 
         findAndHookMethod(
-            GApp.storage.UserSession,
-            Hooker.pkgParam.classLoader,
-            GApp.storage.IUserSession_.getProfileId,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    ownProfileId = param.result as String
-                }
-            }
-        )
-
-        findAndHookMethod(
             GApp.persistence.repository.BlockRepo,
             Hooker.pkgParam.classLoader,
             GApp.persistence.repository.BlockRepo_.add,
@@ -915,7 +910,7 @@ object Hooks {
      * in any chat by using the '/' prefix.
      */
     fun createChatTerminal() {
-        val sendChatMessage = findMethodExact("z5.b", Hooker.pkgParam.classLoader, "r",
+        val sendChatMessage = findMethodExact("y5.b", Hooker.pkgParam.classLoader, "r",
             findClass("com.grindrapp.android.chat.model.ChatMessageMetaData", Hooker.pkgParam.classLoader)
         )
 
@@ -996,7 +991,7 @@ object Hooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (Thread.currentThread().stackTrace.any {
-                            it.className.contains("ub.x2") }) {
+                            it.className.contains("fc.y2") }) {
                         // Only hook if the caller is showMessageLongClickDialog
                         param.result = System.currentTimeMillis()
                     }
@@ -1156,7 +1151,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "c9.a\$b",
+            "e9.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )
@@ -1244,7 +1239,7 @@ object Hooks {
                 findClass("com.grindrapp.android.base.model.profile.ReferrerType", Hooker.pkgParam.classLoader),
                 object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
-                        val profile = getObjectField(param.thisObject, "c") ?: return
+                        val profile = getObjectField(param.thisObject, "a") ?: return
                         val rootView = getObjectField(profile, "a") as? ViewGroup ?: return
                         val statsView = rootView.getChildAt(3) as? ViewGroup ?: return
 

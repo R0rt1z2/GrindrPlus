@@ -275,7 +275,7 @@ object Utils {
         
         Hooker.coroutineHelper.callSuspendFunction { coroutineScope ->
             XposedHelpers.findMethodExact(
-                "w5.r", Hooker.pkgParam.classLoader, "b",
+                "v5.r", Hooker.pkgParam.classLoader, "b",
                 findClass(
                     "com.grindrapp.android.network.websocket.model.WebSocketNotification\$ServerNotification",
                     Hooker.pkgParam.classLoader
