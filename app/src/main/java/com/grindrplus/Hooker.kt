@@ -1,9 +1,13 @@
 package com.grindrplus
 
-import com.grindrplus.core.Config
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
+import com.grindrplus.core.ActivityHook
+import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
 import com.grindrplus.core.Constants.GRINDR_PKG_VERSION_NAME
 import com.grindrplus.core.Hooks
@@ -14,10 +18,9 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
+import kotlinx.coroutines.runBlocking
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.runBlocking
-
 
 class Hooker : IXposedHookLoadPackage {
 
@@ -27,6 +30,7 @@ class Hooker : IXposedHookLoadPackage {
         var appContext: Context by InitOnce()
         var pkgVersionName: String by InitOnce()
         var coroutineHelper: CoroutineHelper by InitOnce()
+        var activityHook: ActivityHook by InitOnce()
         val sharedPref by lazy { appContext.getSharedPreferences("phrases", Context.MODE_PRIVATE) }
     }
 
@@ -77,6 +81,7 @@ class Hooker : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != Constants.GRINDR_PKG) return
         coroutineHelper = CoroutineHelper(lpparam)
+        activityHook = ActivityHook()
         pkgParam = lpparam
         config = Config(
             pkgParam.appInfo.dataDir + "/config.json")
@@ -101,6 +106,16 @@ class Hooker : IXposedHookLoadPackage {
                             Toast.LENGTH_LONG
                         ).show()
                     }
+
+                    findAndHookMethod(
+                        "android.app.Instrumentation",
+                        lpparam.classLoader,
+                        "newActivity",
+                        ClassLoader::class.java,
+                        String::class.java,
+                        Intent::class.java,
+                        activityHook
+                    )
 
                     runBlocking {
                         measureTimeMillis {
