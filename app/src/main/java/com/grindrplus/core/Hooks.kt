@@ -26,7 +26,7 @@ import com.grindrplus.core.Obfuscation.GApp
 import com.grindrplus.core.Utils.findHeightAndWeightTextViews
 import com.grindrplus.core.Utils.logChatMessage
 import com.grindrplus.core.Utils.mapFeatureFlag
-import com.grindrplus.decorated.persistence.model.AlbumContent
+import com.grindrplus.core.Utils.openProfile
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -50,7 +50,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import kotlin.coroutines.Continuation
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 
@@ -257,15 +256,6 @@ object Hooks {
      * Let the user scroll through unlimited profiles.
      */
     fun unlimitedProfiles() {
-        // Enforce the usage of `InaccessibleProfileManager`, otherwise the app
-        // will tell the user to restart the app to apply subscription changes.
-        findAndHookMethod(
-            GApp.profile.experiments.InaccessibleProfileManager,
-            Hooker.pkgParam.classLoader,
-            GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
-            RETURN_TRUE
-        )
-
         // Remove all ads and upsells from the cascade (ServerDrivenCascadeCacheState)
         findAndHookMethod(
             "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState",
@@ -273,13 +263,31 @@ object Hooks {
             "getItems",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    val items = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>
-                    return items.filterNotNull().filter {
-                        it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
+                    return (XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>)
+                        .filterNotNull().filter { it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
                     }
                 }
-            })
+            }
+        )
 
+        // For whatever reason, when opening a profile without upsells the app experiences a
+        // 10 - 15 second delay, which can be annoying. As a workaround, we can just replace
+        // the method that gets called when the user taps on a profile with a custom method
+        // that opens the profile directly.
+        findAndHookMethod("yb.w4", Hooker.pkgParam.classLoader,
+            "invoke", object : XC_MethodReplacement () {
+            override fun replaceHookedMethod(param: MethodHookParam): Any {
+                // The method to open the profile just requires us to pass the profile ID
+                // which can be obtained from the profile object through the getProfileId
+                // method.
+                return openProfile(callMethod(getObjectField(
+                    param.thisObject, "j"), "getProfileId") as String)
+            }
+        })
+
+        // Profiles with upsells cause the app to show the 'Restart the application' dialog, which
+        // prevents the user from being able to open unlimited profiles. To fix this, we can just
+        // report that the profile has no upsells at all by hooking its getter method.
         findAndHookMethod(
             "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile",
             Hooker.pkgParam.classLoader,
