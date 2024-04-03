@@ -10,6 +10,7 @@ class Config(private val configFilePath: String) {
         put("dont_record_views", true)
         put("teleport_enabled", false)
         put("show_profile_details", true)
+        put("profile_delay_workaround", true)
     }
 
     private fun getConfigFile(): File {

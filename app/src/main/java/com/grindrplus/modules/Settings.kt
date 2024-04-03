@@ -24,7 +24,7 @@ class Settings(recipient: String, sender: String) : CommandModule(recipient, sen
     @Command(name = "views", aliases = ["vw"], help = "Control whether you want to be hidden from the view list.")
     private fun views(args: List<String>) {
         showDialog("Views", "Toggling this setting will change whether you are hidden from " +
-                "the view list. Do you want to proceed?",
+                "the view list. This change requires a restart of the app. Do you want to proceed?",
             "Yes", { showToast(Toast.LENGTH_LONG,
                 toggleSetting("dont_record_views", "Hiding from views")) },
             "No", {}
@@ -34,7 +34,7 @@ class Settings(recipient: String, sender: String) : CommandModule(recipient, sen
     @Command(name = "details", aliases = ["dt"], help = "Toggle the profile details feature (BMI, etc).")
     private fun details(args: List<String>) {
         showDialog("Profile Details", "Toggling this setting will change whether profile details " +
-                "(such as BMI) are shown. Do you want to proceed?",
+                "(such as BMI) are shown. This change requires a restart of the app. Do you want to proceed?",
             "Yes", { showToast(Toast.LENGTH_LONG,
                 toggleSetting("show_profile_details", "Profile details")) },
             "No", {}
@@ -86,5 +86,15 @@ class Settings(recipient: String, sender: String) : CommandModule(recipient, sen
         )
 
         logChatMessage("Removed all saved phrases.", this.recipient, this.recipient)
+    }
+
+    @Command(name = "profileDelay", aliases = ["pd"], help = "Toggle the profile delay workaround.")
+    private fun profileDelay(args: List<String>) {
+        showDialog("Profile Delay", "Toggling this setting will change whether the profile delay workaround is enabled. " +
+                "This change requires a restart of the app. Do you want to proceed?",
+            "Yes", { showToast(Toast.LENGTH_LONG,
+                toggleSetting("profile_delay_workaround", "Profile Delay Workaround")) },
+            "No", {}
+        )
     }
 }
