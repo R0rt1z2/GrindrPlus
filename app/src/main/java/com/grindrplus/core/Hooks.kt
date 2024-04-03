@@ -288,16 +288,19 @@ object Hooks {
         // 10 - 15 second delay, which can be annoying. As a workaround, we can just replace
         // the method that gets called when the user taps on a profile with a custom method
         // that opens the profile directly.
-        findAndHookMethod("yb.w4", Hooker.pkgParam.classLoader,
-            "invoke", object : XC_MethodReplacement () {
-            override fun replaceHookedMethod(param: MethodHookParam): Any {
-                // The method to open the profile just requires us to pass the profile ID
-                // which can be obtained from the profile object through the getProfileId
-                // method.
-                return openProfile(callMethod(getObjectField(
-                    param.thisObject, "j"), "getProfileId") as String)
-            }
-        })
+        if (Hooker.config.readBoolean("profile_delay_workaround", true)) {
+            findAndHookMethod("yb.w4", Hooker.pkgParam.classLoader,
+                "invoke", object : XC_MethodReplacement () {
+                    override fun replaceHookedMethod(param: MethodHookParam): Any {
+                        // The method to open the profile just requires us to pass the profile ID
+                        // which can be obtained from the profile object through the getProfileId
+                        // method.
+                        return openProfile(callMethod(getObjectField(
+                            param.thisObject, "j"), "getProfileId") as String)
+                    }
+                }
+            )
+        }
 
         // Profiles with upsells cause the app to show the 'Restart the application' dialog, which
         // prevents the user from being able to open unlimited profiles. To fix this, we can just
