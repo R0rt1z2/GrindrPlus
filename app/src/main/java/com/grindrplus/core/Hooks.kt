@@ -1,6 +1,8 @@
 package com.grindrplus.core
 
 import android.R.attr.classLoader
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -13,6 +15,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.children
 import com.grindrplus.Hooker
 import com.grindrplus.core.Constants.NUM_OF_COLUMNS
@@ -27,6 +30,7 @@ import com.grindrplus.core.Utils.findHeightAndWeightTextViews
 import com.grindrplus.core.Utils.logChatMessage
 import com.grindrplus.core.Utils.mapFeatureFlag
 import com.grindrplus.core.Utils.openProfile
+import com.grindrplus.core.Utils.showToast
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
@@ -57,6 +61,7 @@ import kotlin.time.Duration
 object Hooks {
     var ownProfileId: String? = null
     var chatMessageReceivedPluginManager: Any? = null
+    var boostedProfiles = emptyList<Any>()
     /**
      * Hook the app updates to prevent the app from updating.
      * Also spoof the app version with the latest version to
@@ -263,9 +268,18 @@ object Hooks {
             "getItems",
             object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any {
-                    return (XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>)
+                    var items = (XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args) as List<*>)
                         .filterNotNull().filter { it.javaClass.name == "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
                     }
+
+                    // Keep track of boosted profiles so we can show they're boosting
+                    items.forEach {
+                        if (getObjectField(it, "isBoosting") as Boolean) {
+                            boostedProfiles += callMethod(it, "getProfileId") as String
+                        }
+                    }
+
+                    return items
                 }
             }
         )
@@ -1207,6 +1221,37 @@ object Hooks {
                 }
             )
         }
+
+        findAndHookMethod("com.grindrapp.android.ui.profileV2.ProfileBarView",
+            Hooker.pkgParam.classLoader,
+            "setProfile",
+            findClass("com.grindrapp.android.ui.profileV2.model.ProfileViewState", Hooker.pkgParam.classLoader),
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val profileId = getObjectField(param.args[0], "profileId") as String
+                    val distance = callMethod(param.args[0], "getDistance") ?: "Unknown (hidden)"
+                    setObjectField(param.args[0], "distance", distance)
+
+                    if (profileId in boostedProfiles) {
+                        val lastSeen = callMethod(param.args[0], "getLastSeenText")
+                        setObjectField(param.args[0], "lastSeenText", "$lastSeen (Boosting)")
+                    }
+
+                    val displayName = callMethod(param.args[0], "getDisplayName") ?: profileId
+                    setObjectField(param.args[0], "displayName", displayName)
+
+                    val viewBinding = getObjectField(param.thisObject, "c")
+                    val displayNameTextView = getObjectField(viewBinding, "c") as TextView
+
+                    displayNameTextView.setOnClickListener {
+                        showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Profile ID", profileId))
+                        }
+                    }
+                }
+            })
     }
 
     fun useMorePreciseDistanceDisplay() {
