@@ -17,8 +17,8 @@ ext {
     ]
     versionMajor = 2
     versionMinor = 1
-    versionPatch = 3
-    grindrVersion = '24.2.0'
+    versionPatch = 4
+    grindrVersion = '24.3.0'
 }
 
 android {
