@@ -60,7 +60,6 @@ import kotlin.time.Duration
 
 object Hooks {
     var ownProfileId: String? = null
-    var chatMessageReceivedPluginManager: Any? = null
     var boostedProfiles = emptyList<Any>()
     /**
      * Hook the app updates to prevent the app from updating.
@@ -120,15 +119,6 @@ object Hooks {
      * Store variables required by other hooks.
      */
     fun storeRequiredVariables() {
-        hookAllConstructors(findClass(
-            "v5.r",
-            Hooker.pkgParam.classLoader
-        ), object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                chatMessageReceivedPluginManager = param.thisObject
-            }
-        })
-
         findAndHookMethod(
             GApp.storage.UserSession,
             Hooker.pkgParam.classLoader,
