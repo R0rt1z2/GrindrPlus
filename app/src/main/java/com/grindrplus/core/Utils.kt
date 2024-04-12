@@ -261,8 +261,7 @@ object Utils {
      * Sets the mocked location in the preferences.
      */
     fun setLocationPreference(key: String, latitude: Double, longitude: Double) {
-        val locationString = "$latitude,$longitude"
-        sharedPref.edit().putString(key, locationString).apply()
+        sharedPref.edit().putString(key, "$latitude,$longitude").apply()
     }
 
     /**
