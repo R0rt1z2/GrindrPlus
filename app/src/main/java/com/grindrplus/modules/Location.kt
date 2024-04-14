@@ -164,7 +164,7 @@ class Location(recipient: String, sender: String) : CommandModule(recipient, sen
         }
     }
 
-    @Command(name = "lc", help = "Manage saved teleport locations.")
+    @Command(name = "locations", aliases = ["lc"], help = "Manage saved teleport locations.")
     private fun locationCommand(args: List<String>) {
         val teleportAliases = config.readMap("teleport_aliases")
         var aliases = getKeysFromJSONObject(teleportAliases)
