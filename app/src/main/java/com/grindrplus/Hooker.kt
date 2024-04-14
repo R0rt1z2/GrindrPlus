@@ -1,7 +1,5 @@
 package com.grindrplus
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -64,7 +62,7 @@ class Hooker : IXposedHookLoadPackage {
             Hooks.keepChatsOfBlockedProfiles()
             // Hooks.showBlocksInChat()
             Hooks.createChatTerminal()
-            Hooks.disableAutomaticMessageDeletion()
+            // Hooks.disableAutomaticMessageDeletion()
             Hooks.dontSendTypingIndicator()
             Hooks.useThreeColumnLayoutForFavorites()
             Hooks.disableAnalytics()
@@ -85,7 +83,6 @@ class Hooker : IXposedHookLoadPackage {
         pkgParam = lpparam
         config = Config(
             pkgParam.appInfo.dataDir + "/config.json")
-
         initializePreOnCreateHooks()
 
         findAndHookMethod("com.grindrapp.android.RealApplication",
