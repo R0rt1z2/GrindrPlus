@@ -82,7 +82,7 @@ object Hooks {
         // being executed.
         findAndHookMethod("com.grindrapp.android.manager.AppUpgradeManager",
             Hooker.pkgParam.classLoader, "e",
-            findClass("vb.p", Hooker.pkgParam.classLoader),
+            findClass("zb.o", Hooker.pkgParam.classLoader),
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     param.result = null
@@ -142,7 +142,7 @@ object Hooks {
             GApp.api.PhrasesRestService, Hooker.pkgParam.classLoader)
 
         val createSuccessResultConstructor = findConstructorExact(
-            "e9.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
+            "h9.a\$b", Hooker.pkgParam.classLoader, Any::class.java)
 
         val AddSavedPhraseResponseConstructor = findConstructorExact(
             GApp.model.AddSavedPhraseResponse, Hooker.pkgParam.classLoader,
@@ -274,23 +274,12 @@ object Hooks {
             }
         )
 
-        // For whatever reason, when opening a profile without upsells the app experiences a
-        // 10 - 15 second delay, which can be annoying. As a workaround, we can just replace
-        // the method that gets called when the user taps on a profile with a custom method
-        // that opens the profile directly.
-        if (Hooker.config.readBoolean("profile_delay_workaround", true)) {
-            findAndHookMethod("yb.w4", Hooker.pkgParam.classLoader,
-                "invoke", object : XC_MethodReplacement () {
-                    override fun replaceHookedMethod(param: MethodHookParam): Any {
-                        // The method to open the profile just requires us to pass the profile ID
-                        // which can be obtained from the profile object through the getProfileId
-                        // method.
-                        return openProfile(callMethod(getObjectField(
-                            param.thisObject, "j"), "getProfileId") as String)
-                    }
-                }
-            )
-        }
+        findAndHookMethod(
+            GApp.profile.experiments.InaccessibleProfileManager,
+            Hooker.pkgParam.classLoader,
+            GApp.profile.experiments.InaccessibleProfileManager_.isProfileEnabled,
+            RETURN_TRUE
+        )
 
         // Profiles with upsells cause the app to show the 'Restart the application' dialog, which
         // prevents the user from being able to open unlimited profiles. To fix this, we can just
@@ -462,7 +451,7 @@ object Hooks {
         )
 
         val FeatureFlagsClass = findClass(
-            "f7.g",
+            "i7.g",
             Hooker.pkgParam.classLoader
         )
 
@@ -560,9 +549,9 @@ object Hooks {
      * @author ElJaviLuki
      */
     fun hookOnlineIndicatorDuration(duration: Duration) {
-        findAndHookMethod(findClass("a8.o", Hooker.pkgParam.classLoader),
+        findAndHookMethod(findClass("ne.t0", Hooker.pkgParam.classLoader),
             // pseudoname: shouldShowOnlineIndicator
-            "b", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
+            "a", Long::class.javaPrimitiveType, object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Boolean {
                     return System.currentTimeMillis() - (param.args[0] as Long) <= duration.inWholeMilliseconds
                 }
@@ -653,7 +642,7 @@ object Hooks {
             )
 
             val createSuccessResultConstructor = findConstructorExact(
-                "e9.a\$b", Hooker.pkgParam.classLoader, Any::class.java
+                "h9.a\$b", Hooker.pkgParam.classLoader, Any::class.java
             )
 
             findAndHookMethod(
@@ -871,7 +860,7 @@ object Hooks {
      * in any chat by using the '/' prefix.
      */
     fun createChatTerminal() {
-        val sendChatMessage = findMethodExact("y5.b", Hooker.pkgParam.classLoader, "r",
+        val sendChatMessage = findMethodExact("b6.b", Hooker.pkgParam.classLoader, "r",
             findClass("com.grindrapp.android.chat.model.ChatMessageMetaData", Hooker.pkgParam.classLoader)
         )
 
@@ -1112,7 +1101,7 @@ object Hooks {
         )
 
         val createSuccessResultConstructor = findConstructorExact(
-            "e9.a\$b",
+            "h9.a\$b",
             Hooker.pkgParam.classLoader,
             Any::class.java
         )

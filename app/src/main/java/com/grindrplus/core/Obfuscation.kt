@@ -78,10 +78,10 @@ object Obfuscation {
 
             object persistence {
                 private const val _persistence = "$_manager.persistence"
-                const val ChatPersistenceManager = "i8.a"
+                const val ChatPersistenceManager = "l8.a"
 
                 object ChatPersistenceManager_ {
-                    const val deleteConversationsByProfileIds = "f"
+                    const val deleteConversationsByProfileIds = "e"
                 }
             }
         }
@@ -102,7 +102,7 @@ object Obfuscation {
                 const val getAvailable = "getAvailable"
             }
 
-            const val Feature = "z8.o"
+            const val Feature = "c9.o"
 
             object Feature_ {
                 const val isGranted = "e"
@@ -199,18 +199,17 @@ object Obfuscation {
         object storage {
             private const val _storage = Constants.GRINDR_PKG + ".storage"
             const val UserSession = "$_storage.b"
-            //
 
             const val IUserSession = "$_storage.UserSession"
             object IUserSession_ {
-                const val hasFeature_feature = "e"
-                const val isFree = "u"
+                const val hasFeature_feature = "x"
+                const val isFree = "t"
                 const val isNoPlusUpsell = "D"
-                const val isNoXtraUpsell = "j"
+                const val isNoXtraUpsell = "i"
                 const val isPlus = "B"
-                const val isXtra = "s"
+                const val isXtra = "r"
                 const val isUnlimited = "A"
-                const val getProfileId = "h"
+                const val getProfileId = "g"
             }
         }
 
