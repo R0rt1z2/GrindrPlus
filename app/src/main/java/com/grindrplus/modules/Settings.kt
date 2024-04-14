@@ -28,7 +28,7 @@ class Settings(recipient: String, sender: String) : CommandModule(recipient, sen
         logChatMessage("Removed all saved phrases.", this.recipient, this.recipient)
     }
 
-    @Command(name = "settings", help = "Manage app settings.")
+    @Command(name = "settings", aliases = ["st"], help = "Manage app settings.")
     private fun settingsCommand(args: List<String>) {
         val activity = Hooker.activityHook.getCurrentActivity()
         val settingsDialogView = LinearLayout(activity).apply {
