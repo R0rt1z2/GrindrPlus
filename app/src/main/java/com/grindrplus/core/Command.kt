@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import com.grindrplus.Hooker
+import com.grindrplus.core.Utils.copyToClipboard
 import com.grindrplus.core.Utils.showDialog
 import com.grindrplus.core.Utils.showToast
 import com.grindrplus.modules.Location
@@ -40,8 +41,7 @@ abstract class CommandModule(protected val recipient: String, protected val send
                 showDialog("Error", "Error executing command: $inputCommand\n${e.message}",
                     "OK", {}, "Copy error", {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Error", Log.getStackTraceString(e)))
+                            copyToClipboard("Error", Log.getStackTraceString(e))
                         }
                         showToast(Toast.LENGTH_LONG, "Error copied to clipboard.")
                     }
