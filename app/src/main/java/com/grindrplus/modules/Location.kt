@@ -32,6 +32,7 @@ import com.grindrplus.R
 import com.grindrplus.core.Command
 import com.grindrplus.core.CommandModule
 import com.grindrplus.core.Logger
+import com.grindrplus.core.Utils.copyToClipboard
 import com.grindrplus.core.Utils.createButtonDrawable
 import com.grindrplus.core.Utils.getKeysFromJSONObject
 import com.grindrplus.core.Utils.getLatLngFromLocationName
@@ -101,9 +102,7 @@ class Location(recipient: String, sender: String) : CommandModule(recipient, sen
                     "OK", {}, "Copy location",
                     {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Location",
-                                "${location.first}, ${location.second}"))
+                            copyToClipboard("Location", "${location.first}, ${location.second}")
                             showToast(Toast.LENGTH_LONG, "Location copied to clipboard.")
                         }
                     }

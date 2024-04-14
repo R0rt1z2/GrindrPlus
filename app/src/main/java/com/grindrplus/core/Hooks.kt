@@ -26,6 +26,7 @@ import com.grindrplus.core.Constants.Returns.RETURN_TRUE
 import com.grindrplus.core.Constants.Returns.RETURN_UNIT
 import com.grindrplus.core.Constants.Returns.RETURN_ZERO
 import com.grindrplus.core.Obfuscation.GApp
+import com.grindrplus.core.Utils.copyToClipboard
 import com.grindrplus.core.Utils.findHeightAndWeightTextViews
 import com.grindrplus.core.Utils.logChatMessage
 import com.grindrplus.core.Utils.mapFeatureFlag
@@ -1228,8 +1229,7 @@ object Hooks {
                     displayNameTextView.setOnClickListener {
                         showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Profile ID", profileId))
+                            copyToClipboard("Profile ID", profileId)
                         }
                     }
                 }

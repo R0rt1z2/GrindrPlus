@@ -2,8 +2,11 @@
 package com.grindrplus.core
 
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -378,6 +381,17 @@ object Utils {
             shape = GradientDrawable.RECTANGLE
             setColor(color)
             cornerRadius = 12f
+        }
+    }
+
+    /**
+     * Copy text to clipboard.
+     */
+    fun copyToClipboard(label: String, text: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val clipboard = Hooker.appContext.getSystemService(ClipboardManager::class.java)
+            clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+            showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
         }
     }
 }
