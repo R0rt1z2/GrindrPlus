@@ -47,8 +47,10 @@ class Location(recipient: String, sender: String) : CommandModule(recipient, sen
     @Command(name = "teleport", aliases = ["tp"], help = "Teleport to a location.")
     fun teleport(args: List<String>) {
         if (args.isEmpty()) {
-            return showToast(Toast.LENGTH_LONG,
-                toggleSetting("teleport_enabled", "Teleport"))
+            toggleSetting("teleport_enabled")
+            return showToast(Toast.LENGTH_LONG, "Teleport is now " +
+                    "${if (config.readBoolean("teleport_enabled", 
+                            false)) "enabled" else "disabled"}.")
         }
 
         if (!config.readBoolean("teleport_enabled", false)) {
