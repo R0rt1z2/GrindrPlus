@@ -3,6 +3,7 @@ package com.grindrplus.core
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -353,6 +354,29 @@ object Utils {
         val activity = Hooker.activityHook.getCurrentActivity()
         activity?.runOnUiThread {
             Toast.makeText(activity, message, type).show()
+        }
+    }
+
+    /*
+     * Get keys from a JSONObject.
+     */
+    fun getKeysFromJSONObject(jsonObject: JSONObject): List<String> {
+        val keys = mutableListOf<String>()
+        val iterator = jsonObject.keys()
+        while (iterator.hasNext()) {
+            keys.add(iterator.next())
+        }
+        return keys
+    }
+
+    /**
+     * Create a button drawable with the specified color.
+     */
+    fun createButtonDrawable(color: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(color)
+            cornerRadius = 12f
         }
     }
 }
