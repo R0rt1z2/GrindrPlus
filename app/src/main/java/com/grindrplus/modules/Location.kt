@@ -24,6 +24,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.get
 import com.grindrplus.Hooker
 import com.grindrplus.Hooker.Companion.config
@@ -246,6 +247,10 @@ class Location(recipient: String, sender: String) : CommandModule(recipient, sen
                 textViewCoordinates.text = ""
             }
         }
+
+        val wrapDrawable = DrawableCompat.wrap(spinnerLocations.background)
+        DrawableCompat.setTint(wrapDrawable, Color.WHITE)
+        spinnerLocations.background = wrapDrawable
 
         val buttonCopy = Button(activity).apply {
             layoutParams = LinearLayout.LayoutParams(
