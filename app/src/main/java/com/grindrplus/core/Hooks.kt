@@ -1,8 +1,6 @@
 package com.grindrplus.core
 
 import android.R.attr.classLoader
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -30,12 +28,10 @@ import com.grindrplus.core.Utils.copyToClipboard
 import com.grindrplus.core.Utils.findHeightAndWeightTextViews
 import com.grindrplus.core.Utils.logChatMessage
 import com.grindrplus.core.Utils.mapFeatureFlag
-import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.core.Utils.showToast
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedBridge.hookMethod
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -565,21 +561,32 @@ object Hooks {
      * expiring photos without any restriction.
      */
     fun unlimitedExpiringPhotos() {
-        val class_ExpiringPhotoStatusResponse = findClass(
-            GApp.model.ExpiringPhotoStatusResponse,
-            Hooker.pkgParam.classLoader
+        findAndHookMethod("rc.b0",
+            Hooker.pkgParam.classLoader,
+            "x",
+            findClass("rc.b0", Hooker.pkgParam.classLoader),
+            findClass("com.grindrapp.android.ui.chat.model.BodyUiData\$ExpiringImageBodyUiData", Hooker.pkgParam.classLoader),
+            RETURN_TRUE
         )
 
         findAndHookMethod(
-            class_ExpiringPhotoStatusResponse,
-            GApp.model.ExpiringPhotoStatusResponse_.getTotal,
-            RETURN_INTEGER_MAX_VALUE
-        )
+            "com.grindrapp.android.model.ExpiringImageBody",
+            Hooker.pkgParam.classLoader,
+            "getUrl",
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val mediaId = getObjectField(param.thisObject, "mediaId") as Long
+                    val url = getObjectField(param.thisObject, "url")?.toString()
 
-        findAndHookMethod(
-            class_ExpiringPhotoStatusResponse,
-            GApp.model.ExpiringPhotoStatusResponse_.getAvailable,
-            RETURN_INTEGER_MAX_VALUE
+                    if (url != null) {
+                        if (Hooker.database.getPhoto(mediaId) == null) {
+                            Hooker.database.addPhoto(mediaId, url)
+                        }
+                    } else {
+                        param.result = Hooker.database.getPhoto(mediaId)
+                    }
+                }
+            }
         )
     }
 

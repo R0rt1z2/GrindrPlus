@@ -8,6 +8,7 @@ import com.grindrplus.core.ActivityHook
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
 import com.grindrplus.core.Constants.GRINDR_PKG_VERSION_NAME
+import com.grindrplus.core.Database
 import com.grindrplus.core.Hooks
 import com.grindrplus.core.InitOnce
 import com.grindrplus.core.Logger
@@ -24,6 +25,7 @@ class Hooker : IXposedHookLoadPackage {
 
     companion object {
         var config: Config by InitOnce()
+        var database: Database by InitOnce()
         var pkgParam: LoadPackageParam by InitOnce()
         var appContext: Context by InitOnce()
         var pkgVersionName: String by InitOnce()
@@ -92,6 +94,8 @@ class Hooker : IXposedHookLoadPackage {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     appContext = (param.thisObject as Application)
                         .applicationContext
+                    database = Database(appContext,
+                        pkgParam.appInfo.dataDir + "/grindrplus.db")
                     pkgVersionName = appContext.packageManager
                         .getPackageInfo(appContext.packageName, 0).versionName
 
