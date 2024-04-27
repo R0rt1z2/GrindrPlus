@@ -95,8 +95,10 @@ object GrindrPlus {
     }
 
     fun withCurrentActivityOnMainThread(block: (Activity) -> Unit) {
-        currentActivity?.let { activity ->
-            runOnMainThread { block(activity) }
+        runOnMainThread {
+            currentActivity?.let { activity ->
+                block(activity)
+            }
         }
     }
 
