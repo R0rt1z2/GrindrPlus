@@ -8,15 +8,15 @@ import java.lang.reflect.Member
 import java.util.function.Consumer
 
 @Suppress("UNCHECKED_CAST")
-class HookAdapter(
+class HookAdapter<Clazz>(
     private val methodHookParam: XC_MethodHook.MethodHookParam<*>
 ) {
-    fun <T : Any> thisObject(): T {
-        return methodHookParam.thisObject as T
+    fun thisObject(): Clazz {
+        return methodHookParam.thisObject as Clazz
     }
 
-    fun <T : Any> nullableThisObject(): T? {
-        return methodHookParam.thisObject as T?
+    fun nullableThisObject(): Clazz? {
+        return methodHookParam.thisObject as Clazz?
     }
 
     fun method(): Member {

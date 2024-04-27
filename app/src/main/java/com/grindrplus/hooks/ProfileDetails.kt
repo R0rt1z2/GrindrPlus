@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.os.Build
 import android.widget.TextView
 import android.widget.Toast
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
@@ -55,36 +56,34 @@ class ProfileDetails: Hook("Profile details",
                 val displayNameTextView = getObjectField(viewBinding, "c") as TextView
 
                 displayNameTextView.setOnLongClickListener {
-                    context.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        copyToClipboard("Profile ID", profileId, context)
+                        copyToClipboard("Profile ID", profileId)
                     }
                     true
                 }
 
                 displayNameTextView.setOnClickListener {
-                    context.currentActivity?.runOnUiThread {
-                        val properties = mapOf(
-                            "Profile ID" to profileId,
-                            "Approximate distance" to getObjectField(param.arg(0), "approximateDistance") as Boolean,
-                            "Found via teleport" to getObjectField(param.arg(0), "foundViaTeleport") as Boolean,
-                            "Favorite" to getObjectField(param.arg(0), "isFavorite") as Boolean,
-                            "From viewed me" to getObjectField(param.arg(0), "isFromViewedMe") as Boolean,
-                            "Inaccessible profile" to getObjectField(param.arg(0), "isInaccessibleProfile") as Boolean,
-                            "JWT boosting" to getObjectField(param.arg(0), "isJwtBoosting") as Boolean,
-                            "New" to getObjectField(param.arg(0), "isNew") as Boolean,
-                            "Teleporting" to getObjectField(param.arg(0), "isTeleporting") as Boolean,
-                            "Online now" to getObjectField(param.arg(0), "onlineNow") as Boolean
-                        )
+                    val properties = mapOf(
+                        "Profile ID" to profileId,
+                        "Approximate distance" to getObjectField(param.arg(0), "approximateDistance") as Boolean,
+                        "Found via teleport" to getObjectField(param.arg(0), "foundViaTeleport") as Boolean,
+                        "Favorite" to getObjectField(param.arg(0), "isFavorite") as Boolean,
+                        "From viewed me" to getObjectField(param.arg(0), "isFromViewedMe") as Boolean,
+                        "Inaccessible profile" to getObjectField(param.arg(0), "isInaccessibleProfile") as Boolean,
+                        "JWT boosting" to getObjectField(param.arg(0), "isJwtBoosting") as Boolean,
+                        "New" to getObjectField(param.arg(0), "isNew") as Boolean,
+                        "Teleporting" to getObjectField(param.arg(0), "isTeleporting") as Boolean,
+                        "Online now" to getObjectField(param.arg(0), "onlineNow") as Boolean
+                    )
 
-                        val dialog = AlertDialog.Builder(context.currentActivity!!)
-                            .setTitle("Hidden profile details")
-                            .setMessage(properties.map { (key, value) -> "• $key: $value" }.joinToString("\n"))
-                            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                            .create()
+                    val dialog = AlertDialog.Builder(it.context)
+                        .setTitle("Hidden profile details")
+                        .setMessage(properties.map { (key, value) -> "• $key: $value" }.joinToString("\n"))
+                        .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                        .create()
 
-                        dialog.show()
-                    }
+                    dialog.show()
                 }
             }
 

@@ -9,7 +9,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
-import com.grindrplus.core.ModContext
+import com.grindrplus.GrindrPlus
 
 object Utils {
     fun getId(name: String, defType: String, context: Context): Int {
@@ -57,11 +57,11 @@ object Utils {
         }
     }
 
-    fun copyToClipboard(label: String, text: String, context: ModContext) {
+    fun copyToClipboard(label: String, text: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val clipboard = context.androidContext.getSystemService(ClipboardManager::class.java)
+            val clipboard = GrindrPlus.context.getSystemService(ClipboardManager::class.java)
             clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
-            context.showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
         }
     }
 }

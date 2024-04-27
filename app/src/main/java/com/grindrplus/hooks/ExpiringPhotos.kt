@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -43,11 +44,11 @@ class ExpiringPhotos: Hook("Expiring photos",
                 val url = getObjectField(param.thisObject(), "url")?.toString()
 
                 if (url != null) {
-                    if (context.database.getPhoto(mediaId) == null) {
-                        context.database.addPhoto(mediaId, url)
+                    if (GrindrPlus.database.getPhoto(mediaId) == null) {
+                        GrindrPlus.database.addPhoto(mediaId, url)
                     }
                 } else {
-                    param.setResult(context.database.getPhoto(mediaId))
+                    param.setResult(GrindrPlus.database.getPhoto(mediaId))
                 }
             }
     }

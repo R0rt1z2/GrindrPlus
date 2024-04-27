@@ -1,7 +1,7 @@
 package com.grindrplus.utils
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.ModContext
 import com.grindrplus.hooks.AllowScreenshots
 import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
@@ -17,15 +17,15 @@ import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
-import com.grindrplus.hooks.UnlimitedProfiles
 import com.grindrplus.hooks.RemovableMessages
 import com.grindrplus.hooks.UnlimitedAlbums
+import com.grindrplus.hooks.UnlimitedProfiles
 import com.grindrplus.hooks.UnlimitedTaps
-import kotlin.reflect.KClass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlin.reflect.KClass
 
-class HookManager(private val context: ModContext) {
+class HookManager {
     private var hooks = mutableMapOf<KClass<out Hook>, Hook>()
 
     private fun registerAndInitHooks() {
@@ -61,11 +61,10 @@ class HookManager(private val context: ModContext) {
 
             hooks.values.forEach { hook ->
                 if (Config.isHookEnabled(hook.hookName)) {
-                    hook.context = context
                     hook.init()
-                    context.logger.log("Initialized hook: ${hook.hookName}")
+                    GrindrPlus.logger.log("Initialized hook: ${hook.hookName}")
                 } else {
-                    context.logger.log("Hook disabled: ${hook.hookName}")
+                    GrindrPlus.logger.log("Hook disabled: ${hook.hookName}")
                 }
             }
         }
@@ -76,7 +75,7 @@ class HookManager(private val context: ModContext) {
             hooks.values.forEach { hook -> hook.cleanup() }
             hooks.clear()
             registerAndInitHooks()
-            context.logger.log("Hooks reloaded successfully.")
+            GrindrPlus.logger.log("Hooks reloaded successfully.")
         }
     }
 

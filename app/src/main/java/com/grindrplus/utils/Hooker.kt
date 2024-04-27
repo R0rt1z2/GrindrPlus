@@ -10,79 +10,82 @@ enum class HookStage {
 }
 
 object Hooker {
-    inline fun newMethodHook(
+    inline fun <T> newMethodHook(
         stage: HookStage,
-        crossinline consumer: (HookAdapter) -> Unit,
-        crossinline filter: ((HookAdapter) -> Boolean) = { true }
+        crossinline consumer: (HookAdapter<T>) -> Unit,
+        crossinline filter: ((HookAdapter<T>) -> Boolean) = { true }
     ): XC_MethodHook {
-        return if (stage == HookStage.BEFORE) object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam<*>) {
-                HookAdapter(param).takeIf(filter)?.also(consumer)
+        return when (stage) {
+            HookStage.BEFORE -> object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam<*>) {
+                    HookAdapter<T>(param).takeIf(filter)?.also(consumer)
+                }
             }
-        } else object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam<*>) {
-                HookAdapter(param).takeIf(filter)?.also(consumer)
+            HookStage.AFTER -> object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam<*>) {
+                    HookAdapter<T>(param).takeIf(filter)?.also(consumer)
+                }
             }
         }
     }
 
-    inline fun hook(
-        clazz: Class<*>,
+    inline fun <T> hook(
+        clazz: Class<T>,
         methodName: String,
         stage: HookStage,
-        crossinline filter: (HookAdapter) -> Boolean,
-        noinline consumer: (HookAdapter) -> Unit
+        crossinline filter: (HookAdapter<T>) -> Boolean,
+        noinline consumer: (HookAdapter<T>) -> Unit
     ): Set<XC_MethodHook.Unhook> = XposedBridge.hookAllMethods(clazz, methodName, newMethodHook(stage, consumer, filter))
 
-    inline fun hook(
+    inline fun <T> hook(
         member: Member,
         stage: HookStage,
-        crossinline filter: ((HookAdapter) -> Boolean),
-        crossinline consumer: (HookAdapter) -> Unit
+        crossinline filter: ((HookAdapter<T>) -> Boolean),
+        crossinline consumer: (HookAdapter<T>) -> Unit
     ): XC_MethodHook.Unhook {
         return XposedBridge.hookMethod(member, newMethodHook(stage, consumer, filter))
     }
 
-    fun hook(
-        clazz: Class<*>,
+    fun <T> hook(
+        clazz: Class<T>,
         methodName: String,
         stage: HookStage,
-        consumer: (HookAdapter) -> Unit
+        consumer: (HookAdapter<T>) -> Unit
     ): Set<XC_MethodHook.Unhook> = hook(clazz, methodName, stage, { true }, consumer)
 
-    fun hook(
+    fun <T> hook(
         member: Member,
         stage: HookStage,
-        consumer: (HookAdapter) -> Unit
+        consumer: (HookAdapter<T>) -> Unit
     ): XC_MethodHook.Unhook {
         return hook(member, stage, { true }, consumer)
     }
 
-    fun hookConstructor(
-        clazz: Class<*>,
+    fun <T> hookConstructor(
+        clazz: Class<T>,
         stage: HookStage,
-        consumer: (HookAdapter) -> Unit
+        consumer: (HookAdapter<T>) -> Unit
     ): Set<XC_MethodHook.Unhook> = XposedBridge.hookAllConstructors(clazz, newMethodHook(stage, consumer))
 
-    fun hookConstructor(
-        clazz: Class<*>,
+    fun <T> hookConstructor(
+        clazz: Class<T>,
         stage: HookStage,
-        filter: ((HookAdapter) -> Boolean),
-        consumer: (HookAdapter) -> Unit
+        filter: ((HookAdapter<T>) -> Boolean),
+        consumer: (HookAdapter<T>) -> Unit
     ) {
         XposedBridge.hookAllConstructors(clazz, newMethodHook(stage, consumer, filter))
     }
 
-    inline fun hookObjectMethod(
-        clazz: Class<*>,
+    inline fun <T> hookObjectMethod(
+        clazz: Class<T>,
         instance: Any,
         methodName: String,
         stage: HookStage,
-        crossinline hookConsumer: (HookAdapter) -> Unit
+        crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ): List<() -> Unit> {
         val unhooks = mutableSetOf<XC_MethodHook.Unhook>()
         hook(clazz, methodName, stage) { param->
-            if (param.nullableThisObject<Any>().let {
+            if (param.nullableThisObject().let {
                     if (it == null) unhooks.forEach { u -> u.unhook() }
                     it != instance
                 }) return@hook
@@ -93,11 +96,11 @@ object Hooker {
         }
     }
 
-    inline fun ephemeralHook(
-        clazz: Class<*>,
+    inline fun <T> ephemeralHook(
+        clazz: Class<T>,
         methodName: String,
         stage: HookStage,
-        crossinline hookConsumer: (HookAdapter) -> Unit
+        crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
         hook(clazz, methodName, stage) { param->
@@ -106,25 +109,25 @@ object Hooker {
         }.also { unhooks.addAll(it) }
     }
 
-    inline fun ephemeralHookObjectMethod(
-        clazz: Class<*>,
+    inline fun <T> ephemeralHookObjectMethod(
+        clazz: Class<T>,
         instance: Any,
         methodName: String,
         stage: HookStage,
-        crossinline hookConsumer: (HookAdapter) -> Unit
+        crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
         hook(clazz, methodName, stage) { param->
-            if (param.nullableThisObject<Any>() != instance) return@hook
+            if (param.nullableThisObject() != instance) return@hook
             unhooks.forEach { it.unhook() }
             hookConsumer(param)
         }.also { unhooks.addAll(it) }
     }
 
-    inline fun ephemeralHookConstructor(
-        clazz: Class<*>,
+    inline fun <T> ephemeralHookConstructor(
+        clazz: Class<T>,
         stage: HookStage,
-        crossinline hookConsumer: (HookAdapter) -> Unit
+        crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
         hookConstructor(clazz, stage) { param->
@@ -134,42 +137,42 @@ object Hooker {
     }
 }
 
-fun Class<*>.hookConstructor(
+fun <T> Class<T>.hookConstructor(
     stage: HookStage,
-    consumer: (HookAdapter) -> Unit
+    consumer: (HookAdapter<T>) -> Unit
 ) = Hooker.hookConstructor(this, stage, consumer)
 
-fun Class<*>.hookConstructor(
+fun <T> Class<T>.hookConstructor(
     stage: HookStage,
-    filter: ((HookAdapter) -> Boolean),
-    consumer: (HookAdapter) -> Unit
+    filter: ((HookAdapter<T>) -> Boolean),
+    consumer: (HookAdapter<T>) -> Unit
 ) = Hooker.hookConstructor(this, stage, filter, consumer)
 
-fun Class<*>.hook(
+fun <T> Class<T>.hook(
     methodName: String,
     stage: HookStage,
-    consumer: (HookAdapter) -> Unit
+    consumer: (HookAdapter<T>) -> Unit
 ): Set<XC_MethodHook.Unhook> = Hooker.hook(this, methodName, stage, consumer)
 
-fun Class<*>.hook(
+fun <T> Class<T>.hook(
     methodName: String,
     stage: HookStage,
-    filter: (HookAdapter) -> Boolean,
-    consumer: (HookAdapter) -> Unit
+    filter: (HookAdapter<T>) -> Boolean,
+    consumer: (HookAdapter<T>) -> Unit
 ): Set<XC_MethodHook.Unhook> = Hooker.hook(this, methodName, stage, filter, consumer)
 
 fun Member.hook(
     stage: HookStage,
-    consumer: (HookAdapter) -> Unit
+    consumer: (HookAdapter<Any>) -> Unit
 ): XC_MethodHook.Unhook = Hooker.hook(this, stage, consumer)
 
 fun Member.hook(
     stage: HookStage,
-    filter: ((HookAdapter) -> Boolean),
-    consumer: (HookAdapter) -> Unit
+    filter: ((HookAdapter<Any>) -> Boolean),
+    consumer: (HookAdapter<Any>) -> Unit
 ): XC_MethodHook.Unhook = Hooker.hook(this, stage, filter, consumer)
 
-fun Array<Method>.hookAll(stage: HookStage, param: (HookAdapter) -> Unit) {
+fun Array<Method>.hookAll(stage: HookStage, param: (HookAdapter<Any>) -> Unit) {
     filter { it.declaringClass != Object::class.java }.forEach {
         it.hook(stage, param)
     }

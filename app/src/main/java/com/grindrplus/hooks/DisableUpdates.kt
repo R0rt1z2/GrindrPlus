@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -35,7 +36,7 @@ class DisableUpdates: Hook("Disable updates",
 
         CoroutineScope(Dispatchers.Main).launch {
             fetchLatestVersionInfo()
-            if (versionName < context.pkgVersionName) {
+            if (versionName < GrindrPlus.context.packageManager.getPackageInfo(GrindrPlus.context.packageName, 0).versionName) {
                 findClass(appConfiguration)?.hookConstructor(HookStage.AFTER) { param ->
                     setObjectField(param.thisObject(), "a", versionName)
                     setObjectField(param.thisObject(), "b", versionCode)
@@ -59,13 +60,13 @@ class DisableUpdates: Hook("Disable updates",
                         val json = JSONObject(jsonData)
                         versionCode = json.getInt("versionCode")
                         versionName = json.getString("versionName")
-                        context.logger.log("Fetched version info: $versionName ($versionCode)")
+                        GrindrPlus.logger.log("Fetched version info: $versionName ($versionCode)")
                     }
                 } else {
-                    context.logger.log("Error fetching version info: ${response.message}")
+                    GrindrPlus.logger.log("Error fetching version info: ${response.message}")
                 }
             } catch (e: Exception) {
-                context.logger.log("Error fetching version info: ${e.message}")
+                GrindrPlus.logger.log("Error fetching version info: ${e.message}")
             }
         }
     }

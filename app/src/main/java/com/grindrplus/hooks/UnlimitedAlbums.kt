@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -61,7 +62,7 @@ class UnlimitedAlbums: Hook("Unlimited albums",
                      * album. We can now proceed to save the contents if
                      * we haven't already.
                      */
-                    if (context.database.getContentIdListByAlbumId(albumId).isNotEmpty()) {
+                    if (GrindrPlus.database.getContentIdListByAlbumId(albumId).isNotEmpty()) {
                         /**
                          * It's possible that the album has been viewed before
                          * but the user added more images to it. In this case,
@@ -76,12 +77,12 @@ class UnlimitedAlbums: Hook("Unlimited albums",
                  * If the content list is empty, try to retrieve the contents
                  * from the database and set them as the new content list.
                  */
-                val savedContentsList = context.database.getContentIdListByAlbumId(albumId)
+                val savedContentsList = GrindrPlus.database.getContentIdListByAlbumId(albumId)
                 if (savedContentsList.isNotEmpty()) {
                     val newContentsList = mutableListOf<Any>()
 
                     for (element in savedContentsList) {
-                        val savedContent = context.database.getAlbumContent(element)
+                        val savedContent = GrindrPlus.database.getAlbumContent(element)
                         if (savedContent != null) {
                             loadClass(albumContent)?.constructors?.first()?.newInstance(
                                 savedContent.getAsLong("contentId"),
@@ -112,9 +113,9 @@ class UnlimitedAlbums: Hook("Unlimited albums",
     }
 
     private fun deleteContentsByList(albumId: Long) {
-        val contents = context.database.getContentIdListByAlbumId(albumId)
+        val contents = GrindrPlus.database.getContentIdListByAlbumId(albumId)
         for (element in contents) {
-            context.database.deleteAlbumContent(element)
+            GrindrPlus.database.deleteAlbumContent(element)
         }
     }
 
@@ -123,7 +124,7 @@ class UnlimitedAlbums: Hook("Unlimited albums",
             if (getObjectField(element, "url") == null) {
                 continue // Skip invalid / empty content
             }
-            context.database.addAlbumContent(
+            GrindrPlus.database.addAlbumContent(
                 getObjectField(element, "contentId") as Long,
                 albumId,
                 getObjectField(element, "contentType") as String,

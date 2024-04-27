@@ -1,14 +1,12 @@
 package com.grindrplus.utils
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.ModContext
 
 abstract class Hook(
     val hookName : String,
     val hookDesc : String = "",
 ) {
-    lateinit var context: ModContext
-
     /**
      * Hook specific initialization.
      */
@@ -25,24 +23,24 @@ abstract class Hook(
 
     protected fun findClass(name: String): Class<*>? {
         return try {
-            context.loadClass(name)
+            GrindrPlus.loadClass(name)
         } catch (e: ClassNotFoundException) {
-            context.logger.log("Failed to find class: $name")
+            GrindrPlus.logger.log("Failed to find class: $name")
             null
         }
     }
 
     protected fun loadClass(name: String): Class<*>? {
         return try {
-            context.dexClassLoader.loadClass(name)
+            GrindrPlus.classLoader.loadClass(name)
         } catch (e: ClassNotFoundException) {
-            context.logger.log("Failed to load class: $name")
+            GrindrPlus.logger.log("Failed to load class: $name")
             null
         }
     }
 
     protected fun getResource(name: String, type: String): Int {
-        return context.androidContext.resources.getIdentifier(
-            name, type, context.androidContext.packageName)
+        return GrindrPlus.context.resources.getIdentifier(
+            name, type, GrindrPlus.context.packageName)
     }
 }

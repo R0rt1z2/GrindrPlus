@@ -1,22 +1,23 @@
 package com.grindrplus.hooks
 
 import android.app.Activity
-import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import com.grindrplus.BuildConfig
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
-class ModSettings: Hook("Mod settings",
-    "GrindrPlus settings") {
+class ModSettings: Hook(
+    "Mod settings",
+    "GrindrPlus settings"
+) {
     private val settingsViewModelBinding = "q7.v0"
     private val settingsActivity = "com.grindrapp.android.ui.settings.SettingsActivity"
     private val hooksFragment = "com.grindrplus.ui.fragments.HooksFragment"
@@ -37,7 +38,7 @@ class ModSettings: Hook("Mod settings",
 
         findClass(settingsActivity)
             ?.hook("onCreate", HookStage.AFTER) { param ->
-                val activity = param.thisObject<Activity>()
+                val activity = param.thisObject() as Activity
 
                 val settingsViewBindingLazy = getObjectField(param.thisObject(), "a0")
                 val settingsViewBinding = settingsViewBindingLazy::class
@@ -56,7 +57,7 @@ class ModSettings: Hook("Mod settings",
                     val settingsExampleSubContainerTextView = settingsExampleSubContainer.getChildAt(0) as TextView
                     val settingsExampleDivider = settingsExampleContainer.getChildAt(2) as View
 
-                    val modContainer = LinearLayout(context.androidContext).apply {
+                    val modContainer = LinearLayout(activity).apply {
                         layoutParams = settingsExampleContainer.layoutParams
                         orientation = settingsExampleContainer.orientation
                         setPadding(settingsExampleContainer.paddingLeft, settingsExampleContainer.paddingTop,
@@ -65,7 +66,7 @@ class ModSettings: Hook("Mod settings",
                         textAlignment = settingsExampleContainer.textAlignment
                     }
 
-                    val modHeader = TextView(context.androidContext).apply {
+                    val modHeader = TextView(activity).apply {
                         text = "GrindrPlus"
                         layoutParams = settingsExampleHeader.layoutParams
                         setPadding(settingsExampleHeader.paddingLeft, settingsExampleHeader.paddingTop,
@@ -76,7 +77,7 @@ class ModSettings: Hook("Mod settings",
                         setTextColor(settingsExampleHeader.currentTextColor)
                     }
 
-                    val modSubContainer = LinearLayout(context.androidContext).apply {
+                    val modSubContainer = LinearLayout(activity).apply {
                         layoutParams = settingsExampleSubContainer.layoutParams
                         orientation = settingsExampleSubContainer.orientation
                         setPadding(settingsExampleSubContainer.paddingLeft, settingsExampleSubContainer.paddingTop,
@@ -85,7 +86,7 @@ class ModSettings: Hook("Mod settings",
                         textAlignment = settingsExampleSubContainer.textAlignment
                     }
 
-                    val modSubContainerTextView = TextView(context.androidContext).apply {
+                    val modSubContainerTextView = TextView(activity).apply {
                         text = "Mod Settings"
                         layoutParams = settingsExampleSubContainerTextView.layoutParams
                         setPadding(settingsExampleSubContainerTextView.paddingLeft, settingsExampleSubContainerTextView.paddingTop,
@@ -96,19 +97,17 @@ class ModSettings: Hook("Mod settings",
                         visibility = View.VISIBLE
                     }
 
-                    val modDivider = View(context.androidContext).apply {
+                    val modDivider = View(activity).apply {
                         layoutParams = settingsExampleDivider.layoutParams
                         background = settingsExampleDivider.background
                     }
 
                     modSubContainerTextView.setOnClickListener {
-                        activity.runOnUiThread {
-                            val hooksFragmentInstance = loadClass(hooksFragment)?.newInstance()
-                            val supportFragmentManager = getSupportFragmentManager?.invoke(activity)
-                            val fragmentTransaction = beginTransaction?.invoke(supportFragmentManager)
-                            addFragmentTransaction?.invoke(fragmentTransaction, android.R.id.content, hooksFragmentInstance)
-                            commitFragmentTransaction?.invoke(fragmentTransaction)
-                        }
+                        val hooksFragmentInstance = loadClass(hooksFragment)?.newInstance()
+                        val supportFragmentManager = getSupportFragmentManager?.invoke(activity)
+                        val fragmentTransaction = beginTransaction?.invoke(supportFragmentManager)
+                        addFragmentTransaction?.invoke(fragmentTransaction, android.R.id.content, hooksFragmentInstance)
+                        commitFragmentTransaction?.invoke(fragmentTransaction)
                     }
 
                     modSubContainer.addView(modSubContainerTextView, 0)
@@ -122,7 +121,7 @@ class ModSettings: Hook("Mod settings",
             ?.hookConstructor(HookStage.AFTER) { param ->
                 val versionTextView = param.arg(55) as TextView
                 versionTextView.setOnClickListener {
-                    context.showToast(Toast.LENGTH_LONG,
+                    GrindrPlus.showToast(Toast.LENGTH_LONG,
                         "GrindrPlus v${BuildConfig.VERSION_NAME}")
                 }
             }

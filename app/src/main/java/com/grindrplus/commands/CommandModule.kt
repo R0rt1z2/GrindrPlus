@@ -1,13 +1,14 @@
 package com.grindrplus.commands
 
-import com.grindrplus.core.ModContext
+import com.grindrplus.GrindrPlus
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.javaMethod
 
-abstract class CommandModule(protected val context: ModContext,
-                             protected val recipient: String,
-                             protected val sender: String) {
+abstract class CommandModule(
+    protected val recipient: String,
+    protected val sender: String
+) {
     fun handle(inputCommand: String, args: List<String>): Boolean {
         val commandMethod = this::class.declaredMemberFunctions
             .firstOrNull { function ->
@@ -24,7 +25,7 @@ abstract class CommandModule(protected val context: ModContext,
                 method.call(this, args)
                 true
             } catch (e: Exception) {
-                context.logger.log("Error executing command: $inputCommand")
+                GrindrPlus.logger.log("Error executing command: $inputCommand")
                 false
             }
         } ?: false

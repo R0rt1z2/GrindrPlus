@@ -2,12 +2,12 @@ package com.grindrplus.commands
 
 import android.net.Uri
 import android.widget.Toast
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.ModContext
 import okhttp3.OkHttpClient
 import org.json.JSONArray
 
-class Location(context: ModContext, recipient: String, sender: String) : CommandModule(context, recipient, sender) {
+class Location(recipient: String, sender: String) : CommandModule(recipient, sender) {
     @Command(name = "tp", aliases = ["tp"], help = "Teleport to a location")
     fun teleport(args: List<String>) {
         /**
@@ -18,7 +18,7 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
             val status = (Config.get("current_location", "") as String).isEmpty()
             if (!status) {
                 Config.put("current_location", "")
-                return context.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
+                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
             }
         }
 
@@ -34,22 +34,22 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
             args.size == 1 && args[0].contains(",") -> {
                 val (lat, lon) = args[0].split(",").map { it.toDouble() }
                 Config.put("current_location", "$lat,$lon")
-                return context.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
             }
             args.size == 2 && args.all { arg -> arg.toDoubleOrNull() != null } -> {
                 val (lat, lon) = args.map { it.toDouble() }
                 Config.put("current_location", "$lat,$lon")
-                return context.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
             }
             else -> {
                 /**
                  * If we reached this point, the user has provided a name of a city.
                  * In this case, it could be either a saved location or an actual city.
                  */
-                val location = context.database.getLocation(args.joinToString(" "))
+                val location = GrindrPlus.database.getLocation(args.joinToString(" "))
                 if (location != null) {
                     Config.put("current_location", "${location.first},${location.second}")
-                    return context.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
+                    return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
                             ", ${location.second}")
                 } else {
                     /**
@@ -59,10 +59,10 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
                     val location = getLocationFromNominatim(args.joinToString(" "))
                     return if (location != null) {
                         Config.put("current_location", "${location.first},${location.second}")
-                        context.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
+                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
                                 ", ${location.second}")
                     } else {
-                        context.showToast(Toast.LENGTH_LONG, "Location not found")
+                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Location not found")
                     }
                 }
             }
@@ -72,7 +72,7 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
     @Command(name = "save", aliases = ["sv"], help = "Save the current location")
     fun save(args: List<String>) {
         if (args.isEmpty()) {
-            context.showToast(Toast.LENGTH_LONG,"Please provide a name for the location")
+            GrindrPlus.showToast(Toast.LENGTH_LONG,"Please provide a name for the location")
             return
         }
 
@@ -88,14 +88,14 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
 
         if (location != null) {
             val (lat, lon) = location.split(",").map { it.toDouble() }
-            val existingLocation = context.database.getLocation(name)
+            val existingLocation = GrindrPlus.database.getLocation(name)
 
             if (existingLocation != null) {
-                context.database.updateLocation(name, lat, lon)
-                context.showToast(Toast.LENGTH_LONG, "Successfully updated $name")
+                GrindrPlus.database.updateLocation(name, lat, lon)
+                GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully updated $name")
             } else {
-                context.database.addLocation(name, lat, lon)
-                context.showToast(Toast.LENGTH_LONG, "Successfully saved $name")
+                GrindrPlus.database.addLocation(name, lat, lon)
+                GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully saved $name")
             }
         }
     }
@@ -103,19 +103,19 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
     @Command(name = "delete", aliases = ["del"], help = "Delete a saved location")
     fun delete(args: List<String>) {
         if (args.isEmpty()) {
-            return context.showToast(Toast.LENGTH_LONG,
+            return GrindrPlus.showToast(Toast.LENGTH_LONG,
                 "Please provide a location to delete")
         }
 
         val name = args.joinToString(" ")
-        val location = context.database.getLocation(name)
+        val location = GrindrPlus.database.getLocation(name)
         if (location == null) {
-            return context.showToast(Toast.LENGTH_LONG,
+            return GrindrPlus.showToast(Toast.LENGTH_LONG,
                 "Location not found")
         }
 
-        context.database.deleteLocation(name)
-        return context.showToast(Toast.LENGTH_LONG,
+        GrindrPlus.database.deleteLocation(name)
+        return GrindrPlus.showToast(Toast.LENGTH_LONG,
             "Location deleted")
     }
 
@@ -137,7 +137,7 @@ class Location(context: ModContext, recipient: String, sender: String) : Command
                 Pair(lat, lon)
             }
         } catch (e: Exception) {
-            context.logger.log("Error getting location from Nominatim: ${e.message}")
+            GrindrPlus.logger.log("Error getting location from Nominatim: ${e.message}")
             null
         }
     }

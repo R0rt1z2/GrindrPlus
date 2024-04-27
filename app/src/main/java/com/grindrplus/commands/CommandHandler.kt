@@ -1,16 +1,17 @@
 package com.grindrplus.commands
 
 import android.app.AlertDialog
-import com.grindrplus.core.ModContext
+import com.grindrplus.GrindrPlus
 
-class CommandHandler(private val context: ModContext,
-                     val recipient: String,
-                     private val sender: String = "") {
+class CommandHandler(
+    recipient: String,
+    sender: String = ""
+) {
     private val commandModules: MutableList<CommandModule> = mutableListOf()
 
     init {
-        commandModules.add(Location(context, recipient, sender))
-        commandModules.add(Profile(context, recipient, sender))
+        commandModules.add(Location(recipient, sender))
+        commandModules.add(Profile(recipient, sender))
     }
 
     fun handle(input: String) {
@@ -18,12 +19,13 @@ class CommandHandler(private val context: ModContext,
         val command = args.firstOrNull() ?: return
 
         if (command == "help") {
-            context.currentActivity?.runOnUiThread {
-                AlertDialog.Builder(context.currentActivity)
+            GrindrPlus.withCurrentActivityOnMainThread { activity ->
+                AlertDialog.Builder(activity)
                     .setTitle("Help")
                     .setMessage(commandModules.joinToString("\n") { it.getHelp() }.drop(1))
                     .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .create().show()
+                    .create()
+                    .show()
             }
         }
 

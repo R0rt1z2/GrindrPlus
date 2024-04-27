@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.children
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
@@ -34,7 +35,7 @@ class Favorites: Hook("Favorites",
                 val recyclerView = view.findViewById<View>(
                     Utils.getId(
                         "fragment_favorite_recycler_view",
-                        "id", context.androidContext
+                        "id", GrindrPlus.context
                     )
                 )
                 val gridLayoutManager = callMethod(
@@ -46,7 +47,7 @@ class Favorites: Hook("Favorites",
 
                 adapter::class.java
                     .hook("onBindViewHolder", HookStage.AFTER) { param ->
-                        val size = context.androidContext
+                        val size = GrindrPlus.context
                             .resources.displayMetrics.widthPixels / NUM_OF_COLUMNS
                         val rootLayoutParams = recyclerViewLayoutParamsConstructor
                             ?.newInstance(size, size) as? ViewGroup.LayoutParams
@@ -61,7 +62,7 @@ class Favorites: Hook("Favorites",
                         val distanceTextView =
                             itemView.findViewById<TextView>(
                                 Utils.getId(
-                                    "profile_distance", "id", context.androidContext
+                                    "profile_distance", "id", GrindrPlus.context
                                 )
                             )
 
@@ -79,11 +80,11 @@ class Favorites: Hook("Favorites",
                         val profileOnlineNowIcon = itemView.findViewById<ImageView>(
                             Utils.getId(
                                 "profile_online_now_icon",
-                                "id", context.androidContext
+                                "id", GrindrPlus.context
                             )
                         )
                         val profileLastSeen = itemView.findViewById<TextView>(
-                            Utils.getId("profile_last_seen", "id", context.androidContext)
+                            Utils.getId("profile_last_seen", "id", GrindrPlus.context)
                         )
 
                         val lastSeenLayoutParams = profileLastSeen
@@ -93,7 +94,7 @@ class Favorites: Hook("Favorites",
                         } else {
                             lastSeenLayoutParams.topMargin = TypedValue.applyDimension(
                                 TypedValue.COMPLEX_UNIT_DIP, 5f,
-                                context.androidContext.resources.displayMetrics
+                                GrindrPlus.context.resources.displayMetrics
                             ).roundToInt()
                         }
                         profileLastSeen.layoutParams = lastSeenLayoutParams
@@ -101,13 +102,13 @@ class Favorites: Hook("Favorites",
                         val profileNoteIcon = itemView.findViewById<ImageView>(
                             Utils.getId(
                                 "profile_note_icon",
-                                "id", context.androidContext
+                                "id", GrindrPlus.context
                             )
                         )
                         val profileDisplayName = itemView.findViewById<TextView>(
                             Utils.getId(
                                 "profile_display_name",
-                                "id", context.androidContext
+                                "id", GrindrPlus.context
                             )
                         )
 
@@ -118,7 +119,7 @@ class Favorites: Hook("Favorites",
                         } else {
                             displayNameLayoutParams.topMargin = TypedValue.applyDimension(
                                 TypedValue.COMPLEX_UNIT_DIP, 4f,
-                                context.androidContext.resources.displayMetrics
+                                GrindrPlus.context.resources.displayMetrics
                             ).roundToInt()
                         }
                         profileDisplayName.layoutParams = displayNameLayoutParams

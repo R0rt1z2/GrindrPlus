@@ -20,7 +20,7 @@ class ChatIndicators: Hook("Chat indicators",
             val service = param.getResult()
             if (service?.javaClass?.let { chatRestServiceClass?.isAssignableFrom(it) } == true) {
                 param.setResult(chatRestServiceClass?.let {
-                    createServiceProxy(context, service, it, methodBlacklist)
+                    createServiceProxy(service, it, methodBlacklist)
                 })
             }
         }

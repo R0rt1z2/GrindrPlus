@@ -25,6 +25,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.children
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
@@ -64,9 +65,8 @@ class LocationSpoofer: Hook("Location spoofer",
             }
         }
 
-        val modContext = context
         findClass(chatBottomToolbar)?.hookConstructor(HookStage.AFTER) { param ->
-            val chatBottomToolbarLinearLayout = param.thisObject<LinearLayout>()
+            val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
             val customLocationButton = ImageButton(chatBottomToolbarLinearLayout.context).apply {
@@ -91,19 +91,18 @@ class LocationSpoofer: Hook("Location spoofer",
             }
 
             customLocationButton.setOnClickListener {
-                val activity = context.currentActivity
-                var locations = context.database.getLocations()
+                var locations = GrindrPlus.database.getLocations()
                 var locationNames = locations.map { it.first }
                 var coordinatesMap = locations.associate { it.first to "${it.second.first}, ${it.second.second}" }
 
                 if (locations.isEmpty()) {
-                    context.showToast(
+                    GrindrPlus.showToast(
                         Toast.LENGTH_LONG,
                         "No saved locations")
                     return@setOnClickListener
                 }
 
-                val locationDialogView = LinearLayout(activity).apply {
+                val locationDialogView = LinearLayout(it.context).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(32, 32, 32, 32)
                     layoutParams = LinearLayout.LayoutParams(
@@ -112,7 +111,7 @@ class LocationSpoofer: Hook("Location spoofer",
                     )
                 }
 
-                val textViewCoordinates = TextView(activity).apply {
+                val textViewCoordinates = TextView(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -127,7 +126,7 @@ class LocationSpoofer: Hook("Location spoofer",
                     setTextColor(Color.WHITE)
                 }
 
-                val spinnerLocations = Spinner(activity).apply {
+                val spinnerLocations = Spinner(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -138,7 +137,7 @@ class LocationSpoofer: Hook("Location spoofer",
                     }
                 }
 
-                val adapter = object : ArrayAdapter<String>(activity!!, android.R.layout.simple_spinner_item, locationNames) {
+                val adapter = object : ArrayAdapter<String>(it.context, android.R.layout.simple_spinner_item, locationNames) {
                     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                         return getCustomView(position, convertView, parent)
                     }
@@ -148,7 +147,7 @@ class LocationSpoofer: Hook("Location spoofer",
                     }
 
                     private fun getCustomView(position: Int, convertView: View?, parent: ViewGroup): View {
-                        val view = (convertView as? TextView) ?: TextView(activity).apply {
+                        val view = (convertView as? TextView) ?: TextView(it.context).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -179,7 +178,7 @@ class LocationSpoofer: Hook("Location spoofer",
                 DrawableCompat.setTint(wrapDrawable, Color.WHITE)
                 spinnerLocations.background = wrapDrawable
 
-                val buttonCopy = Button(activity).apply {
+                val buttonCopy = Button(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -193,11 +192,11 @@ class LocationSpoofer: Hook("Location spoofer",
                     setTextColor(Color.WHITE)
                     setOnClickListener {
                         Utils.copyToClipboard("Coordinates",
-                            textViewCoordinates.text.toString(), modContext)
+                            textViewCoordinates.text.toString())
                     }
                 }
 
-                val buttonSet = Button(activity).apply {
+                val buttonSet = Button(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -211,11 +210,11 @@ class LocationSpoofer: Hook("Location spoofer",
                     setTextColor(Color.WHITE)
                     setOnClickListener {
                         Config.put("current_location", textViewCoordinates.text.toString())
-                        modContext.showToast(Toast.LENGTH_LONG, "Successfully teleported to ${textViewCoordinates.text}")
+                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully teleported to ${textViewCoordinates.text}")
                     }
                 }
 
-                val buttonOpen = Button(activity).apply {
+                val buttonOpen = Button(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -236,7 +235,7 @@ class LocationSpoofer: Hook("Location spoofer",
                     }
                 }
 
-                val buttonDelete = Button(activity).apply {
+                val buttonDelete = Button(it.context).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -250,16 +249,16 @@ class LocationSpoofer: Hook("Location spoofer",
                     setTextColor(Color.WHITE)
                     setOnClickListener {
                         val name = spinnerLocations.selectedItem.toString()
-                        modContext.database.deleteLocation(name)
+                        GrindrPlus.database.deleteLocation(name)
 
-                        locations = modContext.database.getLocations()
+                        locations = GrindrPlus.database.getLocations()
                         locationNames = locations.map { it.first }
                         coordinatesMap = locations.associate { it.first to
                                 "${it.second.first}, ${it.second.second}" }
                         adapter.clear()
                         adapter.addAll(locationNames)
 
-                        modContext.showToast(Toast.LENGTH_LONG, "Location deleted")
+                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Location deleted")
                     }
                 }
 
@@ -269,15 +268,12 @@ class LocationSpoofer: Hook("Location spoofer",
                     locationDialogView.addView(view)
                 }
 
-                activity.runOnUiThread {
-                    AlertDialog.Builder(activity).apply {
-                        setTitle("Teleport Locations")
-                        setView(locationDialogView)
-                        setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
-                        show()
-                    }
+                AlertDialog.Builder(it.context).apply {
+                    setTitle("Teleport Locations")
+                    setView(locationDialogView)
+                    setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+                    show()
                 }
-
             }
 
             chatBottomToolbarLinearLayout.addView(customLocationButton)

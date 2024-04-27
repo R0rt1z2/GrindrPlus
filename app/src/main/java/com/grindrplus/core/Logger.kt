@@ -1,19 +1,17 @@
 package com.grindrplus.core
 
-import java.io.File
 import android.util.Log
 import de.robv.android.xposed.XposedBridge
+import java.io.File
 
-class Logger(private val logFile: String) {
+class Logger(logFile: String) {
     private val LOG_FILE = File(logFile)
     private val LOG_TAG = "GrindrPlus"
     private val MAX_LOG_SIZE = 1024 * 1024 * 5 // 5 MB
 
     init {
         try {
-            if (!LOG_FILE.exists() || LOG_FILE.readText().isEmpty()) {
-                LOG_FILE.createNewFile()
-            }
+            LOG_FILE.createNewFile()
         } catch (e: Exception) {
             Log.wtf(LOG_TAG, "Failed to create log file ($logFile): ${e.message}")
         }

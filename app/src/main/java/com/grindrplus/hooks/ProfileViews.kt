@@ -23,7 +23,7 @@ class ProfileViews: Hook("Profile views",
             val service = param.getResult()
             if (service?.javaClass?.let { profileRestServiceClass?.isAssignableFrom(it) } == true) {
                 param.setResult(profileRestServiceClass?.let {
-                    createServiceProxy(context, service, it, methodBlacklist)
+                    createServiceProxy(service, it, methodBlacklist)
                 })
             }
         }

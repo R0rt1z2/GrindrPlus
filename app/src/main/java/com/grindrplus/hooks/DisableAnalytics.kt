@@ -1,9 +1,9 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.hook
 import com.grindrplus.core.Utils.createServiceProxy
 import com.grindrplus.utils.Hook
+import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.hook
 
 class DisableAnalytics: Hook("Disable analytics",
     "Disable Grindr analytics (data collection)") {
@@ -17,7 +17,7 @@ class DisableAnalytics: Hook("Disable analytics",
             val service = param.getResult()
             if (service?.javaClass?.let { analyticsRestServiceClass?.isAssignableFrom(it) } == true) {
                 param.setResult(analyticsRestServiceClass?.let {
-                    createServiceProxy(context, service, it) // Blacklist all methods
+                    createServiceProxy(service, it) // Blacklist all methods
                 })
             }
         }

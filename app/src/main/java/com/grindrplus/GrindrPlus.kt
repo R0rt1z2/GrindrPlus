@@ -1,112 +1,117 @@
 package com.grindrplus
 
+import Database
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
+import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Toast
 import com.grindrplus.core.Config
-import com.grindrplus.core.Constants.TARGET_GRINDR_PKG_VERSION_NAME
-import com.grindrplus.core.ModContext
-import com.grindrplus.utils.HookAdapter
-import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.hook
+import com.grindrplus.core.Logger
+import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
-import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
 import kotlin.system.measureTimeMillis
 
-class GrindrPlus(
-    lpparam: LoadPackageParam,
-    private val dexClassLoader: DexClassLoader) {
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        lateinit var appContext: ModContext private set
-        lateinit var classLoader: ClassLoader private set
-        lateinit var loadPackageParam: LoadPackageParam private set
-    }
+private const val TAG = "GrindrPlus"
 
-    private fun hookMainActivity(methodName: String, stage: HookStage =
-        HookStage.AFTER, block: Activity.(param: HookAdapter) -> Unit) {
-        Activity::class.java.hook(methodName, stage) { param ->
-            val activity = param.thisObject() as Activity
-            if (!activity.packageName.equals(TARGET_GRINDR_PKG_VERSION_NAME)) return@hook
-            block(activity, param)
-        }
-    }
+@SuppressLint("StaticFieldLeak")
+object GrindrPlus {
+    lateinit var context: Context
+        private set
+    lateinit var classLoader: ClassLoader
+        private set
+    lateinit var logger: Logger
+        private set
+    lateinit var database: Database
+        private set
 
-    init {
-        loadPackageParam = lpparam
+    lateinit var hookManager: HookManager
 
-        Application::class.java.hook("attach", HookStage.BEFORE) { param ->
-            appContext = ModContext(
-                androidContext = param.arg<Context>(0)
-                    .also { classLoader = it.classLoader },
-                dexClassLoader = dexClassLoader
-            )
+    var currentActivity: Activity? = null
+        private set
 
-            if (appContext.pkgVersionName != BuildConfig.TARGET_GRINDR_VERSION) {
-                appContext.logger.log("Installed Grindr ${appContext.pkgVersionName} mismatched" +
-                        " with target version $TARGET_GRINDR_PKG_VERSION_NAME.")
-                appContext.showToast(Toast.LENGTH_LONG, "Installed Grindr ${appContext
-                    .pkgVersionName} mismatched" + "with target version $TARGET_GRINDR_PKG_VERSION_NAME.")
-                return@hook
+    fun init(modulePath: String, application: Application) {
+        Log.d(TAG, "Initializing GrindrPlus with module path: $modulePath, application: $application")
+
+        this.context = application.applicationContext
+        this.classLoader = DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
+        this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
+        this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
+        this.hookManager = HookManager()
+
+        application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+
+            override fun onActivityStarted(activity: Activity) {}
+
+            override fun onActivityResumed(activity: Activity) {
+                currentActivity = activity
             }
 
-            /**
-             * Hacky but works for now. Keep the track of the current activity in
-             * case we need to execute some UI-related code in the UI thread.
-             */
-            appContext.androidContext.classLoader.loadClass("android.app.Instrumentation")
-                ?.hook("newActivity", HookStage.AFTER) { param ->
-                    val resultActivity = param.getResult() as Activity
-                    val excludedActivities = setOf("ChatRoomPhotosActivity",
-                        "ProfilesActivity", "FullScreenExpiringImageActivity")
-
-                    if (appContext.currentActivity?.javaClass?.simpleName == "ChatActivityV2" &&
-                        resultActivity.javaClass.simpleName in excludedActivities) return@hook
-
-                    appContext.currentActivity = param.getResult() as Activity
-                }
-
-            appContext.apply {
-                runCatching {
-                    measureTimeMillis {
-                        runBlocking {
-                            init(this)
-                        }
-                    }.also {
-                        logger.log("Initialization completed in $it ms.")
-                    }
-                }.onFailure {
-                    logger.log("Failed to initialize: ${it.message}")
-                    showToast(Log.ERROR, "Failed to initialize: ${it.message}")
+            override fun onActivityPaused(activity: Activity) {
+                if (currentActivity == activity) {
+                    currentActivity = null
                 }
             }
 
-            hookMainActivity("onCreate") { param ->
-                appContext.mainActivity = this
-            }
+            override fun onActivityStopped(activity: Activity) {}
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
+
+        try {
+            val initTime = measureTimeMillis { init() }
+            logger.log("Initialization completed in $initTime ms.")
+        } catch (e: Exception) {
+            logger.log("Failed to initialize: ${e.message}")
+            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${e.message}")
         }
     }
 
-    private fun init(scope: CoroutineScope) {
-        with (appContext) {
-            logger.log("Initializing GrindrPlus...")
-            Config.initialize(appContext.androidContext)
+    private fun init() {
+        logger.log("Initializing GrindrPlus...")
+        Config.initialize(context)
 
-            /**
-             * Emergency reset of the database if the flag is set.
-             */
-            if ((Config.get("reset_database", false) as Boolean)) {
-                appContext.logger.log("Resetting database...")
-                appContext.database.deleteDatabase()
-                Config.put("reset_database", false)
-            }
+        /**
+         * Emergency reset of the database if the flag is set.
+         */
+        if ((Config.get("reset_database", false) as Boolean)) {
+            logger.log("Resetting database...")
+            database.deleteDatabase()
+            Config.put("reset_database", false)
+        }
 
-            hooks.init()
+        hookManager.init()
+    }
+
+    fun runOnMainThread(block: Runnable) {
+        Handler(context.mainLooper).post(block)
+    }
+
+    fun withCurrentActivityOnMainThread(block: (Activity) -> Unit) {
+        currentActivity?.let { activity ->
+            runOnMainThread { block(activity) }
+        }
+    }
+
+    fun showToast(duration: Int, message: String) {
+        runOnMainThread {
+            Toast.makeText(context, message, duration).show()
+        }
+    }
+
+    fun loadClass(name: String): Class<*>? {
+        return try { 
+            classLoader.loadClass(name)
+        } catch (e: ClassNotFoundException) {
+            logger.log("Failed to load class: $name")
+            null
         }
     }
 }

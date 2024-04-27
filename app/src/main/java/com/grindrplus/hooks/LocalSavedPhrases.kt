@@ -1,12 +1,12 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.core.ModContext
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import java.lang.reflect.Proxy
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.Constructor
+import java.lang.reflect.Proxy
 
 class LocalSavedPhrases: Hook("Local saved phrases",
     "Save unlimited phrases locally") {
@@ -28,18 +28,19 @@ override fun init() {
         param.setResult(
             when {
                 chatRestServiceClass?.isAssignableFrom(service.javaClass) == true ->
-                    createChatRestServiceProxy(context, service, createSuccess!!)
+                    createChatRestServiceProxy(service, createSuccess!!)
                 phrasesRestServiceClass?.isAssignableFrom(service.javaClass) == true ->
-                    createPhrasesRestServiceProxy(context, service, createSuccess!!)
+                    createPhrasesRestServiceProxy(service, createSuccess!!)
                 else -> service
             }
         )
     }
 }
 
-    fun createChatRestServiceProxy(context: ModContext,
-                                   originalService: Any,
-                                   createSuccess: Constructor<*>): Any {
+    fun createChatRestServiceProxy(
+        originalService: Any,
+        createSuccess: Constructor<*>
+    ): Any {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
@@ -48,23 +49,23 @@ override fun init() {
             when (method.name) {
                 "w" -> { // Annotated with @POST("v3/me/prefs/phrases")
                     val phrase = getObjectField(args[0], "phrase") as String
-                    val currentPhrases = context.database.getPhraseList()
-                    var index = context.database.getCurrentPhraseIndex() + 1
+                    val currentPhrases = GrindrPlus.database.getPhraseList()
+                    var index = GrindrPlus.database.getCurrentPhraseIndex() + 1
                     while (currentPhrases.any { it.get("phraseId") == index }) index++
-                    context.database.addPhrase(index, phrase, 0, System.currentTimeMillis())
+                    GrindrPlus.database.addPhrase(index, phrase, 0, System.currentTimeMillis())
                     val response = findClass(addSavedPhraseResponse)?.constructors?.first()
                         ?.newInstance(index.toString())
                     createSuccess.newInstance(response)
                 }
                 "o" -> { // Annotated with @DELETE("v3/me/prefs/phrases/{id}")
-                    val index = context.database.getCurrentPhraseIndex()
-                    context.database.deletePhrase(index)
+                    val index = GrindrPlus.database.getCurrentPhraseIndex()
+                    GrindrPlus.database.deletePhrase(index)
                     createSuccess.newInstance(Unit)
                 }
                 "C" -> { // Annotated with @POST("v4/phrases/frequency/{id}")
-                    val index = context.database.getCurrentPhraseIndex()
-                    val phrase = context.database.getPhrase(index)
-                    context.database.updatePhrase(index,
+                    val index = GrindrPlus.database.getCurrentPhraseIndex()
+                    val phrase = GrindrPlus.database.getPhrase(index)
+                    GrindrPlus.database.updatePhrase(index,
                         phrase.getAsString("text"),
                         phrase.getAsInteger("frequency") + 1,
                         System.currentTimeMillis()
@@ -76,9 +77,10 @@ override fun init() {
         }
     }
 
-    fun createPhrasesRestServiceProxy(context: ModContext,
-                                      originalService: Any,
-                                      createSuccess: Constructor<*>): Any {
+    fun createPhrasesRestServiceProxy(
+        originalService: Any,
+        createSuccess: Constructor<*>
+    ): Any {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
@@ -86,12 +88,12 @@ override fun init() {
         ) { proxy, method, args ->
             when (method.name) {
                 "a" -> { // Annotated with @GET("v3/me/prefs")
-                    val currentPhrases = context.database.getPhraseList()
+                    val currentPhrases = GrindrPlus.database.getPhraseList()
                     val phrases = currentPhrases.associateWith { phrase ->
                         val text = phrase.getAsString("text")
                         val timestamp = phrase.getAsLong("timestamp")
                         val frequency = phrase.getAsInteger("frequency")
-                        context.loadClass(phraseModel)?.constructors?.first()?.newInstance(
+                        GrindrPlus.loadClass(phraseModel)?.constructors?.first()?.newInstance(
                             phrase.getAsString("phraseId"), text, timestamp, frequency
                         )
                     }
