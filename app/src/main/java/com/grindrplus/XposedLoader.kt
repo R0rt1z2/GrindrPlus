@@ -20,10 +20,7 @@ class XposedLoader : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (lpparam.packageName != GRINDR_PACKAGE_NAME) {
-            XposedBridge.log("Skipping package: ${lpparam.packageName}")
-            return
-        }
+        if (lpparam.packageName != GRINDR_PACKAGE_NAME) return
 
         Application::class.java.hook("onCreate", HookStage.AFTER) {
             val application = it.thisObject()
