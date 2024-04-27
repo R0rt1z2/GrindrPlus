@@ -94,7 +94,7 @@ object GrindrPlus {
         Handler(context.mainLooper).post(block)
     }
 
-    fun onMainThreadWithCurrentActivity(block: (Activity) -> Unit) {
+    fun runOnMainThreadWithCurrentActivity(block: (Activity) -> Unit) {
         runOnMainThread {
             currentActivity?.let { activity ->
                 block(activity)

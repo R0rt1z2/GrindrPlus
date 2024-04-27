@@ -19,7 +19,7 @@ class CommandHandler(
         val command = args.firstOrNull() ?: return
 
         if (command == "help") {
-            GrindrPlus.onMainThreadWithCurrentActivity { activity ->
+            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
                 AlertDialog.Builder(activity)
                     .setTitle("Help")
                     .setMessage(commandModules.joinToString("\n") { it.getHelp() }.drop(1))

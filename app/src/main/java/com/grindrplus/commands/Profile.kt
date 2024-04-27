@@ -23,7 +23,7 @@ class Profile(recipient: String, sender: String) : CommandModule(recipient, send
     @SuppressLint("SetTextI18n")
     @Command("id", help = "Get and copy profile IDs")
     private fun id(args: List<String>) {
-        GrindrPlus.onMainThreadWithCurrentActivity { activity ->
+        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
             val dialogView = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(60, 0, 60, 0)
