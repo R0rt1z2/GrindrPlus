@@ -23,7 +23,8 @@ import com.grindrplus.ui.colors.Colors
 
 class HooksFragment : Fragment() {
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         val context = requireContext()
         Config.initialize(context)
 
@@ -66,8 +67,11 @@ class HooksFragment : Fragment() {
 
         val manageHooksTitle = AppCompatTextView(context).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(Utils.getId(
-                    "TextAppearanceH6AllCaps", "styles", context))
+                setTextAppearance(
+                    Utils.getId(
+                        "TextAppearanceH6AllCaps", "styles", context
+                    )
+                )
             }
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -83,7 +87,10 @@ class HooksFragment : Fragment() {
         }
 
         val subLinearLayout = LinearLayout(context).apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
             setPadding(50, 10, 50, 10)
             orientation = LinearLayout.VERTICAL
         }
@@ -93,8 +100,10 @@ class HooksFragment : Fragment() {
         val hooks = Config.getHooksSettings()
         hooks.forEach { (hookName, pair) ->
             if (hookName != "Mod settings") {
-                val hookView = createHookSwitch(context,
-                    hookName, pair.second, pair.first)
+                val hookView = createHookSwitch(
+                    context,
+                    hookName, pair.second, pair.first
+                )
                 subLinearLayout.addView(hookView)
             }
         }
@@ -132,7 +141,12 @@ class HooksFragment : Fragment() {
         container.addView(appBarLayout)
     }
 
-    private fun createHookSwitch(context: Context, hookName: String, initialState: Boolean, description: String): View {
+    private fun createHookSwitch(
+        context: Context,
+        hookName: String,
+        initialState: Boolean,
+        description: String
+    ): View {
         val hookVerticalLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -185,7 +199,8 @@ class HooksFragment : Fragment() {
             ).apply {
                 topMargin = TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP, 4f,
-                    resources.displayMetrics).toInt()
+                    resources.displayMetrics
+                ).toInt()
             }
             setTextColor(Colors.text_primary_dark_bg)
             typeface = Utils.getFont("ibm_plex_sans_fonts", context)
@@ -204,7 +219,10 @@ class HooksFragment : Fragment() {
     private fun getActionBarSize(context: Context): Int {
         val typedValue = TypedValue()
         if (context.theme.resolveAttribute(android.R.attr.actionBarSize, typedValue, true)) {
-            return TypedValue.complexToDimensionPixelSize(typedValue.data, context.resources.displayMetrics)
+            return TypedValue.complexToDimensionPixelSize(
+                typedValue.data,
+                context.resources.displayMetrics
+            )
         }
         return 0
     }

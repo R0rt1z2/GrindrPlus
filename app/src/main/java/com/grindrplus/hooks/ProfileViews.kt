@@ -7,7 +7,7 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils.findPOSTMethod
 import com.grindrplus.utils.hook
 
-class ProfileViews: Hook(
+class ProfileViews : Hook(
     "Profile views",
     "Don't let others know you viewed their profile"
 ) {
@@ -30,11 +30,14 @@ class ProfileViews: Hook(
 
         findClass("retrofit2.Retrofit")
             ?.hook("create", HookStage.AFTER) { param ->
-            val service = param.getResult()
-            if (service != null && profileRestServiceClass.isAssignableFrom(service.javaClass)) {
-                val proxy = createServiceProxy(service, profileRestServiceClass, methodBlacklist.toTypedArray())
-                param.setResult(proxy)
+                val service = param.result
+                if (service != null && profileRestServiceClass.isAssignableFrom(service.javaClass)) {
+                    param.result = createServiceProxy(
+                        service,
+                        profileRestServiceClass,
+                        methodBlacklist.toTypedArray()
+                    )
+                }
             }
-        }
     }
 }

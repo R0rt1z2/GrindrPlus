@@ -6,7 +6,7 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 
-class AllowScreenshots: Hook(
+class AllowScreenshots : Hook(
     "Allow screenshots",
     "Allow screenshots everywhere in the app"
 ) {

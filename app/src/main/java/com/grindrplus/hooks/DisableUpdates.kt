@@ -14,11 +14,12 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
-class DisableUpdates: Hook(
+class DisableUpdates : Hook(
     "Disable updates",
     "Disable forced updates"
 ) {
-    private val versionInfoEndpoint = "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
+    private val versionInfoEndpoint =
+        "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
     private val appUpdateInfo = "com.google.android.play.core.appupdate.AppUpdateInfo"
     private val appUpgradeManager = "com.grindrapp.android.manager.AppUpgradeManager"
     private val appConfiguration = "com.grindrapp.android.base.config.AppConfiguration"
@@ -28,21 +29,25 @@ class DisableUpdates: Hook(
     override fun init() {
         findClass(appUpdateInfo)
             ?.hook("updateAvailability", HookStage.BEFORE) { param ->
-                param.setResult(1)
+                param.result = 1
             }
 
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
             ?.hook("zb.o", HookStage.BEFORE) { param ->
-                param.setResult(null)
+                param.result = null
             }
 
         CoroutineScope(Dispatchers.Main).launch {
             fetchLatestVersionInfo()
-            if (versionName < GrindrPlus.context.packageManager.getPackageInfo(GrindrPlus.context.packageName, 0).versionName) {
+            if (versionName < GrindrPlus.context.packageManager.getPackageInfo(
+                    GrindrPlus.context.packageName,
+                    0
+                ).versionName
+            ) {
                 findClass(appConfiguration)?.hookConstructor(HookStage.AFTER) { param ->
-                    setObjectField(param.thisObject(), "a", versionName)
-                    setObjectField(param.thisObject(), "b", versionCode)
-                    setObjectField(param.thisObject(), "u", "$versionName.$versionCode")
+                    setObjectField(param.thisObject, "a", versionName)
+                    setObjectField(param.thisObject, "b", versionCode)
+                    setObjectField(param.thisObject, "u", "$versionName.$versionCode")
                 }
             }
         }

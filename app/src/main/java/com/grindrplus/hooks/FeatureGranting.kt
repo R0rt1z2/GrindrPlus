@@ -8,7 +8,7 @@ import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
-class FeatureGranting: Hook(
+class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
@@ -27,31 +27,37 @@ class FeatureGranting: Hook(
 
         findClass(featureModel)
             ?.hook("e", HookStage.BEFORE) { param ->
-                param.setResult(true)
+                param.result = true
             }
 
         findClass(featureModel)
             ?.hook("f", HookStage.BEFORE) { param ->
-                param.setResult(true)
+                param.result = true
             }
 
         featureFlagsClass?.hook(
-            "isEnabled", HookStage.BEFORE) { param ->
-                val featureFlagName = getObjectField(param.thisObject(),
-                    "featureFlagName") as String
-                if (featureManager.isManaged(featureFlagName)) {
-                    param.setResult(featureManager.isEnabled(featureFlagName))
-                }
+            "isEnabled", HookStage.BEFORE
+        ) { param ->
+            val featureFlagName = getObjectField(
+                param.thisObject,
+                "featureFlagName"
+            ) as String
+            if (featureManager.isManaged(featureFlagName)) {
+                param.result = featureManager.isEnabled(featureFlagName)
             }
+        }
 
         featureFlagsClass?.hook(
-            "isDisabled", HookStage.BEFORE) { param ->
-                val featureFlagName = getObjectField(param.thisObject(),
-                    "featureFlagName") as String
-                if (featureManager.isManaged(featureFlagName)) {
-                    param.setResult(!featureManager.isEnabled(featureFlagName))
-                }
+            "isDisabled", HookStage.BEFORE
+        ) { param ->
+            val featureFlagName = getObjectField(
+                param.thisObject,
+                "featureFlagName"
+            ) as String
+            if (featureManager.isManaged(featureFlagName)) {
+                param.result = !featureManager.isEnabled(featureFlagName)
             }
+        }
 
         findClass(settingDistanceVisibilityViewModel)
             ?.hookConstructor(HookStage.BEFORE) { param ->
@@ -61,12 +67,12 @@ class FeatureGranting: Hook(
         listOf(upsellsV8Model, insertsModel).forEach { model ->
             findClass(model)
                 ?.hook("getMpuFree", HookStage.BEFORE) { param ->
-                    param.setResult(Int.MAX_VALUE)
+                    param.result = Int.MAX_VALUE
                 }
 
             findClass(model)
                 ?.hook("getMpuXtra", HookStage.BEFORE) { param ->
-                    param.setResult(0)
+                    param.result = 0
                 }
         }
     }

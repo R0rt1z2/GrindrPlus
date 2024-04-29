@@ -7,7 +7,7 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.hook
 
-class ChatIndicators: Hook(
+class ChatIndicators : Hook(
     "Chat indicators",
     "Don't show chat markers / indicators to others"
 ) {
@@ -29,11 +29,14 @@ class ChatIndicators: Hook(
 
         findClass("retrofit2.Retrofit")
             ?.hook("create", HookStage.AFTER) { param ->
-            val service = param.getResult()
-            if (service != null && service.javaClass.let { chatRestServiceClass.isAssignableFrom(it) }) {
-                val proxy = createServiceProxy(service, chatRestServiceClass, methodBlacklist.toTypedArray())
-                param.setResult(proxy)
+                val service = param.result
+                if (service != null && chatRestServiceClass.isAssignableFrom(service.javaClass)) {
+                    param.result = createServiceProxy(
+                        service,
+                        chatRestServiceClass,
+                        methodBlacklist.toTypedArray()
+                    )
+                }
             }
-        }
     }
 }

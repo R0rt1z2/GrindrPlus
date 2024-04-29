@@ -2,28 +2,34 @@ package com.grindrplus.core
 
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
 object Config {
-    private lateinit var configFilePath: String
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    private val scope = CoroutineScope(newSingleThreadContext("Config"))
+    private lateinit var configFile: File
     private lateinit var config: JSONObject
 
     fun initialize(context: Context) {
-        configFilePath = File(context.filesDir, "grindrplus.json").path
-        val file = File(configFilePath)
-        if (!file.exists()) {
+        configFile = File(context.filesDir, "grindrplus.json")
+        if (!configFile.exists()) {
             try {
-                file.createNewFile()
+                configFile.createNewFile()
                 val initialConfig = JSONObject().put("hooks", JSONObject())
                 writeConfig(initialConfig)
             } catch (e: IOException) {
                 Log.e("GrindrPlus", "Failed to create config file", e)
             }
         }
-        config = readConfig(file)
+        config = readConfig(configFile)
     }
 
     private fun readConfig(file: File): JSONObject {
@@ -37,7 +43,7 @@ object Config {
 
     private fun writeConfig(json: JSONObject) {
         try {
-            FileOutputStream(File(configFilePath)).use { fos ->
+            FileOutputStream(configFile).use { fos ->
                 fos.write(json.toString(4).toByteArray(Charsets.UTF_8))
             }
         } catch (e: IOException) {
@@ -47,7 +53,7 @@ object Config {
 
     fun put(name: String, value: Any) {
         config.put(name, value)
-        writeConfig(config)
+        scope.launch { writeConfig(config) }
     }
 
     fun get(name: String, default: Any): Any {
@@ -57,7 +63,7 @@ object Config {
     fun setHookEnabled(hookName: String, enabled: Boolean) {
         val hooks = config.optJSONObject("hooks") ?: JSONObject().also { config.put("hooks", it) }
         hooks.optJSONObject(hookName)?.put("enabled", enabled)
-        writeConfig(config)
+        scope.launch { writeConfig(config) }
     }
 
     fun isHookEnabled(hookName: String): Boolean {
@@ -67,7 +73,8 @@ object Config {
 
     fun initHookSettings(name: String, description: String, state: Boolean) {
         if (config.optJSONObject("hooks")?.optJSONObject(name) == null) {
-            val hooks = config.optJSONObject("hooks") ?: JSONObject().also { config.put("hooks", it) }
+            val hooks =
+                config.optJSONObject("hooks") ?: JSONObject().also { config.put("hooks", it) }
             hooks.put(name, JSONObject().apply {
                 put("description", description)
                 put("enabled", state)

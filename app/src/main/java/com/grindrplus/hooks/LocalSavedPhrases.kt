@@ -11,7 +11,7 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.Constructor
 import java.lang.reflect.Proxy
 
-class LocalSavedPhrases: Hook(
+class LocalSavedPhrases : Hook(
     "Local saved phrases",
     "Save unlimited phrases locally"
 ) {
@@ -19,7 +19,8 @@ class LocalSavedPhrases: Hook(
     private val createSuccessResult = "ka.a\$b"
     private val retrofit = "retrofit2.Retrofit"
     private val chatRestService = "com.grindrapp.android.chat.api.ChatRestService"
-    private val addSavedPhraseResponse = "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
+    private val addSavedPhraseResponse =
+        "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
     private val phrasesResponse = "com.grindrapp.android.model.PhrasesResponse"
     private val phraseModel = "com.grindrapp.android.persistence.model.Phrase"
 
@@ -29,17 +30,17 @@ class LocalSavedPhrases: Hook(
         val phrasesRestServiceClass = findClass(phrasesRestService) ?: return
 
         findClass(retrofit)?.hook("create", HookStage.AFTER) { param ->
-            val service = param.getResult()
+            val service = param.result
             if (service != null) {
-                param.setResult(
-                    when {
-                        chatRestServiceClass.isAssignableFrom(service.javaClass) ->
-                            createChatRestServiceProxy(service, createSuccess)
-                        phrasesRestServiceClass.isAssignableFrom(service.javaClass) ->
-                            createPhrasesRestServiceProxy(service, createSuccess)
-                        else -> service
-                    }
-                )
+                param.result = when {
+                    chatRestServiceClass.isAssignableFrom(service.javaClass) ->
+                        createChatRestServiceProxy(service, createSuccess)
+
+                    phrasesRestServiceClass.isAssignableFrom(service.javaClass) ->
+                        createPhrasesRestServiceProxy(service, createSuccess)
+
+                    else -> service
+                }
             }
         }
     }
@@ -64,21 +65,25 @@ class LocalSavedPhrases: Hook(
                         ?.newInstance(index.toString())
                     createSuccess.newInstance(response)
                 }
+
                 method.isDELETE("v3/me/prefs/phrases/{id}") -> {
                     val index = GrindrPlus.database.getCurrentPhraseIndex()
                     GrindrPlus.database.deletePhrase(index)
                     createSuccess.newInstance(Unit)
                 }
+
                 method.isPOST("v4/phrases/frequency/{id}") -> {
                     val index = GrindrPlus.database.getCurrentPhraseIndex()
                     val phrase = GrindrPlus.database.getPhrase(index)
-                    GrindrPlus.database.updatePhrase(index,
+                    GrindrPlus.database.updatePhrase(
+                        index,
                         phrase.getAsString("text"),
                         phrase.getAsInteger("frequency") + 1,
                         System.currentTimeMillis()
                     )
                     createSuccess.newInstance(Unit)
                 }
+
                 else -> invocationHandler.invoke(proxy, method, args)
             }
         }
@@ -108,6 +113,7 @@ class LocalSavedPhrases: Hook(
                         ?.constructors?.find { it.parameterTypes.size == 1 }?.newInstance(phrases)
                     createSuccess.newInstance(phrasesResponse)
                 }
+
                 else -> invocationHandler.invoke(proxy, method, args)
             }
         }

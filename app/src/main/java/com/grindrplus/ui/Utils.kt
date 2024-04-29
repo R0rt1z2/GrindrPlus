@@ -21,8 +21,10 @@ object Utils {
     }
 
     fun getDrawable(name: String, context: Context): Drawable? {
-        return ResourcesCompat.getDrawable(context.resources,
-            getId(name, "drawable", context), null)
+        return ResourcesCompat.getDrawable(
+            context.resources,
+            getId(name, "drawable", context), null
+        )
     }
 
     fun dpToPx(dp: Float, context: Context): Float {

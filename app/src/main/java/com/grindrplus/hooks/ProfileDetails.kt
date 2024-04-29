@@ -15,7 +15,7 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 import kotlin.math.roundToInt
 
-class ProfileDetails: Hook(
+class ProfileDetails : Hook(
     "Profile details",
     "Add extra fields and details to profiles"
 ) {
@@ -31,7 +31,7 @@ class ProfileDetails: Hook(
     override fun init() {
         findClass(serverDrivenCascadeCachedState)
             ?.hook("getItems", HookStage.AFTER) { param ->
-                (param.getResult() as List<*>).filter {
+                (param.result as List<*>).filter {
                     (it?.javaClass?.name ?: "") == serverDrivenCascadeCachedProfile
                 }.forEach {
                     if (getObjectField(it, "isBoosting") as Boolean) {
@@ -54,7 +54,7 @@ class ProfileDetails: Hook(
                 val displayName = callMethod(param.arg(0), "getDisplayName") ?: profileId
                 setObjectField(param.arg(0), "displayName", displayName)
 
-                val viewBinding = getObjectField(param.thisObject(), "c")
+                val viewBinding = getObjectField(param.thisObject, "c")
                 val displayNameTextView = getObjectField(viewBinding, "c") as TextView
 
                 displayNameTextView.setOnLongClickListener {
@@ -68,11 +68,23 @@ class ProfileDetails: Hook(
                 displayNameTextView.setOnClickListener {
                     val properties = mapOf(
                         "Profile ID" to profileId,
-                        "Approximate distance" to getObjectField(param.arg(0), "approximateDistance") as Boolean,
-                        "Found via teleport" to getObjectField(param.arg(0), "foundViaTeleport") as Boolean,
+                        "Approximate distance" to getObjectField(
+                            param.arg(0),
+                            "approximateDistance"
+                        ) as Boolean,
+                        "Found via teleport" to getObjectField(
+                            param.arg(0),
+                            "foundViaTeleport"
+                        ) as Boolean,
                         "Favorite" to getObjectField(param.arg(0), "isFavorite") as Boolean,
-                        "From viewed me" to getObjectField(param.arg(0), "isFromViewedMe") as Boolean,
-                        "Inaccessible profile" to getObjectField(param.arg(0), "isInaccessibleProfile") as Boolean,
+                        "From viewed me" to getObjectField(
+                            param.arg(0),
+                            "isFromViewedMe"
+                        ) as Boolean,
+                        "Inaccessible profile" to getObjectField(
+                            param.arg(0),
+                            "isInaccessibleProfile"
+                        ) as Boolean,
                         "JWT boosting" to getObjectField(param.arg(0), "isJwtBoosting") as Boolean,
                         "New" to getObjectField(param.arg(0), "isNew") as Boolean,
                         "Teleporting" to getObjectField(param.arg(0), "isTeleporting") as Boolean,
@@ -81,7 +93,8 @@ class ProfileDetails: Hook(
 
                     val dialog = AlertDialog.Builder(it.context)
                         .setTitle("Hidden profile details")
-                        .setMessage(properties.map { (key, value) -> "• $key: $value" }.joinToString("\n"))
+                        .setMessage(properties.map { (key, value) -> "• $key: $value" }
+                            .joinToString("\n"))
                         .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                         .create()
 
@@ -94,38 +107,42 @@ class ProfileDetails: Hook(
                 val distance = param.arg<Double>(1)
                 val isFeet = param.arg<Boolean>(2)
 
-                param.setResult(if(isFeet){
+                param.result = if (isFeet) {
                     val feet = (distance * 3.280839895).roundToInt()
-                    if(feet < 5280) {
+                    if (feet < 5280) {
                         String.format("%d feet", feet)
                     } else {
                         String.format("%d miles %d feet", feet / 5280, feet % 5280)
                     }
                 } else {
                     val meters = distance.roundToInt()
-                    if(meters < 1000) {
+                    if (meters < 1000) {
                         String.format("%d meters", meters)
                     } else {
                         String.format("%d km %d m", meters / 1000, meters % 1000)
                     }
-                })
+                }
             }
 
         findClass(profileViewState)
             ?.hook("getWeight", HookStage.AFTER) { param ->
-                val weight = param.getResult()
-                val height = callMethod(param.thisObject(), "getHeight")
+                val weight = param.result
+                val height = callMethod(param.thisObject, "getHeight")
 
                 if (weight != null && height != null) {
-                    val BMI = calculateBMI("kg" in weight.toString(),
+                    val BMI = calculateBMI(
+                        "kg" in weight.toString(),
                         weight.toString().replace("kg", "").toDouble(),
-                        height.toString().replace("cm", "").toDouble())
-                    param.setResult("$weight - ${String.format("%.1f", BMI)} (${mapOf(
-                        "Underweight" to 18.5,
-                        "Normal weight" to 24.9,
-                        "Overweight" to 29.9,
-                        "Obese" to Double.MAX_VALUE
-                    ).entries.first { it.value > BMI }.key})")
+                        height.toString().replace("cm", "").toDouble()
+                    )
+                    param.result = "$weight - ${String.format("%.1f", BMI)} (${
+                        mapOf(
+                            "Underweight" to 18.5,
+                            "Normal weight" to 24.9,
+                            "Overweight" to 29.9,
+                            "Obese" to Double.MAX_VALUE
+                        ).entries.first { it.value > BMI }.key
+                    })"
                 }
             }
 

@@ -18,8 +18,10 @@ class Profile(
         if (args.isNotEmpty()) {
             return openProfile(args[0])
         } else {
-            GrindrPlus.showToast(Toast.LENGTH_LONG,
-                "Please provide valid ID")
+            GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Please provide valid ID"
+            )
         }
     }
 

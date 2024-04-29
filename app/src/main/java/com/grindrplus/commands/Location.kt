@@ -39,11 +39,13 @@ class Location(
                 Config.put("current_location", "$lat,$lon")
                 return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
             }
+
             args.size == 2 && args.all { arg -> arg.toDoubleOrNull() != null } -> {
                 val (lat, lon) = args.map { it.toDouble() }
                 Config.put("current_location", "$lat,$lon")
                 return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
             }
+
             else -> {
                 /**
                  * If we reached this point, the user has provided a name of a city.
@@ -52,8 +54,10 @@ class Location(
                 val location = GrindrPlus.database.getLocation(args.joinToString(" "))
                 if (location != null) {
                     Config.put("current_location", "${location.first},${location.second}")
-                    return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
-                            ", ${location.second}")
+                    return GrindrPlus.showToast(
+                        Toast.LENGTH_LONG, "Teleported to ${location.first}" +
+                                ", ${location.second}"
+                    )
                 } else {
                     /**
                      * No valid saved location was found, try to get the actual location.
@@ -62,8 +66,10 @@ class Location(
                     val location = getLocationFromNominatim(args.joinToString(" "))
                     return if (location != null) {
                         Config.put("current_location", "${location.first},${location.second}")
-                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.first}" +
-                                ", ${location.second}")
+                        GrindrPlus.showToast(
+                            Toast.LENGTH_LONG, "Teleported to ${location.first}" +
+                                    ", ${location.second}"
+                        )
                     } else {
                         GrindrPlus.showToast(Toast.LENGTH_LONG, "Location not found")
                     }
@@ -75,7 +81,7 @@ class Location(
     @Command(name = "save", aliases = ["sv"], help = "Save the current location")
     fun save(args: List<String>) {
         if (args.isEmpty()) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG,"Please provide a name for the location")
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a name for the location")
             return
         }
 
@@ -85,7 +91,10 @@ class Location(
             args.size == 1 -> Config.get("current_location", "") as String
             args.size == 2 && args[1].contains(",") -> args[1]
             args.size == 3 && args[1].toDoubleOrNull() != null && args[2].toDoubleOrNull() != null -> "${args[1]},${args[2]}"
-            args.size > 1 -> getLocationFromNominatim(args.drop(1).joinToString(" "))?.let { "${it.first},${it.second}" }
+            args.size > 1 -> getLocationFromNominatim(
+                args.drop(1).joinToString(" ")
+            )?.let { "${it.first},${it.second}" }
+
             else -> ""
         }
 
@@ -106,20 +115,26 @@ class Location(
     @Command(name = "delete", aliases = ["del"], help = "Delete a saved location")
     fun delete(args: List<String>) {
         if (args.isEmpty()) {
-            return GrindrPlus.showToast(Toast.LENGTH_LONG,
-                "Please provide a location to delete")
+            return GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Please provide a location to delete"
+            )
         }
 
         val name = args.joinToString(" ")
         val location = GrindrPlus.database.getLocation(name)
         if (location == null) {
-            return GrindrPlus.showToast(Toast.LENGTH_LONG,
-                "Location not found")
+            return GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Location not found"
+            )
         }
 
         GrindrPlus.database.deleteLocation(name)
-        return GrindrPlus.showToast(Toast.LENGTH_LONG,
-            "Location deleted")
+        return GrindrPlus.showToast(
+            Toast.LENGTH_LONG,
+            "Location deleted"
+        )
     }
 
     private fun getLocationFromNominatim(location: String): Pair<Double, Double>? {

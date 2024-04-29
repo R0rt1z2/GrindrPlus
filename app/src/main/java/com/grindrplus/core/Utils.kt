@@ -1,4 +1,3 @@
-
 package com.grindrplus.core
 
 import android.content.Context
@@ -14,40 +13,47 @@ object Utils {
         blacklist: Array<String> = emptyArray()
     ): Any {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
-        val createSuccess = GrindrPlus.loadClass("h9.a\$b")?.constructors?.firstOrNull()
+        val successConstructor = GrindrPlus.loadClass("ka.a\$b")?.constructors?.firstOrNull()
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
             arrayOf(serviceClass)
         ) { proxy, method, args ->
-            if (blacklist.isEmpty()) {
-                createSuccess?.newInstance(Unit) ?: invocationHandler.invoke(proxy, method, args)
+            if (successConstructor != null && (blacklist.isEmpty() || method.name in blacklist)) {
+                successConstructor.newInstance(Unit)
             } else {
-                if (method.name in blacklist) {
-                    createSuccess?.newInstance(Unit) ?: invocationHandler.invoke(proxy, method, args)
-                } else {
-                    invocationHandler.invoke(proxy, method, args)
-                }
+                invocationHandler.invoke(proxy, method, args)
             }
         }
     }
 
     fun openProfile(id: String) {
-        val profilesActivityClass = GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity")
+        val profilesActivityClass =
+            GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity")
         val profilesActivityInstance = profilesActivityClass?.getField("u0")?.get(null)
-        val referrerTypeClass = GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
+        val referrerTypeClass =
+            GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
         val referrerType = referrerTypeClass?.getField("NOTIFICATION")?.get(null)
-        val profilesActivityInnerClass = GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a")
+        val profilesActivityInnerClass =
+            GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a")
 
         val method = profilesActivityInnerClass?.declaredMethods?.find {
             it.parameterTypes.size == 3 && it.parameterTypes[2] == referrerTypeClass
         }
 
-        val intent = method?.invoke(profilesActivityInstance, GrindrPlus.context, id, referrerType) as Intent?
+        val intent = method?.invoke(
+            profilesActivityInstance,
+            GrindrPlus.context,
+            id,
+            referrerType
+        ) as Intent?
         intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        val generalDeepLinksClass = GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
+        val generalDeepLinksClass =
+            GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
         val startActivityMethod = generalDeepLinksClass?.getDeclaredMethod(
-            "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6", Context::class.java, Intent::class.java
+            "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6",
+            Context::class.java,
+            Intent::class.java
         )
 
         startActivityMethod?.invoke(null, GrindrPlus.context, intent)

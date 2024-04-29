@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-class UnlimitedAlbums: Hook(
+class UnlimitedAlbums : Hook(
     "Unlimited albums",
     "Allow to be able to view unlimited albums"
 ) {
@@ -25,24 +25,24 @@ class UnlimitedAlbums: Hook(
 
         findClass(albumContent)
             ?.hook("getRemainingViews", HookStage.BEFORE) { param ->
-                param.setResult(Int.MAX_VALUE)
+                param.result = Int.MAX_VALUE
             }
 
         albumModelClass.hook("getAlbumViewable", HookStage.BEFORE) { param ->
-            param.setResult(true)
+            param.result = true
         }
 
         albumModelClass.hook("getContent", HookStage.AFTER) { param ->
             /**
              * If we've already processed this object, return the cached value
              */
-            val cachedContent = albumCache[param.thisObject()]?.get("content")
+            val cachedContent = albumCache[param.thisObject]?.get("content")
             if (cachedContent != null) {
-                param.setResult(cachedContent)
+                param.result = cachedContent
                 return@hook
             }
 
-            val contentList = param.getResult() as List<*>
+            val contentList = param.result as List<*>
 
             /**
              * The first step is to find out if we're dealing with cover
@@ -54,7 +54,7 @@ class UnlimitedAlbums: Hook(
              */
             if (contentList.size == 1) return@hook
 
-            val albumId = getObjectField(param.thisObject(), "albumId") as Long
+            val albumId = getObjectField(param.thisObject, "albumId") as Long
             if (contentList.isNotEmpty()) {
                 // TODO: Check for race conditions
                 scope.launch {
@@ -97,13 +97,13 @@ class UnlimitedAlbums: Hook(
                         }
                     }
 
-                    //setObjectField(param.thisObject(), "contentCount", newContentsList.size)
-                    albumCache.getOrPut(param.thisObject()) { mutableMapOf() }["content"] =
+                    //setObjectField(param.thisObject, "contentCount", newContentsList.size)
+                    albumCache.getOrPut(param.thisObject) { mutableMapOf() }["content"] =
                         newContentsList
 
                     // TODO: Should we also hook other getters such as "getContentCount"?
 
-                    param.setResult(newContentsList)
+                    param.result = newContentsList
                 }
             }
         }

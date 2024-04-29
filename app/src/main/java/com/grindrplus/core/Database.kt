@@ -64,7 +64,8 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
                 put("imageURL", imageURL)
             }
             return writableDatabase.use { db ->
-                tables.find { it.name == "ExpiringPhotos" }?.update(db, values, mediaId.toString()) ?: -1
+                tables.find { it.name == "ExpiringPhotos" }?.update(db, values, mediaId.toString())
+                    ?: -1
             }
         }
     }
@@ -142,12 +143,17 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         synchronized(lock) {
             return readableDatabase.use { db ->
                 val locations = mutableListOf<Pair<String, Pair<Double, Double>>>()
-                db.query("TeleportLocations",
+                db.query(
+                    "TeleportLocations",
                     arrayOf("name", "latitude", "longitude"),
-                    null, null, null, null, null).use { cursor ->
+                    null, null, null, null, null
+                ).use { cursor ->
                     while (cursor.moveToNext()) {
-                        locations.add(Pair(cursor.getString(0),
-                            Pair(cursor.getDouble(1), cursor.getDouble(2)))
+                        locations.add(
+                            Pair(
+                                cursor.getString(0),
+                                Pair(cursor.getDouble(1), cursor.getDouble(2))
+                            )
                         )
                     }
                 }
@@ -156,7 +162,16 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         }
     }
 
-    fun addAlbumContent(contentId: Long, albumId: Long, contentType: String, url: String, isProcessing: Boolean, thumbUrl: String, coverUrl: String, remainingViews: Int): Long {
+    fun addAlbumContent(
+        contentId: Long,
+        albumId: Long,
+        contentType: String,
+        url: String,
+        isProcessing: Boolean,
+        thumbUrl: String,
+        coverUrl: String,
+        remainingViews: Int
+    ): Long {
         synchronized(lock) {
             val values = ContentValues().apply {
                 put("contentId", contentId)
@@ -174,7 +189,16 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         }
     }
 
-    fun updateAlbumContent(contentId: Long, albumId: Long, contentType: String, url: String, isProcessing: Boolean, thumbUrl: String, coverUrl: String, remainingViews: Int): Int {
+    fun updateAlbumContent(
+        contentId: Long,
+        albumId: Long,
+        contentType: String,
+        url: String,
+        isProcessing: Boolean,
+        thumbUrl: String,
+        coverUrl: String,
+        remainingViews: Int
+    ): Int {
         synchronized(lock) {
             val values = ContentValues().apply {
                 put("albumId", albumId)
@@ -204,7 +228,16 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
             return readableDatabase.use { db ->
                 tables.find { it.name == "Albums" }?.query(
                     db,
-                    arrayOf("contentId", "albumId", "contentType", "url", "isProcessing", "thumbUrl", "coverUrl", "remainingViews"),
+                    arrayOf(
+                        "contentId",
+                        "albumId",
+                        "contentType",
+                        "url",
+                        "isProcessing",
+                        "thumbUrl",
+                        "coverUrl",
+                        "remainingViews"
+                    ),
                     "contentId = ?",
                     arrayOf(contentId.toString())
                 )
@@ -216,11 +249,13 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         synchronized(lock) {
             return readableDatabase.use { db ->
                 val contentIds = mutableListOf<Long>()
-                db.query("Albums",
+                db.query(
+                    "Albums",
                     arrayOf("contentId"),
                     "albumId = ?",
                     arrayOf(albumId.toString()),
-                    null, null, null).use { cursor ->
+                    null, null, null
+                ).use { cursor ->
                     while (cursor.moveToNext()) {
                         contentIds.add(cursor.getLong(0))
                     }
@@ -234,9 +269,20 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         synchronized(lock) {
             return readableDatabase.use { db ->
                 val contents = mutableListOf<ContentValues>()
-                db.query("Albums",
-                    arrayOf("contentId", "albumId", "contentType", "url", "isProcessing", "thumbUrl", "coverUrl", "remainingViews"),
-                    null, null, null, null, null).use { cursor ->
+                db.query(
+                    "Albums",
+                    arrayOf(
+                        "contentId",
+                        "albumId",
+                        "contentType",
+                        "url",
+                        "isProcessing",
+                        "thumbUrl",
+                        "coverUrl",
+                        "remainingViews"
+                    ),
+                    null, null, null, null, null
+                ).use { cursor ->
                     while (cursor.moveToNext()) {
                         val values = ContentValues()
                         values.put("contentId", cursor.getLong(0))
@@ -277,7 +323,8 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
                 put("timestamp", timestamp)
             }
             return writableDatabase.use { db ->
-                tables.find { it.name == "SavedPhrases" }?.update(db, values, phraseId.toString()) ?: -1
+                tables.find { it.name == "SavedPhrases" }?.update(db, values, phraseId.toString())
+                    ?: -1
             }
         }
     }
@@ -306,10 +353,12 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
     fun getCurrentPhraseIndex(): Long {
         synchronized(lock) {
             return readableDatabase.use { db ->
-                db.query("SavedPhrases",
+                db.query(
+                    "SavedPhrases",
                     arrayOf("MAX(phraseId)"),
                     null, null,
-                    null, null, null).use { cursor ->
+                    null, null, null
+                ).use { cursor ->
                     if (cursor.moveToFirst()) {
                         cursor.getLong(0)
                     } else {
@@ -324,9 +373,11 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         synchronized(lock) {
             return readableDatabase.use { db ->
                 val phrases = mutableListOf<ContentValues>()
-                db.query("SavedPhrases",
+                db.query(
+                    "SavedPhrases",
                     arrayOf("phraseId", "text", "frequency", "timestamp"),
-                    null, null, null, null, null).use { cursor ->
+                    null, null, null, null, null
+                ).use { cursor ->
                     while (cursor.moveToNext()) {
                         val values = ContentValues()
                         values.put("phraseId", cursor.getLong(0))
@@ -342,7 +393,8 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
     }
 
     companion object {
-        @Volatile private var instance: Database? = null
+        @Volatile
+        private var instance: Database? = null
 
         fun getInstance(context: Context, databasePath: String? = null): Database =
             instance ?: synchronized(this) {
@@ -367,7 +419,12 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
             return db.delete(name, "$primaryKey = ?", arrayOf(primaryKeyValue))
         }
 
-        fun query(db: SQLiteDatabase, columns: Array<String>, selection: String, selectionArgs: Array<String>): ContentValues? {
+        fun query(
+            db: SQLiteDatabase,
+            columns: Array<String>,
+            selection: String,
+            selectionArgs: Array<String>
+        ): ContentValues? {
             db.query(name, columns, selection, selectionArgs, null, null, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     val values = ContentValues()

@@ -34,7 +34,7 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 
-class LocationSpoofer: Hook(
+class LocationSpoofer : Hook(
     "Location spoofer",
     "Spoof your location"
 ) {
@@ -46,28 +46,34 @@ class LocationSpoofer: Hook(
         val locationClass = findClass(location) ?: return
 
         if (Build.VERSION.SDK_INT >= 31) {
-            locationClass.hook("isMock",
-                HookStage.BEFORE) { param ->
-                param.setResult(false)
+            locationClass.hook(
+                "isMock",
+                HookStage.BEFORE
+            ) { param ->
+                param.result = false
             }
         }
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
             (Config.get("current_location", "") as String).takeIf {
-                it.isNotEmpty() }?.split(",")?.firstOrNull()
-                ?.toDoubleOrNull()?.let { param.setResult(it)
+                it.isNotEmpty()
+            }?.split(",")?.firstOrNull()
+                ?.toDoubleOrNull()?.let {
+                    param.result = it
                 }
         }
 
         locationClass.hook("getLongitude", HookStage.AFTER) { param ->
             (Config.get("current_location", "") as String).takeIf {
-                it.isNotEmpty() }?.split(",")?.lastOrNull()
-                ?.toDoubleOrNull()?.let { param.setResult(it)
+                it.isNotEmpty()
+            }?.split(",")?.lastOrNull()
+                ?.toDoubleOrNull()?.let {
+                    param.result = it
                 }
         }
 
         findClass(chatBottomToolbar)?.hookConstructor(HookStage.AFTER) { param ->
-            val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
+            val chatBottomToolbarLinearLayout = param.thisObject as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
             val customLocationButton = ImageButton(chatBottomToolbarLinearLayout.context).apply {
@@ -79,27 +85,48 @@ class LocationSpoofer: Hook(
                 }
                 scaleType = ImageView.ScaleType.CENTER
                 isClickable = true
-                setBackgroundResource(Utils.getId("image_button_ripple", "drawable", chatBottomToolbarLinearLayout.context))
-                setImageResource(Utils.getId("ic_my_location", "drawable", chatBottomToolbarLinearLayout.context))
-                setPadding(exampleButton.paddingLeft, exampleButton.paddingTop, exampleButton.paddingRight, exampleButton.paddingBottom)
+                setBackgroundResource(
+                    Utils.getId(
+                        "image_button_ripple",
+                        "drawable",
+                        chatBottomToolbarLinearLayout.context
+                    )
+                )
+                setImageResource(
+                    Utils.getId(
+                        "ic_my_location",
+                        "drawable",
+                        chatBottomToolbarLinearLayout.context
+                    )
+                )
+                setPadding(
+                    exampleButton.paddingLeft,
+                    exampleButton.paddingTop,
+                    exampleButton.paddingRight,
+                    exampleButton.paddingBottom
+                )
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    drawable.colorFilter = BlendModeColorFilter(Colors.grindr_middle_gray, BlendMode.SRC_IN)
+                    drawable.colorFilter =
+                        BlendModeColorFilter(Colors.grindr_middle_gray, BlendMode.SRC_IN)
                 } else {
                     @Suppress("DEPRECATION")
-                    drawable.colorFilter = PorterDuffColorFilter(Colors.grindr_middle_gray, PorterDuff.Mode.SRC_IN)
+                    drawable.colorFilter =
+                        PorterDuffColorFilter(Colors.grindr_middle_gray, PorterDuff.Mode.SRC_IN)
                 }
             }
 
             customLocationButton.setOnClickListener {
                 var locations = GrindrPlus.database.getLocations()
                 var locationNames = locations.map { it.first }
-                var coordinatesMap = locations.associate { it.first to "${it.second.first}, ${it.second.second}" }
+                var coordinatesMap =
+                    locations.associate { it.first to "${it.second.first}, ${it.second.second}" }
 
                 if (locations.isEmpty()) {
                     GrindrPlus.showToast(
                         Toast.LENGTH_LONG,
-                        "No saved locations")
+                        "No saved locations"
+                    )
                     return@setOnClickListener
                 }
 
@@ -138,16 +165,32 @@ class LocationSpoofer: Hook(
                     }
                 }
 
-                val adapter = object : ArrayAdapter<String>(it.context, android.R.layout.simple_spinner_item, locationNames) {
-                    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val adapter = object : ArrayAdapter<String>(
+                    it.context,
+                    android.R.layout.simple_spinner_item,
+                    locationNames
+                ) {
+                    override fun getView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup
+                    ): View {
                         return getCustomView(position, convertView, parent)
                     }
 
-                    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    override fun getDropDownView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup
+                    ): View {
                         return getCustomView(position, convertView, parent)
                     }
 
-                    private fun getCustomView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    private fun getCustomView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup
+                    ): View {
                         val view = (convertView as? TextView) ?: TextView(it.context).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -165,15 +208,21 @@ class LocationSpoofer: Hook(
                 }
                 spinnerLocations.adapter = adapter
 
-                spinnerLocations.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                        textViewCoordinates.text = coordinatesMap[locationNames[position]]
-                    }
+                spinnerLocations.onItemSelectedListener =
+                    object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>,
+                            view: View,
+                            position: Int,
+                            id: Long
+                        ) {
+                            textViewCoordinates.text = coordinatesMap[locationNames[position]]
+                        }
 
-                    override fun onNothingSelected(parent: AdapterView<*>) {
-                        textViewCoordinates.text = ""
+                        override fun onNothingSelected(parent: AdapterView<*>) {
+                            textViewCoordinates.text = ""
+                        }
                     }
-                }
 
                 val wrapDrawable = DrawableCompat.wrap(spinnerLocations.background)
                 DrawableCompat.setTint(wrapDrawable, Color.WHITE)
@@ -192,8 +241,10 @@ class LocationSpoofer: Hook(
                     background = Utils.createButtonDrawable(Color.parseColor("#4CAF50"))
                     setTextColor(Color.WHITE)
                     setOnClickListener {
-                        Utils.copyToClipboard("Coordinates",
-                            textViewCoordinates.text.toString())
+                        Utils.copyToClipboard(
+                            "Coordinates",
+                            textViewCoordinates.text.toString()
+                        )
                     }
                 }
 
@@ -211,7 +262,10 @@ class LocationSpoofer: Hook(
                     setTextColor(Color.WHITE)
                     setOnClickListener {
                         Config.put("current_location", textViewCoordinates.text.toString())
-                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully teleported to ${textViewCoordinates.text}")
+                        GrindrPlus.showToast(
+                            Toast.LENGTH_LONG,
+                            "Successfully teleported to ${textViewCoordinates.text}"
+                        )
                     }
                 }
 
@@ -231,7 +285,9 @@ class LocationSpoofer: Hook(
                         context.startActivity(
                             Intent(
                                 Intent.ACTION_VIEW, Uri.parse(
-                                "geo:${textViewCoordinates.text}"))
+                                    "geo:${textViewCoordinates.text}"
+                                )
+                            )
                         )
                     }
                 }
@@ -254,8 +310,10 @@ class LocationSpoofer: Hook(
 
                         locations = GrindrPlus.database.getLocations()
                         locationNames = locations.map { it.first }
-                        coordinatesMap = locations.associate { it.first to
-                                "${it.second.first}, ${it.second.second}" }
+                        coordinatesMap = locations.associate {
+                            it.first to
+                                    "${it.second.first}, ${it.second.second}"
+                        }
                         adapter.clear()
                         adapter.addAll(locationNames)
 
@@ -263,9 +321,11 @@ class LocationSpoofer: Hook(
                     }
                 }
 
-                for (view in arrayOf(spinnerLocations,
+                for (view in arrayOf(
+                    spinnerLocations,
                     textViewCoordinates, buttonCopy,
-                    buttonSet, buttonOpen, buttonDelete)) {
+                    buttonSet, buttonOpen, buttonDelete
+                )) {
                     locationDialogView.addView(view)
                 }
 

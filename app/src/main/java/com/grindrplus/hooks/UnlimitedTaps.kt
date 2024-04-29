@@ -4,7 +4,7 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 
-class UnlimitedTaps: Hook(
+class UnlimitedTaps : Hook(
     "Unlimited taps",
     "Allow unlimited taps"
 ) {
@@ -14,13 +14,15 @@ class UnlimitedTaps: Hook(
         val tapsAnimLayoutClass = findClass(tapsAnimLayout) ?: return
 
         tapsAnimLayoutClass.hook(
-            "getCanSelectVariants", HookStage.BEFORE) { param ->
-            param.setResult(true)
+            "getCanSelectVariants", HookStage.BEFORE
+        ) { param ->
+            param.result = true
         }
 
         tapsAnimLayoutClass.hook(
-            "getDisableVariantSelection", HookStage.BEFORE) { param ->
-            param.setResult(false)
+            "getDisableVariantSelection", HookStage.BEFORE
+        ) { param ->
+            param.result = false
         }
     }
 }

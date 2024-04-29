@@ -18,7 +18,7 @@ import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlin.math.roundToInt
 
-class Favorites: Hook(
+class Favorites : Hook(
     "Favorites",
     "Customize layout for the favorites tab"
 ) {

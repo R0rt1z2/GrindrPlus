@@ -4,8 +4,8 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 
 abstract class Hook(
-    val hookName : String,
-    val hookDesc : String = "",
+    val hookName: String,
+    val hookDesc: String = "",
 ) {
     /**
      * Hook specific initialization.
@@ -27,6 +27,7 @@ abstract class Hook(
 
     protected fun getResource(name: String, type: String): Int {
         return GrindrPlus.context.resources.getIdentifier(
-            name, type, GrindrPlus.context.packageName)
+            name, type, GrindrPlus.context.packageName
+        )
     }
 }

@@ -35,10 +35,14 @@ object GrindrPlus {
         private set
 
     fun init(modulePath: String, application: Application) {
-        Log.d(TAG, "Initializing GrindrPlus with module path: $modulePath, application: $application")
+        Log.d(
+            TAG,
+            "Initializing GrindrPlus with module path: $modulePath, application: $application"
+        )
 
         this.context = application.applicationContext
-        this.classLoader = DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
+        this.classLoader =
+            DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
         this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
@@ -49,10 +53,16 @@ object GrindrPlus {
             override fun onActivityStarted(activity: Activity) {}
 
             override fun onActivityResumed(activity: Activity) {
+                if (BuildConfig.DEBUG) {
+                    logger.log("Resuming activity: ${activity.javaClass.name}")
+                }
                 currentActivity = activity
             }
 
             override fun onActivityPaused(activity: Activity) {
+                if (BuildConfig.DEBUG) {
+                    logger.log("Pausing activity: ${activity.javaClass.name}")
+                }
                 if (currentActivity == activity) {
                     currentActivity = null
                 }
@@ -109,7 +119,7 @@ object GrindrPlus {
     }
 
     fun loadClass(name: String): Class<*>? {
-        return try { 
+        return try {
             classLoader.loadClass(name)
         } catch (e: ClassNotFoundException) {
             logger.log("Failed to load class: $name")
