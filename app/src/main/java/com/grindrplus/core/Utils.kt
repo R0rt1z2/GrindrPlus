@@ -3,8 +3,11 @@ package com.grindrplus.core
 import android.content.Context
 import android.content.Intent
 import com.grindrplus.GrindrPlus
+import com.grindrplus.GrindrPlus.logger
 import java.lang.reflect.Proxy
+import kotlin.jvm.internal.Intrinsics
 import kotlin.math.pow
+
 
 object Utils {
     fun createServiceProxy(
@@ -57,6 +60,23 @@ object Utils {
         )
 
         startActivityMethod?.invoke(null, GrindrPlus.context, intent)
+    }
+
+    fun weightToNum(isMetric: Boolean, weight: String): Double {
+        return if (isMetric) {
+            weight.replace("kg", "").toDouble()
+        } else {
+            weight.replace("lbs", "").toDouble()
+        }
+    }
+
+    fun heightToNum(isMetric: Boolean, height: String): Double {
+        return if (isMetric) {
+            height.replace("cm", "").toDouble()
+        } else {
+            val heightTokens = height.split("\'", "\"")
+            heightTokens[0].toDouble() * 12 + heightTokens[1].toDouble()
+        }
     }
 
     fun calculateBMI(isMetric: Boolean, weight: Double, height: Double): Double {

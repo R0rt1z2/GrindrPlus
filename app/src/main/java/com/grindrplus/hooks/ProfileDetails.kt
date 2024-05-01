@@ -6,6 +6,8 @@ import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Utils.calculateBMI
+import com.grindrplus.core.Utils.heightToNum
+import com.grindrplus.core.Utils.weightToNum
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
@@ -130,10 +132,11 @@ class ProfileDetails : Hook(
                 val height = callMethod(param.thisObject, "getHeight")
 
                 if (weight != null && height != null) {
+                    val isMetric = "kg" in weight.toString()
                     val BMI = calculateBMI(
-                        "kg" in weight.toString(),
-                        weight.toString().replace("kg", "").toDouble(),
-                        height.toString().replace("cm", "").toDouble()
+                        isMetric,
+                        weightToNum(isMetric, weight.toString()),
+                        heightToNum(isMetric, height.toString())
                     )
                     param.result = "$weight - ${String.format("%.1f", BMI)} (${
                         mapOf(
