@@ -15,7 +15,7 @@ class EnableUnlimited : Hook(
         "pd.n0\$a\$a",
         "pd.o0\$a\$a",
         "pd.p0\$a\$a",
-        "ze.t1\$a\$a"
+        "ze.s1\$a\$a"
     )
 
     override fun init() {
