@@ -9,6 +9,14 @@ class EnableUnlimited : Hook(
     "Enable Grindr Unlimited features"
 ) {
     private val userSession = "com.grindrapp.android.storage.b"
+    private val subscribeToInterstitialsList = listOf(
+        "dg.z0",
+        "f8.t",
+        "pd.n0\$a\$a",
+        "pd.o0\$a\$a",
+        "pd.p0\$a\$a",
+        "ze.t1\$a\$a"
+    )
 
     override fun init() {
         val userSessionClass = findClass(userSession)
@@ -54,6 +62,17 @@ class EnableUnlimited : Hook(
             "A", HookStage.BEFORE
         ) { param ->
             param.result = true
+        }
+
+        subscribeToInterstitialsList.forEach {
+            findClass(it)
+                ?.hook("emit", HookStage.BEFORE) { param ->
+                    val modelName = param.args[0]!!::class.java.name
+                    if (!modelName.contains("NoInterstitialCreated")
+                        && !modelName.contains("OnInterstitialDismissed")) {
+                        param.result = null
+                    }
+                }
         }
     }
 }
