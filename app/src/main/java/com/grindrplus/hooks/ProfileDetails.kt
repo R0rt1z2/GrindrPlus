@@ -5,6 +5,7 @@ import android.os.Build
 import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.heightToNum
 import com.grindrplus.core.Utils.weightToNum
@@ -70,28 +71,25 @@ class ProfileDetails : Hook(
                 displayNameTextView.setOnClickListener {
                     val properties = mapOf(
                         "Profile ID" to profileId,
-                        "Approximate distance" to getObjectField(
+                        "Approximate distance" to Utils.safeGetField(
                             param.arg(0),
                             "approximateDistance"
-                        ) as Boolean,
-                        "Found via teleport" to getObjectField(
+                        ) as? Boolean,
+                        "Found via teleport" to Utils.safeGetField(
                             param.arg(0),
                             "foundViaTeleport"
-                        ) as Boolean,
-                        "Favorite" to getObjectField(param.arg(0), "isFavorite") as Boolean,
-                        "From viewed me" to getObjectField(
-                            param.arg(0),
-                            "isFromViewedMe"
-                        ) as Boolean,
-                        "Inaccessible profile" to getObjectField(
+                        ) as? Boolean,
+                        "Favorite" to Utils.safeGetField(param.arg(0), "isFavorite") as? Boolean,
+                        "From viewed me" to Utils.safeGetField(param.arg(0), "isFromViewedMe") as? Boolean,
+                        "Inaccessible profile" to Utils.safeGetField(
                             param.arg(0),
                             "isInaccessibleProfile"
-                        ) as Boolean,
-                        "JWT boosting" to getObjectField(param.arg(0), "isJwtBoosting") as Boolean,
-                        "New" to getObjectField(param.arg(0), "isNew") as Boolean,
-                        "Teleporting" to getObjectField(param.arg(0), "isTeleporting") as Boolean,
-                        "Online now" to getObjectField(param.arg(0), "onlineNow") as Boolean
-                    )
+                        ) as? Boolean,
+                        "JWT boosting" to Utils.safeGetField(param.arg(0), "isJwtBoosting") as? Boolean,
+                        "New" to Utils.safeGetField(param.arg(0), "isNew") as? Boolean,
+                        "Teleporting" to Utils.safeGetField(param.arg(0), "isTeleporting") as? Boolean,
+                        "Online now" to Utils.safeGetField(param.arg(0), "onlineNow") as? Boolean
+                    ).filterValues { it != null }
 
                     val dialog = AlertDialog.Builder(it.context)
                         .setTitle("Hidden profile details")

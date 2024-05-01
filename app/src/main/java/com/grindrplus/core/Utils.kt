@@ -86,4 +86,15 @@ object Utils {
             703 * weight / height.pow(2)
         }
     }
+
+    fun safeGetField(obj: Any, fieldName: String): Any? {
+        return try {
+            obj::class.java.getDeclaredField(fieldName).apply {
+                isAccessible = true
+            }.get(obj)
+        } catch (e: Exception) {
+            logger.log("Failed to get field $fieldName from object $obj")
+            null
+        }
+    }
 }
