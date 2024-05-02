@@ -17,7 +17,7 @@ class ChatIndicators : Hook(
     )
 
     override fun init() {
-        val chatRestServiceClass = findClass(chatRestService) ?: return
+        val chatRestServiceClass = findClass(chatRestService)
 
         val methodBlacklist = blacklistedPaths.mapNotNull {
             RetrofitUtils.findPOSTMethod(chatRestServiceClass, it)?.name
@@ -28,7 +28,7 @@ class ChatIndicators : Hook(
         }
 
         findClass("retrofit2.Retrofit")
-            ?.hook("create", HookStage.AFTER) { param ->
+            .hook("create", HookStage.AFTER) { param ->
                 val service = param.result
                 if (service != null && chatRestServiceClass.isAssignableFrom(service.javaClass)) {
                     param.result = createServiceProxy(

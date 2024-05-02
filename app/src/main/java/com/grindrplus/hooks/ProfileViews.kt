@@ -18,7 +18,7 @@ class ProfileViews : Hook(
     )
 
     override fun init() {
-        val profileRestServiceClass = findClass(profileRestService) ?: return
+        val profileRestServiceClass = findClass(profileRestService)
 
         val methodBlacklist = blacklistedPaths.mapNotNull {
             findPOSTMethod(profileRestServiceClass, it)?.name
@@ -29,7 +29,7 @@ class ProfileViews : Hook(
         }
 
         findClass("retrofit2.Retrofit")
-            ?.hook("create", HookStage.AFTER) { param ->
+            .hook("create", HookStage.AFTER) { param ->
                 val service = param.result
                 if (service != null && profileRestServiceClass.isAssignableFrom(service.javaClass)) {
                     param.result = createServiceProxy(

@@ -26,16 +26,16 @@ class FeatureGranting : Hook(
         val featureFlagsClass = findClass(featureFlags)
 
         findClass(featureModel)
-            ?.hook("e", HookStage.BEFORE) { param ->
+            .hook("e", HookStage.BEFORE) { param ->
                 param.result = true
             }
 
         findClass(featureModel)
-            ?.hook("f", HookStage.BEFORE) { param ->
+            .hook("f", HookStage.BEFORE) { param ->
                 param.result = true
             }
 
-        featureFlagsClass?.hook(
+        featureFlagsClass.hook(
             "isEnabled", HookStage.BEFORE
         ) { param ->
             val featureFlagName = getObjectField(
@@ -47,7 +47,7 @@ class FeatureGranting : Hook(
             }
         }
 
-        featureFlagsClass?.hook(
+        featureFlagsClass.hook(
             "isDisabled", HookStage.BEFORE
         ) { param ->
             val featureFlagName = getObjectField(
@@ -60,18 +60,18 @@ class FeatureGranting : Hook(
         }
 
         findClass(settingDistanceVisibilityViewModel)
-            ?.hookConstructor(HookStage.BEFORE) { param ->
+            .hookConstructor(HookStage.BEFORE) { param ->
                 param.setArg(4, false)
             }
 
         listOf(upsellsV8Model, insertsModel).forEach { model ->
             findClass(model)
-                ?.hook("getMpuFree", HookStage.BEFORE) { param ->
+                .hook("getMpuFree", HookStage.BEFORE) { param ->
                     param.result = Int.MAX_VALUE
                 }
 
             findClass(model)
-                ?.hook("getMpuXtra", HookStage.BEFORE) { param ->
+                .hook("getMpuXtra", HookStage.BEFORE) { param ->
                     param.result = 0
                 }
         }

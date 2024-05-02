@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
+import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
 import kotlin.system.measureTimeMillis
@@ -25,6 +26,8 @@ object GrindrPlus {
     lateinit var classLoader: ClassLoader
         private set
     lateinit var logger: Logger
+        private set
+    lateinit var newDatabase: NewDatabase
         private set
     lateinit var database: Database
         private set
@@ -44,6 +47,7 @@ object GrindrPlus {
         this.classLoader =
             DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
         this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
+        this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
 
@@ -118,12 +122,7 @@ object GrindrPlus {
         }
     }
 
-    fun loadClass(name: String): Class<*>? {
-        return try {
-            classLoader.loadClass(name)
-        } catch (e: ClassNotFoundException) {
-            logger.log("Failed to load class: $name")
-            null
-        }
+    fun loadClass(name: String): Class<*> {
+        return classLoader.loadClass(name)
     }
 }

@@ -40,10 +40,9 @@ class LocationSpoofer : Hook(
 ) {
     private val location = "android.location.Location"
     private val chatBottomToolbar = "com.grindrapp.android.view.ChatBottomToolbar"
-    private val chatActivity = "com.grindrapp.android.ui.chat.ChatActivityV2"
 
     override fun init() {
-        val locationClass = findClass(location) ?: return
+        val locationClass = findClass(location)
 
         if (Build.VERSION.SDK_INT >= 31) {
             locationClass.hook(
@@ -72,7 +71,7 @@ class LocationSpoofer : Hook(
                 }
         }
 
-        findClass(chatBottomToolbar)?.hookConstructor(HookStage.AFTER) { param ->
+        findClass(chatBottomToolbar).hookConstructor(HookStage.AFTER) { param ->
             val chatBottomToolbarLinearLayout = param.thisObject as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 

@@ -29,16 +29,6 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
         }
     }
 
-    fun clearDatabase() {
-        synchronized(lock) {
-            writableDatabase.use { db ->
-                tables.forEach { table ->
-                    db.execSQL("DROP TABLE IF EXISTS ${table.name}")
-                }
-            }
-        }
-    }
-
     fun deleteDatabase() {
         synchronized(lock) {
             writableDatabase.close()
@@ -54,26 +44,6 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
             }
             return writableDatabase.use { db ->
                 tables.find { it.name == "ExpiringPhotos" }?.insert(db, values) ?: -1
-            }
-        }
-    }
-
-    fun updatePhoto(mediaId: Long, imageURL: String): Int {
-        synchronized(lock) {
-            val values = ContentValues().apply {
-                put("imageURL", imageURL)
-            }
-            return writableDatabase.use { db ->
-                tables.find { it.name == "ExpiringPhotos" }?.update(db, values, mediaId.toString())
-                    ?: -1
-            }
-        }
-    }
-
-    fun deletePhoto(mediaId: Long): Int {
-        synchronized(lock) {
-            return writableDatabase.use { db ->
-                tables.find { it.name == "ExpiringPhotos" }?.delete(db, mediaId.toString()) ?: -1
             }
         }
     }
@@ -158,145 +128,6 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
                     }
                 }
                 locations
-            }
-        }
-    }
-
-    fun addAlbumContent(
-        contentId: Long,
-        albumId: Long,
-        contentType: String,
-        url: String,
-        isProcessing: Boolean,
-        thumbUrl: String,
-        coverUrl: String,
-        remainingViews: Int
-    ): Long {
-        synchronized(lock) {
-            val values = ContentValues().apply {
-                put("contentId", contentId)
-                put("albumId", albumId)
-                put("contentType", contentType)
-                put("url", url)
-                put("isProcessing", isProcessing)
-                put("thumbUrl", thumbUrl)
-                put("coverUrl", coverUrl)
-                put("remainingViews", remainingViews)
-            }
-            return writableDatabase.use { db ->
-                tables.find { it.name == "Albums" }?.insert(db, values) ?: -1
-            }
-        }
-    }
-
-    fun updateAlbumContent(
-        contentId: Long,
-        albumId: Long,
-        contentType: String,
-        url: String,
-        isProcessing: Boolean,
-        thumbUrl: String,
-        coverUrl: String,
-        remainingViews: Int
-    ): Int {
-        synchronized(lock) {
-            val values = ContentValues().apply {
-                put("albumId", albumId)
-                put("contentType", contentType)
-                put("url", url)
-                put("isProcessing", isProcessing)
-                put("thumbUrl", thumbUrl)
-                put("coverUrl", coverUrl)
-                put("remainingViews", remainingViews)
-            }
-            return writableDatabase.use { db ->
-                tables.find { it.name == "Albums" }?.update(db, values, contentId.toString()) ?: -1
-            }
-        }
-    }
-
-    fun deleteAlbumContent(contentId: Long): Int {
-        synchronized(lock) {
-            return writableDatabase.use { db ->
-                tables.find { it.name == "Albums" }?.delete(db, contentId.toString()) ?: -1
-            }
-        }
-    }
-
-    fun getAlbumContent(contentId: Long): ContentValues? {
-        synchronized(lock) {
-            return readableDatabase.use { db ->
-                tables.find { it.name == "Albums" }?.query(
-                    db,
-                    arrayOf(
-                        "contentId",
-                        "albumId",
-                        "contentType",
-                        "url",
-                        "isProcessing",
-                        "thumbUrl",
-                        "coverUrl",
-                        "remainingViews"
-                    ),
-                    "contentId = ?",
-                    arrayOf(contentId.toString())
-                )
-            }
-        }
-    }
-
-    fun getContentIdListByAlbumId(albumId: Long): List<Long> {
-        synchronized(lock) {
-            return readableDatabase.use { db ->
-                val contentIds = mutableListOf<Long>()
-                db.query(
-                    "Albums",
-                    arrayOf("contentId"),
-                    "albumId = ?",
-                    arrayOf(albumId.toString()),
-                    null, null, null
-                ).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        contentIds.add(cursor.getLong(0))
-                    }
-                }
-                contentIds
-            }
-        }
-    }
-
-    fun getAllContents(): List<ContentValues> {
-        synchronized(lock) {
-            return readableDatabase.use { db ->
-                val contents = mutableListOf<ContentValues>()
-                db.query(
-                    "Albums",
-                    arrayOf(
-                        "contentId",
-                        "albumId",
-                        "contentType",
-                        "url",
-                        "isProcessing",
-                        "thumbUrl",
-                        "coverUrl",
-                        "remainingViews"
-                    ),
-                    null, null, null, null, null
-                ).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val values = ContentValues()
-                        values.put("contentId", cursor.getLong(0))
-                        values.put("albumId", cursor.getLong(1))
-                        values.put("contentType", cursor.getString(2))
-                        values.put("url", cursor.getString(3))
-                        values.put("isProcessing", cursor.getInt(4) == 1)
-                        values.put("thumbUrl", cursor.getString(5))
-                        values.put("coverUrl", cursor.getString(6))
-                        values.put("remainingViews", cursor.getInt(7))
-                        contents.add(values)
-                    }
-                }
-                contents
             }
         }
     }
@@ -390,16 +221,6 @@ class Database(context: Context, databasePath: String?) : SQLiteOpenHelper(
                 phrases
             }
         }
-    }
-
-    companion object {
-        @Volatile
-        private var instance: Database? = null
-
-        fun getInstance(context: Context, databasePath: String? = null): Database =
-            instance ?: synchronized(this) {
-                instance ?: Database(context, databasePath).also { instance = it }
-            }
     }
 
     data class Table(

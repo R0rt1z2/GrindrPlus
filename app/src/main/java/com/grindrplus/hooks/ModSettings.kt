@@ -23,25 +23,25 @@ class ModSettings : Hook(
     private val hooksFragment = "com.grindrplus.ui.fragments.HooksFragment"
 
     override fun init() {
-        val nestedScrollViewClass = findClass("androidx.core.widget.NestedScrollView") ?: return
+        val nestedScrollViewClass = findClass("androidx.core.widget.NestedScrollView")
         val getChildAtNestedScrollView = nestedScrollViewClass.getMethod(
             "getChildAt",
             Int::class.java
         )
 
-        val fragmentClass = findClass("androidx.fragment.app.Fragment") ?: return
-        val fragmentActivityClass = findClass("androidx.fragment.app.FragmentActivity") ?: return
+        val fragmentClass = findClass("androidx.fragment.app.Fragment")
+        val fragmentActivityClass = findClass("androidx.fragment.app.FragmentActivity")
         val getSupportFragmentManager = fragmentActivityClass.getMethod("getSupportFragmentManager")
-        val fragmentManagerClass = findClass("androidx.fragment.app.FragmentManager") ?: return
+        val fragmentManagerClass = findClass("androidx.fragment.app.FragmentManager")
         val beginTransaction = fragmentManagerClass.getMethod("beginTransaction")
         val fragmentTransactionClass =
-            findClass("androidx.fragment.app.FragmentTransaction") ?: return
+            findClass("androidx.fragment.app.FragmentTransaction")
         val addFragmentTransaction =
             fragmentTransactionClass.getMethod("add", Int::class.java, fragmentClass)
         val commitFragmentTransaction = fragmentTransactionClass.getMethod("commit")
 
         findClass(settingsActivity)
-            ?.hook("onCreate", HookStage.AFTER) { param ->
+            .hook("onCreate", HookStage.AFTER) { param ->
                 val activity = param.thisObject as Activity
 
                 val settingsViewBindingLazy = getObjectField(param.thisObject, "a0")
@@ -122,8 +122,9 @@ class ModSettings : Hook(
                         visibility = View.VISIBLE
                     }
 
-                    modSubContainerTextView.setOnClickListener {
-                        val hooksFragmentInstance = findClass(hooksFragment)?.newInstance()
+                    modSubContainer.setOnClickListener {
+                        val hooksFragmentInstance =
+                            findClass(hooksFragment).constructors.first().newInstance()
                         val supportFragmentManager = getSupportFragmentManager.invoke(activity)
                         val fragmentTransaction = beginTransaction.invoke(supportFragmentManager)
                         addFragmentTransaction.invoke(
@@ -142,7 +143,7 @@ class ModSettings : Hook(
             }
 
         findClass(settingsViewModelBinding)
-            ?.hookConstructor(HookStage.AFTER) { param ->
+            .hookConstructor(HookStage.AFTER) { param ->
                 val versionTextView = param.arg(55) as TextView
                 versionTextView.setOnClickListener {
                     GrindrPlus.showToast(

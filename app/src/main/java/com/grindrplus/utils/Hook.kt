@@ -21,7 +21,7 @@ abstract class Hook(
         return Config.isHookEnabled(hookName)
     }
 
-    protected fun findClass(name: String): Class<*>? {
+    protected fun findClass(name: String): Class<*> {
         return GrindrPlus.loadClass(name)
     }
 

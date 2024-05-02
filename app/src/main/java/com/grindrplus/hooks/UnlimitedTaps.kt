@@ -11,7 +11,7 @@ class UnlimitedTaps : Hook(
     private val tapsAnimLayout = "com.grindrapp.android.view.TapsAnimLayout"
 
     override fun init() {
-        val tapsAnimLayoutClass = findClass(tapsAnimLayout) ?: return
+        val tapsAnimLayoutClass = findClass(tapsAnimLayout)
 
         tapsAnimLayoutClass.hook(
             "getCanSelectVariants", HookStage.BEFORE

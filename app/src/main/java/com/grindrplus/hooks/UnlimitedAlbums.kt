@@ -1,141 +1,192 @@
 package com.grindrplus.hooks
 
+import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
+import com.grindrplus.persistence.asAlbumBriefToAlbumEntity
+import com.grindrplus.persistence.asAlbumToAlbumEntity
+import com.grindrplus.persistence.toAlbumContentEntity
+import com.grindrplus.persistence.toGrindrAlbum
+import com.grindrplus.persistence.toGrindrAlbumBrief
 import com.grindrplus.utils.Hook
-import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.hook
+import com.grindrplus.utils.RetrofitUtils
+import com.grindrplus.utils.RetrofitUtils.createSuccess
+import com.grindrplus.utils.RetrofitUtils.getSuccessValue
+import com.grindrplus.utils.RetrofitUtils.isGET
+import com.grindrplus.utils.RetrofitUtils.isSuccess
+import com.grindrplus.utils.withSuspendResult
 import de.robv.android.xposed.XposedHelpers.getObjectField
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class UnlimitedAlbums : Hook(
     "Unlimited albums",
     "Allow to be able to view unlimited albums"
 ) {
-    private val albumModel = "com.grindrapp.android.model.Album"
-    private val albumContent = "com.grindrapp.android.model.AlbumContent"
-
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private val albumCache = mutableMapOf<Any, MutableMap<String, Any>>()
+    private val albumsService = "w5.a"
 
     override fun init() {
-        val albumModelClass = findClass(albumModel) ?: return
+        val albumsService = findClass(albumsService)
 
-        findClass(albumContent)
-            ?.hook("getRemainingViews", HookStage.BEFORE) { param ->
-                param.result = Int.MAX_VALUE
+        RetrofitUtils.hookService(
+            albumsService,
+        ) { originalHandler, proxy, method, args ->
+            val result = originalHandler.invoke(proxy, method, args)
+            when {
+                method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
+                method.isGET("v1/albums") -> handleGetAlbums(args, result)
+                method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
+                method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
+                else -> result
             }
+        }
+    }
 
-        albumModelClass.hook("getAlbumViewable", HookStage.BEFORE) { param ->
-            param.result = true
+    private suspend fun saveAlbum(grindrAlbum: Any) {
+        val dao = GrindrPlus.newDatabase.albumDao()
+
+        val dbAlbum = grindrAlbum.asAlbumToAlbumEntity()
+        dao.upsertAlbum(dbAlbum)
+        val grindrAlbumContent = getObjectField(grindrAlbum, "content") as List<Any>
+        grindrAlbumContent.forEach {
+            val dbAlbumContent = it.toAlbumContentEntity(dbAlbum.id)
+            dao.upsertAlbumContent(dbAlbumContent)
+        }
+    }
+
+    private fun handleGetAlbum(args: Array<Any?>, result: Any) =
+        withSuspendResult(args, result) { args, result ->
+            val albumId = args[0] as Long
+
+            runBlocking {
+                GrindrPlus.newDatabase.withTransaction {
+                    if (result.isSuccess()) {
+                        /**
+                         * If the request was successful, we should add its
+                         * content to the database.
+                         */
+                        saveAlbum(result.getSuccessValue())
+                    }
+
+                    val dao = GrindrPlus.newDatabase.albumDao()
+                    val dbAlbum = dao.getAlbum(albumId)
+                    if (dbAlbum != null) {
+                        val dbContent = dao.getAlbumContent(dbAlbum.id)
+                        createSuccess(dbAlbum.toGrindrAlbum(dbContent))
+                    } else {
+                        GrindrPlus.logger.log("UnlimitedAlbums: Album not found in database, returning original result")
+                        result
+                    }
+                }
+            }
         }
 
-        albumModelClass.hook("getContent", HookStage.AFTER) { param ->
-            /**
-             * If we've already processed this object, return the cached value
-             */
-            val cachedContent = albumCache[param.thisObject]?.get("content")
-            if (cachedContent != null) {
-                param.result = cachedContent
-                return@hook
-            }
-
-            val contentList = param.result as List<*>
-
-            /**
-             * The first step is to find out if we're dealing with cover
-             * images or not. If we are, we don't have to do anything.
-             *
-             * Covers usually have only one image, so we can just
-             * detect if it's a cover or not by checking the size of
-             * the list.
-             */
-            if (contentList.size == 1) return@hook
-
-            val albumId = getObjectField(param.thisObject, "albumId") as Long
-            if (contentList.isNotEmpty()) {
-                // TODO: Check for race conditions
-                scope.launch {
-                    /**
-                     * At this point, we know we're dealing with an actual
-                     * album. We can now proceed to save the contents if
-                     * we haven't already.
-                     */
-                    if (GrindrPlus.database.getContentIdListByAlbumId(albumId).isNotEmpty()) {
-                        /**
-                         * It's possible that the album has been viewed before
-                         * but the user added more images to it. In this case,
-                         * we should update the album contents.
-                         */
-                        deleteContentsByList(albumId)
-                    }
-                    saveContentsByList(albumId, contentList)
-                }
-            } else {
-                /**
-                 * If the content list is empty, try to retrieve the contents
-                 * from the database and set them as the new content list.
-                 */
-                val savedContentsList = GrindrPlus.database.getContentIdListByAlbumId(albumId)
-                if (savedContentsList.isNotEmpty()) {
-                    val newContentsList = mutableListOf<Any>()
-
-                    for (element in savedContentsList) {
-                        val savedContent = GrindrPlus.database.getAlbumContent(element)
-                        if (savedContent != null) {
-                            findClass(albumContent)?.constructors?.first()?.newInstance(
-                                savedContent.getAsLong("contentId"),
-                                savedContent.getAsString("contentType"),
-                                savedContent.getAsString("url"),
-                                savedContent.getAsBoolean("isProcessing"),
-                                savedContent.getAsString("thumbUrl"),
-                                savedContent.getAsString("coverUrl"),
-                                savedContent.getAsInteger("remainingViews")
-                            )?.let { newContentsList.add(it) }
+    private fun handleGetAlbums(args: Array<Any?>, result: Any) =
+        withSuspendResult(args, result) { args, result ->
+            if (result.isSuccess()) {
+                val albums = getObjectField(result.getSuccessValue(), "albums") as List<Any>
+                runBlocking {
+                    GrindrPlus.newDatabase.withTransaction {
+                        albums.forEach { album ->
+                            saveAlbum(album)
                         }
                     }
-
-                    //setObjectField(param.thisObject, "contentCount", newContentsList.size)
-                    albumCache.getOrPut(param.thisObject) { mutableMapOf() }["content"] =
-                        newContentsList
-
-                    // TODO: Should we also hook other getters such as "getContentCount"?
-
-                    param.result = newContentsList
                 }
             }
-        }
-    }
 
-    override fun cleanup() {
-        scope.cancel()
-    }
-
-    private fun deleteContentsByList(albumId: Long) {
-        val contents = GrindrPlus.database.getContentIdListByAlbumId(albumId)
-        for (element in contents) {
-            GrindrPlus.database.deleteAlbumContent(element)
-        }
-    }
-
-    private fun saveContentsByList(albumId: Long, content: List<*>) {
-        for (element in content) {
-            if (getObjectField(element, "url") == null) {
-                continue // Skip invalid / empty content
+            val albums = runBlocking {
+                GrindrPlus.newDatabase.withTransaction {
+                    val dao = GrindrPlus.newDatabase.albumDao()
+                    val dbAlbums = dao.getAlbums()
+                    dbAlbums.map {
+                        val dbContent = dao.getAlbumContent(it.id)
+                        it.toGrindrAlbum(dbContent)
+                    }
+                }
             }
-            GrindrPlus.database.addAlbumContent(
-                getObjectField(element, "contentId") as Long,
-                albumId,
-                getObjectField(element, "contentType") as String,
-                getObjectField(element, "url") as String,
-                getObjectField(element, "isProcessing") as Boolean,
-                getObjectField(element, "thumbUrl") as String,
-                getObjectField(element, "coverUrl") as String,
-                getObjectField(element, "remainingViews") as Int,
-            )
-        }
-    }
 
+            val newValue = findClass("com.grindrapp.android.model.AlbumsList")
+                .getConstructor(List::class.java)
+                .newInstance(albums)
+
+            createSuccess(newValue)
+        }
+
+    private fun handleGetAlbumsShares(args: Array<Any?>, result: Any) =
+        withSuspendResult(args, result) { args, result ->
+            if (result.isSuccess()) {
+                runBlocking {
+                    GrindrPlus.newDatabase.withTransaction {
+                        val dao = GrindrPlus.newDatabase.albumDao()
+                        val albumBriefs =
+                            getObjectField(result.getSuccessValue(), "albums") as List<Any>
+                        albumBriefs.forEach { albumBrief ->
+                            val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
+                            dao.insertAlbumFromAlbumEntity(albumEntity)
+                            val grindrAlbumContent = getObjectField(albumBrief, "content") as Any
+                            val dbAlbumContent =
+                                grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
+                            dao.upsertAlbumContent(dbAlbumContent)
+                        }
+                    }
+                }
+            }
+
+            val albumBriefs = runBlocking {
+                GrindrPlus.newDatabase.withTransaction {
+                    val dao = GrindrPlus.newDatabase.albumDao()
+                    val dbAlbums = dao.getAlbums()
+                    dbAlbums.map {
+                        val dbContent = dao.getAlbumContent(it.id)
+                        it.toGrindrAlbumBrief(dbContent.first())
+                    }
+                }
+            }
+
+            val newValue = findClass("com.grindrapp.android.model.albums.SharedAlbumsBrief")
+                .getConstructor(List::class.java)
+                .newInstance(albumBriefs)
+
+            createSuccess(newValue)
+        }
+
+    private fun handleGetAlbumsSharesProfileId(args: Array<Any?>, result: Any) =
+        withSuspendResult(args, result) { args, result ->
+            val profileId = args[0] as Long
+
+            GrindrPlus.logger.log("UnlimitedAlbums: Handling getAlbumsSharesProfileId request (result: $result)")
+
+            if (result.isSuccess()) {
+                runBlocking {
+                    GrindrPlus.newDatabase.withTransaction {
+                        val dao = GrindrPlus.newDatabase.albumDao()
+                        val albumBriefs =
+                            getObjectField(result.getSuccessValue(), "albums") as List<Any>
+                        albumBriefs.forEach { albumBrief ->
+                            val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
+                            dao.insertAlbumFromAlbumEntity(albumEntity)
+                            val grindrAlbumContent = getObjectField(albumBrief, "content") as Any
+                            val dbAlbumContent =
+                                grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
+                            dao.upsertAlbumContent(dbAlbumContent)
+                        }
+                    }
+                }
+            }
+
+            val albumBriefs = runBlocking {
+                GrindrPlus.newDatabase.withTransaction {
+                    val dao = GrindrPlus.newDatabase.albumDao()
+                    val dbAlbums = dao.getAlbums(profileId)
+                    dbAlbums.map {
+                        val dbContent = dao.getAlbumContent(it.id)
+                        it.toGrindrAlbumBrief(dbContent.first())
+                    }
+                }
+            }
+
+            val newValue = findClass("com.grindrapp.android.model.albums.SharedAlbumsBrief")
+                .getConstructor(List::class.java)
+                .newInstance(albumBriefs)
+
+            createSuccess(newValue)
+        }
 }

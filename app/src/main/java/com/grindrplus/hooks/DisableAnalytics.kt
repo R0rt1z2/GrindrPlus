@@ -12,10 +12,10 @@ class DisableAnalytics : Hook(
     private val analyticsRestService = "v5.b"
 
     override fun init() {
-        val analyticsRestServiceClass = findClass(analyticsRestService) ?: return
+        val analyticsRestServiceClass = findClass(analyticsRestService)
 
         findClass("retrofit2.Retrofit")
-            ?.hook("create", HookStage.AFTER) { param ->
+            .hook("create", HookStage.AFTER) { param ->
                 val service = param.result
                 if (service != null && analyticsRestServiceClass.isAssignableFrom(service.javaClass)) {
                     param.result = createServiceProxy(service, analyticsRestServiceClass)

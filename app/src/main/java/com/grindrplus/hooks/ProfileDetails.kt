@@ -33,7 +33,7 @@ class ProfileDetails : Hook(
 
     override fun init() {
         findClass(serverDrivenCascadeCachedState)
-            ?.hook("getItems", HookStage.AFTER) { param ->
+            .hook("getItems", HookStage.AFTER) { param ->
                 (param.result as List<*>).filter {
                     (it?.javaClass?.name ?: "") == serverDrivenCascadeCachedProfile
                 }.forEach {
@@ -44,7 +44,7 @@ class ProfileDetails : Hook(
             }
 
         findClass(profileBarView)
-            ?.hook("setProfile", HookStage.BEFORE) { param ->
+            .hook("setProfile", HookStage.BEFORE) { param ->
                 val profileId = getObjectField(param.arg(0), "profileId") as String
                 val distance = callMethod(param.arg(0), "getDistance") ?: "Unknown (hidden)"
                 setObjectField(param.arg(0), "distance", distance)
@@ -103,7 +103,7 @@ class ProfileDetails : Hook(
             }
 
         findClass(distanceUtils)
-            ?.hook("b", HookStage.AFTER) { param ->
+            .hook("b", HookStage.AFTER) { param ->
                 val distance = param.arg<Double>(1)
                 val isFeet = param.arg<Boolean>(2)
 
@@ -125,7 +125,7 @@ class ProfileDetails : Hook(
             }
 
         findClass(profileViewState)
-            ?.hook("getWeight", HookStage.AFTER) { param ->
+            .hook("getWeight", HookStage.AFTER) { param ->
                 val weight = param.result
                 val height = callMethod(param.thisObject, "getHeight")
 

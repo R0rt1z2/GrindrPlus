@@ -29,10 +29,10 @@ class Favorites : Hook(
     override fun init() {
         val NUM_OF_COLUMNS = Config.get("favorites_grid_columns", 3) as Int
         val recyclerViewLayoutParamsConstructor = findClass(recyclerViewLayoutParams)
-            ?.getDeclaredConstructor(Int::class.java, Int::class.java)
+            .getDeclaredConstructor(Int::class.java, Int::class.java)
 
         findClass(favoritesFragment)
-            ?.hook("onViewCreated", HookStage.AFTER) { param ->
+            .hook("onViewCreated", HookStage.AFTER) { param ->
                 val view = param.arg<View>(0)
                 val recyclerView = view.findViewById<View>(
                     Utils.getId(

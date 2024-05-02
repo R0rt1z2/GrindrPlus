@@ -18,32 +18,32 @@ class ExpiringPhotos : Hook(
 
     override fun init() {
         findClass(expiringImageBodyUiData)
-            ?.hook("hasViewsRemaining", HookStage.BEFORE) { param ->
+            .hook("hasViewsRemaining", HookStage.BEFORE) { param ->
                 param.result = true
             }
 
         findClass(expiringImageBody)
-            ?.hook("getDuration", HookStage.BEFORE) { param ->
+            .hook("getDuration", HookStage.BEFORE) { param ->
                 param.result = Long.MAX_VALUE
             }
 
         findClass(expiringImageBody)
-            ?.hook("getViewsRemaining", HookStage.BEFORE) { param ->
+            .hook("getViewsRemaining", HookStage.BEFORE) { param ->
                 param.result = Int.MAX_VALUE
             }
 
         findClass(expiringStatusResponse)
-            ?.hook("getAvailable", HookStage.BEFORE) { param ->
+            .hook("getAvailable", HookStage.BEFORE) { param ->
                 param.result = Int.MAX_VALUE
             }
 
         findClass(expiringStatusResponse)
-            ?.hook("getTotal", HookStage.BEFORE) { param ->
+            .hook("getTotal", HookStage.BEFORE) { param ->
                 param.result = Int.MAX_VALUE
             }
 
         findClass(expiringImageBody)
-            ?.hook("getUrl", HookStage.AFTER) { param ->
+            .hook("getUrl", HookStage.AFTER) { param ->
                 val mediaId = getObjectField(param.thisObject, "mediaId") as Long
                 val url = getObjectField(param.thisObject, "url")?.toString()
 

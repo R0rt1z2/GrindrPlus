@@ -14,7 +14,7 @@ class RemovableMessages : Hook(
     override fun init() {
         // TODO: I think this is not needed/working, check what to do with it
         findClass(chatMessageContent)
-            ?.hook("getTimestamp", HookStage.AFTER) { param ->
+            .hook("getTimestamp", HookStage.AFTER) { param ->
                 if (Thread.currentThread().stackTrace.any {
                         it.className.contains(showMessageLongClickDialog)
                     }) {

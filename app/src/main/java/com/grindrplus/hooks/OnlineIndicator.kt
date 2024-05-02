@@ -13,7 +13,7 @@ class OnlineIndicator : Hook(
 
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
-            ?.hook("a", HookStage.BEFORE) { param ->
+            .hook("a", HookStage.BEFORE) { param ->
                 param.result =
                     System.currentTimeMillis() - param.arg<Long>(0) <= 3.minutes.inWholeMilliseconds
             }

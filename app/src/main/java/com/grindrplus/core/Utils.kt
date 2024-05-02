@@ -3,11 +3,9 @@ package com.grindrplus.core
 import android.content.Context
 import android.content.Intent
 import com.grindrplus.GrindrPlus
-import com.grindrplus.GrindrPlus.logger
+import com.grindrplus.utils.RetrofitUtils
 import java.lang.reflect.Proxy
-import kotlin.jvm.internal.Intrinsics
 import kotlin.math.pow
-
 
 object Utils {
     fun createServiceProxy(
@@ -16,7 +14,8 @@ object Utils {
         blacklist: Array<String> = emptyArray()
     ): Any {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
-        val successConstructor = GrindrPlus.loadClass("ka.a\$b")?.constructors?.firstOrNull()
+        val successConstructor =
+            GrindrPlus.loadClass(RetrofitUtils.SUCCESS_CLASS_NAME).constructors.firstOrNull()
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
             arrayOf(serviceClass)
@@ -32,14 +31,14 @@ object Utils {
     fun openProfile(id: String) {
         val profilesActivityClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity")
-        val profilesActivityInstance = profilesActivityClass?.let { safeGetField(it, "u0") }
+        val profilesActivityInstance = profilesActivityClass.let { safeGetField(it, "u0") }
         val referrerTypeClass =
             GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
-        val referrerType = referrerTypeClass?.getField("NOTIFICATION")?.get(null)
+        val referrerType = referrerTypeClass.getField("NOTIFICATION").get(null)
         val profilesActivityInnerClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a")
 
-        val method = profilesActivityInnerClass?.declaredMethods?.find {
+        val method = profilesActivityInnerClass.declaredMethods.find {
             it.parameterTypes.size == 3 && it.parameterTypes[2] == referrerTypeClass
         }
 
@@ -53,13 +52,13 @@ object Utils {
 
         val generalDeepLinksClass =
             GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
-        val startActivityMethod = generalDeepLinksClass?.getDeclaredMethod(
+        val startActivityMethod = generalDeepLinksClass.getDeclaredMethod(
             "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6",
             Context::class.java,
             Intent::class.java
         )
 
-        startActivityMethod?.invoke(null, GrindrPlus.context, intent)
+        startActivityMethod.invoke(null, GrindrPlus.context, intent)
     }
 
     fun weightToNum(isMetric: Boolean, weight: String): Double {
@@ -93,7 +92,7 @@ object Utils {
                 isAccessible = true
             }.get(obj)
         } catch (e: Exception) {
-            logger.log("Failed to get field $fieldName from object $obj")
+            GrindrPlus.logger.log("Failed to get field $fieldName from object $obj")
             null
         }
     }

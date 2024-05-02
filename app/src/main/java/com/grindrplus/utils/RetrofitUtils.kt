@@ -1,9 +1,17 @@
 package com.grindrplus.utils
 
+import com.grindrplus.GrindrPlus
 import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.getObjectField
+import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
 object RetrofitUtils {
+    const val FAIL_CLASS_NAME = "ka.a\$a"
+    const val SUCCESS_CLASS_NAME = "ka.a\$b"
+    const val SUCCESS_VALUE_NAME = "a"
+
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {
         return clazz.declaredMethods.find { method ->
             method.annotations.any {
@@ -32,5 +40,41 @@ object RetrofitUtils {
             it.annotationClass.java.name == "retrofit2.http.GET"
                     && callMethod(it, "value") == value
         }
+    }
+
+    fun Any.isFail(): Boolean {
+        return javaClass.name == FAIL_CLASS_NAME
+    }
+
+    fun Any.isSuccess(): Boolean {
+        return javaClass.name == SUCCESS_CLASS_NAME
+    }
+
+    fun Any.getSuccessValue(): Any {
+        return getObjectField(this, SUCCESS_VALUE_NAME)
+    }
+
+    fun createSuccess(value: Any): Any {
+        val successClass = GrindrPlus.loadClass(SUCCESS_CLASS_NAME)
+        return successClass.constructors.first().newInstance(value)
+    }
+
+    fun hookService(
+        serviceClass: Class<*>,
+        invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
+    ) {
+        GrindrPlus.loadClass("retrofit2.Retrofit")
+            .hook("create", HookStage.AFTER) { param ->
+                val serviceInstance = param.result
+                if (serviceInstance != null && serviceClass.isAssignableFrom(serviceInstance.javaClass)) {
+                    val invocationHandler = Proxy.getInvocationHandler(serviceInstance)
+                    param.result = Proxy.newProxyInstance(
+                        serviceInstance.javaClass.classLoader,
+                        arrayOf(serviceClass)
+                    ) { proxy, method, args ->
+                        invoke(invocationHandler, proxy, method, args)
+                    }
+                }
+            }
     }
 }

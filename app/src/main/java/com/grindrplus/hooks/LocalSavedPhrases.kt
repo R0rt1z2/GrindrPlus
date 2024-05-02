@@ -25,11 +25,11 @@ class LocalSavedPhrases : Hook(
     private val phraseModel = "com.grindrapp.android.persistence.model.Phrase"
 
     override fun init() {
-        val chatRestServiceClass = findClass(chatRestService) ?: return
-        val createSuccess = findClass(createSuccessResult)?.constructors?.firstOrNull() ?: return
-        val phrasesRestServiceClass = findClass(phrasesRestService) ?: return
+        val chatRestServiceClass = findClass(chatRestService)
+        val createSuccess = findClass(createSuccessResult).constructors.firstOrNull() ?: return
+        val phrasesRestServiceClass = findClass(phrasesRestService)
 
-        findClass(retrofit)?.hook("create", HookStage.AFTER) { param ->
+        findClass(retrofit).hook("create", HookStage.AFTER) { param ->
             val service = param.result
             if (service != null) {
                 param.result = when {
@@ -61,7 +61,7 @@ class LocalSavedPhrases : Hook(
                     var index = GrindrPlus.database.getCurrentPhraseIndex() + 1
                     while (currentPhrases.any { it.get("phraseId") == index }) index++
                     GrindrPlus.database.addPhrase(index, phrase, 0, System.currentTimeMillis())
-                    val response = findClass(addSavedPhraseResponse)?.constructors?.first()
+                    val response = findClass(addSavedPhraseResponse).constructors.first()
                         ?.newInstance(index.toString())
                     createSuccess.newInstance(response)
                 }
@@ -105,12 +105,12 @@ class LocalSavedPhrases : Hook(
                         val text = phrase.getAsString("text")
                         val timestamp = phrase.getAsLong("timestamp")
                         val frequency = phrase.getAsInteger("frequency")
-                        GrindrPlus.loadClass(phraseModel)?.constructors?.first()?.newInstance(
+                        GrindrPlus.loadClass(phraseModel).constructors.first()?.newInstance(
                             phrase.getAsString("phraseId"), text, timestamp, frequency
                         )
                     }
                     val phrasesResponse = findClass(phrasesResponse)
-                        ?.constructors?.find { it.parameterTypes.size == 1 }?.newInstance(phrases)
+                        .constructors.find { it.parameterTypes.size == 1 }?.newInstance(phrases)
                     createSuccess.newInstance(phrasesResponse)
                 }
 

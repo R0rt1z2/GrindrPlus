@@ -28,12 +28,12 @@ class DisableUpdates : Hook(
 
     override fun init() {
         findClass(appUpdateInfo)
-            ?.hook("updateAvailability", HookStage.BEFORE) { param ->
+            .hook("updateAvailability", HookStage.BEFORE) { param ->
                 param.result = 1
             }
 
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
-            ?.hook("zb.o", HookStage.BEFORE) { param ->
+            .hook("zb.o", HookStage.BEFORE) { param ->
                 param.result = null
             }
 
@@ -44,7 +44,7 @@ class DisableUpdates : Hook(
                     0
                 ).versionName
             ) {
-                findClass(appConfiguration)?.hookConstructor(HookStage.AFTER) { param ->
+                findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
                     setObjectField(param.thisObject, "a", versionName)
                     setObjectField(param.thisObject, "b", versionCode)
                     setObjectField(param.thisObject, "u", "$versionName.$versionCode")

@@ -17,12 +17,12 @@ class UnlimitedProfiles : Hook(
 
     override fun init() {
         findClass(inAccessibleProfileManager)
-            ?.hook("a", HookStage.BEFORE) { param ->
+            .hook("a", HookStage.BEFORE) { param ->
                 param.result = true
             }
 
         findClass(serverDrivenCascadeCachedState)
-            ?.hook("getItems", HookStage.AFTER) { param ->
+            .hook("getItems", HookStage.AFTER) { param ->
                 val items = (param.result as List<*>).filter {
                     it?.javaClass?.name == serverDrivenCascadeCachedProfile
                 }
@@ -31,7 +31,7 @@ class UnlimitedProfiles : Hook(
             }
 
         findClass(serverDrivenCascadeCachedProfile)
-            ?.hook("getUpsellType", HookStage.BEFORE) { param ->
+            .hook("getUpsellType", HookStage.BEFORE) { param ->
                 param.result = null
             }
     }

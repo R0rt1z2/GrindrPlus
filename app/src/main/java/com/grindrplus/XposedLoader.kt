@@ -7,6 +7,8 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
+import de.robv.android.xposed.XC_MethodReplacement
+import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
 class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
@@ -19,7 +21,18 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName != GRINDR_PACKAGE_NAME) return
 
-        Application::class.java.hook("onCreate", HookStage.AFTER) {
+        if (BuildConfig.DEBUG) {
+            // disable SSL pinning if running in debug mode
+            findAndHookMethod(
+                "okhttp3.OkHttpClient\$Builder",
+                lpparam.classLoader,
+                "certificatePinner",
+                "okhttp3.CertificatePinner",
+                XC_MethodReplacement.DO_NOTHING
+            )
+        }
+
+        Application::class.java.hook("onCreate", HookStage.BEFORE) {
             val application = it.thisObject
             val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
 
