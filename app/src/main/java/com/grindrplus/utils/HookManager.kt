@@ -18,6 +18,7 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.RemovableMessages
+import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
 import com.grindrplus.hooks.UnlimitedTaps
@@ -48,6 +49,7 @@ class HookManager {
                 ProfileDetails(),
                 ProfileViews(),
                 RemovableMessages(),
+                SignatureSpoofer(),
                 UnlimitedTaps(),
                 UnlimitedAlbums()
             )
