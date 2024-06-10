@@ -43,7 +43,7 @@ object GrindrPlus {
             "Initializing GrindrPlus with module path: $modulePath, application: $application"
         )
 
-        this.context = application.applicationContext
+        this.context = application // do not use .applicationContext as it's null at this point
         this.classLoader =
             DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
         this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
