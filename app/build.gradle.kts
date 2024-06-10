@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    val grindrVersion = "24.4.1"
+    val grindrVersion = "24.7.0"
 
     namespace = "com.grindrplus"
     compileSdk = 34
