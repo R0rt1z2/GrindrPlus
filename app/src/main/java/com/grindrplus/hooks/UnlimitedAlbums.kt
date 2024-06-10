@@ -120,7 +120,7 @@ class UnlimitedAlbums : Hook(
                             getObjectField(result.getSuccessValue(), "albums") as List<Any>
                         albumBriefs.forEach { albumBrief ->
                             val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
-                            dao.insertAlbumFromAlbumEntity(albumEntity)
+                            dao.insertAlbumFromAlbumBrief(albumEntity)
                             val grindrAlbumContent = getObjectField(albumBrief, "content") as Any
                             val dbAlbumContent =
                                 grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
@@ -162,7 +162,7 @@ class UnlimitedAlbums : Hook(
                             getObjectField(result.getSuccessValue(), "albums") as List<Any>
                         albumBriefs.forEach { albumBrief ->
                             val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
-                            dao.insertAlbumFromAlbumEntity(albumEntity)
+                            dao.insertAlbumFromAlbumBrief(albumEntity)
                             val grindrAlbumContent = getObjectField(albumBrief, "content") as Any
                             val dbAlbumContent =
                                 grindrAlbumContent.toAlbumContentEntity(albumEntity.id)

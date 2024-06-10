@@ -24,7 +24,7 @@ interface AlbumDao {
     suspend fun upsertAlbum(album: AlbumEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAlbumFromAlbumEntity(albumEntity: AlbumEntity)
+    suspend fun insertAlbumFromAlbumBrief(albumEntity: AlbumEntity)
 
     @Query("SELECT * FROM AlbumContentEntity WHERE albumId = :albumId")
     suspend fun getAlbumContent(albumId: Long): List<AlbumContentEntity>
