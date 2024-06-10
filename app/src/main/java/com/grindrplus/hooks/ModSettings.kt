@@ -18,7 +18,7 @@ class ModSettings : Hook(
     "Mod settings",
     "GrindrPlus settings"
 ) {
-    private val settingsViewModelBinding = "q7.v0"
+    private val settingsViewModelBinding = "e6.v0"
     private val settingsActivity = "com.grindrapp.android.ui.settings.SettingsActivity"
     private val hooksFragment = "com.grindrplus.ui.fragments.HooksFragment"
 

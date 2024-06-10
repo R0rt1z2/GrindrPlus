@@ -12,12 +12,12 @@ class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "j8.h"
-    private val featureModel = "fa.o"
+    private val featureFlags = "x6.h"
+    private val featureModel = "t8.o"
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val settingDistanceVisibilityViewModel =
-        "com.grindrapp.android.ui.settings.distance.SettingDistanceVisibilityViewModel\$e"
+        "com.grindrapp.android.ui.settings.distance.a\$e"
     private val featureManager = FeatureManager()
 
     override fun init() {
@@ -61,7 +61,7 @@ class FeatureGranting : Hook(
 
         findClass(settingDistanceVisibilityViewModel)
             .hookConstructor(HookStage.BEFORE) { param ->
-                param.setArg(4, false)
+                param.setArg(4, false) // hidePreciseDistance
             }
 
         listOf(upsellsV8Model, insertsModel).forEach { model ->
