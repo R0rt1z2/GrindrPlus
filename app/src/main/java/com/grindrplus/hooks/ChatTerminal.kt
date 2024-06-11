@@ -12,10 +12,10 @@ class ChatTerminal : Hook(
     "Chat terminal",
     "Create a chat terminal to execute commands"
 ) {
-    private val chatMessageHandler = "c7.b"
+    private val chatMessageHandler = "r5.b"
 
     override fun init() {
-        findClass(chatMessageHandler).hook("r", HookStage.BEFORE) { param ->
+        findClass(chatMessageHandler).hook("q", HookStage.BEFORE) { param ->
             val message = getObjectField(param.arg(0), "chatMessage")
             val content = getObjectField(message, "content")
             val sender = getObjectField(content, "sender") as String
