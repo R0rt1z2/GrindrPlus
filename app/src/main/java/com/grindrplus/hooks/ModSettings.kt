@@ -42,9 +42,10 @@ class ModSettings : Hook(
 
         findClass(settingsActivity)
             .hook("onCreate", HookStage.AFTER) { param ->
+                GrindrPlus.logger.log("ModSettings: onCreate")
                 val activity = param.thisObject as Activity
 
-                val settingsViewBindingLazy = getObjectField(param.thisObject, "a0")
+                val settingsViewBindingLazy = getObjectField(param.thisObject, "e0")
                 val settingsViewBinding = settingsViewBindingLazy::class
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
                 val settingsViewBindingRoot = settingsViewBinding::class
