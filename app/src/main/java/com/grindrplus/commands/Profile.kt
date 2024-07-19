@@ -63,7 +63,21 @@ class Profile(
                 .setNeutralButton("Close") { dialog, _ ->
                     dialog.dismiss()
                 }
-                .show()
+                .create()
+                .also { alertDialog ->
+                    alertDialog.show()
+                    alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnLongClickListener {
+                        copyToClipboard("Your ID", " $recipient")
+                        alertDialog.dismiss()
+                        true
+                    }
+
+                    alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnLongClickListener {
+                        copyToClipboard("Profile ID", " $sender")
+                        alertDialog.dismiss()
+                        true
+                    }
+                }
         }
     }
 }
