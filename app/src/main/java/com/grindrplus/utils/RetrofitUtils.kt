@@ -8,8 +8,8 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 object RetrofitUtils {
-    const val FAIL_CLASS_NAME = "y8.a\$a"
-    const val SUCCESS_CLASS_NAME = "y8.a\$b"
+    const val FAIL_CLASS_NAME = "l9.a\$a"
+    const val SUCCESS_CLASS_NAME = "l9.a\$b"
     const val SUCCESS_VALUE_NAME = "a"
 
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {

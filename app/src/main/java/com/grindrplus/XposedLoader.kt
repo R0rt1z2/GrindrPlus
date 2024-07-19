@@ -80,6 +80,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                     "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected: ${BuildConfig.TARGET_GRINDR_VERSION}). Mod disabled.",
                     Toast.LENGTH_LONG
                 ).show()
+                GrindrPlus.logger.log("Grindr version mismatch (installed: ${pkgInfo.versionName}, expected: ${BuildConfig.TARGET_GRINDR_VERSION}). Mod disabled.")
                 return@hook
             }
 

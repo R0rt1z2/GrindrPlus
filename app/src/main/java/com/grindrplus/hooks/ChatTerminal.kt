@@ -12,7 +12,7 @@ class ChatTerminal : Hook(
     "Chat terminal",
     "Create a chat terminal to execute commands"
 ) {
-    private val chatMessageHandler = "r5.b"
+    private val chatMessageHandler = "s5.b"
 
     override fun init() {
         findClass(chatMessageHandler).hook("q", HookStage.BEFORE) { param ->

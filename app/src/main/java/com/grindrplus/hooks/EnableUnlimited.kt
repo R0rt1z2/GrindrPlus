@@ -10,56 +10,56 @@ class EnableUnlimited : Hook(
 ) {
     private val userSession = "com.grindrapp.android.storage.b"
     private val subscribeToInterstitialsList = listOf(
-        "af.z0",       // Viewed Me
-        "t6.t",        // Favorites
-        "mc.o0\$a\$a", // Chat ($1)
-        "mc.p0\$a\$a", // Chat ($2)
-        "mc.q0\$a\$a", // Chat ($3)
-        "wd.s1\$a\$a"  // Profiles
+        "qf.z0",       // Viewed Me
+        "c7.s",        // Favorites
+        "ed.n0\$a\$a", // Chat ($1)
+        "ed.o0\$a\$a", // Chat ($2)
+        "ed.p0\$a\$a", // Chat ($3)
+        "oe.s1\$a\$a"  // Profiles
     )
 
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // hasFeature()
-            "q", HookStage.BEFORE
+            "m", HookStage.BEFORE
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
             param.result = param.arg(0) !in disallowedFeatures
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "i", HookStage.BEFORE
+            "k", HookStage.BEFORE
         ) { param ->
             param.result = true
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
-            "E", HookStage.BEFORE
+            "D", HookStage.BEFORE
         ) { param ->
             param.result = true
         }
 
         userSessionClass.hook( // isFree()
-            "v", HookStage.BEFORE
+            "w", HookStage.BEFORE
         ) { param ->
             param.result = false
         }
 
-        userSessionClass.hook(
-            "t", HookStage.BEFORE
+        userSessionClass.hook( // isFreeXtra()
+            "u", HookStage.BEFORE
         ) { param ->
             param.result = false
         }
 
-        userSessionClass.hook(
-            "C", HookStage.BEFORE
-        ) { param ->
-            param.result = false
-        }
-
-        userSessionClass.hook(
+        userSessionClass.hook( // isFreePlus()
             "B", HookStage.BEFORE
+        ) { param ->
+            param.result = false
+        }
+
+        userSessionClass.hook( // isFreeUnlimited()
+            "A", HookStage.BEFORE
         ) { param ->
             param.result = true
         }
