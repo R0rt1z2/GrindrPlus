@@ -13,7 +13,6 @@ class FeatureGranting : Hook(
     "Grant all Grindr features"
 ) {
     private val featureFlags = "i7.h"
-    private val featureModel = "g9.o"
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val settingDistanceVisibilityViewModel =
@@ -24,16 +23,6 @@ class FeatureGranting : Hook(
         initFeatures()
 
         val featureFlagsClass = findClass(featureFlags)
-
-        findClass(featureModel)
-            .hook("e", HookStage.BEFORE) { param ->
-                param.result = true
-            }
-
-        findClass(featureModel)
-            .hook("f", HookStage.BEFORE) { param ->
-                param.result = true
-            }
 
         featureFlagsClass.hook(
             "isEnabled", HookStage.BEFORE

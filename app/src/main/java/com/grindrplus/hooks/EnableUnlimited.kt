@@ -25,7 +25,7 @@ class EnableUnlimited : Hook(
             "m", HookStage.BEFORE
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
-            param.result = param.arg(0) !in disallowedFeatures
+            param.result = param.args[0].toString() !in disallowedFeatures
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
