@@ -15,7 +15,7 @@ class CommandHandler(
     }
 
     fun handle(input: String) {
-        val args = input.split(" ")
+        val args = input.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
         val command = args.firstOrNull() ?: return
 
         if (command == "help") {
