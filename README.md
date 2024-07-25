@@ -68,8 +68,11 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
 </details>
 
 ### Installation
-> [!WARNING]  
+> [!WARNING]
 > Although LSPatch should work fine with this mod, its use is not recommended.
+
+> [!WARNING]
+> If you're using GrapheneOS, make sure to check out the FAQ if you encounter any issues.
 <details>
   <summary>LSPosed instructions</summary>
 
@@ -147,6 +150,17 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
   <summary>Can I suggest a new feature?</summary>
 
 - Feel free to, but keep in mind that every feature, no matter how small, has a lot of work behind it, so please be patient and understand that sometimes it is impossible to implement certain things due to the nature of how LSPosed works.
+</details>
+
+<details>
+  <summary>I'm having issues on GrapheneOS!</summary>
+
+- Uninstall Google Play "trio" (framework, services, store) in "apps" app and reinstall them again. They break all the time so it's a good idea to reload them. Don't worry, you won't have to login again to Google.
+- Make sure to turn **ON** the exploit protection compatibility mode in "App Info" of Grindr, GrindrPlus and Google Play "trio". Just tap and hold onto the app icon to go there. When it comes to Google services you can do so from "apps" app.
+- While doing the step above make sure to give Google Play services permissions to access location all the time and sensors.
+- In Settings -> Apps -> Sandboxed Google Play, turn off the option "Reroute location requests to OS".
+- Feel free to, but keep in mind that every feature, no matter how small, has a lot of work behind it, so please be patient and understand that sometimes it is impossible to implement certain things due to the >
+
 </details>
 
 ## Contributing
