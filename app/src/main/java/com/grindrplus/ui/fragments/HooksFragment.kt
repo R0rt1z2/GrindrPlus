@@ -3,11 +3,16 @@ package com.grindrplus.ui.fragments
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -107,6 +112,31 @@ class HooksFragment : Fragment() {
                 subLinearLayout.addView(hookView)
             }
         }
+
+        val otherSettingsTitle = AppCompatTextView(context).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setTextAppearance(
+                    Utils.getId(
+                        "TextAppearanceH6AllCaps", "styles", context
+                    )
+                )
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 44
+                params.bottomMargin = 49
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            text = "Other Settings"
+            isAllCaps = true
+            setTextColor(Colors.text_secondary_dark_bg)
+        }
+
+        subLinearLayout.addView(otherSettingsTitle)
+        val customizeOnlineIndicatorView = createCustomizeOnlineIndicatorView(context)
+        subLinearLayout.addView(customizeOnlineIndicatorView)
 
         linearLayout.addView(subLinearLayout)
         scrollView.addView(linearLayout)
@@ -214,6 +244,108 @@ class HooksFragment : Fragment() {
         hookVerticalLayout.addView(hookDescription)
 
         return hookVerticalLayout
+    }
+
+    private fun createCustomizeOnlineIndicatorView(context: Context): View {
+        val settingLayout = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 44
+                params.bottomMargin = 44
+            }
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val horizontalLayout = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val settingTitle = AppCompatTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).also {
+                it.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            textSize = 16f
+            text = "Online indicator duration (mins)"
+        }
+
+        val currentValue = Config.get("online_indicator", 3) as Int
+
+        val durationEditText = EditText(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText(currentValue.toString())
+            setSelection(text.length)
+            isFocusable = false
+            isClickable = true
+            setOnClickListener {
+                isFocusableInTouchMode = true
+                isFocusable = true
+                isClickable = false
+                requestFocus()
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+            }
+            setOnEditorActionListener { v, actionId, event ->
+                if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
+                    isFocusable = false
+                    isClickable = true
+                    if (text.toString().toIntOrNull() != null) {
+                        Config.put("online_indicator", text.toString().toIntOrNull()!!)
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+            setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    isFocusable = false
+                    isClickable = true
+                    if (text.toString().toIntOrNull() != null) {
+                        Config.put("online_indicator", text.toString().toIntOrNull()!!)
+                    }
+                }
+            }
+        }
+
+        val description = AppCompatTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 4f,
+                    resources.displayMetrics
+                ).toInt()
+            }
+            setTextColor(Colors.text_primary_dark_bg)
+            typeface = Utils.getFont("ibm_plex_sans_fonts", context)
+            setTextColor(Colors.grindr_light_gray_0)
+            text = "Control when your green dot disappears after inactivity"
+        }
+
+        horizontalLayout.addView(settingTitle)
+        horizontalLayout.addView(durationEditText)
+        settingLayout.addView(horizontalLayout)
+        settingLayout.addView(description)
+
+        return settingLayout
     }
 
     private fun getActionBarSize(context: Context): Int {

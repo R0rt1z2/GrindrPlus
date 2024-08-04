@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.Config
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -14,8 +15,9 @@ class OnlineIndicator : Hook(
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
             .hook("a", HookStage.BEFORE) { param ->
+                val savedDuration = Config.get("online_indicator", 3) as Int
                 param.result =
-                    System.currentTimeMillis() - param.arg<Long>(0) <= 3.minutes.inWholeMilliseconds
+                    System.currentTimeMillis() - param.arg<Long>(0) <= savedDuration.minutes.inWholeMilliseconds
             }
     }
 }
