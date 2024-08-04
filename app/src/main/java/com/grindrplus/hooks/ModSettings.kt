@@ -20,7 +20,7 @@ class ModSettings : Hook(
 ) {
     private val settingsViewModelBinding = "m6.v0"
     private val settingsActivity = "com.grindrapp.android.ui.settings.SettingsActivity"
-    private val hooksFragment = "com.grindrplus.ui.fragments.HooksFragment"
+    private val settingsFragment = "com.grindrplus.ui.fragments.SettingsFragment"
 
     override fun init() {
         val nestedScrollViewClass = findClass("androidx.core.widget.NestedScrollView")
@@ -42,7 +42,6 @@ class ModSettings : Hook(
 
         findClass(settingsActivity)
             .hook("onCreate", HookStage.AFTER) { param ->
-                GrindrPlus.logger.log("ModSettings: onCreate")
                 val activity = param.thisObject as Activity
 
                 val settingsViewBindingLazy = getObjectField(param.thisObject, "e0")
@@ -125,7 +124,7 @@ class ModSettings : Hook(
 
                     modSubContainer.setOnClickListener {
                         val hooksFragmentInstance =
-                            findClass(hooksFragment).constructors.first().newInstance()
+                            findClass(settingsFragment).constructors.first().newInstance()
                         val supportFragmentManager = getSupportFragmentManager.invoke(activity)
                         val fragmentTransaction = beginTransaction.invoke(supportFragmentManager)
                         addFragmentTransaction.invoke(

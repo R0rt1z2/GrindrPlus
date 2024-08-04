@@ -27,12 +27,12 @@ class Favorites : Hook(
     private val favoritesFragment = "com.grindrapp.android.favorites.FavoritesFragment"
 
     override fun init() {
-        val NUM_OF_COLUMNS = Config.get("favorites_grid_columns", 3) as Int
         val recyclerViewLayoutParamsConstructor = findClass(recyclerViewLayoutParams)
             .getDeclaredConstructor(Int::class.java, Int::class.java)
 
         findClass(favoritesFragment)
             .hook("onViewCreated", HookStage.AFTER) { param ->
+                val columnsNumber = Config.get("favorites_grid_columns", 3) as Int
                 val view = param.arg<View>(0)
                 val recyclerView = view.findViewById<View>(
                     Utils.getId(
@@ -44,13 +44,13 @@ class Favorites : Hook(
                     recyclerView, "getLayoutManager"
                 )
 
-                callMethod(gridLayoutManager, "setSpanCount", NUM_OF_COLUMNS)
+                callMethod(gridLayoutManager, "setSpanCount", columnsNumber)
                 val adapter = callMethod(recyclerView, "getAdapter")
 
                 adapter::class.java
                     .hook("onBindViewHolder", HookStage.AFTER) { param ->
                         val size = GrindrPlus.context
-                            .resources.displayMetrics.widthPixels / NUM_OF_COLUMNS
+                            .resources.displayMetrics.widthPixels / columnsNumber
                         val rootLayoutParams = recyclerViewLayoutParamsConstructor
                             ?.newInstance(size, size) as? ViewGroup.LayoutParams
 

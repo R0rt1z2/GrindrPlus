@@ -26,7 +26,7 @@ import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
 
-class HooksFragment : Fragment() {
+class SettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -135,8 +135,8 @@ class HooksFragment : Fragment() {
         }
 
         subLinearLayout.addView(otherSettingsTitle)
-        val customizeOnlineIndicatorView = createCustomizeOnlineIndicatorView(context)
-        subLinearLayout.addView(customizeOnlineIndicatorView)
+        subLinearLayout.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
+        subLinearLayout.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
 
         linearLayout.addView(subLinearLayout)
         scrollView.addView(linearLayout)
@@ -246,7 +246,7 @@ class HooksFragment : Fragment() {
         return hookVerticalLayout
     }
 
-    private fun createCustomizeOnlineIndicatorView(context: Context): View {
+    private fun createDynamicSettingView(context: Context, title: String, description: String, key: String): View {
         val settingLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -278,10 +278,10 @@ class HooksFragment : Fragment() {
             }
             typeface = Utils.getFont("ibm_plex_sans_medium", context)
             textSize = 16f
-            text = "Online indicator duration (mins)"
+            text = title
         }
 
-        val currentValue = Config.get("online_indicator", 3) as Int
+        val currentValue = Config.get(key, 3) as Int
 
         val durationEditText = EditText(context).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -306,7 +306,7 @@ class HooksFragment : Fragment() {
                     isFocusable = false
                     isClickable = true
                     if (text.toString().toIntOrNull() != null) {
-                        Config.put("online_indicator", text.toString().toIntOrNull()!!)
+                        Config.put(key, text.toString().toIntOrNull()!!)
                     }
                     true
                 } else {
@@ -318,13 +318,13 @@ class HooksFragment : Fragment() {
                     isFocusable = false
                     isClickable = true
                     if (text.toString().toIntOrNull() != null) {
-                        Config.put("online_indicator", text.toString().toIntOrNull()!!)
+                        Config.put(key, text.toString().toIntOrNull()!!)
                     }
                 }
             }
         }
 
-        val description = AppCompatTextView(context).apply {
+        val settingDescription = AppCompatTextView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -337,13 +337,13 @@ class HooksFragment : Fragment() {
             setTextColor(Colors.text_primary_dark_bg)
             typeface = Utils.getFont("ibm_plex_sans_fonts", context)
             setTextColor(Colors.grindr_light_gray_0)
-            text = "Control when your green dot disappears after inactivity"
+            text = description
         }
 
         horizontalLayout.addView(settingTitle)
         horizontalLayout.addView(durationEditText)
         settingLayout.addView(horizontalLayout)
-        settingLayout.addView(description)
+        settingLayout.addView(settingDescription)
 
         return settingLayout
     }
