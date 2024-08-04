@@ -51,6 +51,14 @@ object Config {
         }
     }
 
+    fun resetConfig(shouldResetDb: Boolean = false) {
+        config = JSONObject().put("hooks", JSONObject())
+        if (shouldResetDb) {
+            config.put("reset_database", true)
+        }
+        scope.launch { writeConfig(config) }
+    }
+
     fun importFromJson(jsonString: String) {
         try {
             val newConfig = JSONObject(jsonString)

@@ -1,6 +1,7 @@
 package com.grindrplus.ui.fragments
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -26,6 +27,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
+import kotlin.system.exitProcess
 
 class SettingsFragment : Fragment() {
 
@@ -133,6 +135,9 @@ class SettingsFragment : Fragment() {
         toolbar.menu.add(Menu.NONE, 2, Menu.NONE, "Import config from file").apply {
             setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         }
+        toolbar.menu.add(Menu.NONE, 3, Menu.NONE, "Reset GrindrPlus").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
 
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -142,6 +147,10 @@ class SettingsFragment : Fragment() {
                 }
                 2 -> {
                     promptFileSelection()
+                    true
+                }
+                3 -> {
+                    showResetConfirmationDialog()
                     true
                 }
                 else -> false
@@ -238,6 +247,25 @@ class SettingsFragment : Fragment() {
         container?.addView(otherSettingsTitle)
         container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
         container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
+    }
+
+    private fun showResetConfirmationDialog() {
+        val context = requireContext()
+        AlertDialog.Builder(context).apply {
+            setTitle("Reset GrindrPlus")
+            setMessage("This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.")
+            setPositiveButton("Yes") { _, _ ->
+                resetConfigAndCloseApp()
+            }
+            setNegativeButton("No", null)
+        }.create().show()
+    }
+
+    private fun resetConfigAndCloseApp() {
+        Config.resetConfig(true)
+        val activity = requireActivity()
+        activity.finishAffinity()
+        exitProcess(0)
     }
 
     private fun createHookSwitch(
