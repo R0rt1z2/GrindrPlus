@@ -51,6 +51,16 @@ object Config {
         }
     }
 
+    fun importFromJson(jsonString: String) {
+        try {
+            val newConfig = JSONObject(jsonString)
+            config = newConfig
+            scope.launch { writeConfig(newConfig) }
+        } catch (e: Exception) {
+            Log.e("GrindrPlus", "Failed to import config", e)
+        }
+    }
+
     fun put(name: String, value: Any) {
         config.put(name, value)
         scope.launch { writeConfig(config) }
@@ -58,6 +68,10 @@ object Config {
 
     fun get(name: String, default: Any): Any {
         return config.opt(name) ?: default
+    }
+
+    fun getConfigJson(): String {
+        return config.toString(4)
     }
 
     fun setHookEnabled(hookName: String, enabled: Boolean) {

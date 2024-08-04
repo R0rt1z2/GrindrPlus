@@ -1,21 +1,22 @@
 package com.grindrplus.ui.fragments
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.TypedValue
-import android.view.Gravity
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
@@ -27,6 +28,22 @@ import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
 
 class SettingsFragment : Fragment() {
+
+    private lateinit var importConfigLauncher: ActivityResultLauncher<Intent>
+    private lateinit var subLinearLayout: LinearLayout
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        importConfigLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.also { uri ->
+                    importConfigFromUri(uri)
+                }
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -70,28 +87,7 @@ class SettingsFragment : Fragment() {
             showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
         }
 
-        val manageHooksTitle = AppCompatTextView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(
-                    Utils.getId(
-                        "TextAppearanceH6AllCaps", "styles", context
-                    )
-                )
-            }
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { params ->
-                params.topMargin = 44
-                params.bottomMargin = 49
-            }
-            typeface = Utils.getFont("ibm_plex_sans_medium", context)
-            text = "Manage Hooks"
-            isAllCaps = true
-            setTextColor(Colors.text_secondary_dark_bg)
-        }
-
-        val subLinearLayout = LinearLayout(context).apply {
+        subLinearLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -100,50 +96,13 @@ class SettingsFragment : Fragment() {
             orientation = LinearLayout.VERTICAL
         }
 
-        subLinearLayout.addView(manageHooksTitle)
-
-        val hooks = Config.getHooksSettings()
-        hooks.forEach { (hookName, pair) ->
-            if (hookName != "Mod settings") {
-                val hookView = createHookSwitch(
-                    context,
-                    hookName, pair.second, pair.first
-                )
-                subLinearLayout.addView(hookView)
-            }
-        }
-
-        val otherSettingsTitle = AppCompatTextView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(
-                    Utils.getId(
-                        "TextAppearanceH6AllCaps", "styles", context
-                    )
-                )
-            }
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { params ->
-                params.topMargin = 44
-                params.bottomMargin = 49
-            }
-            typeface = Utils.getFont("ibm_plex_sans_medium", context)
-            text = "Other Settings"
-            isAllCaps = true
-            setTextColor(Colors.text_secondary_dark_bg)
-        }
-
-        subLinearLayout.addView(otherSettingsTitle)
-        subLinearLayout.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
-        subLinearLayout.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
-
         linearLayout.addView(subLinearLayout)
         scrollView.addView(linearLayout)
         fragmentContainer.addView(scrollView)
         rootLayout.addView(fragmentContainer)
 
         setupToolbar(context, fragmentContainer)
+        updateUIFromConfig()
 
         return rootLayout
     }
@@ -167,8 +126,118 @@ class SettingsFragment : Fragment() {
         }
 
         toolbar.addView(toolbarTitle)
+
+        toolbar.menu.add(Menu.NONE, 1, Menu.NONE, "Export current config").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
+        toolbar.menu.add(Menu.NONE, 2, Menu.NONE, "Import config from file").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
+
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> {
+                    exportConfig()
+                    true
+                }
+                2 -> {
+                    promptFileSelection()
+                    true
+                }
+                else -> false
+            }
+        }
+
         appBarLayout.addView(toolbar)
         container.addView(appBarLayout)
+    }
+
+    private fun promptFileSelection() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/json"
+        }
+        importConfigLauncher.launch(intent)
+    }
+
+    private fun importConfigFromUri(uri: Uri) {
+        val context = requireContext()
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val configJson = inputStream.bufferedReader().use { it.readText() }
+                Config.importFromJson(configJson)
+                updateUIFromConfig()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun exportConfig() {
+        val configJson = Config.getConfigJson()
+
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, configJson)
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Share config"))
+    }
+
+    private fun updateUIFromConfig() {
+        subLinearLayout.removeAllViews()
+        addViewsToContainer(subLinearLayout)
+    }
+
+    private fun addViewsToContainer(container: LinearLayout?) {
+        val context = requireContext()
+
+        val manageHooksTitle = AppCompatTextView(context).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 44
+                params.bottomMargin = 49
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            text = "Manage Hooks"
+            isAllCaps = true
+            setTextColor(Colors.text_secondary_dark_bg)
+        }
+        container?.addView(manageHooksTitle)
+
+        val hooks = Config.getHooksSettings()
+        hooks.forEach { (hookName, pair) ->
+            if (hookName != "Mod settings") {
+                val hookView = createHookSwitch(context, hookName, pair.second, pair.first)
+                container?.addView(hookView)
+            }
+        }
+
+        val otherSettingsTitle = AppCompatTextView(context).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 44
+                params.bottomMargin = 49
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            text = "Other Settings"
+            isAllCaps = true
+            setTextColor(Colors.text_secondary_dark_bg)
+        }
+        container?.addView(otherSettingsTitle)
+        container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
+        container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
     }
 
     private fun createHookSwitch(
