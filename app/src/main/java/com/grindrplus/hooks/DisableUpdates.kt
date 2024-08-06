@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
+
 class DisableUpdates : Hook(
     "Disable updates",
     "Disable forced updates"
@@ -32,8 +33,13 @@ class DisableUpdates : Hook(
                 param.result = 1
             }
 
+        findClass(appUpdateInfo)
+            .hook("isUpdateTypeAllowed", HookStage.BEFORE) { param ->
+                param.result = false
+            }
+
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
-            .hook("zb.o", HookStage.BEFORE) { param ->
+            .hook("e", HookStage.BEFORE) { param ->
                 param.result = null
             }
 

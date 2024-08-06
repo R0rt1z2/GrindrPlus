@@ -9,7 +9,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "v5.b"
+    private val analyticsRestService = "c6.b"
 
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)
@@ -42,7 +42,7 @@ class DisableAnalytics : Hook(
             }
 
         // AppsFlyer
-        findClass("f4.z")
+        findClass("m4.z")
             .hook("b", HookStage.BEFORE) { param ->
                 param.args[0] = false
             }

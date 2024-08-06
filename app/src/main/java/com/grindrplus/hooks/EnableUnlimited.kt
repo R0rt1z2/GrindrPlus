@@ -10,26 +10,26 @@ class EnableUnlimited : Hook(
 ) {
     private val userSession = "com.grindrapp.android.storage.b"
     private val subscribeToInterstitialsList = listOf(
-        "qf.z0",       // Viewed Me
-        "c7.s",        // Favorites
-        "ed.n0\$a\$a", // Chat ($1)
-        "ed.o0\$a\$a", // Chat ($2)
-        "ed.p0\$a\$a", // Chat ($3)
-        "oe.s1\$a\$a"  // Profiles
+        "uf.z0",       // Viewed Me
+        "j7.s",        // Favorites
+        "ld.n0\$a\$a", // Chat ($1)
+        "ld.o0\$a\$a", // Chat ($2)
+        "ld.p0\$a\$a", // Chat ($3)
+        "se.s1\$a\$a"  // Profiles
     )
 
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // hasFeature()
-            "m", HookStage.BEFORE
+            "j", HookStage.BEFORE
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
             param.result = param.args[0].toString() !in disallowedFeatures
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "k", HookStage.BEFORE
+            "l", HookStage.BEFORE
         ) { param ->
             param.result = true
         }
