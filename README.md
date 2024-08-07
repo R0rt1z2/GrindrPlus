@@ -4,9 +4,8 @@
 
 <h1 align="center">Grindr Plus</h1>
 <p align="center">
-  <a href="https://discord.gg/SPb6Kc7S4C">
-    <img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord&style=for-the-badge" alt="Discord">
-  </a>
+  <a href="https://discord.gg/SPb6Kc7S4C"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
+  <img src="https://shields.io/github/downloads/R0rt1z2/GrindrPlus/total?logo=Bookmeter&label=Downloads&logoColor=Green&color=Green" alt="Total downloads">
 </p>
 Grindr Plus is an Xposed Module that unlocks and adds unique features to the Grindr app, enhancing user experience.
 
@@ -159,7 +158,6 @@ Each Grindr Plus release supports only a specific Grindr app version and quite p
 - Make sure to turn **ON** the exploit protection compatibility mode in "App Info" of Grindr, GrindrPlus and Google Play "trio". Just tap and hold onto the app icon to go there. When it comes to Google services you can do so from "apps" app.
 - While doing the step above make sure to give Google Play services permissions to access location all the time and sensors.
 - In Settings -> Apps -> Sandboxed Google Play, turn off the option "Reroute location requests to OS".
-- Feel free to, but keep in mind that every feature, no matter how small, has a lot of work behind it, so please be patient and understand that sometimes it is impossible to implement certain things due to the >
 
 </details>
 
