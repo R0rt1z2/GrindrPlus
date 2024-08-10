@@ -31,7 +31,7 @@ object Utils {
     fun openProfile(id: String) {
         val profilesActivityClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity")
-        val profilesActivityInstance = profilesActivityClass.let { safeGetField(it, "u0") }
+        val profilesActivityInstance = safeGetField(profilesActivityClass, "u0")
         val referrerTypeClass =
             GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
         val referrerType = referrerTypeClass.getField("NOTIFICATION").get(null)
