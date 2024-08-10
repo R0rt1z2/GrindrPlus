@@ -1,6 +1,6 @@
 package com.grindrplus
 
-import Database
+import com.grindrplus.core.Database
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
