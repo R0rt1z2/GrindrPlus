@@ -35,31 +35,31 @@ class EnableUnlimited : Hook(
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
-            "D", HookStage.BEFORE
+            "D", HookStage.BEFORE // E
         ) { param ->
             param.result = true
         }
 
         userSessionClass.hook( // isFree()
-            "w", HookStage.BEFORE
+            "w", HookStage.BEFORE // x
         ) { param ->
             param.result = false
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "u", HookStage.BEFORE
+            "u", HookStage.BEFORE // v
         ) { param ->
             param.result = false
         }
 
         userSessionClass.hook( // isFreePlus()
-            "B", HookStage.BEFORE
+            "B", HookStage.BEFORE // C
         ) { param ->
             param.result = false
         }
 
         userSessionClass.hook( // isFreeUnlimited()
-            "A", HookStage.BEFORE
+            "A", HookStage.BEFORE // B
         ) { param ->
             param.result = true
         }

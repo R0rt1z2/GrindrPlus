@@ -12,7 +12,7 @@ class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "p7.h"
+    private val featureFlags = "z4.h"
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val settingDistanceVisibilityViewModel =
