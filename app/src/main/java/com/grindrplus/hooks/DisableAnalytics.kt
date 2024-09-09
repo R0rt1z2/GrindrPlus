@@ -9,7 +9,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "c6.b"
+    private val analyticsRestService = "G3.b"
 
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)
@@ -30,20 +30,20 @@ class DisableAnalytics : Hook(
             }
 
         // AppLovin
-        findClass("com.applovin.impl.b4") // ConnectionManager
+        findClass("com.applovin.impl.d4") // ConnectionManager
             .hook("a", HookStage.BEFORE) {
                     param -> param.result = null
             }
 
         // Some error reporting thing
-        findClass("com.applovin.impl.sdk.o")
+        findClass("com.applovin.impl.sdk.ma")
             .hook("a", HookStage.BEFORE) {
                 param -> param.result = null
             }
 
         // AppsFlyer
-        findClass("m4.z")
-            .hook("b", HookStage.BEFORE) { param ->
+        findClass("J2.C")
+            .hook("C", HookStage.BEFORE) { param ->
                 param.args[0] = false
             }
 

@@ -22,7 +22,7 @@ class DisableUpdates : Hook(
     private val versionInfoEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
     private val appUpdateInfo = "com.google.android.play.core.appupdate.AppUpdateInfo"
-    private val appUpgradeManager = "com.grindrapp.android.manager.AppUpgradeManager"
+    private val appUpgradeManager = "Z4.k"
     private val appConfiguration = "com.grindrapp.android.base.config.AppConfiguration"
     private var versionCode: Int = 0
     private var versionName: String = ""
