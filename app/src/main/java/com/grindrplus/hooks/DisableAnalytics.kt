@@ -35,12 +35,6 @@ class DisableAnalytics : Hook(
                     param -> param.setResult(null)
             }
 
-        // Some error reporting thing
-        findClass("com.applovin.impl.sdk.ma")
-            .hook("a", HookStage.BEFORE) {
-                param -> param.setResult(null)
-            }
-
         // AppsFlyer
         findClass("J2.C")
             .hook("C", HookStage.BEFORE) { param ->

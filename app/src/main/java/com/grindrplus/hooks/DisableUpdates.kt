@@ -51,9 +51,9 @@ class DisableUpdates : Hook(
                 ).versionName
             ) {
                 findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
-                    setObjectField(param.thisObject(), "a", versionName)
-                    setObjectField(param.thisObject(), "b", versionCode)
-                    setObjectField(param.thisObject(), "u", "$versionName.$versionCode")
+                    setObjectField(param.thisObject(), "b", versionName)
+                    setObjectField(param.thisObject(), "c", versionCode)
+                    setObjectField(param.thisObject(), "z", "$versionName.$versionCode")
                 }
             }
         }

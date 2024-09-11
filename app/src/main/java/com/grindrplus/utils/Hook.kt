@@ -30,4 +30,9 @@ abstract class Hook(
             name, type, GrindrPlus.context.packageName
         )
     }
+
+    protected fun getAttribute(name: String): Int {
+        return GrindrPlus.context.resources.getIdentifier(name, "attr"
+            , GrindrPlus.context.packageName)
+    }
 }
