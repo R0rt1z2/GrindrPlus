@@ -19,7 +19,7 @@ class SignatureSpoofer : Hook(
         findClass(androidUtilsLight)
             .hook(getPackageCertificateHashBytes, HookStage.BEFORE) {
                     param ->
-                param.result = packageSignature
+                param.setResult(packageSignature)
             }
     }
 }

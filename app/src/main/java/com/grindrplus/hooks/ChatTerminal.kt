@@ -26,7 +26,7 @@ class ChatTerminal : Hook(
 
             val commandPrefix = (Config.get("command_prefix", "/") as String)
             if (text.startsWith(commandPrefix)) {
-                param.result = null // Don't send the command to the chat
+                param.setResult(null) // Don't send the command to the chat
                 CommandHandler(sender, recipient).handle(text.substring(1))
             }
         }

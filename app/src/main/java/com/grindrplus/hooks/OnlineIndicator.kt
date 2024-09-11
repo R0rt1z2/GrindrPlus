@@ -16,8 +16,7 @@ class OnlineIndicator : Hook(
         findClass(utils) // shouldShowOnlineIndicator()
             .hook("a", HookStage.BEFORE) { param ->
                 val savedDuration = Config.get("online_indicator", 3) as Int
-                param.result =
-                    System.currentTimeMillis() - param.arg<Long>(0) <= savedDuration.minutes.inWholeMilliseconds
+                param.setResult(System.currentTimeMillis() - param.arg<Long>(0) <= savedDuration.minutes.inWholeMilliseconds)
             }
     }
 }

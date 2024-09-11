@@ -75,5 +75,5 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-    compileOnly(libs.xposed.api)
+    compileOnly(fileTree("libs") { include("*.jar") })
 }

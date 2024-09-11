@@ -17,77 +17,77 @@ class DisableAnalytics : Hook(
         // First party analytics
         findClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
-                val service = param.result
+                val service = param.getResult() as Any?
                 if (service != null && analyticsRestServiceClass.isAssignableFrom(service.javaClass)) {
-                    param.result = createServiceProxy(service, analyticsRestServiceClass)
+                    param.setResult(createServiceProxy(service, analyticsRestServiceClass))
                 }
             }
 
         // Amplitude Analytics
         findClass("com.amplitude.android.Configuration")
             .hook("getOptOut", HookStage.AFTER) { param ->
-                param.result = true
+                param.setResult(true)
             }
 
         // AppLovin
         findClass("com.applovin.impl.d4") // ConnectionManager
             .hook("a", HookStage.BEFORE) {
-                    param -> param.result = null
+                    param -> param.setResult(null)
             }
 
         // Some error reporting thing
         findClass("com.applovin.impl.sdk.ma")
             .hook("a", HookStage.BEFORE) {
-                param -> param.result = null
+                param -> param.setResult(null)
             }
 
         // AppsFlyer
         findClass("J2.C")
             .hook("C", HookStage.BEFORE) { param ->
-                param.args[0] = false
+                param.setArg(0, false)
             }
 
         // Braze
         findClass("com.braze.Braze\$Companion")
             // See https://braze-inc.github.io/braze-android-sdk/kdoc/braze-android-sdk/com.braze/-braze/-companion/outbound-network-requests-offline.html
             .hook("setOutboundNetworkRequestsOffline", HookStage.BEFORE) {
-                param -> param.args[0] = true
+                param -> param.setArg(0, true)
             }
 
         // Digital Turbine
         findClass("com.fyber.inneractive.sdk.network.i")
             .hook("a", HookStage.BEFORE) {
-                param -> param.result = null
+                param -> param.setResult(null)
             }
 
         // Google Analytics
         findClass("com.google.firebase.analytics.FirebaseAnalytics")
             .hook("setAnalyticsCollectionEnabled", HookStage.BEFORE) { param ->
-                param.args[0] = false
+                param.setArg(0, false)
             }
 
         // Google Crashlytics
         findClass("com.google.firebase.crashlytics.FirebaseCrashlytics")
             .hook("setCrashlyticsCollectionEnabled", HookStage.BEFORE) { param ->
-                param.args[0] = false
+                param.setArg(0, false)
             }
 
         // Ironsource
         findClass("com.ironsource.mediationsdk.server.ServerURL")
             .hook("getRequestURL", HookStage.BEFORE) {
-                param -> param.result = null
+                param -> param.setResult(null)
             }
 
         // Liftoff (Vungle)
         findClass("com.vungle.ads.internal.network.VungleApiClient")
             .hook("config", HookStage.BEFORE) {
-                param -> param.result = null
+                param -> param.setResult(null)
             }
 
         // Unity
         findClass("com.unity3d.services.ads.UnityAdsImplementation")
             .hook("getInstance", HookStage.BEFORE) {
-                param -> param.result = null
+                param -> param.setResult(null)
             }
     }
 }

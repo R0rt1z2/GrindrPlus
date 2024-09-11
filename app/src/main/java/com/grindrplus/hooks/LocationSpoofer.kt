@@ -49,7 +49,7 @@ class LocationSpoofer : Hook(
                 "isMock",
                 HookStage.BEFORE
             ) { param ->
-                param.result = false
+                param.setResult(false)
             }
         }
 
@@ -58,7 +58,7 @@ class LocationSpoofer : Hook(
                 it.isNotEmpty()
             }?.split(",")?.firstOrNull()
                 ?.toDoubleOrNull()?.let {
-                    param.result = it
+                    param.setResult(it)
                 }
         }
 
@@ -67,12 +67,12 @@ class LocationSpoofer : Hook(
                 it.isNotEmpty()
             }?.split(",")?.lastOrNull()
                 ?.toDoubleOrNull()?.let {
-                    param.result = it
+                    param.setResult(it)
                 }
         }
 
         findClass(chatBottomToolbar).hookConstructor(HookStage.AFTER) { param ->
-            val chatBottomToolbarLinearLayout = param.thisObject as LinearLayout
+            val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
             val customLocationButton = ImageButton(chatBottomToolbarLinearLayout.context).apply {

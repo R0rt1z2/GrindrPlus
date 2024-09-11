@@ -25,43 +25,44 @@ class EnableUnlimited : Hook(
             "j", HookStage.BEFORE
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
-            param.result = param.args[0].toString() !in disallowedFeatures
+            //param.result = param.args[0].toString() !in disallowedFeatures
+            param.setResult(param.arg<String>(0).toString() !in disallowedFeatures)
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
             "l", HookStage.BEFORE
         ) { param ->
-            param.result = true
+            param.setResult(true)
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
             "D", HookStage.BEFORE // E
         ) { param ->
-            param.result = true
+            param.setResult(true)
         }
 
         userSessionClass.hook( // isFree()
             "w", HookStage.BEFORE // x
         ) { param ->
-            param.result = false
+            param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
             "u", HookStage.BEFORE // v
         ) { param ->
-            param.result = false
+            param.setResult(false)
         }
 
         userSessionClass.hook( // isFreePlus()
             "B", HookStage.BEFORE // C
         ) { param ->
-            param.result = false
+            param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeUnlimited()
             "A", HookStage.BEFORE // B
         ) { param ->
-            param.result = true
+            param.setResult(true)
         }
 
         subscribeToInterstitialsList.forEach {
@@ -71,7 +72,7 @@ class EnableUnlimited : Hook(
                     if (!modelName.contains("NoInterstitialCreated")
                         && !modelName.contains("OnInterstitialDismissed")
                     ) {
-                        param.result = null
+                        param.setResult(null)
                     }
                 }
         }

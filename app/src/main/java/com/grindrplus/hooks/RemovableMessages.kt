@@ -18,7 +18,7 @@ class RemovableMessages : Hook(
                 if (Thread.currentThread().stackTrace.any {
                         it.className.contains(showMessageLongClickDialog)
                     }) {
-                    param.result = System.currentTimeMillis()
+                    param.setResult(System.currentTimeMillis())
                 }
             }
     }

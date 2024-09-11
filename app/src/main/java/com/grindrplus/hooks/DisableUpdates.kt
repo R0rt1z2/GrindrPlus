@@ -30,17 +30,17 @@ class DisableUpdates : Hook(
     override fun init() {
         findClass(appUpdateInfo)
             .hook("updateAvailability", HookStage.BEFORE) { param ->
-                param.result = 1
+                param.setResult(1)
             }
 
         findClass(appUpdateInfo)
             .hook("isUpdateTypeAllowed", HookStage.BEFORE) { param ->
-                param.result = false
+                param.setResult(false)
             }
 
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
             .hook("e", HookStage.BEFORE) { param ->
-                param.result = null
+                param.setResult(null)
             }
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -51,9 +51,9 @@ class DisableUpdates : Hook(
                 ).versionName
             ) {
                 findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
-                    setObjectField(param.thisObject, "a", versionName)
-                    setObjectField(param.thisObject, "b", versionCode)
-                    setObjectField(param.thisObject, "u", "$versionName.$versionCode")
+                    setObjectField(param.thisObject(), "a", versionName)
+                    setObjectField(param.thisObject(), "b", versionCode)
+                    setObjectField(param.thisObject(), "u", "$versionName.$versionCode")
                 }
             }
         }

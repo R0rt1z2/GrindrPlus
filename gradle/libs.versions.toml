@@ -10,7 +10,6 @@ room = "2.6.1"
 appcompat = "1.7.0"
 coordinatorlayout = "1.2.0"
 material = "1.12.0"
-xposed = "82"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -23,7 +22,6 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-coordinatorlayout = { group = "androidx.coordinatorlayout", name = "coordinatorlayout", version.ref = "coordinatorlayout" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-xposed-api = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

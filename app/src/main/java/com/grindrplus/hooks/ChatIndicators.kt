@@ -29,13 +29,13 @@ class ChatIndicators : Hook(
 
         findClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
-                val service = param.result
+                val service = param.getResult()
                 if (service != null && chatRestServiceClass.isAssignableFrom(service.javaClass)) {
-                    param.result = createServiceProxy(
+                    param.setResult(createServiceProxy(
                         service,
                         chatRestServiceClass,
                         methodBlacklist.toTypedArray()
-                    )
+                    ))
                 }
             }
     }

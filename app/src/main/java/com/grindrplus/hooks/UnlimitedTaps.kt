@@ -16,13 +16,13 @@ class UnlimitedTaps : Hook(
         tapsAnimLayoutClass.hook(
             "getCanSelectVariants", HookStage.BEFORE
         ) { param ->
-            param.result = true
+            param.setResult(true)
         }
 
         tapsAnimLayoutClass.hook(
             "getDisableVariantSelection", HookStage.BEFORE
         ) { param ->
-            param.result = false
+            param.setResult(false)
         }
     }
 }

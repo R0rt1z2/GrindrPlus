@@ -31,47 +31,8 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName != GRINDR_PACKAGE_NAME) return
 
-        if (BuildConfig.DEBUG) {
-            // disable SSL pinning if running in debug mode
-            findAndHookConstructor(
-                "okhttp3.OkHttpClient\$Builder",
-                lpparam.classLoader,
-                object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
-                        val trustAlLCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                            override fun checkClientTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?
-                            ) {}
-
-                            override fun checkServerTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?
-                            ) {}
-
-                            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-
-                        })
-                        val sslContext = SSLContext.getInstance("TLSv1.3")
-                        sslContext.init(null, trustAlLCerts, SecureRandom())
-                        callMethod(param.thisObject, "sslSocketFactory", sslContext.socketFactory, trustAlLCerts.first() as X509TrustManager)
-                        callMethod(param.thisObject, "hostnameVerifier", object : HostnameVerifier {
-                            override fun verify(hostname: String?, session: SSLSession?): Boolean = true
-                        })
-                    }
-                })
-
-            findAndHookMethod(
-                "okhttp3.OkHttpClient\$Builder",
-                lpparam.classLoader,
-                "certificatePinner",
-                "okhttp3.CertificatePinner",
-                XC_MethodReplacement.DO_NOTHING
-            )
-        }
-
         Application::class.java.hook("attach", HookStage.AFTER) {
-            val application = it.thisObject
+            val application = it.thisObject()
             val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
 
             if (pkgInfo.versionName != BuildConfig.TARGET_GRINDR_VERSION) {

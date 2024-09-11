@@ -65,15 +65,15 @@ object RetrofitUtils {
     ) {
         GrindrPlus.loadClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
-                val serviceInstance = param.result
+                val serviceInstance = param.getResult()
                 if (serviceInstance != null && serviceClass.isAssignableFrom(serviceInstance.javaClass)) {
                     val invocationHandler = Proxy.getInvocationHandler(serviceInstance)
-                    param.result = Proxy.newProxyInstance(
+                    param.setResult(Proxy.newProxyInstance(
                         serviceInstance.javaClass.classLoader,
                         arrayOf(serviceClass)
                     ) { proxy, method, args ->
                         invoke(invocationHandler, proxy, method, args)
-                    }
+                    })
                 }
             }
     }

@@ -30,9 +30,9 @@ class LocalSavedPhrases : Hook(
         val phrasesRestServiceClass = findClass(phrasesRestService)
 
         findClass(retrofit).hook("create", HookStage.AFTER) { param ->
-            val service = param.result
+            val service = param.getResult()
             if (service != null) {
-                param.result = when {
+                param.setResult(when {
                     chatRestServiceClass.isAssignableFrom(service.javaClass) ->
                         createChatRestServiceProxy(service, createSuccess)
 
@@ -40,7 +40,7 @@ class LocalSavedPhrases : Hook(
                         createPhrasesRestServiceProxy(service, createSuccess)
 
                     else -> service
-                }
+                })
             }
         }
     }

@@ -1,5 +1,4 @@
 package com.grindrplus.utils
-
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import java.lang.reflect.Member
@@ -16,15 +15,14 @@ object Hooker {
         crossinline consumer: (HookAdapter<T>) -> Unit,
         crossinline filter: ((HookAdapter<T>) -> Boolean) = { true }
     ): XC_MethodHook {
-        return object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (stage == HookStage.BEFORE) {
+        return when (stage) {
+            HookStage.BEFORE -> object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam<*>) {
                     HookAdapter<T>(param).takeIf(filter)?.also(consumer)
                 }
             }
-
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (stage == HookStage.AFTER) {
+            HookStage.AFTER -> object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam<*>) {
                     HookAdapter<T>(param).takeIf(filter)?.also(consumer)
                 }
             }
@@ -37,8 +35,7 @@ object Hooker {
         stage: HookStage,
         crossinline filter: (HookAdapter<T>) -> Boolean,
         noinline consumer: (HookAdapter<T>) -> Unit
-    ): Set<XC_MethodHook.Unhook> =
-        XposedBridge.hookAllMethods(clazz, methodName, newMethodHook(stage, consumer, filter))
+    ): Set<XC_MethodHook.Unhook> = XposedBridge.hookAllMethods(clazz, methodName, newMethodHook(stage, consumer, filter))
 
     inline fun <T> hook(
         member: Member,
@@ -68,8 +65,7 @@ object Hooker {
         clazz: Class<T>,
         stage: HookStage,
         consumer: (HookAdapter<T>) -> Unit
-    ): Set<XC_MethodHook.Unhook> =
-        XposedBridge.hookAllConstructors(clazz, newMethodHook(stage, consumer))
+    ): Set<XC_MethodHook.Unhook> = XposedBridge.hookAllConstructors(clazz, newMethodHook(stage, consumer))
 
     fun <T> hookConstructor(
         clazz: Class<T>,
@@ -88,8 +84,8 @@ object Hooker {
         crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ): List<() -> Unit> {
         val unhooks = mutableSetOf<XC_MethodHook.Unhook>()
-        hook(clazz, methodName, stage) { param ->
-            if (param.nullableThisObject.let {
+        hook(clazz, methodName, stage) { param->
+            if (param.nullableThisObject().let {
                     if (it == null) unhooks.forEach { u -> u.unhook() }
                     it != instance
                 }) return@hook
@@ -107,9 +103,9 @@ object Hooker {
         crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
-        hook(clazz, methodName, stage) { param ->
+        hook(clazz, methodName, stage) { param->
             hookConsumer(param)
-            unhooks.forEach { it.unhook() }
+            unhooks.forEach{ it.unhook() }
         }.also { unhooks.addAll(it) }
     }
 
@@ -121,8 +117,8 @@ object Hooker {
         crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
-        hook(clazz, methodName, stage) { param ->
-            if (param.nullableThisObject != instance) return@hook
+        hook(clazz, methodName, stage) { param->
+            if (param.nullableThisObject() != instance) return@hook
             unhooks.forEach { it.unhook() }
             hookConsumer(param)
         }.also { unhooks.addAll(it) }
@@ -134,9 +130,9 @@ object Hooker {
         crossinline hookConsumer: (HookAdapter<T>) -> Unit
     ) {
         val unhooks: MutableSet<XC_MethodHook.Unhook> = HashSet()
-        hookConstructor(clazz, stage) { param ->
+        hookConstructor(clazz, stage) { param->
             hookConsumer(param)
-            unhooks.forEach { it.unhook() }
+            unhooks.forEach{ it.unhook() }
         }.also { unhooks.addAll(it) }
     }
 }

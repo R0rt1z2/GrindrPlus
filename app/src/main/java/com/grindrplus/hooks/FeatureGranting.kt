@@ -28,11 +28,11 @@ class FeatureGranting : Hook(
             "isEnabled", HookStage.BEFORE
         ) { param ->
             val featureFlagName = getObjectField(
-                param.thisObject,
+                param.thisObject(),
                 "featureFlagName"
             ) as String
             if (featureManager.isManaged(featureFlagName)) {
-                param.result = featureManager.isEnabled(featureFlagName)
+                param.setResult(featureManager.isEnabled(featureFlagName))
             }
         }
 
@@ -40,11 +40,11 @@ class FeatureGranting : Hook(
             "isDisabled", HookStage.BEFORE
         ) { param ->
             val featureFlagName = getObjectField(
-                param.thisObject,
+                param.thisObject(),
                 "featureFlagName"
             ) as String
             if (featureManager.isManaged(featureFlagName)) {
-                param.result = !featureManager.isEnabled(featureFlagName)
+                param.setResult(!featureManager.isEnabled(featureFlagName))
             }
         }
 
@@ -56,12 +56,12 @@ class FeatureGranting : Hook(
         listOf(upsellsV8Model, insertsModel).forEach { model ->
             findClass(model)
                 .hook("getMpuFree", HookStage.BEFORE) { param ->
-                    param.result = Int.MAX_VALUE
+                    param.setResult(Int.MAX_VALUE)
                 }
 
             findClass(model)
                 .hook("getMpuXtra", HookStage.BEFORE) { param ->
-                    param.result = 0
+                    param.setResult(0)
                 }
         }
     }
