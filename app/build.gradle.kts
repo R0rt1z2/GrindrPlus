@@ -17,7 +17,7 @@ android {
         minSdk = 21
         targetSdk = 34
         versionCode = 14
-        versionName = "3.1.5-$grindrVersion"
+        versionName = "3.2.0-$grindrVersion"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
