@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.os.Build
 import android.widget.TextView
@@ -31,6 +32,7 @@ class ProfileDetails : Hook(
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
 
+    @SuppressLint("DefaultLocale")
     override fun init() {
         findClass(serverDrivenCascadeCachedState)
             .hook("getItems", HookStage.AFTER) { param ->
@@ -58,7 +60,7 @@ class ProfileDetails : Hook(
                 setObjectField(param.arg(0), "displayName", displayName)
 
                 val viewBinding = getObjectField(param.thisObject(), "d")
-                val displayNameTextView = getObjectField(viewBinding, "c") as TextView
+                val displayNameTextView = getObjectField(viewBinding, "d") as TextView
 
                 displayNameTextView.setOnLongClickListener {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
@@ -103,7 +105,7 @@ class ProfileDetails : Hook(
             }
 
         findClass(distanceUtils)
-            .hook("b", HookStage.AFTER) { param ->
+            .hook("c", HookStage.AFTER) { param ->
                 val distance = param.arg<Double>(1)
                 val isFeet = param.arg<Boolean>(2)
 
