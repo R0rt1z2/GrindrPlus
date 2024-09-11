@@ -18,7 +18,6 @@ class ModSettings : Hook(
     "Mod settings",
     "GrindrPlus settings"
 ) {
-    private val settingsViewModelBinding = "b4.S"
     private val settingsActivity = "com.grindrapp.android.ui.settings.SettingsActivity"
     private val settingsFragment = "com.grindrplus.ui.fragments.SettingsFragment"
 
@@ -47,6 +46,23 @@ class ModSettings : Hook(
                 val settingsViewBindingLazy = getObjectField(param.thisObject(), "e0")
                 val settingsViewBinding = settingsViewBindingLazy::class
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
+
+                var settingsRoot = param.thisObject()::class.java.getMethod("E").invoke(param.thisObject())
+                settingsRoot::class.java.declaredFields.reversed().forEach { field ->
+                    field.isAccessible = true
+                    val fieldValue = field.get(settingsRoot)
+
+                    if (fieldValue is TextView && fieldValue.text.isEmpty()) {
+                        fieldValue.setOnClickListener {
+                            GrindrPlus.showToast(
+                                Toast.LENGTH_LONG,
+                                "GrindrPlus v${BuildConfig.VERSION_NAME}"
+                            )
+                        }
+                        return@forEach
+                    }
+                }
+
                 val settingsViewBindingRoot = settingsViewBinding::class
                     .java.getMethod("getRoot").invoke(settingsViewBinding) as RelativeLayout
                 val settingsNestedScrollView = settingsViewBindingRoot.getChildAt(1)
@@ -139,28 +155,6 @@ class ModSettings : Hook(
                     modContainer.addView(modHeader, 0)
                     modContainer.addView(modSubContainer, 1)
                     settingsScrollingContentLayout.addView(modContainer, 0)
-                }
-            }
-
-        findClass(settingsViewModelBinding)
-            .hookConstructor(HookStage.AFTER) { param ->
-                // Loop over all the parameters and scan (in reverse order) for the
-                // first TextView that is empty. Usually, that is the TextView used
-                // for the version number.
-                for (i in param.args().size - 1 downTo 0) {
-                    val arg = param.args()[i]
-                    if (arg?.javaClass?.name?.contains("TextView") == true) {
-                        val textView = arg as TextView
-                        if (textView.text.isEmpty()) {
-                            textView.setOnClickListener {
-                                GrindrPlus.showToast(
-                                    Toast.LENGTH_LONG,
-                                    "GrindrPlus v${BuildConfig.VERSION_NAME}"
-                                )
-                            }
-                            break
-                        }
-                    }
                 }
             }
     }
