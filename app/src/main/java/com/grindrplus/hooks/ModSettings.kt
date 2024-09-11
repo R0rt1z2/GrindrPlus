@@ -18,7 +18,7 @@ class ModSettings : Hook(
     "Mod settings",
     "GrindrPlus settings"
 ) {
-    private val settingsViewModelBinding = "b4.V"
+    private val settingsViewModelBinding = "b4.S"
     private val settingsActivity = "com.grindrapp.android.ui.settings.SettingsActivity"
     private val settingsFragment = "com.grindrplus.ui.fragments.SettingsFragment"
 
@@ -144,14 +144,24 @@ class ModSettings : Hook(
 
         findClass(settingsViewModelBinding)
             .hookConstructor(HookStage.AFTER) { param ->
-                val versionTextView = param.arg(55) as TextView
-                versionTextView.setOnClickListener {
-                    GrindrPlus.showToast(
-                        Toast.LENGTH_LONG,
-                        "GrindrPlus v${BuildConfig.VERSION_NAME}"
-                    )
+                // Loop over all the parameters and scan (in reverse order) for the
+                // first TextView that is empty. Usually, that is the TextView used
+                // for the version number.
+                for (i in param.args().size - 1 downTo 0) {
+                    val arg = param.args()[i]
+                    if (arg?.javaClass?.name?.contains("TextView") == true) {
+                        val textView = arg as TextView
+                        if (textView.text.isEmpty()) {
+                            textView.setOnClickListener {
+                                GrindrPlus.showToast(
+                                    Toast.LENGTH_LONG,
+                                    "GrindrPlus v${BuildConfig.VERSION_NAME}"
+                                )
+                            }
+                            break
+                        }
+                    }
                 }
             }
     }
-
 }
