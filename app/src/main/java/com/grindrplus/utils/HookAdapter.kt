@@ -27,6 +27,15 @@ class HookAdapter<Clazz>(
         return methodHookParam.args[index] as T
     }
 
+    fun <T : Any> arg(index: Int, clazz: Class<T>): T? {
+        val argValue = methodHookParam.args[index]
+        return try {
+            clazz.cast(argValue)
+        } catch (e: ClassCastException) {
+            convertToType(argValue, clazz) ?: handlePrimitiveDefaults(clazz)
+        }
+    }
+
     fun <T : Any> argNullable(index: Int): T? {
         return methodHookParam.args.getOrNull(index) as T?
     }
@@ -75,6 +84,41 @@ class HookAdapter<Clazz>(
             setResult(XposedBridge.invokeOriginalMethod(method(), thisObject(), args))
         }.onFailure {
             errorCallback.accept(it)
+        }
+    }
+
+    private fun invokeMethodSafe(obj: Any, methodName: String): Any? {
+        return try {
+            obj::class.java.getMethod(methodName).invoke(obj)
+        } catch (e: NoSuchMethodException) {
+            null
+        }
+    }
+
+    private fun <T : Any> handlePrimitiveDefaults(clazz: Class<T>): T? {
+        return when (clazz) {
+            Int::class.java -> 0 as T
+            Double::class.java -> 0.0 as T
+            Float::class.java -> 0f as T
+            Long::class.java -> 0L as T
+            Boolean::class.java -> false as T
+            else -> null
+        }
+    }
+
+    fun <T : Any> convertToType(arg: Any, clazz: Class<T>): T? {
+        return try {
+            when (clazz) {
+                String::class.java -> invokeMethodSafe(arg, "toString") as T
+                Int::class.java -> invokeMethodSafe(arg, "toInt") as T
+                Double::class.java -> invokeMethodSafe(arg, "toDouble") as T
+                Float::class.java -> invokeMethodSafe(arg, "toFloat") as T
+                Long::class.java -> invokeMethodSafe(arg, "toLong") as T
+                Boolean::class.java -> invokeMethodSafe(arg, "toBoolean") as T
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 }
