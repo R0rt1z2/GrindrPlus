@@ -22,6 +22,7 @@ class DisableUpdates : Hook(
     private val versionInfoEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
     private val appUpdateInfo = "com.google.android.play.core.appupdate.AppUpdateInfo"
+    private val appUpdateZzm = "com.google.android.play.core.appupdate.zzm"
     private val appUpgradeManager = "Z4.k"
     private val appConfiguration = "com.grindrapp.android.base.config.AppConfiguration"
     private var versionCode: Int = 0
@@ -40,6 +41,11 @@ class DisableUpdates : Hook(
 
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
             .hook("e", HookStage.BEFORE) { param ->
+                param.setResult(null)
+            }
+
+        findClass(appUpdateZzm) // requestUpdateInfo()
+            .hook("zza", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
 
