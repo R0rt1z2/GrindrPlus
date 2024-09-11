@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +24,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.appbar.AppBarLayout
 import com.grindrplus.core.Config
@@ -57,7 +60,7 @@ class SettingsFragment : Fragment() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Colors.grindr_dark_gray_3)
+            setBackgroundColor(Colors.grindr_dark_amoled_black)
             id = Utils.getId("activity_content", "id", context)
         }
 
@@ -83,7 +86,7 @@ class SettingsFragment : Fragment() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(Colors.grindr_dark_gray_2)
+            setBackgroundColor(Colors.grindr_dark_amoled_black)
             dividerDrawable = Utils.getDrawable("settings_divider", context)
             orientation = LinearLayout.VERTICAL
             showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
@@ -117,7 +120,7 @@ class SettingsFragment : Fragment() {
 
         val toolbar = Toolbar(context).apply {
             id = Utils.getId("fragment_toolbar", "id", context)
-            setBackgroundColor(Colors.grindr_dark_gray_3)
+            setBackgroundColor(Colors.grindr_dark_amoled_black)
             elevation = 6f
         }
 
@@ -157,8 +160,17 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        // Set black amoled background color
+        setOverflowButtonColor(toolbar, Colors.grindr_off_white)
+
         appBarLayout.addView(toolbar)
         container.addView(appBarLayout)
+    }
+
+    private fun setOverflowButtonColor(toolbar: Toolbar, color: Int) {
+        val overflowIcon = toolbar.overflowIcon
+        overflowIcon?.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+        toolbar.overflowIcon = overflowIcon
     }
 
     private fun promptFileSelection() {

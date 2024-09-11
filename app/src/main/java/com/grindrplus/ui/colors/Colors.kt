@@ -3,6 +3,7 @@ package com.grindrplus.ui.colors
 import android.graphics.Color
 
 object Colors {
+    val grindr_dark_amoled_black = Color.parseColor("#000000")
     val grindr_dark_gray_0 = Color.parseColor("#636369")
     val grindr_dark_gray_1 = Color.parseColor("#4a4a4f")
     val grindr_dark_gray_2 = Color.parseColor("#2c2c2e")
