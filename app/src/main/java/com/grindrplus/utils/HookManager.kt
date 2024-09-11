@@ -6,6 +6,7 @@ import com.grindrplus.hooks.AllowScreenshots
 import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
+import com.grindrplus.hooks.DisableBoosting
 import com.grindrplus.hooks.DisableUpdates
 import com.grindrplus.hooks.EnableUnlimited
 import com.grindrplus.hooks.ExpiringPhotos
@@ -36,6 +37,7 @@ class HookManager {
                 AllowScreenshots(),
                 ChatIndicators(),
                 ChatTerminal(),
+                DisableBoosting(),
                 DisableUpdates(),
                 DisableAnalytics(),
                 ExpiringPhotos(),
