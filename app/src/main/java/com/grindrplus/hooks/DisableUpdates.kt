@@ -49,43 +49,45 @@ class DisableUpdates : Hook(
                 param.setResult(null)
             }
 
-        CoroutineScope(Dispatchers.Main).launch {
+        Thread {
             fetchLatestVersionInfo()
-            if (versionName < GrindrPlus.context.packageManager.getPackageInfo(
-                    GrindrPlus.context.packageName,
-                    0
-                ).versionName
-            ) {
-                findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
-                    setObjectField(param.thisObject(), "b", versionName)
-                    setObjectField(param.thisObject(), "c", versionCode)
-                    setObjectField(param.thisObject(), "z", "$versionName.$versionCode")
-                }
-            }
-        }
+        }.start()
     }
 
-    private suspend fun fetchLatestVersionInfo() {
+    private fun fetchLatestVersionInfo() {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(versionInfoEndpoint).build()
 
-        withContext(Dispatchers.IO) {
-            try {
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val jsonData = response.body?.string()
-                    if (jsonData != null) {
-                        val json = JSONObject(jsonData)
-                        versionCode = json.getInt("versionCode")
-                        versionName = json.getString("versionName")
-                        GrindrPlus.logger.log("Fetched version info: $versionName ($versionCode)")
-                    }
-                } else {
-                    GrindrPlus.logger.log("Error fetching version info: ${response.message}")
+        try {
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val jsonData = response.body?.string()
+                if (jsonData != null) {
+                    val json = JSONObject(jsonData)
+                    versionCode = json.getInt("versionCode")
+                    versionName = json.getString("versionName")
+                    GrindrPlus.logger.log("Fetched version info: $versionName ($versionCode)")
+                    updateVersionInfo()
                 }
-            } catch (e: Exception) {
-                GrindrPlus.logger.log("Error fetching version info: ${e.message}")
+            } else {
+                GrindrPlus.logger.log("Error fetching version info: ${response.message}")
+            }
+        } catch (e: Exception) {
+            GrindrPlus.logger.log("Error fetching version info: ${e.message}")
+        }
+    }
+
+    private fun updateVersionInfo() {
+        if (versionName < GrindrPlus.context.packageManager.getPackageInfo(
+                GrindrPlus.context.packageName,
+                0
+            ).versionName
+        ) {
+            findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
+                setObjectField(param.thisObject(), "b", versionName)
+                setObjectField(param.thisObject(), "c", versionCode)
+                setObjectField(param.thisObject(), "z", "$versionName.$versionCode")
             }
         }
     }
