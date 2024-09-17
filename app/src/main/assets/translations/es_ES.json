@@ -1,44 +1,44 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus: Discordancia de la versión de Grindr (instalado: {installedVersion}, esperado: {expectedVersion}). Mod desactivado",
+        "unable_to_fetch_translations": "No se han podido descargar las traducciones"
     },
     "hooks": {
         "allow_screenshots": {
             "name": "Permitir capturas de pantalla",
-            "description": "Allow screenshots everywhere in the app"
+            "description": "Permitir capturas de pantalla en cualquier lugar de la aplicación"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indicadores de chat",
+            "description": "No mostrar marcadores / indicadores de chat a otros"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal en el chat",
+            "description": "Crear un terminal en el chat para ejecutar comandos"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Desactivar análisis de datos",
+            "description": "Desactivar análisis de Grindr (recolección de datos)"
         },
         "disable_boosting": {
             "name": "Disable boosting",
             "description": "Get rid of all upsells related to boosting"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Desactivar actualizaciones",
+            "description": "Desactivar actualizaciones forzadas"
         },
         "enable_unlimited": {
             "name": "Enable unlimited",
             "description": "Enable Grindr Unlimited features"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "Fotos que expiran",
+            "description": "Permitir visualización ilimitada de fotos"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "Favoritos",
+            "description": "Personalizar diseño para la pestaña de favoritos"
         },
         "feature_granting": {
             "name": "Feature granting",
