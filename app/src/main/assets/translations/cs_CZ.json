@@ -1,116 +1,116 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus: Verze Grindru je neplatná (nainstalováno: {installedVersion}, požadováno: {expectedVersion}). Mod deaktivován",
+        "unable_to_fetch_translations": "Načtení překladů selhalo"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Povolit snímky obrazovky",
+            "description": "Povolit snímky obrazovky kdekoliv v aplikaci"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indikátory chatu",
+            "description": "Nezobrazovat ostatním značky/indikátory chatu"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminál chatu",
+            "description": "Vytvořit v chatu terminál pro spuštění příkazů"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Vypnout analytiku",
+            "description": "Vypnout analytiku Grindru (sběr dat)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Vypnout funkci Boost",
+            "description": "Odstranit reklamy na zakoupení funkce Boost"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Vypnout aktualizace",
+            "description": "Vypnout vynucení aktualizací"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Povolit neomezené",
+            "description": "Povolit neomezené funkce Grindru"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "Expirace fotografií",
+            "description": "Povolit neomezené prohlížení fotografií"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "Oblíbené",
+            "description": "Změnit rozložení karty Oblíbené"
         },
         "feature_granting": {
-            "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "name": "Zpřístupnit funkce",
+            "description": "Zpřístupnit všechny funkce Grindru (včetně experimentálních)"
         },
-        "local_saved_profiles": {
-            "name": "Local saved profiles",
+        "local_saved_phrases": {
+            "name": "Local saved phrases",
             "description": "Save unlimited phrases locally"
         },
         "location_spoofer": {
-            "name": "Location spoofer",
-            "description": "Spoof your location"
+            "name": "Falšování polohy",
+            "description": "Umožnit falšování polohy"
         },
         "mod_settings": {
-            "name": "Mod settings",
-            "description": "GrindrPlus settings"
+            "name": "Nastavení modu",
+            "description": "Nastavení GrindrPlus"
         },
         "online_indicator": {
-            "name": "Online indicator",
-            "description": "More accurate online status indicator"
+            "name": "Indikátor stavu online",
+            "description": "Přesnější indikátor stavu online"
         },
         "profile_details": {
-            "name": "Profile details",
-            "description": "Add extra fields and details to profiles",
-            "profile_id": "Profile ID",
-            "approximate_distance": "Approximate distance",
-            "found_via_teleport": "Found via teleport",
-            "favorite": "Favorite",
-            "from_viewed_me": "From viewed me",
-            "innaccessible_profile": "Inaccessible profile",
-            "jwt_boosting": "JWT boosting",
-            "new": "New",
-            "teleporting": "Teleporting",
-            "online_now": "Online now",
-            "hidden_profile_details": "Hidden profile details",
+            "name": "Podrobnosti profilu",
+            "description": "Doplnit pole a podrobnosti v profilech",
+            "profile_id": "ID profilu",
+            "approximate_distance": "Přibližná vzdálenost",
+            "found_via_teleport": "Nalezeno funkcí teleport",
+            "favorite": "Oblíbené",
+            "from_viewed_me": "Z karty „Prohlédli si mě“",
+            "innaccessible_profile": "Nepřístupný profil",
+            "jwt_boosting": "Funkce JWT Boosting",
+            "new": "Nové",
+            "teleporting": "Teleport",
+            "online_now": "Online nyní",
+            "hidden_profile_details": "Skryté podrobnosti profilů",
             "ok": "OK",
-            "underweight": "Underweight",
-            "normal_weight": "Normal weight",
-            "overweight": "Overweight",
-            "obese": "Obese"
+            "underweight": "Podvýživa",
+            "normal_weight": "Normální hmotnost",
+            "overweight": "Nadváha",
+            "obese": "Obezita"
         },
         "profile_views": {
-            "name": "Profile views",
-            "description": "Control whether others can see you've viewed their profile"
+            "name": "Prohlížení profilů",
+            "description": "Určí, zda ostatní vidí, že jste si prohlédli jejich profil"
         },
         "removable_messages": {
-            "name": "Removable messages",
-            "description": "Remove messages for both parties"
+            "name": "Odstranění zpráv",
+            "description": "Odstranit zprávy pro obě strany"
         },
         "signature_spoofer": {
-            "title": "Signature spoofer",
-            "description": "Allow logging in with Google while using LSPatch"
+            "title": "Falšování podpisu",
+            "description": "Umožnit přihlašování pomocí účtu Google při použití LSPatch"
         },
         "unlimited_albums": {
-            "name": "Unlimited albums",
-            "description": "Ability to view unlimited albums"
+            "name": "Neomezená alba",
+            "description": "Umožnit neomezené prohlížení alb"
         },
         "unlimited_profiles": {
-            "name": "Unlimited profiles",
-            "description": "View unlimited profiles in cascade"
+            "name": "Neomezené profily",
+            "description": "Zobrazit v mřížce neomezené profily"
         }
     },
     "commands": {
         "location": {
-            "teleport_to_location": "Teleport to a locatioN",
-            "teleportation_disabled": "Teleportation disabled",
-            "teleported_to_coords": "Teleported to {lat}, {lon}",
-            "location_not_found": "Location not found",
-            "save_current_location": "Save the current location",
-            "provide_name_for_location": "Please provide a name for the location",
-            "successfully_updated_location": "Successfully updated {name}!",
-            "successfully_saved_location": "Successfully saved {name}!",
+            "teleport_to_location": "Teleportovat na místo",
+            "teleportation_disabled": "Teleport zakázán",
+            "teleported_to_coords": "Teleportováno na souřadnice {lat}, {lon}",
+            "location_not_found": "Místo nenalezeno",
+            "save_current_location": "Uložit aktuální místo",
+            "provide_name_for_location": "Zadejte název místa",
+            "successfully_updated_location": "Název {name} byl úspěšně aktualizován.",
+            "successfully_saved_location": "Místo {name} bylo uloženo.",
             "delete_saved_location": "Delete a saved location",
             "successfully_deleted_location": "Successfully deleted {name}!"
         },
@@ -150,11 +150,11 @@
         "other_settings": "Other settings",
         "online_indicator_title": "Online indicator duration (mins)",
         "online_indicator_description": "Control when online green dots disappear after inactivity",
-        "favorites_grid_size": "Favorites grid size",
-        "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
-        "reset_grindrplus_title": "Reset GrindrPlus",
-        "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
-        "yes": "Yes",
-        "no": "No"
+        "favorites_grid_size": "Velikost mřížky Oblíbené",
+        "favorites_grid_size_description": "Změnit velikost mřížky karty Oblíbené",
+        "reset_grindrplus_title": "Resetovat GrindrPlus",
+        "reset_grindrplus_description": "Funkce odstraní databázi a konfiguraci modu. Odstraní se tím alba a obrázky z mezipaměti, včetně frází a uložených poloh.",
+        "yes": "Ano",
+        "no": "Ne"
     }
 }
