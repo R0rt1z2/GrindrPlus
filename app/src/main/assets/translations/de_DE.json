@@ -14,7 +14,7 @@
         },
         "chat_terminal": {
             "name": "Chat-Konsole",
-            "description": "Create a chat terminal to execute commands"
+            "description": "Erstelle eine Chat-Konsole zum Ausführen von Befehlen"
         },
         "disable_analytics": {
             "name": "Analytics deaktivieren",
@@ -22,7 +22,7 @@
         },
         "disable_boosting": {
             "name": "Boosting deaktivieren",
-            "description": "Get rid of all upsells related to boosting"
+            "description": "Alle Upsells im Zusammenhang mit Boosting entfernen"
         },
         "disable_updates": {
             "name": "Updates deaktivieren",
@@ -34,19 +34,19 @@
         },
         "expiring_photos": {
             "name": "Ablaufende Bilder",
-            "description": "Allow unlimited photo viewing"
+            "description": "Unbegrenzt viele Bilderansichten zulassen"
         },
         "favorites": {
             "name": "Favoriten",
-            "description": "Customize layout for the favorites tab"
+            "description": "Layout für den Favoriten-Tab anpassen"
         },
         "feature_granting": {
-            "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "name": "Funktionen freischalten",
+            "description": "Alle Grindr-Funktionen freischalten (einschließlich Experimenten)"
         },
         "local_saved_phrases": {
-            "name": "Local saved phrases",
-            "description": "Save unlimited phrases locally"
+            "name": "Lokal gespeicherte Phrasen",
+            "description": "Unbegrenzt viele Phrasen Lokal speichern"
         },
         "location_spoofer": {
             "name": "Standort spoofer",
@@ -62,14 +62,14 @@
         },
         "profile_details": {
             "name": "Profil Details",
-            "description": "Add extra fields and details to profiles",
+            "description": "Hinzufügen von extra Feldern und Details zu Profilen",
             "profile_id": "Profil ID",
             "approximate_distance": "Approximierte Distanz",
-            "found_via_teleport": "Found via teleport",
+            "found_via_teleport": "Gefunden durch Teleportieren",
             "favorite": "Favoriten",
-            "from_viewed_me": "From viewed me",
+            "from_viewed_me": "Von hat mein Profil angesehen",
             "innaccessible_profile": "Nicht verfügbare Profile",
-            "jwt_boosting": "JWT boosting",
+            "jwt_boosting": "JWT-Boosting",
             "new": "Neu",
             "teleporting": "Teleportieren",
             "online_now": "Jetzt online",
@@ -82,15 +82,15 @@
         },
         "profile_views": {
             "name": "Profilansichten",
-            "description": "Control whether others can see you've viewed their profile"
+            "description": "Entscheide, ob andere sehen können, dass du ihr Profil angesehen hast"
         },
         "removable_messages": {
-            "name": "Removable messages",
-            "description": "Remove messages for both parties"
+            "name": "Entfernbare Nachrichten",
+            "description": "Nachricht für beide Benutzer entfernen"
         },
         "signature_spoofer": {
             "title": "Signaturen spoofer",
-            "description": "Allow logging in with Google while using LSPatch"
+            "description": "Anmeldung mit Google durch LSPatch erlauben"
         },
         "unlimited_albums": {
             "name": "Unbegrenzte Alben",
@@ -117,7 +117,7 @@
         "profile": {
             "open_user_profile": "Öffne ein Benutzer Profil",
             "provide_user_id": "Bitte gib eine valide ID an",
-            "get_and_copy_id": "Get and copy profile IDs",
+            "get_and_copy_id": "Profil-IDs abrufen und kopieren",
             "your_id": "Deine ID",
             "profile_id": "Profil ID",
             "profile_ids": "Profil IDs",
@@ -150,8 +150,8 @@
         "other_settings": "Weitere Einstellungen",
         "online_indicator_title": "Online Indikator Länge (min)",
         "online_indicator_description": "Legt fest wann grüne Online-Punkte nach Inaktivität verschwinden",
-        "favorites_grid_size": "Favorites grid size",
-        "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
+        "favorites_grid_size": "Favoriten Rastergröße",
+        "favorites_grid_size_description": "Anpassen der Rastergröße vom Layout des Favoriten-Tabs",
         "reset_grindrplus_title": "GrindrPlus zurücksetzen",
         "reset_grindrplus_description": "Dies setzt die Datenbank und Mod-Einstellungen zurück. Du verlierst deine gecachte Alben/Bilder, gespeicherte Phrasen und Standorte.",
         "yes": "Ja",
