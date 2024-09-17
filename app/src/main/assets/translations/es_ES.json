@@ -5,7 +5,7 @@
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
+            "name": "Permitir capturas de pantalla",
             "description": "Allow screenshots everywhere in the app"
         },
         "chat_indicators": {
@@ -44,8 +44,8 @@
             "name": "Feature granting",
             "description": "Grant all Grindr features (including experiments)"
         },
-        "local_saved_profiles": {
-            "name": "Local saved profiles",
+        "local_saved_phrases": {
+            "name": "Local saved phrases",
             "description": "Save unlimited phrases locally"
         },
         "location_spoofer": {
