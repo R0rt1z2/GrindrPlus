@@ -14,11 +14,11 @@
         },
         "chat_terminal": {
             "name": "Terminál chatu",
-            "description": "Vytvořit v chatu terminál pro spuštění příkazů"
+            "description": "Vytvořit v chatu terminál pro provádění příkazů"
         },
         "disable_analytics": {
             "name": "Vypnout analytiku",
-            "description": "Vypnout analytiku Grindru (sběr dat)"
+            "description": "Vypnout analytiku (sběr dat) Grindru"
         },
         "disable_boosting": {
             "name": "Vypnout funkci Boost",
@@ -45,8 +45,8 @@
             "description": "Zpřístupnit všechny funkce Grindru (včetně experimentálních)"
         },
         "local_saved_phrases": {
-            "name": "Local saved phrases",
-            "description": "Save unlimited phrases locally"
+            "name": "Místní ukládání frází",
+            "description": "Neomezené místní ukládání frází"
         },
         "location_spoofer": {
             "name": "Falšování polohy",
@@ -62,7 +62,7 @@
         },
         "profile_details": {
             "name": "Podrobnosti profilu",
-            "description": "Doplnit pole a podrobnosti v profilech",
+            "description": "Přidat další pole a podrobnosti v profilech",
             "profile_id": "ID profilu",
             "approximate_distance": "Přibližná vzdálenost",
             "found_via_teleport": "Nalezeno funkcí teleport",
@@ -70,7 +70,7 @@
             "from_viewed_me": "Z karty „Prohlédli si mě“",
             "innaccessible_profile": "Nepřístupný profil",
             "jwt_boosting": "Funkce JWT Boosting",
-            "new": "Nové",
+            "new": "Nový",
             "teleporting": "Teleport",
             "online_now": "Online nyní",
             "hidden_profile_details": "Skryté podrobnosti profilů",
@@ -98,7 +98,7 @@
         },
         "unlimited_profiles": {
             "name": "Neomezené profily",
-            "description": "Zobrazit v mřížce neomezené profily"
+            "description": "Zobrazit neomezený počet profilů v mřížce"
         }
     },
     "commands": {
@@ -109,47 +109,47 @@
             "location_not_found": "Místo nenalezeno",
             "save_current_location": "Uložit aktuální místo",
             "provide_name_for_location": "Zadejte název místa",
-            "successfully_updated_location": "Název {name} byl úspěšně aktualizován.",
+            "successfully_updated_location": "Název místa {name} byl úspěšně aktualizován.",
             "successfully_saved_location": "Místo {name} bylo uloženo.",
-            "delete_saved_location": "Delete a saved location",
-            "successfully_deleted_location": "Successfully deleted {name}!"
+            "delete_saved_location": "Odstranit uložené místo",
+            "successfully_deleted_location": "Místo {name} bylo odstraněno."
         },
         "profile": {
-            "open_user_profile": "Open a user profile",
-            "provide_user_id": "Please provide a valid ID",
-            "get_and_copy_id": "Get and copy profile IDs",
-            "your_id": "Your ID",
-            "profile_id": "Profile ID",
-            "profile_ids": "Profile IDs",
-            "copy_my_id": "Copy my ID",
-            "copy_profile_id": "Copy profile ID",
-            "close": "Close"
+            "open_user_profile": "Otevřít profil uživatele",
+            "provide_user_id": "Zadejte platné ID profilu",
+            "get_and_copy_id": "Načíst a zkopírovat ID profilu",
+            "your_id": "Vaše ID",
+            "profile_id": "ID profilu",
+            "profile_ids": "ID profilů",
+            "copy_my_id": "Zkopírovat moje ID",
+            "copy_profile_id": "Zkopírovat ID profilu",
+            "close": "Zavřít"
         }
     },
     "settings": {
-        "export_config": "Export config",
-        "import_config": "Import config",
-        "export_database": "Export database",
-        "import_database": "Import database",
-        "reset_grindrplus": "Reset GrindrPlus",
-        "reload_hooks": "Reload hooks",
-        "manage_hooks": "Manage hooks",
-        "database_imported_successfully": "Database imported successfully",
-        "database_exported_successfully": "Database exported successfully",
-        "failed_to_export_database": "Failed to export database!",
-        "failed_to_restore_database": "Failed to restore database!",
-        "failed_to_import_database": "Failed to import database!",
-        "config_imported_successfully": "Config imported successfully",
-        "config_exported_successfully": "Config exported successfully",
-        "failed_to_restore_config": "Failed to restore config!",
-        "failed_to_import_config": "Failed to import config!",
-        "failed_to_export_config": "Failed to export config!",
-        "database_import": "Database import",
-        "database_import_description": "The database has been successfully imported. The app will now close to apply the changes.",
+        "export_config": "Exportovat konfiguraci",
+        "import_config": "Importovat konfiguraci",
+        "export_database": "Exportovat databázi",
+        "import_database": "Importovat databázi",
+        "reset_grindrplus": "Resetovat GrindrPlus",
+        "reload_hooks": "Znovu načíst modifikátory",
+        "manage_hooks": "Spravovat modifikátory",
+        "database_imported_successfully": "Import databáze dokončen",
+        "database_exported_successfully": "Export databáze dokončen",
+        "failed_to_export_database": "Export databáze selhal.",
+        "failed_to_restore_database": "Načtení databáze selhalo.",
+        "failed_to_import_database": "Import databáze selhal.",
+        "config_imported_successfully": "Import konfigurace dokončen.",
+        "config_exported_successfully": "Export konfigurace dokončen.",
+        "failed_to_restore_config": "Obnovení konfigurace selhalo.",
+        "failed_to_import_config": "Import konfigurace selhal.",
+        "failed_to_export_config": "Export konfigurace selhal.",
+        "database_import": "Import databáze",
+        "database_import_description": "Import databáze byl dokončen. Aplikace bude ukončena, aby bylo možné načíst změny.",
         "ok": "OK",
-        "other_settings": "Other settings",
-        "online_indicator_title": "Online indicator duration (mins)",
-        "online_indicator_description": "Control when online green dots disappear after inactivity",
+        "other_settings": "Další nastavení",
+        "online_indicator_title": "Indikátor stavu online (min)",
+        "online_indicator_description": "Určí čas neaktivity, po které zmizí zelený indikátor",
         "favorites_grid_size": "Velikost mřížky Oblíbené",
         "favorites_grid_size_description": "Změnit velikost mřížky karty Oblíbené",
         "reset_grindrplus_title": "Resetovat GrindrPlus",
