@@ -1,24 +1,24 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GirndrPlus: Neusklađena verzija Grindr-a (instalirano: {installedVersion}, očekivano: {expectedVersion}). Mod onemogućen",
+        "unable_to_fetch_translations": "Nije moguće dohvatiti prijevode"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Dopusti snimke zaslona",
+            "description": "Dopusti snimke zaslona bilo gdje u aplikaciji"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indikatori za chat",
+            "description": "Ne pokazujte drugima markere/indikatore za chat"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal chata",
+            "description": "Stvorite terminal chata za izvršavanje naredbi"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Onemogući analitiku",
+            "description": "Onemogući Grindr analitiku (prikupljanje podataka)"
         },
         "disable_boosting": {
             "name": "Disable boosting",
@@ -44,8 +44,8 @@
             "name": "Feature granting",
             "description": "Grant all Grindr features (including experiments)"
         },
-        "local_saved_profiles": {
-            "name": "Local saved profiles",
+        "local_saved_phrases": {
+            "name": "Local saved phrases",
             "description": "Save unlimited phrases locally"
         },
         "location_spoofer": {
