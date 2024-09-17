@@ -9,12 +9,12 @@
             "description": "アプリ内のどこでもスクリーンショットを許可する"
         },
         "chat_indicators": {
-            "name": "チャットインジケータを表示",
-            "description": "チャットマーカー/インジケータを他のユーザーに表示しない"
+            "name": "チャットインジケーター",
+            "description": "チャットマーカー/インジケーターを他のユーザーに表示しない"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "チャットの入力欄",
+            "description": "チャット入力欄を開き、コマンドを実行する"
         },
         "disable_analytics": {
             "name": "分析を無効にする",
@@ -34,14 +34,14 @@
         },
         "expiring_photos": {
             "name": "期限付き写真",
-            "description": "写真の表示を無制限にする"
+            "description": "写真の閲覧を無制限にする"
         },
         "favorites": {
             "name": "お気に入り",
             "description": "お気に入りタブのレイアウトをカスタマイズ"
         },
         "feature_granting": {
-            "name": "Feature granting",
+            "name": "機能を有効化中",
             "description": "Grindrのすべての機能を許可する（実験的なものを含む）"
         },
         "local_saved_phrases": {
@@ -62,7 +62,7 @@
         },
         "profile_details": {
             "name": "プロフィール詳細",
-            "description": "追加項目と詳細をプロフィールに追加",
+            "description": "追加項目と詳細をプロフィールに追加表示",
             "profile_id": "プロフィールID",
             "approximate_distance": "おおよその距離",
             "found_via_teleport": "Found via teleport",
@@ -70,90 +70,90 @@
             "from_viewed_me": "From viewed me",
             "innaccessible_profile": "アクセスできないプロフィール",
             "jwt_boosting": "JWTブースト",
-            "new": "New",
+            "new": "新規",
             "teleporting": "テレポート中",
             "online_now": "オンライン中",
             "hidden_profile_details": "非表示のプロフィール詳細",
             "ok": "OK",
             "underweight": "痩せている",
-            "normal_weight": "Normal weight",
-            "overweight": "Overweight",
-            "obese": "Obese"
+            "normal_weight": "標準体重",
+            "overweight": "太っている",
+            "obese": "肥満"
         },
         "profile_views": {
             "name": "Profile views",
-            "description": "Control whether others can see you've viewed their profile"
+            "description": "足跡を残す/残さない"
         },
         "removable_messages": {
-            "name": "Removable messages",
-            "description": "Remove messages for both parties"
+            "name": "削除可能なメッセージ",
+            "description": "双方のメッセージを削除"
         },
         "signature_spoofer": {
-            "title": "Signature spoofer",
-            "description": "Allow logging in with Google while using LSPatch"
+            "title": "シグネチャの偽装",
+            "description": "LSPatch使用中にGoogleでのログインを許可する"
         },
         "unlimited_albums": {
-            "name": "Unlimited albums",
-            "description": "Ability to view unlimited albums"
+            "name": "無制限のアルバム",
+            "description": "無制限にアルバムを閲覧する"
         },
         "unlimited_profiles": {
-            "name": "Unlimited profiles",
-            "description": "View unlimited profiles in cascade"
+            "name": "無制限のプロフィール",
+            "description": "カスケードで無制限にプロフィールを表示する"
         }
     },
     "commands": {
         "location": {
-            "teleport_to_location": "Teleport to a locatioN",
-            "teleportation_disabled": "Teleportation disabled",
-            "teleported_to_coords": "Teleported to {lat}, {lon}",
-            "location_not_found": "Location not found",
-            "save_current_location": "Save the current location",
-            "provide_name_for_location": "Please provide a name for the location",
-            "successfully_updated_location": "Successfully updated {name}!",
-            "successfully_saved_location": "Successfully saved {name}!",
-            "delete_saved_location": "Delete a saved location",
-            "successfully_deleted_location": "Successfully deleted {name}!"
+            "teleport_to_location": "指定位置にテレポート",
+            "teleportation_disabled": "テレポートは無効です",
+            "teleported_to_coords": "{lat}、 {lon} にテレポートしました",
+            "location_not_found": "場所が見つかりません",
+            "save_current_location": "現在の位置を保存",
+            "provide_name_for_location": "場所の名前を入力してください",
+            "successfully_updated_location": "{name} にテレポートしました！",
+            "successfully_saved_location": "{name} を保存しました！",
+            "delete_saved_location": "保存した場所を削除",
+            "successfully_deleted_location": "{name} を削除しました！"
         },
         "profile": {
-            "open_user_profile": "Open a user profile",
-            "provide_user_id": "Please provide a valid ID",
-            "get_and_copy_id": "Get and copy profile IDs",
-            "your_id": "Your ID",
-            "profile_id": "Profile ID",
-            "profile_ids": "Profile IDs",
-            "copy_my_id": "Copy my ID",
-            "copy_profile_id": "Copy profile ID",
-            "close": "Close"
+            "open_user_profile": "ユーザープロフィールを開く",
+            "provide_user_id": "有効なIDを入力してください。",
+            "get_and_copy_id": "プロフィールIDの取得とコピー",
+            "your_id": "あなたのID",
+            "profile_id": "プロフィールID",
+            "profile_ids": "プロフィールID",
+            "copy_my_id": "自分のIDをコピー",
+            "copy_profile_id": "プロフィールIDをコピー",
+            "close": "閉じる"
         }
     },
     "settings": {
-        "export_config": "Export config",
-        "import_config": "Import config",
-        "export_database": "Export database",
-        "import_database": "Import database",
-        "reset_grindrplus": "Reset GrindrPlus",
-        "reload_hooks": "Reload hooks",
-        "manage_hooks": "Manage hooks",
-        "database_imported_successfully": "Database imported successfully",
-        "database_exported_successfully": "Database exported successfully",
-        "failed_to_export_database": "Failed to export database!",
-        "failed_to_restore_database": "Failed to restore database!",
-        "failed_to_import_database": "Failed to import database!",
-        "config_imported_successfully": "Config imported successfully",
-        "config_exported_successfully": "Config exported successfully",
-        "failed_to_restore_config": "Failed to restore config!",
-        "failed_to_import_config": "Failed to import config!",
-        "failed_to_export_config": "Failed to export config!",
-        "database_import": "Database import",
-        "database_import_description": "The database has been successfully imported. The app will now close to apply the changes.",
+        "export_config": "設定のエクスポート",
+        "import_config": "設定をインポート",
+        "export_database": "データベースのエクスポート",
+        "import_database": "データベースのインポート",
+        "reset_grindrplus": "GrindrPlusをリセットする",
+        "reload_hooks": "Modをリロード",
+        "manage_hooks": "Modの管理",
+        "database_imported_successfully": "データベースの正常にインポートしました",
+        "database_exported_successfully": "データベースを正常にエクスポートしました",
+        "failed_to_export_database": "データベースのエクスポートに失敗しました！",
+        "failed_to_restore_database": "データベースの復元に失敗しました！",
+        "failed_to_import_database": "データベースのインポートに失敗しました！",
+        "config_imported_successfully": "設定を正常にインポートしました",
+        "config_exported_successfully": "設定を正常にエクスポートしました",
+        "failed_to_restore_config": "設定の復元に失敗しました！",
+        "failed_to_import_config": "設定のインポートに失敗しました！",
+        "failed_to_export_config": "設定のエクスポートに失敗しました！",
+        "database_import": "データベースのインポート",
+        "database_import_description": "データベースが正常にインポートされました。変更を適用するためにアプリが閉じます。",
         "ok": "OK",
-        "other_settings": "Other settings",
-        "online_indicator_title": "Online indicator duration (mins)",
-        "online_indicator_description": "Control when online green dots disappear after inactivity",
-        "favorites_grid_size": "Favorites grid size",
-        "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
-        "reset_grindrplus_title": "Reset GrindrPlus",
-        "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
+        "other_settings": "その他の設定",
+        "online_indicator_title": "オンラインインジケーターの保持時間（分）",
+        "online_indicator_description": "非アクティブになり、オンラインを表す緑色の点が消えたときの設定",
+        "favorites_grid_size": "お気に入りのグリッドサイズ",
+        "favorites_grid_size_description": "お気に入りタブのレイアウトのグリッドサイズをカスタマイズ",
+        "reset_grindrplus_title": "GrindrPlusをリセットする",
+        "reset_grindrplus_description": "データベースとmodの設定をリセットします。これによりキャッシュされているアルバムや写真、保存されているフレーズや位置情報がなくなります。",
         "yes": "Yes",
         "no": "No"
     }
