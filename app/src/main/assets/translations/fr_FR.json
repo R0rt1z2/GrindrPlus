@@ -1,63 +1,63 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus : Version non supportée (installée : {installedVersion}, attendue : {expectedVersion}). Mod désactivé",
+        "unable_to_fetch_translations": "Impossible de charger les traductions"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Autoriser les captures d'écran",
+            "description": "Autorise les screenshots dans l'application"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indicateur de tchat",
+            "description": "Masque le statut des autres utilisateurs"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal de tchat",
+            "description": "Créé un tchat pour exécuter des commandes"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Désactiver les suivis",
+            "description": "Désactive la collecte de données de Grindr"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Désactiver le boost",
+            "description": "Supprime les suggestions d'achat de boost"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Désactiver les mises à jour",
+            "description": "Désactive les màj forcées"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Activer Unlimited",
+            "description": "Active les fonctionnalités Grindr Unlimited"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "Photos éphémères",
+            "description": "Permet le revisionnage des photos"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "Favoris",
+            "description": "Affichage personnalisé pour l'onglet Favoris"
         },
         "feature_granting": {
-            "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "name": "Autorisations de fonctionnalités",
+            "description": "Active toutes les fonctionnalités et experiments de Grindr"
         },
-        "local_saved_profiles": {
-            "name": "Local saved profiles",
+        "local_saved_phrases": {
+            "name": "Local saved phrases",
             "description": "Save unlimited phrases locally"
         },
         "location_spoofer": {
-            "name": "Location spoofer",
-            "description": "Spoof your location"
+            "name": "Localisation personnalisée",
+            "description": "Permet de se téléporter n'importe où"
         },
         "mod_settings": {
-            "name": "Mod settings",
-            "description": "GrindrPlus settings"
+            "name": "Paramètres du Mod",
+            "description": "Paramètres GrindrPlus"
         },
         "online_indicator": {
-            "name": "Online indicator",
+            "name": "Statut en ligne",
             "description": "More accurate online status indicator"
         },
         "profile_details": {
