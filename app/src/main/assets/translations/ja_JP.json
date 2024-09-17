@@ -1,81 +1,81 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus: Grindr のバージョンが一致しません (インストール済み: {installedVersion}, 利用可能: {expectedVersion}) 。Modは無効です",
+        "unable_to_fetch_translations": "翻訳を取得できません"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "スクリーンショットを許可する",
+            "description": "アプリ内のどこでもスクリーンショットを許可する"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "チャットインジケータを表示",
+            "description": "チャットマーカー/インジケータを他のユーザーに表示しない"
         },
         "chat_terminal": {
             "name": "Chat terminal",
             "description": "Create a chat terminal to execute commands"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "分析を無効にする",
+            "description": "Grindrによる分析を無効にする (データ収集)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "ブーストを無効にする",
+            "description": "ブーストに関連するすべてのプロモーションを排除する"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "アップデートを無効にする",
+            "description": "アップデートの強制を無効にする"
         },
         "enable_unlimited": {
             "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "description": "Unlimitedの機能を有効にする"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "期限付き写真",
+            "description": "写真の表示を無制限にする"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "お気に入り",
+            "description": "お気に入りタブのレイアウトをカスタマイズ"
         },
         "feature_granting": {
             "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "description": "Grindrのすべての機能を許可する（実験的なものを含む）"
         },
         "local_saved_phrases": {
-            "name": "Local saved phrases",
-            "description": "Save unlimited phrases locally"
+            "name": "ローカルに保存されたフレーズ",
+            "description": "無制限にフレーズをローカルに保存する"
         },
         "location_spoofer": {
-            "name": "Location spoofer",
-            "description": "Spoof your location"
+            "name": "位置情報偽装",
+            "description": "位置情報を偽装する"
         },
         "mod_settings": {
-            "name": "Mod settings",
-            "description": "GrindrPlus settings"
+            "name": "Modの設定",
+            "description": "GrindrPlusの設定"
         },
         "online_indicator": {
-            "name": "Online indicator",
-            "description": "More accurate online status indicator"
+            "name": "オンラインインジケーター",
+            "description": "より正確なオンラインインジケーターを表示"
         },
         "profile_details": {
-            "name": "Profile details",
-            "description": "Add extra fields and details to profiles",
-            "profile_id": "Profile ID",
-            "approximate_distance": "Approximate distance",
+            "name": "プロフィール詳細",
+            "description": "追加項目と詳細をプロフィールに追加",
+            "profile_id": "プロフィールID",
+            "approximate_distance": "おおよその距離",
             "found_via_teleport": "Found via teleport",
-            "favorite": "Favorite",
+            "favorite": "お気に入り",
             "from_viewed_me": "From viewed me",
-            "innaccessible_profile": "Inaccessible profile",
-            "jwt_boosting": "JWT boosting",
+            "innaccessible_profile": "アクセスできないプロフィール",
+            "jwt_boosting": "JWTブースト",
             "new": "New",
-            "teleporting": "Teleporting",
-            "online_now": "Online now",
-            "hidden_profile_details": "Hidden profile details",
+            "teleporting": "テレポート中",
+            "online_now": "オンライン中",
+            "hidden_profile_details": "非表示のプロフィール詳細",
             "ok": "OK",
-            "underweight": "Underweight",
+            "underweight": "痩せている",
             "normal_weight": "Normal weight",
             "overweight": "Overweight",
             "obese": "Obese"
