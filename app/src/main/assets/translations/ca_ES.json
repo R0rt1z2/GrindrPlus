@@ -5,39 +5,39 @@
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Permet captures de pantalla",
+            "description": "Permet captures de pantalla a qualsevol lloc de l'app"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indicadors de xat",
+            "description": "No mostrar marcadors / indicadors de xat als altres"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal de xat",
+            "description": "Crea un terminal de xat per executar comandes"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Deshabilitar analítiques",
+            "description": "Deshabilitar analítiques de Grindr (obtenció de dades)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
+            "name": "Desactivar \"boosts\"",
             "description": "Get rid of all upsells related to boosting"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Desactivar actualitzacions",
+            "description": "Desactivar actualitzacions forçades"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Activar \"unlimited\"",
+            "description": "Activar funcionalitats Grindr \"Unlimited\""
         },
         "expiring_photos": {
             "name": "Expiring photos",
             "description": "Allow unlimited photo viewing"
         },
         "favorites": {
-            "name": "Favorites",
+            "name": "Preferits",
             "description": "Customize layout for the favorites tab"
         },
         "feature_granting": {
@@ -53,7 +53,7 @@
             "description": "Spoof your location"
         },
         "mod_settings": {
-            "name": "Mod settings",
+            "name": "Configuració del mod",
             "description": "GrindrPlus settings"
         },
         "online_indicator": {
@@ -61,27 +61,27 @@
             "description": "More accurate online status indicator"
         },
         "profile_details": {
-            "name": "Profile details",
+            "name": "Detalls del perfil",
             "description": "Add extra fields and details to profiles",
-            "profile_id": "Profile ID",
-            "approximate_distance": "Approximate distance",
+            "profile_id": "ID del perfil",
+            "approximate_distance": "Distància aproximada",
             "found_via_teleport": "Found via teleport",
-            "favorite": "Favorite",
+            "favorite": "Preferit",
             "from_viewed_me": "From viewed me",
             "innaccessible_profile": "Inaccessible profile",
             "jwt_boosting": "JWT boosting",
-            "new": "New",
+            "new": "Nou",
             "teleporting": "Teleporting",
-            "online_now": "Online now",
+            "online_now": "En línia",
             "hidden_profile_details": "Hidden profile details",
-            "ok": "OK",
-            "underweight": "Underweight",
-            "normal_weight": "Normal weight",
-            "overweight": "Overweight",
-            "obese": "Obese"
+            "ok": "Acceptar",
+            "underweight": "Prim",
+            "normal_weight": "Pes normal",
+            "overweight": "Sobrepès",
+            "obese": "Obès"
         },
         "profile_views": {
-            "name": "Profile views",
+            "name": "Visualitzacions del perfil",
             "description": "Control whether others can see you've viewed their profile"
         },
         "removable_messages": {
@@ -118,24 +118,24 @@
             "open_user_profile": "Open a user profile",
             "provide_user_id": "Please provide a valid ID",
             "get_and_copy_id": "Get and copy profile IDs",
-            "your_id": "Your ID",
-            "profile_id": "Profile ID",
-            "profile_ids": "Profile IDs",
-            "copy_my_id": "Copy my ID",
-            "copy_profile_id": "Copy profile ID",
-            "close": "Close"
+            "your_id": "La teva ID",
+            "profile_id": "ID del perfil",
+            "profile_ids": "IDs dels perfils",
+            "copy_my_id": "Copiar la meva ID",
+            "copy_profile_id": "Copiar ID del perfil",
+            "close": "Tancar"
         }
     },
     "settings": {
-        "export_config": "Export config",
-        "import_config": "Import config",
-        "export_database": "Export database",
-        "import_database": "Import database",
+        "export_config": "Exportar configuració",
+        "import_config": "Importar configuració",
+        "export_database": "Exportar base de dades",
+        "import_database": "Importar base de dades",
         "reset_grindrplus": "Reset GrindrPlus",
         "reload_hooks": "Reload hooks",
-        "manage_hooks": "Manage hooks",
-        "database_imported_successfully": "Database imported successfully",
-        "database_exported_successfully": "Database exported successfully",
+        "manage_hooks": "Administrar \"hooks\"",
+        "database_imported_successfully": "Base de dades importada amb èxit",
+        "database_exported_successfully": "Base de dades exportada amb èxit",
         "failed_to_export_database": "Failed to export database!",
         "failed_to_restore_database": "Failed to restore database!",
         "failed_to_import_database": "Failed to import database!",
@@ -146,15 +146,15 @@
         "failed_to_export_config": "Failed to export config!",
         "database_import": "Database import",
         "database_import_description": "The database has been successfully imported. The app will now close to apply the changes.",
-        "ok": "OK",
-        "other_settings": "Other settings",
+        "ok": "Acceptar",
+        "other_settings": "Altres ajustaments",
         "online_indicator_title": "Online indicator duration (mins)",
         "online_indicator_description": "Control when online green dots disappear after inactivity",
         "favorites_grid_size": "Favorites grid size",
         "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
         "reset_grindrplus_title": "Reset GrindrPlus",
         "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
-        "yes": "Yes",
+        "yes": "Sí",
         "no": "No"
     }
 }
