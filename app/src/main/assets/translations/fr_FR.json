@@ -1,0 +1,160 @@
+{
+    "global": {
+        "version_mismatch": "GrindrPlus : Version non supportée (installée : {installedVersion}, attendue : {expectedVersion}). Mod désactivé",
+        "unable_to_fetch_translations": "Impossible de charger les traductions"
+    },
+    "hooks": {
+        "allow_screenshots": {
+            "name": "Autoriser les captures d'écran",
+            "description": "Autorise les screenshots dans l'application"
+        },
+        "chat_indicators": {
+            "name": "Indicateur de tchat",
+            "description": "Masque le statut délivré et de lecture dans le tchat pour les autres utilisateurs"
+        },
+        "chat_terminal": {
+            "name": "Terminal de tchat",
+            "description": "Créé un tchat pour exécuter des commandes"
+        },
+        "disable_analytics": {
+            "name": "Désactiver les suivis",
+            "description": "Désactive la collecte de données de Grindr"
+        },
+        "disable_boosting": {
+            "name": "Désactiver le boost",
+            "description": "Supprime les suggestions d'achat de boost"
+        },
+        "disable_updates": {
+            "name": "Désactiver les mises à jour",
+            "description": "Désactive les màj forcées"
+        },
+        "enable_unlimited": {
+            "name": "Activer Unlimited",
+            "description": "Active les fonctionnalités Grindr Unlimited"
+        },
+        "expiring_photos": {
+            "name": "Photos éphémères",
+            "description": "Permet le revisionnage des photos"
+        },
+        "favorites": {
+            "name": "Favoris",
+            "description": "Affichage personnalisé pour l'onglet Favoris"
+        },
+        "feature_granting": {
+            "name": "Autorisations de fonctionnalités",
+            "description": "Active toutes les fonctionnalités et experiments de Grindr"
+        },
+        "local_saved_phrases": {
+            "name": "Phrases enregistrées",
+            "description": "Les phrases seront enregistrées sur votre appareil"
+        },
+        "location_spoofer": {
+            "name": "Localisation personnalisée",
+            "description": "Permet de se téléporter n'importe où"
+        },
+        "mod_settings": {
+            "name": "Paramètres du Mod",
+            "description": "Paramètres GrindrPlus"
+        },
+        "online_indicator": {
+            "name": "Statut en ligne",
+            "description": "Indicateur du statut en ligne plus précis"
+        },
+        "profile_details": {
+            "name": "Détails du profil",
+            "description": "Ajoute des informations supplémentaires aux profils",
+            "profile_id": "ID du profil",
+            "approximate_distance": "Distance approximative",
+            "found_via_teleport": "Trouvé via téléportation",
+            "favorite": "Favoris",
+            "from_viewed_me": "A partir des consultations de profil",
+            "innaccessible_profile": "Profil inaccessible",
+            "jwt_boosting": "Boost JWT",
+            "new": "Nouveau",
+            "teleporting": "Téléportation",
+            "online_now": "En ligne",
+            "hidden_profile_details": "Détails masqués",
+            "ok": "OK",
+            "underweight": "Maigre",
+            "normal_weight": "Poids normal",
+            "overweight": "Surpoids",
+            "obese": "Obésité"
+        },
+        "profile_views": {
+            "name": "Vues du profil",
+            "description": "Permet aux utilisateurs de savoir si vous avez consulté leur profil"
+        },
+        "removable_messages": {
+            "name": "Retrait de messages",
+            "description": "Permet la suppression de messages, peu importe leur date"
+        },
+        "signature_spoofer": {
+            "title": "Signature spoofer",
+            "description": "Autorise la connexion via Google en utilisant LSPatch"
+        },
+        "unlimited_albums": {
+            "name": "Albums illimités",
+            "description": "Permet de visionner n'importe quel album déjà partagé"
+        },
+        "unlimited_profiles": {
+            "name": "Grille de profils illimitée",
+            "description": "Permet de voir les profils sans limite"
+        }
+    },
+    "commands": {
+        "location": {
+            "teleport_to_location": "Se téléporter",
+            "teleportation_disabled": "Téléportation désactivée",
+            "teleported_to_coords": "Téléporté vers {lat},{lon}",
+            "location_not_found": "Localisation introuvable",
+            "save_current_location": "Sauvegarder la localisation actuelle",
+            "provide_name_for_location": "Merci de donner un nom à cet emplacement",
+            "successfully_updated_location": "{name} mis à jour !",
+            "successfully_saved_location": "{name} sauvegardé !",
+            "delete_saved_location": "Localisation supprimée",
+            "successfully_deleted_location": "{name} effacé !"
+        },
+        "profile": {
+            "open_user_profile": "Ouvrir un profil",
+            "provide_user_id": "Merci d'entrer un ID valide",
+            "get_and_copy_id": "Visionner et copier les identifiants",
+            "your_id": "Votre ID",
+            "profile_id": "ID de profil",
+            "profile_ids": "Identifiants de profils",
+            "copy_my_id": "Copier mon ID",
+            "copy_profile_id": "Copier l'ID du profil",
+            "close": "Fermer"
+        }
+    },
+    "settings": {
+        "export_config": "Exporter la configuration",
+        "import_config": "Importer la configuration",
+        "export_database": "Exporter la base de données",
+        "import_database": "Importer la base de données",
+        "reset_grindrplus": "Réinitialiser GrindrPlus",
+        "reload_hooks": "Recharger les crochets",
+        "manage_hooks": "Gérer les crochets",
+        "database_imported_successfully": "Base de données importée",
+        "database_exported_successfully": "Base de données exportée",
+        "failed_to_export_database": "L'export de la base de donnée a échoué",
+        "failed_to_restore_database": "La restauration de la base de donnée a échouée",
+        "failed_to_import_database": "L'import de la base de donnée a échoué",
+        "config_imported_successfully": "Configuration importée",
+        "config_exported_successfully": "Configuration exportée",
+        "failed_to_restore_config": "La restauration de la configuration a échouée",
+        "failed_to_import_config": "L'import de la configuration a échouée",
+        "failed_to_export_config": "L'export de la configuration a échouée",
+        "database_import": "Importation de la base de données",
+        "database_import_description": "La base de données a été importée. L'application va se fermer pour appliquer les changements.",
+        "ok": "OK",
+        "other_settings": "Paramètres supplémentaires",
+        "online_indicator_title": "Statut en ligne (minutes)",
+        "online_indicator_description": "Contrôle le délai d'affichage de votre statut",
+        "favorites_grid_size": "Grille de favoris",
+        "favorites_grid_size_description": "Modifie le nombre de colonnes dans l'onglet Favoris",
+        "reset_grindrplus_title": "Réinitialiser GrindrPlus",
+        "reset_grindrplus_description": "Cela écrasera les données de configuration du mod, les albums, les images, les phrases enregistrées et les localisations sauvegardées seront effacées.",
+        "yes": "Oui",
+        "no": "Non"
+    }
+}

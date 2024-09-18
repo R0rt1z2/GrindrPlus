@@ -1,0 +1,160 @@
+{
+    "global": {
+        "version_mismatch": "GrindrPlus: Incompatibilidade com versão do Grindr (instalado: {installedVersion}, esperado: {expectedVersion}). Mod desativado",
+        "unable_to_fetch_translations": "Não foi possível obter traduções"
+    },
+    "hooks": {
+        "allow_screenshots": {
+            "name": "Permitir capturas de ecrã",
+            "description": "Permitir capturas de ecrã em toda a aplicação"
+        },
+        "chat_indicators": {
+            "name": "Indicadores de conversa",
+            "description": "Não mostrar marcadores / indicadores para outros"
+        },
+        "chat_terminal": {
+            "name": "Terminal de conversa",
+            "description": "Criar um terminal de conversa para executar comandos"
+        },
+        "disable_analytics": {
+            "name": "Desativar analítica",
+            "description": "Desativar analítica do Grindr (recolha de dados)"
+        },
+        "disable_boosting": {
+            "name": "Desativar impulso",
+            "description": "Livrar-se de todas as upsells relacionadas a impulsos"
+        },
+        "disable_updates": {
+            "name": "Desativar atualizações",
+            "description": "Desativar atualizações forçadas"
+        },
+        "enable_unlimited": {
+            "name": "Ativar ilimitado",
+            "description": "Ativar funções do Grindr Ilimitado"
+        },
+        "expiring_photos": {
+            "name": "Fotos a expirar",
+            "description": "Permitir visualização ilimitada de fotos"
+        },
+        "favorites": {
+            "name": "Favoritos",
+            "description": "Personalizar o aspeto da aba de favoritos"
+        },
+        "feature_granting": {
+            "name": "Atribuição de recursos",
+            "description": "Conceder todas as funções do Grindr (incluindo as experimentais)"
+        },
+        "local_saved_phrases": {
+            "name": "Frases locais salvas",
+            "description": "Salvar frases ilimitadas localmente"
+        },
+        "location_spoofer": {
+            "name": "Falsificação de localização",
+            "description": "Falsificar a sua localização"
+        },
+        "mod_settings": {
+            "name": "Configurações do mod",
+            "description": "Configurações do GrindrPlus"
+        },
+        "online_indicator": {
+            "name": "Indicador de conexão",
+            "description": "Indicador de estado de conexão mais preciso"
+        },
+        "profile_details": {
+            "name": "Detalhes do perfil",
+            "description": "Adicionar campos e detalhes extras nos perfis",
+            "profile_id": "ID do perfil",
+            "approximate_distance": "Distância aproximada",
+            "found_via_teleport": "Encontrado via teletransporte",
+            "favorite": "Favorito",
+            "from_viewed_me": "De Viram-me",
+            "innaccessible_profile": "Perfil inacessível",
+            "jwt_boosting": "Impulsionador JWT",
+            "new": "Novo",
+            "teleporting": "Teletransportando",
+            "online_now": "Conectado Agora",
+            "hidden_profile_details": "Detalhes do perfil ocultos",
+            "ok": "OK",
+            "underweight": "Abaixo do peso",
+            "normal_weight": "Peso normal",
+            "overweight": "Acima do peso",
+            "obese": "Obeso"
+        },
+        "profile_views": {
+            "name": "Visualizações do perfil",
+            "description": "Controlar se os outros podem ver se você viu o perfil"
+        },
+        "removable_messages": {
+            "name": "Mensagens removíveis",
+            "description": "Remover mensagens de ambas as partes"
+        },
+        "signature_spoofer": {
+            "title": "Falsificador de assinaturas",
+            "description": "Permitir entrar com o Google enquanto usa LSPatch"
+        },
+        "unlimited_albums": {
+            "name": "Álbuns ilimitados",
+            "description": "Capacidade de ver álbuns ilimitados"
+        },
+        "unlimited_profiles": {
+            "name": "Perfis ilimitados",
+            "description": "Ver perfis ilimitados em cascata"
+        }
+    },
+    "commands": {
+        "location": {
+            "teleport_to_location": "Teletransportar para um local",
+            "teleportation_disabled": "Teletransporte desativado",
+            "teleported_to_coords": "Teletransportado para {lat}, {lon}",
+            "location_not_found": "Localização não encontrada",
+            "save_current_location": "Salvar localização atual",
+            "provide_name_for_location": "Por favor forneça um nome para a localização",
+            "successfully_updated_location": "{name} atualizado com sucesso!",
+            "successfully_saved_location": "{name} guardado com sucesso!",
+            "delete_saved_location": "Apagar uma localização guardada",
+            "successfully_deleted_location": "{name} apagada com sucesso!"
+        },
+        "profile": {
+            "open_user_profile": "Abrir um perfil de utilizador",
+            "provide_user_id": "Por favor forneça um ID válido",
+            "get_and_copy_id": "Obter e copiar IDs de perfis",
+            "your_id": "Teu ID",
+            "profile_id": "ID do perfil",
+            "profile_ids": "IDs do perfil",
+            "copy_my_id": "Copiar meu ID",
+            "copy_profile_id": "Copiar ID do perfil",
+            "close": "Fechar"
+        }
+    },
+    "settings": {
+        "export_config": "Exportar configuração",
+        "import_config": "Importar configuração",
+        "export_database": "Exportar base de dados",
+        "import_database": "Importar base de dados",
+        "reset_grindrplus": "Repor GrindrPlus",
+        "reload_hooks": "Recarregar hooks",
+        "manage_hooks": "Gerir hooks",
+        "database_imported_successfully": "Base de dados importada com sucesso",
+        "database_exported_successfully": "Base de dados exportada com sucesso",
+        "failed_to_export_database": "Falha ao exportar base de dados!",
+        "failed_to_restore_database": "Falha ao restaurar base de dados!",
+        "failed_to_import_database": "Falha ao importar base de dados!",
+        "config_imported_successfully": "Configuração importada com sucesso",
+        "config_exported_successfully": "Configuração exportada com sucesso",
+        "failed_to_restore_config": "Falha a restaurar configuração!",
+        "failed_to_import_config": "Falha a importar configuração!",
+        "failed_to_export_config": "Falha a exportar configuração!",
+        "database_import": "Importação de base de dados",
+        "database_import_description": "A base de dados foi importada com sucesso. A aplicação irá fechar para aplicar alterações.",
+        "ok": "OK",
+        "other_settings": "Outras definições",
+        "online_indicator_title": "Duração do indicador de conexão (mins)",
+        "online_indicator_description": "Controla quando pontos verdes de conexão desaparecem após inatividade",
+        "favorites_grid_size": "Tamanho da grelha de favoritos",
+        "favorites_grid_size_description": "Personalizar o tamanho da grelha do layout para a aba dos favoritos",
+        "reset_grindrplus_title": "Repor GrindrPlus",
+        "reset_grindrplus_description": "Isto irá repor a base de dados e a configuração do mod, o que significa que os álbums/fotografias em cache desaparecerão, assim como as frases salvas e locais.",
+        "yes": "Sim",
+        "no": "Não"
+    }
+}
