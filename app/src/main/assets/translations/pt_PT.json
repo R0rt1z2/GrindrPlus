@@ -5,71 +5,71 @@
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Permitir capturas de ecrã",
+            "description": "Permitir capturas de ecrã em toda a aplicação"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indicadores de conversa",
+            "description": "Não mostrar marcadores / indicadores para outros"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal de conversa",
+            "description": "Criar um terminal de conversa para executar comandos"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Desativar analítica",
+            "description": "Desativar analítica do Grindr (recolha de dados)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Desativar impulso",
+            "description": "Livrar-se de todas as upsells relacionadas a impulsos"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Desativar atualizações",
+            "description": "Desativar atualizações forçadas"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Ativar ilimitado",
+            "description": "Ativar funções do Grindr Ilimitado"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "Fotos a expirar",
+            "description": "Permitir visualização ilimitada de fotos"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "Favoritos",
+            "description": "Personalizar o aspeto da aba de favoritos"
         },
         "feature_granting": {
-            "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "name": "Atribuição de recursos",
+            "description": "Conceder todas as funções do Grindr (incluindo as experimentais)"
         },
         "local_saved_phrases": {
-            "name": "Local saved phrases",
-            "description": "Save unlimited phrases locally"
+            "name": "Frases locais salvas",
+            "description": "Salvar frases ilimitadas localmente"
         },
         "location_spoofer": {
-            "name": "Location spoofer",
-            "description": "Spoof your location"
+            "name": "Falsificação de localização",
+            "description": "Falsificar a tua localização"
         },
         "mod_settings": {
-            "name": "Mod settings",
-            "description": "GrindrPlus settings"
+            "name": "Configurações do mod",
+            "description": "Configurações do GrindrPlus"
         },
         "online_indicator": {
-            "name": "Online indicator",
-            "description": "More accurate online status indicator"
+            "name": "Indicador de Online",
+            "description": "Indicador de estado online mais preciso"
         },
         "profile_details": {
-            "name": "Profile details",
-            "description": "Add extra fields and details to profiles",
-            "profile_id": "Profile ID",
-            "approximate_distance": "Approximate distance",
-            "found_via_teleport": "Found via teleport",
-            "favorite": "Favorite",
-            "from_viewed_me": "From viewed me",
-            "innaccessible_profile": "Inaccessible profile",
-            "jwt_boosting": "JWT boosting",
+            "name": "Detalhes do perfil",
+            "description": "Adicionar campos e detalhes extras nos perfis",
+            "profile_id": "ID do perfil",
+            "approximate_distance": "Distância aproximada",
+            "found_via_teleport": "Encontrado via teletransporte",
+            "favorite": "Favorito",
+            "from_viewed_me": "De Viram-me",
+            "innaccessible_profile": "Perfil inacessível",
+            "jwt_boosting": "Impulsionador JWT",
             "new": "New",
             "teleporting": "Teleporting",
             "online_now": "Online now",
