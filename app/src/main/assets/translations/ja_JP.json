@@ -29,7 +29,7 @@
             "description": "アップデートの強制を無効にする"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
+            "name": "Unlimited機能を有効にする",
             "description": "Unlimitedの機能を有効にする"
         },
         "expiring_photos": {
