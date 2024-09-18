@@ -87,4 +87,17 @@ class BridgeClient(private val context: Context) : ServiceConnection {
             JSONObject(it)
         }
     }
+
+    /**
+     * Get list of available translations ("en_US", "es_ES", etc).
+     * @return List of available translations.
+     */
+    fun getAvailableTranslations(): List<String> {
+        if (!isBound) {
+            GrindrPlus.logger.log("Cannot get available translations, service is not bound!")
+            return emptyList()
+        }
+
+        return bridgeService?.getAvailableTranslations() ?: emptyList()
+    }
 }

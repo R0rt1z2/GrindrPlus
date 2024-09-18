@@ -39,6 +39,7 @@ object GrindrPlus {
 
     lateinit var hookManager: HookManager
     lateinit var translations: JSONObject
+    lateinit var localeTag: String
 
     var currentActivity: Activity? = null
         private set
@@ -100,7 +101,7 @@ object GrindrPlus {
 
         bridgeClient = BridgeClient(context).apply {
             connect {
-                val localeTag = Config.get("locale", "") as String?
+                localeTag = Config.get("locale", "") as String?
                     ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         context.resources.configuration.locales.get(0).toLanguageTag()
                     } else {
@@ -148,7 +149,22 @@ object GrindrPlus {
         return classLoader.loadClass(name)
     }
 
+    fun getTranslation(key: String, vararg placeholders: Pair<String, String>): String {
+        var translation = translations.optString(key, key)
+
+        placeholders.forEach { (placeholder, value) ->
+            translation = translation.replace("{$placeholder}", value)
+        }
+
+        return translation
+    }
+
+    fun getTranslation(key: String): String {
+        return translations.optString(key, key)
+    }
+
     fun reloadTranslations(locale: String) {
-        translations = bridgeClient.getTranslation(locale) ?: JSONObject()
+        localeTag = locale
+        translations = bridgeClient.getTranslation(localeTag) ?: JSONObject()
     }
 }

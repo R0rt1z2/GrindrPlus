@@ -29,5 +29,15 @@ class BridgeService : Service() {
                 "{\"error\": \"Translation file not found or failed to load\"}"
             }
         }
+
+        @Throws(RemoteException::class)
+        override fun getAvailableTranslations(): List<String> {
+            return try {
+                assets.list("translations")?.map { it.removeSuffix(".json") } ?: emptyList()
+            } catch (e: Exception) {
+                Log.e("BridgeService", "Error listing translation files", e)
+                emptyList()
+            }
+        }
     }
 }
