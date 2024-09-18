@@ -1,0 +1,160 @@
+{
+    "global": {
+        "version_mismatch": "GrindrPlus: Grindr のバージョンが一致しません (インストール済み: {installedVersion}, 利用可能: {expectedVersion}) 。Modは無効です",
+        "unable_to_fetch_translations": "翻訳を取得できません"
+    },
+    "hooks": {
+        "allow_screenshots": {
+            "name": "スクリーンショットを許可する",
+            "description": "アプリ内のどこでもスクリーンショットを許可する"
+        },
+        "chat_indicators": {
+            "name": "チャットインジケーター",
+            "description": "チャットマーカー/インジケーターを他のユーザーに表示しない"
+        },
+        "chat_terminal": {
+            "name": "チャットの入力欄",
+            "description": "チャット入力欄を開き、コマンドを実行する"
+        },
+        "disable_analytics": {
+            "name": "分析を無効にする",
+            "description": "Grindrによる分析を無効にする (データ収集)"
+        },
+        "disable_boosting": {
+            "name": "ブーストを無効にする",
+            "description": "ブーストに関連するすべてのプロモーションを排除する"
+        },
+        "disable_updates": {
+            "name": "アップデートを無効にする",
+            "description": "アップデートの強制を無効にする"
+        },
+        "enable_unlimited": {
+            "name": "Unlimitedを有効にする",
+            "description": "Unlimitedの機能を有効にする"
+        },
+        "expiring_photos": {
+            "name": "期限付き写真",
+            "description": "写真の閲覧を無制限にする"
+        },
+        "favorites": {
+            "name": "お気に入り",
+            "description": "お気に入りタブのレイアウトをカスタマイズ"
+        },
+        "feature_granting": {
+            "name": "機能を有効化中",
+            "description": "Grindrのすべての機能を許可する（実験的なものを含む）"
+        },
+        "local_saved_phrases": {
+            "name": "ローカルに保存されたフレーズ",
+            "description": "無制限にフレーズをローカルに保存する"
+        },
+        "location_spoofer": {
+            "name": "位置情報偽装",
+            "description": "位置情報を偽装する"
+        },
+        "mod_settings": {
+            "name": "Modの設定",
+            "description": "GrindrPlusの設定"
+        },
+        "online_indicator": {
+            "name": "オンラインインジケーター",
+            "description": "より正確なオンラインインジケーターを使用"
+        },
+        "profile_details": {
+            "name": "プロフィール詳細",
+            "description": "追加項目と詳細をプロフィールに追加表示",
+            "profile_id": "プロフィールID",
+            "approximate_distance": "おおよその距離",
+            "found_via_teleport": "遠距離からの閲覧",
+            "favorite": "お気に入り",
+            "from_viewed_me": "あなたの足跡から閲覧",
+            "innaccessible_profile": "アクセスできないプロフィール",
+            "jwt_boosting": "JWTブースト",
+            "new": "新規",
+            "teleporting": "テレポート中",
+            "online_now": "オンライン中",
+            "hidden_profile_details": "非表示のプロフィール詳細",
+            "ok": "OK",
+            "underweight": "痩せている",
+            "normal_weight": "標準体重",
+            "overweight": "太っている",
+            "obese": "肥満"
+        },
+        "profile_views": {
+            "name": "プロフィール閲覧の足跡",
+            "description": "足跡を残す/残さない"
+        },
+        "removable_messages": {
+            "name": "削除可能なメッセージ",
+            "description": "双方のメッセージを削除"
+        },
+        "signature_spoofer": {
+            "title": "シグネチャの偽装",
+            "description": "LSPatch使用中にGoogleでのログインを許可する"
+        },
+        "unlimited_albums": {
+            "name": "無制限のアルバム",
+            "description": "無制限にアルバムを閲覧する"
+        },
+        "unlimited_profiles": {
+            "name": "無制限のプロフィール",
+            "description": "カスケードで無制限にプロフィールを表示する"
+        }
+    },
+    "commands": {
+        "location": {
+            "teleport_to_location": "指定位置にテレポート",
+            "teleportation_disabled": "テレポートを無効にしました",
+            "teleported_to_coords": "{lat}、 {lon} にテレポートしました",
+            "location_not_found": "場所が見つかりません",
+            "save_current_location": "現在の位置を保存",
+            "provide_name_for_location": "場所の名前を入力してください",
+            "successfully_updated_location": "{name} にテレポートしました！",
+            "successfully_saved_location": "{name} を保存しました！",
+            "delete_saved_location": "保存した場所を削除",
+            "successfully_deleted_location": "{name} を削除しました！"
+        },
+        "profile": {
+            "open_user_profile": "ユーザープロフィールを開く",
+            "provide_user_id": "有効なIDを入力してください。",
+            "get_and_copy_id": "プロフィールIDの取得とコピー",
+            "your_id": "あなたのID",
+            "profile_id": "プロフィールID",
+            "profile_ids": "プロフィールID",
+            "copy_my_id": "自分のIDをコピー",
+            "copy_profile_id": "プロフィールIDをコピー",
+            "close": "閉じる"
+        }
+    },
+    "settings": {
+        "export_config": "設定のエクスポート",
+        "import_config": "設定のインポート",
+        "export_database": "データベースのエクスポート",
+        "import_database": "データベースのインポート",
+        "reset_grindrplus": "GrindrPlusをリセットする",
+        "reload_hooks": "Modをリロード",
+        "manage_hooks": "Modの管理",
+        "database_imported_successfully": "データベースをインポートしました",
+        "database_exported_successfully": "データベースをエクスポートしました",
+        "failed_to_export_database": "データベースのエクスポートに失敗しました！",
+        "failed_to_restore_database": "データベースの復元に失敗しました！",
+        "failed_to_import_database": "データベースのインポートに失敗しました！",
+        "config_imported_successfully": "設定をインポートしました",
+        "config_exported_successfully": "設定をエクスポートしました",
+        "failed_to_restore_config": "設定の復元に失敗しました！",
+        "failed_to_import_config": "設定のインポートに失敗しました！",
+        "failed_to_export_config": "設定のエクスポートに失敗しました！",
+        "database_import": "データベースのインポート",
+        "database_import_description": "データベースがインポートされました。変更を適用するためにアプリが閉じます。",
+        "ok": "OK",
+        "other_settings": "その他の設定",
+        "online_indicator_title": "オンラインインジケーターの保持時間（分）",
+        "online_indicator_description": "非アクティブになり、オンラインを表す緑色の点が消えたときの設定",
+        "favorites_grid_size": "お気に入りのグリッドサイズ",
+        "favorites_grid_size_description": "お気に入りタブのグリッドサイズをカスタマイズ",
+        "reset_grindrplus_title": "GrindrPlusをリセットする",
+        "reset_grindrplus_description": "データベースとmodの設定をリセットします。これによりキャッシュされているアルバムや写真、保存されているフレーズや位置情報がなくなります。",
+        "yes": "Yes",
+        "no": "No"
+    }
+}

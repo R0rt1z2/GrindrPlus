@@ -1,0 +1,160 @@
+{
+    "global": {
+        "version_mismatch": "GirndrPlus: Neusklađena verzija Grindr-a (instalirano: {installedVersion}, očekivano: {expectedVersion}). Mod onemogućen",
+        "unable_to_fetch_translations": "Nije moguće dohvatiti prijevode"
+    },
+    "hooks": {
+        "allow_screenshots": {
+            "name": "Dopusti snimke zaslona",
+            "description": "Dopusti snimke zaslona bilo gdje u aplikaciji"
+        },
+        "chat_indicators": {
+            "name": "Indikatori za chat",
+            "description": "Ne pokazujte drugima markere/indikatore za chat"
+        },
+        "chat_terminal": {
+            "name": "Terminal chata",
+            "description": "Stvorite terminal chata za izvršavanje naredbi"
+        },
+        "disable_analytics": {
+            "name": "Onemogući analitiku",
+            "description": "Onemogući Grindr analitiku (prikupljanje podataka)"
+        },
+        "disable_boosting": {
+            "name": "Onemogući boosting",
+            "description": "Riješite se svih skupljih prodaja povezanih s boostingom"
+        },
+        "disable_updates": {
+            "name": "Onemogući ažuriranja",
+            "description": "Onemogući prisiljena ažuriranja"
+        },
+        "enable_unlimited": {
+            "name": "Omogući neogranično",
+            "description": "Omogući Grindr Neograniče značajke"
+        },
+        "expiring_photos": {
+            "name": "Fotografije koje ističu",
+            "description": "Omogućite neograničeno gledanje fotografija"
+        },
+        "favorites": {
+            "name": "Favoriti",
+            "description": "Prilagodite izgled za karticu favorita"
+        },
+        "feature_granting": {
+            "name": "Dodjela značajki",
+            "description": "Dodijelite sve Grindr značajke (uključujući eksperimente)"
+        },
+        "local_saved_phrases": {
+            "name": "Lokalno spremljene fraze",
+            "description": "Spremite neograničen broj fraza lokalno"
+        },
+        "location_spoofer": {
+            "name": "Spoofer lokacije",
+            "description": "Lažirajte svoju lokaciju"
+        },
+        "mod_settings": {
+            "name": "Mod postavke",
+            "description": "GrindrPlus postavke"
+        },
+        "online_indicator": {
+            "name": "Online indikator",
+            "description": "Precizniji indikator online statusa"
+        },
+        "profile_details": {
+            "name": "Detalji profila",
+            "description": "Dodajte dodatna polja i detalje u profile",
+            "profile_id": "ID Profila",
+            "approximate_distance": "Približna udaljenost",
+            "found_via_teleport": "Pronađen putem teleporta",
+            "favorite": "Favoriti",
+            "from_viewed_me": "Od pogledao me",
+            "innaccessible_profile": "Nedostupan profil",
+            "jwt_boosting": "JWT boosting",
+            "new": "Novo",
+            "teleporting": "Teleportitanje",
+            "online_now": "Na mreži",
+            "hidden_profile_details": "Detalji skrivenog profila",
+            "ok": "OK",
+            "underweight": "Pothranjen",
+            "normal_weight": "Normalna težina",
+            "overweight": "Prekomjerna težina",
+            "obese": "Pretilo"
+        },
+        "profile_views": {
+            "name": "Pregledi profila",
+            "description": "Kontrolirajte mogu li drugi vidjeti da ste pogledali njihov profil"
+        },
+        "removable_messages": {
+            "name": "Poruke koje se mogu ukloniti",
+            "description": "Uklonite poruke za obje strane"
+        },
+        "signature_spoofer": {
+            "title": "Potpis spoofer",
+            "description": "Dopusti prijavu s Googleom dok koristiš LSPatch"
+        },
+        "unlimited_albums": {
+            "name": "Neograničeni albumi",
+            "description": "Mogućnost gledanja neograničenih albuma"
+        },
+        "unlimited_profiles": {
+            "name": "Neograničeni profili",
+            "description": "Pogledajte neograniče profile u kaskadi"
+        }
+    },
+    "commands": {
+        "location": {
+            "teleport_to_location": "Teleportiraj se na lokaciju",
+            "teleportation_disabled": "Teleportacija onemogućena",
+            "teleported_to_coords": "Teleportiraj na {lat}, {lon}",
+            "location_not_found": "Lokacija nije pronađena",
+            "save_current_location": "Spremi trenutačnu lokaciju",
+            "provide_name_for_location": "Navedite naziv lokacije",
+            "successfully_updated_location": "Uspješno ažurirano {name}!",
+            "successfully_saved_location": "Uspješno spremljeno {name}!",
+            "delete_saved_location": "Brisanje spremljene lokacije",
+            "successfully_deleted_location": "Uspješno izbrisano {name}!"
+        },
+        "profile": {
+            "open_user_profile": "Otvorite korisnički profil",
+            "provide_user_id": "Navedite važeći ID",
+            "get_and_copy_id": "Dobijte i kopirajte ID profila",
+            "your_id": "Tvoj ID",
+            "profile_id": "ID profila",
+            "profile_ids": "ID-ovi profila",
+            "copy_my_id": "Kopiraj moj ID",
+            "copy_profile_id": "Kopiraj ID profila",
+            "close": "Zatvori"
+        }
+    },
+    "settings": {
+        "export_config": "Izvoz konfiguracije",
+        "import_config": "Izvoz konfiguracije",
+        "export_database": "Izvoz baze podataka",
+        "import_database": "Uvoz baze podataka",
+        "reset_grindrplus": "Resetiraj GrindrPlus",
+        "reload_hooks": "Ponovno učitaj hooks",
+        "manage_hooks": "Upravljaj sa hooks",
+        "database_imported_successfully": "Baza podataka je uspješno uvezena",
+        "database_exported_successfully": "Baza podataka je uspješno izvezena",
+        "failed_to_export_database": "Izvoz baze podataka nije uspio!",
+        "failed_to_restore_database": "Vraćanje baze podataka nije uspjelo!",
+        "failed_to_import_database": "Uvoz baze podataka nije uspio!",
+        "config_imported_successfully": "Konfiguracija je uspješno uvezena",
+        "config_exported_successfully": "Konfiguracija je uspješno izvezena",
+        "failed_to_restore_config": "Vraćanje konfiguracije nije uspjelo!",
+        "failed_to_import_config": "Uvoz konfiguracije nije uspio!",
+        "failed_to_export_config": "Izvoz konfiguracije nije uspio!",
+        "database_import": "Uvoz baze podataka",
+        "database_import_description": "Baza podataka je uspješno uvezena. Aplikacija će se sada zatvoriti kako bi se primijenile promjene.",
+        "ok": "OK",
+        "other_settings": "Ostale postavke",
+        "online_indicator_title": "Trajanje online indikatora (min)",
+        "online_indicator_description": "Kontrolirajte kada online zelene točke nestaju nakon neaktivnosti",
+        "favorites_grid_size": "Veličina mreže favorita",
+        "favorites_grid_size_description": "Prilagodite veličinu rešetke izgleda za karticu favorita",
+        "reset_grindrplus_title": "Resetiraj GrindrPlus",
+        "reset_grindrplus_description": "Ovo će resetirati bazu podataka i konfiguraciju moda, što znači da će vaši albumi/slike u predmemoriji nestati, kao i spremljene fraze i lokacije.",
+        "yes": "Da",
+        "no": "Ne"
+    }
+}
