@@ -29,7 +29,7 @@
             "description": "アップデートの強制を無効にする"
         },
         "enable_unlimited": {
-            "name": "Unlimited機能を有効にする",
+            "name": "Unlimitedを有効にする",
             "description": "Unlimitedの機能を有効にする"
         },
         "expiring_photos": {
@@ -58,16 +58,16 @@
         },
         "online_indicator": {
             "name": "オンラインインジケーター",
-            "description": "より正確なオンラインインジケーターを表示"
+            "description": "より正確なオンラインインジケーターを使用"
         },
         "profile_details": {
             "name": "プロフィール詳細",
             "description": "追加項目と詳細をプロフィールに追加表示",
             "profile_id": "プロフィールID",
             "approximate_distance": "おおよその距離",
-            "found_via_teleport": "Found via teleport",
+            "found_via_teleport": "遠距離からの閲覧",
             "favorite": "お気に入り",
-            "from_viewed_me": "From viewed me",
+            "from_viewed_me": "あなたの足跡から閲覧",
             "innaccessible_profile": "アクセスできないプロフィール",
             "jwt_boosting": "JWTブースト",
             "new": "新規",
@@ -81,7 +81,7 @@
             "obese": "肥満"
         },
         "profile_views": {
-            "name": "Profile views",
+            "name": "プロフィール閲覧の足跡",
             "description": "足跡を残す/残さない"
         },
         "removable_messages": {
@@ -104,7 +104,7 @@
     "commands": {
         "location": {
             "teleport_to_location": "指定位置にテレポート",
-            "teleportation_disabled": "テレポートは無効です",
+            "teleportation_disabled": "テレポートを無効にしました",
             "teleported_to_coords": "{lat}、 {lon} にテレポートしました",
             "location_not_found": "場所が見つかりません",
             "save_current_location": "現在の位置を保存",
@@ -128,7 +128,7 @@
     },
     "settings": {
         "export_config": "設定のエクスポート",
-        "import_config": "設定をインポート",
+        "import_config": "設定のインポート",
         "export_database": "データベースのエクスポート",
         "import_database": "データベースのインポート",
         "reset_grindrplus": "GrindrPlusをリセットする",
@@ -140,7 +140,7 @@
         "failed_to_restore_database": "データベースの復元に失敗しました！",
         "failed_to_import_database": "データベースのインポートに失敗しました！",
         "config_imported_successfully": "設定をインポートしました",
-        "config_exported_successfully": "設定を正常にエクスポートしました",
+        "config_exported_successfully": "設定をエクスポートしました",
         "failed_to_restore_config": "設定の復元に失敗しました！",
         "failed_to_import_config": "設定のインポートに失敗しました！",
         "failed_to_export_config": "設定のエクスポートに失敗しました！",
