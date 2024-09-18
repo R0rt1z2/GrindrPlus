@@ -1,7 +1,7 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus: Incompatibilidade com versão do Grindr (instalado: {installedVersion}, esperado: {expectedVersion}). Mod desativado",
+        "unable_to_fetch_translations": "Não foi possível obter traduções"
     },
     "hooks": {
         "allow_screenshots": {
