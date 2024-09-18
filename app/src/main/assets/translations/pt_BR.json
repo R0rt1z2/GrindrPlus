@@ -133,7 +133,7 @@
         "import_database": "Import database",
         "reset_grindrplus": "Reset GrindrPlus",
         "reload_hooks": "Reload hooks",
-        "manage_hooks": "Manage hooks",
+        "manage_hooks": "Gerenciar gatilhos",
         "database_imported_successfully": "Database imported successfully",
         "database_exported_successfully": "Database exported successfully",
         "failed_to_export_database": "Failed to export database!",
@@ -152,9 +152,9 @@
         "online_indicator_description": "Control when online green dots disappear after inactivity",
         "favorites_grid_size": "Favorites grid size",
         "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
-        "reset_grindrplus_title": "Reset GrindrPlus",
+        "reset_grindrplus_title": "Redefinir o GrindrPlus",
         "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
         "yes": "Yes",
-        "no": "No"
+        "no": "Não"
     }
 }
