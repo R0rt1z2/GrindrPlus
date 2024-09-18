@@ -6,15 +6,18 @@ import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.widget.Toast
+import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
+import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
 private const val TAG = "GrindrPlus"
@@ -31,8 +34,11 @@ object GrindrPlus {
         private set
     lateinit var database: Database
         private set
+    lateinit var bridgeClient: BridgeClient
+        private set
 
     lateinit var hookManager: HookManager
+    lateinit var translations: JSONObject
 
     var currentActivity: Activity? = null
         private set
@@ -92,6 +98,18 @@ object GrindrPlus {
         logger.log("Initializing GrindrPlus...")
         Config.initialize(context)
 
+        bridgeClient = BridgeClient(context).apply {
+            connect {
+                val localeTag = Config.get("locale", "") as String?
+                    ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        context.resources.configuration.locales.get(0).toLanguageTag()
+                    } else {
+                        context.resources.configuration.locale.toLanguageTag()
+                    }
+                translations = getTranslation(localeTag) ?: JSONObject()
+            }
+        }
+
         /**
          * Emergency reset of the database if the flag is set.
          */
@@ -128,5 +146,9 @@ object GrindrPlus {
 
     fun loadClass(name: String): Class<*> {
         return classLoader.loadClass(name)
+    }
+
+    fun reloadTranslations(locale: String) {
+        translations = bridgeClient.getTranslation(locale) ?: JSONObject()
     }
 }
