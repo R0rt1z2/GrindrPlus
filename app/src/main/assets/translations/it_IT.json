@@ -1,6 +1,6 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
+        "version_mismatch": "GrindrPlus: versione di Grindr non corrispondente (Installato: {installedVersion}, Atteso: {expectedVersion}). Mod disabilitata",
         "unable_to_fetch_translations": "Unable to fetch translations"
     },
     "hooks": {
@@ -82,7 +82,7 @@
         },
         "profile_views": {
             "name": "Profile views",
-            "description": "Control whether others can see you've viewed their profile"
+            "description": "Consentire se gli altri possono vedere che avete visualizzato il loro profilo"
         },
         "removable_messages": {
             "name": "Removable messages",
