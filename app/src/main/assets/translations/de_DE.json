@@ -62,7 +62,7 @@
         },
         "profile_details": {
             "name": "Profildetails",
-            "description": "Fügt Extrafelder und Details Profilen hinzu",
+            "description": "Fügt Extrafelder und Details zu Profilen hinzu",
             "profile_id": "Profil-ID",
             "approximate_distance": "Ungefähre Entfernung",
             "found_via_teleport": "Über die Teleportfunktion gefunden",
@@ -78,7 +78,7 @@
             "underweight": "Untergewichtig",
             "normal_weight": "Normalgewicht",
             "overweight": "Übergewichtig",
-            "obese": "Fettleibig"
+            "obese": "Adipös"
         },
         "profile_views": {
             "name": "Profilansichten",
