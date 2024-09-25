@@ -5,11 +5,11 @@
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Screenshots toestaan",
+            "description": "Screenshots overal toestaan in app"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
+            "name": "Chat-indicatoren",
             "description": "Don't show chat markers / indicators to others"
         },
         "chat_terminal": {
@@ -17,19 +17,19 @@
             "description": "Create a chat terminal to execute commands"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Analytics uitschakelen",
+            "description": "Grindr analytics (gegevensverzameling) uitschakelen"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Boost uitschakelen",
+            "description": "Verwijder alle upsells voor boost"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Updates uitschakelen",
+            "description": "Geforceerde updates uitschakelen"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
+            "name": "Unlimited activeren",
             "description": "Enable Grindr Unlimited features"
         },
         "expiring_photos": {
