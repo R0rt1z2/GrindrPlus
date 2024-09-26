@@ -22,7 +22,7 @@
         },
         "disable_boosting": {
             "name": "Boost uitschakelen",
-            "description": "Verwijder alle upsells voor boost"
+            "description": "Verwijder alle opmerkingen voor boost"
         },
         "disable_updates": {
             "name": "Updates uitschakelen",
