@@ -1,24 +1,24 @@
 {
     "global": {
-        "version_mismatch": "GrindrPlus: Grindr version mismatch (installed: {installedVersion}, expected: {expectedVersion}). Mod disabled",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "version_mismatch": "GrindrPlus: incompatibilidade de versão do Grindr (instalado: {installedVersion}, esperado: {expectedVersion}). Mod desativado",
+        "unable_to_fetch_translations": "Não é possível buscar traduções"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Permitir capturas de tela",
+            "description": "Permitir capturas de tela em todos os lugares do aplicativo"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
-            "description": "Don't show chat markers / indicators to others"
+            "name": "Indicadores de bate papo",
+            "description": "Não mostre marcadores/indicadores de chat a outras pessoas"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Terminal de bate-papo",
+            "description": "Criar um terminal de bate-papo para executar comandos"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Desativar análises",
+            "description": "Desativar a análise do Grindr (coleta de dados)"
         },
         "disable_boosting": {
             "name": "Disable boosting",
