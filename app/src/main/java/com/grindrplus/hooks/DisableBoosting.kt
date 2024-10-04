@@ -9,8 +9,8 @@ class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
 ) {
-    private val drawerProfileUiState = "e8.h\$a"
-    private val radarUiModel = "i6.a\$a"
+    private val drawerProfileUiState = "i8.f\$a"
+    private val radarUiModel = "l6.a\$a"
     private val boostFabUiModel = "com.grindrapp.android.boost2.presentation.model.BoostFabUiModel"
 
     override fun init() {

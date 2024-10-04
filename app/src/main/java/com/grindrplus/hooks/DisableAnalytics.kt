@@ -35,12 +35,6 @@ class DisableAnalytics : Hook(
                     param -> param.setResult(null)
             }
 
-        // AppsFlyer
-        findClass("J2.C")
-            .hook("C", HookStage.BEFORE) { param ->
-                param.setArg(0, false)
-            }
-
         // Braze
         findClass("com.braze.Braze\$Companion")
             // See https://braze-inc.github.io/braze-android-sdk/kdoc/braze-android-sdk/com.braze/-braze/-companion/outbound-network-requests-offline.html
