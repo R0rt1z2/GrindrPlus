@@ -11,51 +11,51 @@ class EnableUnlimited : Hook(
 ) {
     private val userSession = "com.grindrapp.android.storage.b"
     private val subscribeToInterstitialsList = listOf(
-        "V7.u\$a" // Chat ($1)
+        "q8.p\$a" // Chat ($1)
     )
 
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // hasFeature()
-            "m", HookStage.BEFORE
+            "E", HookStage.BEFORE
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
             param.setResult(param.arg(0, String::class.java) !in disallowedFeatures)
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "l", HookStage.BEFORE
+            "k", HookStage.BEFORE
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
-            "E", HookStage.BEFORE
+            "D", HookStage.BEFORE
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isFree()
-            "x", HookStage.BEFORE
-        ) { param ->
-            param.setResult(false)
-        }
-
-        userSessionClass.hook( // isFreeXtra()
             "v", HookStage.BEFORE
         ) { param ->
             param.setResult(false)
         }
 
+        userSessionClass.hook( // isFreeXtra()
+            "t", HookStage.BEFORE
+        ) { param ->
+            param.setResult(false)
+        }
+
         userSessionClass.hook( // isFreePlus()
-            "C", HookStage.BEFORE
+            "B", HookStage.BEFORE
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeUnlimited()
-            "B", HookStage.BEFORE
+            "A", HookStage.BEFORE
         ) { param ->
             param.setResult(true)
         }

@@ -11,7 +11,7 @@ class ChatIndicators : Hook(
     "Chat indicators",
     "Don't show chat markers / indicators to others"
 ) {
-    private val chatRestService = "com.grindrapp.android.chat.api.ChatRestService"
+    private val chatRestService = "com.grindrapp.android.chat.data.datasource.api.service.ChatRestService"
     private val blacklistedPaths = setOf(
         "v4/chatstatus/typing"
     )

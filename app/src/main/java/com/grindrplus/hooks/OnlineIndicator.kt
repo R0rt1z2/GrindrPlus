@@ -10,7 +10,7 @@ class OnlineIndicator : Hook(
     "Online indicator",
     "Customize online indicator duration"
 ) {
-    val utils = "Y8.Z"
+    val utils = "u9.a0"
 
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
