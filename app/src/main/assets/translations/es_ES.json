@@ -57,7 +57,7 @@
             "description": "Ajustes de GrindrPlus"
         },
         "online_indicator": {
-            "name": "Online indicator",
+            "name": "",
             "description": "More accurate online status indicator"
         },
         "profile_details": {
@@ -94,7 +94,7 @@
         },
         "unlimited_albums": {
             "name": "Álbumes ilimitados",
-            "description": "Ability to view unlimited albums"
+            "description": "Capacidad de ver álbumes ilimitados"
         },
         "unlimited_profiles": {
             "name": "Perfiles ilimitados",
@@ -151,7 +151,7 @@
         "online_indicator_title": "Duración del indicador en línea (minutos)",
         "online_indicator_description": "Controla cuándo desaparece tu indicador online luego de tiempo inactivo",
         "favorites_grid_size": "Tamaño de la cuadrícula de favoritos",
-        "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
+        "favorites_grid_size_description": "Personaliza el tamaño de la cuadrícula de la ventana de favoritos",
         "reset_grindrplus_title": "Reiniciar GrindrPlus",
         "reset_grindrplus_description": "Esto reiniciará la base de datos y la configuración del mod, lo que significa que albumes/fotos guardados en el caché desaparecerán, al igual que frases y localizaciones guardadas.",
         "yes": "Si",
