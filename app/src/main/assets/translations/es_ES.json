@@ -42,7 +42,7 @@
         },
         "feature_granting": {
             "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "description": "Otorgar todas las características de Grindr (incluyendo las experimentales)"
         },
         "local_saved_phrases": {
             "name": "Local saved phrases",
@@ -64,11 +64,11 @@
             "name": "Detalles del perfil",
             "description": "Add extra fields and details to profiles",
             "profile_id": "ID del perfil",
-            "approximate_distance": "Approximate distance",
+            "approximate_distance": "Distancia Aproximada",
             "found_via_teleport": "Found via teleport",
             "favorite": "Favorito",
             "from_viewed_me": "From viewed me",
-            "innaccessible_profile": "Inaccessible profile",
+            "innaccessible_profile": "Perfil inaccesible",
             "jwt_boosting": "JWT boosting",
             "new": "New",
             "teleporting": "Teleporting",
@@ -131,7 +131,7 @@
         "import_config": "Importar configuración",
         "export_database": "Exportar base de datos",
         "import_database": "Importar base de datos",
-        "reset_grindrplus": "Reset GrindrPlus",
+        "reset_grindrplus": "Reiniciar GrindrPlus",
         "reload_hooks": "Reload hooks",
         "manage_hooks": "Manage hooks",
         "database_imported_successfully": "Base de datos importada con éxito",
@@ -145,15 +145,15 @@
         "failed_to_import_config": "¡Error al importar la configuración!",
         "failed_to_export_config": "¡Error al exportar la configuración!",
         "database_import": "Importar base de datos",
-        "database_import_description": "The database has been successfully imported. The app will now close to apply the changes.",
+        "database_import_description": "La base de datos se ha importado exitosamente. Ahora la aplicación se cerrará para aplicar los cambios.",
         "ok": "Aceptar",
         "other_settings": "Otros ajustes",
         "online_indicator_title": "Duración del indicador en línea (minutos)",
-        "online_indicator_description": "Control when online green dots disappear after inactivity",
+        "online_indicator_description": "Controla cuándo desaparece tu indicador online luego de tiempo inactivo",
         "favorites_grid_size": "Tamaño de la cuadrícula de favoritos",
         "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
-        "reset_grindrplus_title": "Reset GrindrPlus",
-        "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
+        "reset_grindrplus_title": "Reiniciar GrindrPlus",
+        "reset_grindrplus_description": "Esto reiniciará la base de datos y la configuración del mod, lo que significa que albumes/fotos guardados en el caché desaparecerán, al igual que frases y localizaciones guardadas.",
         "yes": "Si",
         "no": "No"
     }
