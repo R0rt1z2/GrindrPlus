@@ -1,16 +1,21 @@
 package com.grindrplus.hooks
 
 import android.app.Activity
+import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.view.children
 import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
+import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class ModSettings : Hook(
@@ -46,7 +51,8 @@ class ModSettings : Hook(
                 val settingsViewBinding = settingsViewBindingLazy::class
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
 
-                var settingsRoot = param.thisObject()::class.java.getMethod("E").invoke(param.thisObject())
+                var settingsRoot =
+                    param.thisObject()::class.java.getMethod("E").invoke(param.thisObject())
                 settingsRoot::class.java.declaredFields.reversed().forEach { field ->
                     field.isAccessible = true
                     val fieldValue = field.get(settingsRoot)
@@ -70,10 +76,11 @@ class ModSettings : Hook(
                     val settingsScrollingContentLayout = getChildAtNestedScrollView
                         .invoke(settingsNestedScrollView, 0) as LinearLayout
                     val settingsExampleContainer = settingsScrollingContentLayout
-                        .getChildAt(2) as LinearLayout
+                        .getChildAt(1) as LinearLayout
                     val settingsExampleHeader = settingsExampleContainer.getChildAt(0) as TextView
+
                     val settingsExampleSubContainer =
-                        settingsExampleContainer.getChildAt(1) as LinearLayout
+                        settingsExampleContainer.children.first { it is LinearLayout } as LinearLayout
                     val settingsExampleSubContainerTextView =
                         settingsExampleSubContainer.getChildAt(0) as TextView
 

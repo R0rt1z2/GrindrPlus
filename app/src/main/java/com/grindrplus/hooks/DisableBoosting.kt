@@ -12,15 +12,15 @@ class DisableBoosting : Hook(
     private val drawerProfileUiState = "E8.f\$a"
     private val radarUiModel = "L6.a\$a"
     private val boostFabUiModel = "com.grindrapp.android.boost2.presentation.model.BoostFabUiModel"
+    private val boostStateClass = "com.grindrapp.android.ui.drawer.model.SideDrawerRightNowBoostState"
 
     override fun init() {
         findClass(drawerProfileUiState).hookConstructor(HookStage.AFTER) { param ->
             setObjectField(param.thisObject(), "a", false) // showBoostMeButton
-            setObjectField(param.thisObject(), "b", false) // isBoostAvailable
-            setObjectField(param.thisObject(), "d", null) // showDayPassItem
-            setObjectField(param.thisObject(), "e", null) // dayPassXtraItem
-            setObjectField(param.thisObject(), "f", null) // unlimitedWeeklySubscriptionItem
-            setObjectField(param.thisObject(), "f", null) // unlimitedWeeklySubscriptionItem
+            setObjectField(param.thisObject(), "e", findClass(boostStateClass).getField("UNAVAILABLE").get(null)) // boostButtonState
+            setObjectField(param.thisObject(), "h", null) // showDayPassItem
+            setObjectField(param.thisObject(), "i", null) // dayPassXtraItem
+            setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
         }
 
         findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
