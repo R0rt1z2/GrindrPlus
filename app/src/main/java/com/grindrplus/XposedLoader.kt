@@ -2,6 +2,7 @@ package com.grindrplus
 
 import android.app.Application
 import android.widget.Toast
+import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -42,21 +43,29 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                             override fun checkClientTrusted(
                                 chain: Array<out X509Certificate>?,
                                 authType: String?
-                            ) {}
+                            ) {
+                            }
 
                             override fun checkServerTrusted(
                                 chain: Array<out X509Certificate>?,
                                 authType: String?
-                            ) {}
+                            ) {
+                            }
 
                             override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
 
                         })
                         val sslContext = SSLContext.getInstance("TLSv1.3")
                         sslContext.init(null, trustAlLCerts, SecureRandom())
-                        callMethod(param.thisObject, "sslSocketFactory", sslContext.socketFactory, trustAlLCerts.first() as X509TrustManager)
+                        callMethod(
+                            param.thisObject,
+                            "sslSocketFactory",
+                            sslContext.socketFactory,
+                            trustAlLCerts.first() as X509TrustManager
+                        )
                         callMethod(param.thisObject, "hostnameVerifier", object : HostnameVerifier {
-                            override fun verify(hostname: String?, session: SSLSession?): Boolean = true
+                            override fun verify(hostname: String?, session: SSLSession?): Boolean =
+                                true
                         })
                     }
                 })
