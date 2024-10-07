@@ -1,7 +1,9 @@
 package com.grindrplus
 
 import android.app.Application
+import android.util.Log
 import android.widget.Toast
+import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -23,12 +25,21 @@ import javax.net.ssl.X509TrustManager
 
 class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     private lateinit var modulePath: String
+    private lateinit var bridgeClient: BridgeClient
 
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
         modulePath = startupParam.modulePath
     }
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
+        if (lpparam.packageName == BuildConfig.APPLICATION_ID) {
+            findAndHookMethod(
+                "com.grindrplus.core.Utils",
+                lpparam.classLoader, "isModuleLoaded",
+                XC_MethodReplacement.returnConstant(true)
+            )
+        }
+
         if (lpparam.packageName != GRINDR_PACKAGE_NAME) return
 
         if (BuildConfig.DEBUG) {
@@ -73,6 +84,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
         Application::class.java.hook("attach", HookStage.AFTER) {
             val application = it.thisObject()
             val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
+            bridgeClient = BridgeClient(application).apply { connect {} }
 
             if (pkgInfo.versionName != BuildConfig.TARGET_GRINDR_VERSION) {
                 Toast.makeText(
@@ -84,7 +96,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                 return@hook
             }
 
-            GrindrPlus.init(modulePath, application)
+            GrindrPlus.init(modulePath, application, bridgeClient)
         }
     }
 }

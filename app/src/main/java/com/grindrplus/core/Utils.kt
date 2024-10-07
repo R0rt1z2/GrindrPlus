@@ -2,6 +2,8 @@ package com.grindrplus.core
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.RetrofitUtils
 import java.lang.reflect.Proxy
@@ -113,5 +115,51 @@ object Utils {
             GrindrPlus.logger.log("Failed to get field $fieldName from object $obj")
             null
         }
+    }
+
+    /**
+     * Get both version name and version code.
+     *
+     * @param context The context.
+     * @return The app version (e.g. 1.0.0 (1e1a2b3c)).
+     */
+    fun getAppVersion(packageId: String, context: Context): Pair<String, Int> {
+        return try {
+            context.packageManager.getPackageInfo(packageId, 0).let { packageInfo ->
+                Pair(packageInfo.versionName ?: "Unknown", packageInfo.versionCode)
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            Pair("Unknown", 0)
+        }
+    }
+
+    /**
+     * Check whether a package is installed.
+     *
+     * @param context The context.
+     * @param packageName The package name.
+     * @return True if the package is installed, false otherwise.
+     */
+    fun isPackageInstalled(context: Context, packageId: String): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager
+                    .getApplicationInfo(packageId,
+                        PackageManager.ApplicationInfoFlags.of(0))
+            } else {
+                context.packageManager.getApplicationInfo(packageId, 0)
+            }
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    /**
+     * Check whether a module is loaded.
+     * @return True if the module is loaded, false otherwise.
+     */
+    fun isModuleLoaded(): Boolean {
+        return false // Replaced by XposedLoader
     }
 }

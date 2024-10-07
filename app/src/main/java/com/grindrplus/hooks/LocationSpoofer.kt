@@ -42,6 +42,7 @@ class LocationSpoofer : Hook(
     private val chatBottomToolbar = "com.grindrapp.android.view.ChatBottomToolbar"
 
     override fun init() {
+        GrindrPlus.logger.log("Initializing LocationSpoofer")
         val locationClass = findClass(location)
 
         if (Build.VERSION.SDK_INT >= 31) {

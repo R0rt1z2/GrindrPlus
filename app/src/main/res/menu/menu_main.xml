@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_about"
+        android:title="About"/>
+    <item
+        android:id="@+id/action_comments_help"
+        android:title="Comments or help"/>
+</menu>

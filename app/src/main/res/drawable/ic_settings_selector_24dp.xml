@@ -1,0 +1,10 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark theme -->
+    <item android:drawable="@drawable/ic_baseline_about_black_24dp" android:state_checked="true" />
+    <item android:drawable="@drawable/ic_baseline_about_black_24dp" android:state_pressed="true" />
+    <item android:drawable="@drawable/ic_baseline_about_black_24dp" />
+
+    <!-- Light theme -->
+    <item android:drawable="@drawable/ic_baseline_about_light_24dp" android:state_checked="false" />
+    <item android:drawable="@drawable/ic_baseline_about_light_24dp" android:state_pressed="true" />
+</selector>

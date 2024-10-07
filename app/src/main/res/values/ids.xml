@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="textViewAppName" type="id" />
+    <item name="status_title" type="id" />
+    <item name="status_summary" type="id" />
+</resources>

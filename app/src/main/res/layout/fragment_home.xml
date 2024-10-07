@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".ui.home.HomeFragment">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="MissingPrefix">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="?dialogPreferredPadding"
+                tools:context=".ui.home.HomeFragment">
+
+                <TextView
+                    android:id="@+id/appNameTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textAppearance="?textAppearanceHeadline4"
+                    android:layout_gravity="start"
+                    android:paddingBottom="20dp"
+                    android:paddingTop="15dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/status"
+                    style="@style/Widget.MaterialComponents.CardView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:outlineAmbientShadowColor="?colorPrimary"
+                    android:outlineSpotShadowColor="?colorPrimary"
+                    android:stateListAnimator="@null"
+                    app:cardBackgroundColor="#FFCC00"
+                    app:cardElevation="@dimen/home_primary_elevation"
+                    app:cardPreventCornerOverlap="false"
+                    app:strokeWidth="0dp"
+                    tools:targetApi="p">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="?dialogPreferredPadding">
+
+                        <ImageView
+                            android:id="@+id/status_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_centerVertical="true"
+                            app:srcCompat="@drawable/ic_baseline_check_circle_24dp"
+                            tools:ignore="ContentDescription"
+                            app:tint="?colorOnPrimary" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/status_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="24dp"
+                            android:layout_toEndOf="@id/status_icon"
+                            android:fontFamily="sans-serif-medium"
+                            android:textAppearance="?textAppearanceTitleMedium"
+                            android:textColor="?colorOnPrimary"
+                            android:textSize="16sp" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/status_summary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/status_title"
+                            android:layout_alignStart="@id/status_title"
+                            android:textAppearance="?textAppearanceBodyMedium"
+                            android:textSize="12sp"
+                            android:textColor="?colorOnPrimary" />
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/warning_card"
+                    style="?materialCardViewOutlinedStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="?colorErrorContainer">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="?dialogPreferredPadding">
+
+                        <ImageView
+                            android:id="@+id/warning_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_centerVertical="true"
+                            app:srcCompat="@drawable/ic_baseline_round_warning_24dp"
+                            tools:ignore="ContentDescription"
+                            app:tint="?colorOnPrimary" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/warning_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="24dp"
+                            android:layout_toEndOf="@id/warning_icon"
+                            android:fontFamily="sans-serif-medium"
+                            android:textAppearance="?textAppearanceTitleMedium"
+                            android:textColor="?colorOnPrimary"
+                            android:textSize="16sp" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/warning_summary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/warning_title"
+                            android:layout_alignStart="@id/warning_title"
+                            android:textAppearance="?textAppearanceBodyMedium"
+                            android:textSize="12sp"
+                            android:textColor="?colorOnPrimary" />
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/info_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="?dialogPreferredPadding">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_app_version" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/app_version"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="0 (debug)" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_grindr_version" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/grindr_version"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/not_installed" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/active_hooks" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/active_hooks"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/no_active_hooks" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/android_version" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/android_version"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_unknown" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_abi_type" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/abi_type"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_unknown" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            style="@style/InfoDialogLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/device_model" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/device_model"
+                            style="@style/InfoDialogValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/info_unknown" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/copy_info"
+                                style="?borderlessButtonStyle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/copy"
+                                android:textAlignment="center"
+                                android:tooltipText="@string/copy" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

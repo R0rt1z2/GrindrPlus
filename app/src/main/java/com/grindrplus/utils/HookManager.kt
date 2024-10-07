@@ -18,7 +18,6 @@ import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
-import com.grindrplus.hooks.RemovableMessages
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
@@ -50,7 +49,6 @@ class HookManager {
                 UnlimitedProfiles(),
                 ProfileDetails(),
                 ProfileViews(),
-                RemovableMessages(),
                 SignatureSpoofer(),
                 UnlimitedTaps(),
                 UnlimitedAlbums()
@@ -65,7 +63,7 @@ class HookManager {
             hooks = hookList.associateBy { it::class }.toMutableMap()
 
             hooks.values.forEach { hook ->
-                if (Config.isHookEnabled(hook.hookName)) {
+                if (GrindrPlus.bridgeClient.isHookEnabled(hook.hookName, hook.hookDesc)) {
                     hook.init()
                     GrindrPlus.logger.log("Initialized hook: ${hook.hookName}")
                 } else {

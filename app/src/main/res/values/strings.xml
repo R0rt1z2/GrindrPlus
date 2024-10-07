@@ -1,3 +1,21 @@
 <resources>
-    <string name="app_name">Grindr Plus</string>
+    <string name="app_name">GrindrPlus</string>
+    <string name="title_home">Home</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_hooks">Hooks</string>
+    <string name="about_view_source_code"><![CDATA[View source code at %1$s]]></string>
+    <string name="info_grindr_version" >Grindr version</string>
+    <string name="info_system_version">System Version</string>
+    <string name="not_installed">Not installed</string>
+    <string name="copy">Copy</string>
+    <string name="active_hooks">Active hooks</string>
+    <string name="no_active_hooks">No active hooks</string>
+    <string name="android_version">Android version</string>
+    <string name="device_model">Device</string>
+    <string name="module_description">Xposed Module to enhance Grindr</string>
+    <string name="info_app_version">App version</string>
+    <string name="info_unknown">Unknown</string>
+    <string name="info_abi_type">ABI</string>
+    <string name="hook_name">Hook Name</string>
+    <string name="hook_description">Hook Description</string>
 </resources>

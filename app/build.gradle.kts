@@ -53,6 +53,9 @@ android {
     buildFeatures {
         buildConfig = true
         aidl = true
+        //noinspection DataBindingWithoutKapt
+        dataBinding = true
+        viewBinding = true
     }
 
     packaging {
@@ -74,11 +77,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.coordinatorlayout)
-    implementation(libs.material)
     implementation(libs.square.okhttp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.material)
     implementation(libs.androidx.room.ktx)
     compileOnly(fileTree("libs") { include("*.jar") })
 }

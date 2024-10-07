@@ -44,12 +44,13 @@ object GrindrPlus {
     var currentActivity: Activity? = null
         private set
 
-    fun init(modulePath: String, application: Application) {
+    fun init(modulePath: String, application: Application, bridgeClient: BridgeClient) {
         Log.d(
             TAG,
             "Initializing GrindrPlus with module path: $modulePath, application: $application"
         )
 
+        this.bridgeClient = bridgeClient
         this.context = application // do not use .applicationContext as it's null at this point
         this.classLoader =
             DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
@@ -98,18 +99,6 @@ object GrindrPlus {
     private fun init() {
         logger.log("Initializing GrindrPlus...")
         Config.initialize(context)
-
-        bridgeClient = BridgeClient(context).apply {
-            connect {
-                localeTag = Config.get("locale", "") as String?
-                    ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        context.resources.configuration.locales.get(0).toLanguageTag()
-                    } else {
-                        context.resources.configuration.locale.toLanguageTag()
-                    }
-                translations = getTranslation(localeTag) ?: JSONObject()
-            }
-        }
 
         /**
          * Emergency reset of the database if the flag is set.
