@@ -2,7 +2,6 @@ package com.grindrplus
 
 import android.app.Application
 import android.widget.Toast
-import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook

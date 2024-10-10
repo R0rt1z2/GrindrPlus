@@ -1,6 +1,7 @@
 package com.grindrplus.utils
 
 import com.grindrplus.GrindrPlus
+import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.InvocationHandler
@@ -76,5 +77,26 @@ object RetrofitUtils {
                     })
                 }
             }
+    }
+
+    fun logServiceRequests(clazz: Class<*>, shouldDebugCheck: Boolean = true) {
+        if (!clazz.isInterface) error("the class must be an interface, check whatever you passed into the function")
+
+        hookService(clazz) { originalHandler, proxy, method, args ->
+            val result = originalHandler.invoke(proxy, method, args)
+
+            XposedBridge.log("START NEW METHOD CALL TO ${clazz.simpleName}")
+            XposedBridge.log(method.annotations.map { it to callMethod(it, "value") }
+                .joinToString { it.first.javaClass.simpleName + ": " + it.second })
+            XposedBridge.log("args: ${args.joinToString { it.toString() }}")
+            XposedBridge.log("result: $result")
+            withSuspendResult(
+                args,
+                result
+            ) { suspendArgs, suspendResult -> XposedBridge.log("${clazz.simpleName} suspend result: $suspendResult, args: ${suspendArgs.joinToString()}") }
+            XposedBridge.log("END NEW METHOD CALL TO ${clazz.simpleName}")
+
+            return@hookService result
+        }
     }
 }

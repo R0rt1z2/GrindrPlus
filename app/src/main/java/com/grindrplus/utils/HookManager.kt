@@ -14,11 +14,13 @@ import com.grindrplus.hooks.Favorites
 import com.grindrplus.hooks.FeatureGranting
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
+import com.grindrplus.hooks.AntiBlock
 import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.RemovableMessages
+import com.grindrplus.hooks.RequestLogger
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
@@ -53,7 +55,9 @@ class HookManager {
                 RemovableMessages(),
                 SignatureSpoofer(),
                 UnlimitedTaps(),
-                UnlimitedAlbums()
+                UnlimitedAlbums(),
+                AntiBlock(),
+                RequestLogger()
             )
 
             hookList.forEach { hook ->
