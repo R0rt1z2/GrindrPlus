@@ -13,6 +13,8 @@ import android.util.Log
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
+import com.grindrplus.core.CoroutineHelper
+import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
@@ -36,6 +38,10 @@ object GrindrPlus {
         private set
     lateinit var bridgeClient: BridgeClient
         private set
+    lateinit var coroutineHelper: CoroutineHelper
+        private set
+    lateinit var instanceManager: InstanceManager
+        private set
 
     lateinit var hookManager: HookManager
     lateinit var translations: JSONObject
@@ -57,6 +63,8 @@ object GrindrPlus {
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
+        this.coroutineHelper = CoroutineHelper(classLoader)
+        this.instanceManager = InstanceManager(classLoader)
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
@@ -85,6 +93,10 @@ object GrindrPlus {
 
             override fun onActivityDestroyed(activity: Activity) {}
         })
+
+        instanceManager.hookClassConstructors(
+            "com.grindrapp.android.persistence.repository.ProfileRepo"
+        )
 
         try {
             val initTime = measureTimeMillis { init() }
