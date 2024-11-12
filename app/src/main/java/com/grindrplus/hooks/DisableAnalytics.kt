@@ -9,8 +9,9 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "G3.b"
+    private val analyticsRestService = "a4.g"
 
+    @Suppress("USELESS_CAST") // IDE kept complaining about the service cast [as Any?]
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)
 
