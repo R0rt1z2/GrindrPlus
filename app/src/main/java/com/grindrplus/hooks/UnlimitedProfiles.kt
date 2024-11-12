@@ -12,15 +12,8 @@ class UnlimitedProfiles : Hook(
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
-    private val inAccessibleProfileManager =
-        "com.grindrapp.android.profile.experiments.InaccessibleProfileManager"
 
     override fun init() {
-        findClass(inAccessibleProfileManager)
-            .hook("a", HookStage.BEFORE) { param ->
-                param.setResult(true)
-            }
-
         findClass(serverDrivenCascadeCachedState)
             .hook("getItems", HookStage.AFTER) { param ->
                 val items = (param.getResult() as List<*>).filter {

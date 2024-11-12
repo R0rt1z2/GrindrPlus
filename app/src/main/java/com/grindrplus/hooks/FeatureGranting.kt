@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
 import com.grindrplus.utils.Hook
@@ -12,7 +13,7 @@ class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "T4.h"
+    private val featureFlags = "E5.i"
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val settingDistanceVisibilityViewModel =
@@ -56,7 +57,7 @@ class FeatureGranting : Hook(
         listOf(upsellsV8Model, insertsModel).forEach { model ->
             findClass(model)
                 .hook("getMpuFree", HookStage.BEFORE) { param ->
-                    param.setResult(Int.MAX_VALUE)
+                    param.setResult(0)
                 }
 
             findClass(model)

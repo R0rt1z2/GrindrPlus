@@ -11,14 +11,13 @@ class DisableAnalytics : Hook(
 ) {
     private val analyticsRestService = "a4.g"
 
-    @Suppress("USELESS_CAST") // IDE kept complaining about the service cast [as Any?]
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)
 
         // First party analytics
         findClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
-                val service = param.getResult() as Any?
+                val service = param.getResult()
                 if (service != null && analyticsRestServiceClass.isAssignableFrom(service.javaClass)) {
                     param.setResult(createServiceProxy(service, analyticsRestServiceClass))
                 }

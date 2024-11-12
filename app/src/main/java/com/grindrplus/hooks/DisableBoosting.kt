@@ -4,10 +4,7 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XC_MethodReplacement
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers.findAndHookMethod
+import de.robv.android.xposed.XposedHelpers.newInstance
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
 class DisableBoosting : Hook(
@@ -16,17 +13,9 @@ class DisableBoosting : Hook(
 ) {
     private val drawerProfileUiState = "V9.e\$a"
     private val radarUiModel = "J7.a\$a"
-
-    // BoostFabUiModel was refactored into BoostOverviewUIModel; however, this val is now unused
-    // see: this class's TODO
-    private val boostFabUiModel = "com.grindrapp.android.boost2.presentation.model.BoostOverviewUIModel"
-
+    private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUIModel"
     private val boostStateClass =
-        "com.grindrapp.android.ui.drawer.model.SideDrawerMicrosButtonState.Unavailable"
-
-    // SideDrawerRightNowBoostState.UNAVAILABLE has been shifted from a field to a class, and
-    // the whole structure has been rearranged under SideDrawerMicrosButtonState
-    // i think the new target field would be SideDrawerMicrosButtonState.Unavailable.INSTANCE
+        "com.grindrapp.android.ui.drawer.model.SideDrawerMicrosButtonState\$Unavailable"
 
     override fun init() {
         findClass(drawerProfileUiState).hookConstructor(HookStage.AFTER) { param ->
@@ -34,26 +23,24 @@ class DisableBoosting : Hook(
             setObjectField(
                 param.thisObject(),
                 "e",
-                findClass(boostStateClass).getField("INSTANCE").get(null)
+                newInstance(findClass(boostStateClass))
             ) // boostButtonState
+            setObjectField(
+                param.thisObject(),
+                "f",
+                newInstance(findClass(boostStateClass))
+            ) // roamButtonState
             setObjectField(param.thisObject(), "i", null) // showDayPassItem
-            // setObjectField(param.thisObject(), "i", null) // dayPassXtraItem --> no longer exists
             setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
             setObjectField(param.thisObject(), "s", false) // isRightNowTooltipVisible
             setObjectField(param.thisObject(), "r", false) // isRightNowAvailable
         }
 
-
-        // see: this class's TODO
-
-        /*
         findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
-            setObjectField(param.thisObject(), "a", false) // isBoostButtonVisible
-            setObjectField(param.thisObject(), "b", false) // isBoostReportButtonVisible
-            setObjectField(param.thisObject(), "c", false) // isBoostingTextVisible
-            setObjectField(param.thisObject(), "d", false) // isBoostIconVisible
+            setObjectField(param.thisObject(), "a", false) // showReportButton
+            setObjectField(param.thisObject(), "b", null) // boostButton
+            setObjectField(param.thisObject(), "c", null) // roamButton
         }
-         */
 
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
@@ -63,23 +50,8 @@ class DisableBoosting : Hook(
             }
         }
 
-        // Grindr decided to name this upsell with the weirdest name possible, I pay respects below.
-
-        // TODO: reevaluate this hook, along with everything else pertaining to the Boost buttons
-        //  these params no longer exist, code blocks need revisiting
-        //  my best guess as to how to handle this is passing a null BoostSession
-        //  can't be sure, however, and don't intend to break the module where it needn't be broken
-        //  -mlr
-
-
-        /*
-        findClass(boostFabUiModel)
-            .hookConstructor(HookStage.AFTER) { param ->
-                setObjectField(param.thisObject(), "isVisible", false)
-            }
-         */
-
-
-
+        findClass(fabUiModel).hook("component2", HookStage.AFTER) { param -> // getIsVisible()
+            param.setResult(false)
+        }
     }
 }
