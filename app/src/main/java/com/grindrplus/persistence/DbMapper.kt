@@ -32,6 +32,7 @@ fun AlbumEntity.toGrindrAlbum(dbContent: List<AlbumContentEntity>): Any {
         false, // hasUnseenContent
         true, // albumViewable
         true, // isShareable
+        Long.MAX_VALUE, // viewableUntil
         albumName, // albumName
         0, // albumNumber
         0, // totalAlbumsShared
