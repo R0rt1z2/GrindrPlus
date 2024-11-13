@@ -197,6 +197,13 @@ I would also like to give special recognition to [@rhunk](https://github.com/rhu
 ## Contributing
 This project is open to any kind of contribution. Feel free to [open a pull request](https://github.com/R0rt1z2/GrindrPlus/pulls) or [submit an issue](https://github.com/R0rt1z2/GrindrPlus/issues)! [Discussions section](https://github.com/R0rt1z2/GrindrPlus/discussions) also available!
 
+## Donations
+I don't usually ask for donations, but if you really want to support me, you can do so by sending me a coffee!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/r0rt1z2)
+
+[![PayPal](https://cdn.rawgit.com/twolfson/paypal-github-button/1.0.0/dist/button.svg)](https://www.paypal.me/R0rt1z2/)
+
 ## Related resources
 - [Official XDA thread](https://forum.xda-developers.com/t/mod-xposed-new-grindr-plus.4461857/#post-87076193)
 - [Downloads for Grindr (APKMirror)](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date)
