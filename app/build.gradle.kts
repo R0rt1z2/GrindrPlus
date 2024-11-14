@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    val grindrVersion = "24.17.0"
+    val grindrVersion = "24.17.1"
 
     namespace = "com.grindrplus"
     compileSdk = 34
@@ -19,7 +19,7 @@ android {
         minSdk = 21
         targetSdk = 34
         versionCode = 14
-        versionName = "3.2.3-$grindrVersion ($gitCommitHash)"
+        versionName = "3.2.4-$grindrVersion ($gitCommitHash)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
