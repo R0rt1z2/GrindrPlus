@@ -33,16 +33,16 @@ class HookManager {
     private fun registerAndInitHooks() {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
+                FeatureGranting(),
+                DisableUpdates(),
+                DisableBoosting(),
                 EnableUnlimited(),
                 AllowScreenshots(),
                 ChatIndicators(),
                 ChatTerminal(),
-                DisableBoosting(),
-                DisableUpdates(),
                 DisableAnalytics(),
                 ExpiringPhotos(),
                 Favorites(),
-                FeatureGranting(),
                 LocalSavedPhrases(),
                 LocationSpoofer(),
                 ModSettings(),
