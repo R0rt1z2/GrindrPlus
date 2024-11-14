@@ -139,7 +139,12 @@ class Location(
 
     private fun getLocationFromNominatim(location: String): Pair<Double, Double>? {
         val url = "https://nominatim.openstreetmap.org/search?q=${Uri.encode(location)}&format=json"
-        val request = okhttp3.Request.Builder().url(url).build()
+
+        val randomUserAgent = getRandomGarbageUserAgent()
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .header("User-Agent", randomUserAgent)
+            .build()
 
         return try {
             OkHttpClient().newCall(request).execute().use { response ->
@@ -158,5 +163,18 @@ class Location(
             GrindrPlus.logger.log("Error getting location from Nominatim: ${e.message}")
             null
         }
+    }
+
+    private fun getRandomGarbageUserAgent(): String {
+        val randomPlatform = "Mozilla/5.0 (${getRandomGarbageString(10)}) AppleWebKit/${getRandomGarbageString(6)} (KHTML, like Gecko)"
+        val randomBrowser = "${getRandomGarbageString(6)}/${getRandomGarbageString(4)}"
+        return "$randomPlatform $randomBrowser"
+    }
+
+    private fun getRandomGarbageString(length: Int): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?"
+        return (1..length)
+            .map { chars.random() }
+            .joinToString("")
     }
 }
