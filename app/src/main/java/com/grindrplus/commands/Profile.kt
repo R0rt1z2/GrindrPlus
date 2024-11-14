@@ -6,6 +6,8 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
+import com.grindrplus.core.Utils.blockProfile
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
 
@@ -22,6 +24,31 @@ class Profile(
                 Toast.LENGTH_LONG,
                 "Please provide valid ID"
             )
+        }
+    }
+
+    @Command("block", help = "Block a user")
+    fun block(args: List<String>) {
+        if (args.isNotEmpty()) {
+            blockProfile(args[0])
+        } else {
+            if (Config.get("confirm_block", true) as Boolean) {
+                GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+                    AlertDialog.Builder(activity)
+                        .setTitle("Block user")
+                        .setMessage("Are you sure you want to block this user?")
+                        .setPositiveButton("Block") { _, _ ->
+                            blockProfile(sender)
+                        }
+                        .setNegativeButton("Cancel") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .create()
+                        .show()
+                }
+            } else {
+                blockProfile(sender)
+            }
         }
     }
 

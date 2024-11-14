@@ -95,7 +95,8 @@ object GrindrPlus {
         })
 
         instanceManager.hookClassConstructors(
-            "com.grindrapp.android.persistence.repository.ProfileRepo"
+            "com.grindrapp.android.persistence.repository.ProfileRepo",
+            "u7.a" // BlockRepo
         )
 
         try {

@@ -76,6 +76,21 @@ object Utils {
         return result
     }
 
+    fun blockProfile(id: String): Any {
+        val blockRepoClass =
+            GrindrPlus.loadClass("u7.a")
+        val blockProfileMethod = blockRepoClass.declaredMethods.find {
+            it.name == "b" // blockProfile
+        }
+        val blockRepoInstance = GrindrPlus.instanceManager.getInstance<Any>("u7.a")
+
+        val result = GrindrPlus.coroutineHelper.callSuspendFunction { continuation ->
+            blockProfileMethod?.invoke(blockRepoInstance, id, continuation)
+        }
+
+        return result
+    }
+
     fun weightToNum(isMetric: Boolean, weight: String): Double {
         return if (isMetric) {
             weight.replace("kg", "").toDouble()

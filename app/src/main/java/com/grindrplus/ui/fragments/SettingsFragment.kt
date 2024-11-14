@@ -383,6 +383,8 @@ class SettingsFragment : Fragment() {
         container?.addView(otherSettingsTitle)
         container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
         container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
+
+        container?.addView(createToggleableSettingView(context, "Confirm block", "Show a confirmation dialog before blocking a user", "confirm_block"))
     }
 
     private fun showResetConfirmationDialog() {
@@ -579,6 +581,78 @@ class SettingsFragment : Fragment() {
 
         horizontalLayout.addView(settingTitle)
         horizontalLayout.addView(durationEditText)
+        settingLayout.addView(horizontalLayout)
+        settingLayout.addView(settingDescription)
+
+        return settingLayout
+    }
+
+    private fun createToggleableSettingView(context: Context, title: String, description: String, key: String): View {
+        val settingLayout = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 44
+                params.bottomMargin = 44
+            }
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val horizontalLayout = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val settingTitle = AppCompatTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).also {
+                it.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            textSize = 16f
+            text = title
+        }
+
+        val currentValue = Config.get(key, false) as Boolean
+        val settingSwitch = SwitchCompat(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            isChecked = currentValue
+            setOnCheckedChangeListener { _, isChecked ->
+                Config.put(key, isChecked)
+            }
+        }
+
+        val settingDescription = AppCompatTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 4f,
+                    resources.displayMetrics
+                ).toInt()
+            }
+            setTextColor(Colors.text_primary_dark_bg)
+            typeface = Utils.getFont("ibm_plex_sans_fonts", context)
+            setTextColor(Colors.grindr_light_gray_0)
+            text = description
+        }
+
+        horizontalLayout.addView(settingTitle)
+        horizontalLayout.addView(settingSwitch)
+
         settingLayout.addView(horizontalLayout)
         settingLayout.addView(settingDescription)
 
