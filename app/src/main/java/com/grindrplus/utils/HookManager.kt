@@ -3,6 +3,7 @@ package com.grindrplus.utils
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.hooks.AllowScreenshots
+import com.grindrplus.hooks.AntiBlock
 import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
@@ -33,6 +34,7 @@ class HookManager {
     private fun registerAndInitHooks() {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
+                AntiBlock(),
                 FeatureGranting(),
                 DisableUpdates(),
                 DisableBoosting(),
