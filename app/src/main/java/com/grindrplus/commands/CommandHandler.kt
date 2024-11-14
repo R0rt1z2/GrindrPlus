@@ -12,6 +12,7 @@ class CommandHandler(
     init {
         commandModules.add(Location(recipient, sender))
         commandModules.add(Profile(recipient, sender))
+        commandModules.add(Utils(recipient, sender))
     }
 
     fun handle(input: String) {

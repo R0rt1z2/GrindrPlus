@@ -13,6 +13,7 @@ import android.util.Log
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
+import com.grindrplus.core.CoroutineHelper
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
 import com.grindrplus.persistence.NewDatabase
@@ -37,6 +38,8 @@ object GrindrPlus {
         private set
     lateinit var bridgeClient: BridgeClient
         private set
+    lateinit var coroutineHelper: CoroutineHelper
+        private set
     lateinit var instanceManager: InstanceManager
         private set
 
@@ -60,6 +63,7 @@ object GrindrPlus {
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
+        this.coroutineHelper = CoroutineHelper(classLoader)
         this.instanceManager = InstanceManager(classLoader)
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
@@ -91,8 +95,7 @@ object GrindrPlus {
         })
 
         instanceManager.hookClassConstructors(
-            "J7.a\$a\$b\$c",
-            "J7.a\$a\$c\$b",
+            "com.grindrapp.android.persistence.repository.ProfileRepo"
         )
 
         try {

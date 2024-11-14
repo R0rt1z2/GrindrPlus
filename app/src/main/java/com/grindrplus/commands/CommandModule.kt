@@ -1,5 +1,6 @@
 package com.grindrplus.commands
 
+import android.widget.Toast
 import com.grindrplus.GrindrPlus
 
 abstract class CommandModule(
@@ -18,7 +19,10 @@ abstract class CommandModule(
             commandMethod.invoke(this, args)
             true
         } catch (e: Exception) {
+            GrindrPlus.showToast(Toast.LENGTH_LONG,
+                "An error occurred while executing the command: ${e.message}")
             GrindrPlus.logger.log("Error executing command: $inputCommand")
+            e.printStackTrace()
             false
         }
     }
