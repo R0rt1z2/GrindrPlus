@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    val grindrVersion = "24.17.1"
+    val grindrVersions = listOf("24.17.0", "24.17.1")
 
     namespace = "com.grindrplus"
     compileSdk = 34
@@ -19,7 +19,7 @@ android {
         minSdk = 21
         targetSdk = 34
         versionCode = 14
-        versionName = "3.2.4-$grindrVersion ($gitCommitHash)"
+        versionName = "3.2.4-${grindrVersions.joinToString("_")}_$gitCommitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -27,8 +27,11 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "COMMIT_HASH", "\"$gitCommitHash\"")
-        buildConfigField("String", "TARGET_GRINDR_VERSION", "\"$grindrVersion\"")
+        buildConfigField(
+            "String[]",
+            "TARGET_GRINDR_VERSIONS",
+            grindrVersions.joinToString(prefix = "{", separator = ", ", postfix = "}") { "\"$it\"" }
+        )
     }
 
     buildTypes {
@@ -61,10 +64,10 @@ android {
         }
     }
 
-    android.applicationVariants.configureEach {
+    applicationVariants.configureEach {
         outputs.configureEach {
-            val gitCommitHash = getGitCommitHash() ?: "unknown"
-            (this as BaseVariantOutputImpl).outputFileName = "GPlus_v${versionName}-${name}.apk"
+            val sanitizedVersionName = versionName.replace(Regex("[^a-zA-Z0-9._-]"), "_").trim('_')
+            (this as BaseVariantOutputImpl).outputFileName = "GPlus_v${sanitizedVersionName}-${name}.apk"
         }
     }
 }

@@ -83,13 +83,13 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
             val application = it.thisObject()
             val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
 
-            if (pkgInfo.versionName != BuildConfig.TARGET_GRINDR_VERSION) {
+            if (pkgInfo.versionName !in BuildConfig.TARGET_GRINDR_VERSIONS) {
                 Toast.makeText(
                     application,
-                    "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected: ${BuildConfig.TARGET_GRINDR_VERSION}). Mod disabled.",
+                    "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${BuildConfig.TARGET_GRINDR_VERSIONS.joinToString("_")}). Mod disabled.",
                     Toast.LENGTH_LONG
                 ).show()
-                GrindrPlus.logger.log("Grindr version mismatch (installed: ${pkgInfo.versionName}, expected: ${BuildConfig.TARGET_GRINDR_VERSION}). Mod disabled.")
+                GrindrPlus.logger.log("Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${BuildConfig.TARGET_GRINDR_VERSIONS.joinToString("_")}). Mod disabled.")
                 return@hook
             }
 
