@@ -42,6 +42,13 @@ object RetrofitUtils {
         }
     }
 
+    fun Method.isPUT(value: String): Boolean {
+        return this.annotations.any {
+            it.annotationClass.java.name == "retrofit2.http.PUT"
+                    && callMethod(it, "value") == value
+        }
+    }
+
     fun Any.isFail(): Boolean {
         return javaClass.name == FAIL_CLASS_NAME
     }
@@ -51,6 +58,10 @@ object RetrofitUtils {
     }
 
     fun Any.getSuccessValue(): Any {
+        return getObjectField(this, SUCCESS_VALUE_NAME)
+    }
+
+    fun Any.getFailValue(): Any {
         return getObjectField(this, SUCCESS_VALUE_NAME)
     }
 

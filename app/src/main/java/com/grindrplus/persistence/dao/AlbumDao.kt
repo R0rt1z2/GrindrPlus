@@ -31,4 +31,7 @@ interface AlbumDao {
 
     @Upsert
     suspend fun upsertAlbumContent(dbAlbumContent: AlbumContentEntity)
+
+    @Query("DELETE FROM AlbumEntity WHERE id = :id")
+    suspend fun deleteAlbum(id: Long)
 }

@@ -10,8 +10,11 @@ import com.grindrplus.persistence.toGrindrAlbumBrief
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.createSuccess
+import com.grindrplus.utils.RetrofitUtils.getFailValue
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
+import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
+import com.grindrplus.utils.RetrofitUtils.isPUT
 import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.withSuspendResult
 import de.robv.android.xposed.XposedHelpers.getObjectField
@@ -35,6 +38,7 @@ class UnlimitedAlbums : Hook(
                 method.isGET("v1/albums") -> handleGetAlbums(args, result)
                 method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
                 method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
+                method.isPUT("v1/albums/{albumId}/shares/remove") -> handleRemoveAlbumShares(args, result)
                 else -> result
             }
         }
@@ -51,6 +55,29 @@ class UnlimitedAlbums : Hook(
             dao.upsertAlbumContent(dbAlbumContent)
         }
     }
+
+    private fun handleRemoveAlbumShares(args: Array<Any?>, result: Any) =
+        withSuspendResult(args, result) { args, result ->
+            val albumId = args[0] as Long
+            if (result.isFail()) {
+                runBlocking {
+                    GrindrPlus.newDatabase.withTransaction {
+                        val dao = GrindrPlus.newDatabase.albumDao()
+                        val albumToDelete = dao.getAlbum(albumId)
+
+                        if (albumToDelete != null) {
+                            GrindrPlus.logger.log("UnlimitedAlbums: Removing album $albumId from database")
+                            dao.deleteAlbum(albumId)
+                            createSuccess(albumId)
+                        } else {
+                            GrindrPlus.logger.log("UnlimitedAlbums: Album $albumId not found in database")
+                            result
+                        }
+                    }
+                }
+            }
+            result
+        }
 
     private fun handleGetAlbum(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
