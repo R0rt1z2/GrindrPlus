@@ -6,6 +6,7 @@
   <a href="https://github.com/R0rt1z2/GrindrPlus/actions/workflows/build_apk.yml?query=branch%3Amaster+event%3Apush+is%3Acompleted"><img src="https://img.shields.io/github/actions/workflow/status/R0rt1z2/GrindrPlus/build_apk.yml?branch=master&logo=github&label=Build" alt="Build"></a>
   <img src="https://shields.io/github/downloads/R0rt1z2/GrindrPlus/total?logo=Bookmeter&label=Downloads&logoColor=Green&color=Green" alt="Total downloads">
   <a href="https://discord.gg/SPb6Kc7S4C"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
+  <a href="https://t.me/GrindrPlus"><img src="https://img.shields.io/endpoint?label=Support&url=https%3A%2F%2Fmogyo.ro%2Fquart-apis%2Ftgmembercount%3Fchat_id%3DGrindrPlus" alt="Telegram"></a>
 </p>
 <h1 align="center">Grindr Plus</h1>
 
