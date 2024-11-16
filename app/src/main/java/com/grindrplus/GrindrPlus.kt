@@ -16,6 +16,8 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.CoroutineHelper
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
+import com.grindrplus.core.http.Client
+import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
@@ -42,6 +44,8 @@ object GrindrPlus {
         private set
     lateinit var instanceManager: InstanceManager
         private set
+    lateinit var httpClient: Client
+        private set
 
     lateinit var hookManager: HookManager
     lateinit var translations: JSONObject
@@ -49,6 +53,9 @@ object GrindrPlus {
 
     var currentActivity: Activity? = null
         private set
+
+    private val userAgent = "d5.u"
+    private val userSession = "com.grindrapp.android.storage.b"
 
     fun init(modulePath: String, application: Application) {
         Log.d(
@@ -95,9 +102,15 @@ object GrindrPlus {
         })
 
         instanceManager.hookClassConstructors(
-            "com.grindrapp.android.persistence.repository.ProfileRepo",
-            "u7.a" // BlockRepo
+            userAgent,
+            userSession
         )
+
+        instanceManager.setCallback(userSession) { uSession ->
+            instanceManager.setCallback(userAgent) { uAgent ->
+                httpClient = Client(Interceptor(uSession, uAgent))
+            }
+        }
 
         try {
             val initTime = measureTimeMillis { init() }

@@ -6,8 +6,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
-import com.grindrplus.core.Config
-import com.grindrplus.core.Utils.blockProfile
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
 
@@ -27,28 +25,58 @@ class Profile(
         }
     }
 
-    @Command("block", help = "Block a user")
-    fun block(args: List<String>) {
-        if (args.isNotEmpty()) {
-            blockProfile(args[0])
+@Command("block", help = "Block a user")
+fun block(args: List<String>) {
+    val profileId = if (args.isNotEmpty()) args[0] else sender
+    GrindrPlus.runCatching {
+        val response = httpClient.sendRequest(
+            "https://grindr.mobi/v3/me/blocks/$profileId",
+            "POST",
+        )
+        if (response.isSuccessful) {
+            showToast(
+                Toast.LENGTH_LONG,
+                "User blocked successfully"
+            )
         } else {
-            if (Config.get("confirm_block", true) as Boolean) {
-                GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-                    AlertDialog.Builder(activity)
-                        .setTitle("Block user")
-                        .setMessage("Are you sure you want to block this user?")
-                        .setPositiveButton("Block") { _, _ ->
-                            blockProfile(sender)
-                        }
-                        .setNegativeButton("Cancel") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        .create()
-                        .show()
+            showToast(
+                Toast.LENGTH_LONG,
+                "Failed to block user: ${response.body?.string()}"
+            )
+        }
+    }.onFailure {
+        GrindrPlus.showToast(
+            Toast.LENGTH_LONG,
+            "Failed to block user: ${it.message}"
+        )
+    }
+}
+
+    @Command("unblock", help = "Unblock a user")
+    fun unblock(args: List<String>) {
+        if (args.isNotEmpty()) {
+            GrindrPlus.runCatching {
+                val response = GrindrPlus.httpClient.sendRequest(
+                    "https://grindr.mobi/v3/me/blocks/${args[0]}",
+                    "DELETE"
+                )
+                if (response.isSuccessful) {
+                    GrindrPlus.showToast(
+                        Toast.LENGTH_LONG,
+                        "User unblocked successfully"
+                    )
+                } else {
+                    GrindrPlus.showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to unblock user: ${response.body?.string()}"
+                    )
                 }
-            } else {
-                blockProfile(sender)
             }
+        } else {
+            GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Please provide valid ID"
+            )
         }
     }
 

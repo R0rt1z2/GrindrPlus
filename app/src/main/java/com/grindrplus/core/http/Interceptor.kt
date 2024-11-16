@@ -1,0 +1,74 @@
+package com.grindrplus.core.http
+
+import de.robv.android.xposed.XposedBridge
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
+import java.util.TimeZone
+import okhttp3.Request.Builder
+
+class Interceptor(
+    private val userSession: Any,
+    private val userAgent: Any
+) :
+    Interceptor {
+    private fun modifyRequest(originalRequest: Request): Request {
+        try {
+            val isLoggedIn = invokeMethodSafe(userSession, "o") as Boolean
+            val authTokenFlow = invokeMethodSafe(userSession, "s")
+            val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
+            val roles = invokeMethodSafe(userSession, "x") as String
+            val userAgent = invokeMethodSafe(userAgent, "a") as String
+
+            val builder: Builder = originalRequest.newBuilder()
+
+            if (isLoggedIn) {
+                builder.header("Authorization", "Grindr3 $authToken")
+                builder.header("L-Time-Zone", TimeZone.getDefault().id)
+                builder.header("L-Grindr-Roles", roles)
+                builder.header("L-Device-Info", "00000000-0000-0000-0000-000000000000")
+            } else {
+                builder.header("L-Time-Zone", "Unknown")
+            }
+
+            builder.header("Accept", "application/json")
+            builder.header("User-Agent", userAgent)
+            builder.header("L-Locale", "en_US")
+            builder.header("Accept-language", "en-US")
+
+            return builder.build()
+        } catch (e: Exception) {
+            throw IOException("Failed to modify request: " + e.message, e)
+        }
+    }
+
+    private fun invokeMethodSafe(userSession: Any, s: String): Any {
+        return try {
+            userSession::class.java.getMethod(s).invoke(userSession)
+        } catch (e: Exception) {
+            XposedBridge.log("Failed to invoke method: ${e.printStackTrace()} $s")
+        }
+    }
+
+    private fun getFieldSafe(userSession: Any, fieldName: String): Any? {
+        return try {
+            val field = userSession::class.java.getDeclaredField(fieldName)
+            field.isAccessible = true
+            val value = field.get(userSession)
+            value
+        } catch (e: Exception) {
+            XposedBridge.log("Failed to get field: ${e.message} $fieldName")
+            null
+        }
+    }
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request: Request = chain.request()
+        try {
+            return chain.proceed(modifyRequest(request))
+        } catch (e: Exception) {
+            throw IOException("Failed to intercept request: " + e.message, e)
+        }
+    }
+}
