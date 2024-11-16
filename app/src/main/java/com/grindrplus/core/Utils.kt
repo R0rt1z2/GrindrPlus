@@ -28,6 +28,61 @@ object Utils {
         }
     }
 
+    fun openChat(id: String) {
+        val chatActivityInnerClass =
+            GrindrPlus.loadClass("com.grindrapp.android.ui.chat.ChatActivityV2\$a")
+        val chatArgsClass =
+            GrindrPlus.loadClass("com.grindrapp.android.args.ChatArgs")
+        val profileTypeClass =
+            GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.model.ProfileType")
+        val referrerTypeClass =
+            GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
+        val conversationMetadataClass =
+            GrindrPlus.loadClass("com.grindrapp.android.chat.model.DirectConversationMetaData")
+
+        val conversationMetadataInstance = conversationMetadataClass.constructors.first().newInstance(
+            id,
+            id.substringBefore(":"),
+            id.substringAfter(":")
+        )
+
+        val profileType = profileTypeClass.getField("FAVORITES").get(null)
+        val refererType = referrerTypeClass.getField("UNIFIED_CASCADE").get(null)
+
+        val chatArgsInstance = chatArgsClass.constructors.first().newInstance(
+            conversationMetadataInstance,
+            "0xDEADBEEF", // str
+            profileType,
+            refererType,
+            "0xDEADBEEF", // str2
+            "0xDEADBEEF", // str3
+            null,
+            844
+        )
+
+        val method = chatActivityInnerClass.declaredMethods.find {
+            it.parameterTypes.size == 2 && it.parameterTypes[1] == chatArgsClass
+        }
+
+        val intent = method?.invoke(
+            null,
+            GrindrPlus.context,
+            chatArgsInstance
+        ) as Intent?
+
+        intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val generalDeepLinksClass =
+            GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
+        val startActivityMethod = generalDeepLinksClass.getDeclaredMethod(
+            "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6",
+            Context::class.java,
+            Intent::class.java
+        )
+
+        startActivityMethod.invoke(null, GrindrPlus.context, intent)
+    }
+
     fun openProfile(id: String) {
         val profilesActivityClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity")
@@ -126,6 +181,7 @@ object Utils {
             }.get(obj)
         } catch (e: Exception) {
             GrindrPlus.logger.log("Failed to get field $fieldName from object $obj")
+            e.printStackTrace()
             null
         }
     }
