@@ -56,6 +56,15 @@ class Profile(
         }
     }
 
+    @Command("clear", aliases = ["reset"], help = "Reset chat with a user")
+    fun reset(args: List<String>) {
+        val profileId = if (args.isNotEmpty()) args[0] else sender
+        block(listOf(profileId, "silent"))
+        Thread.sleep(1000) // Wait for the block to take effect
+        unblock(listOf(profileId, "silent"))
+        openChat("$recipient:$profileId")
+    }
+
     @Command("unblock", help = "Unblock a user")
     fun unblock(args: List<String>) {
         val silent = "silent" in args
