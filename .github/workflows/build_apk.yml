@@ -76,7 +76,6 @@ jobs:
           curl -F document=@"${{ env.DEBUG_APK }}" \
           -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -F parse_mode=Markdown \
-          -F caption="${{ env.VERSION_INFO }} (debug) | [${{ env.COMMIT_SHA }}](${{ env.COMMIT_URL }})" \
           https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Upload Signed Release APK to Telegram
@@ -84,7 +83,6 @@ jobs:
           curl -F document=@"${{ env.RELEASE_APK }}" \
           -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -F parse_mode=Markdown \
-          -F caption="${{ env.VERSION_INFO }} (release) | [${{ env.COMMIT_SHA }}](${{ env.COMMIT_URL }})" \
           https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Upload Debug APK as Artifact

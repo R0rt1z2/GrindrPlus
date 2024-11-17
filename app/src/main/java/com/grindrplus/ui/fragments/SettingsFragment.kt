@@ -383,8 +383,6 @@ class SettingsFragment : Fragment() {
         container?.addView(otherSettingsTitle)
         container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
         container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
-
-        container?.addView(createToggleableSettingView(context, "Confirm block", "Show a confirmation dialog before blocking a user", "confirm_block"))
     }
 
     private fun showResetConfirmationDialog() {

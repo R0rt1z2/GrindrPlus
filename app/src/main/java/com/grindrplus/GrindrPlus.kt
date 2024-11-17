@@ -54,7 +54,7 @@ object GrindrPlus {
     var currentActivity: Activity? = null
         private set
 
-    private val userAgent = "d5.u"
+    private val userAgent = "d5.t"
     private val userSession = "com.grindrapp.android.storage.b"
 
     fun init(modulePath: String, application: Application) {

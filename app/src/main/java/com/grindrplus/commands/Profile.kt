@@ -9,6 +9,7 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class Profile(
     recipient: String,
@@ -70,7 +71,7 @@ class Profile(
         val silent = "silent" in args
         if (args.isNotEmpty()) {
             GrindrPlus.runCatching {
-                val response = GrindrPlus.httpClient.sendRequest(
+                val response = httpClient.sendRequest(
                     "https://grindr.mobi/v3/me/blocks/${args[0]}",
                     "DELETE"
                 )
@@ -104,6 +105,45 @@ class Profile(
             GrindrPlus.showToast(
                 Toast.LENGTH_LONG,
                 "Please provide valid ID"
+            )
+        }
+    }
+
+    @Command("report", help = "Report a user")
+    fun report(args: List<String>) {
+        val profileId = if (args.isNotEmpty()) args[0] else sender
+        val reason = if (args.size > 1) args[1] else "SPAM"
+        val body = """
+                {
+                    "reason": "$reason",
+                    "comment": "",
+                    "locations": [
+                        "CHAT_MESSAGE"
+                    ]
+                }
+            """.trimIndent()
+        GrindrPlus.runCatching {
+            val response = httpClient.sendRequest(
+                "https://grindr.mobi/v3.1/flags/$profileId",
+                "POST",
+                mapOf("Content-Type" to "application/json"),
+                body.toRequestBody()
+            )
+            if (response.isSuccessful) {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "User reported successfully"
+                )
+            } else {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to report user: ${response.body?.string()}"
+                )
+            }
+        }.onFailure {
+            GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Failed to report user: ${it.message}"
             )
         }
     }

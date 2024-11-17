@@ -13,6 +13,7 @@ class DisableBoosting : Hook(
 ) {
     private val drawerProfileUiState = "V9.e\$a"
     private val radarUiModel = "J7.a\$a"
+    private val roamOnBoardingFragment = "Aa.c"
     private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUIModel"
     private val boostStateClass =
         "com.grindrapp.android.ui.drawer.model.SideDrawerMicrosButtonState\$Unavailable"
@@ -50,7 +51,11 @@ class DisableBoosting : Hook(
             }
         }
 
-        findClass(fabUiModel).hook("component2", HookStage.AFTER) { param -> // getIsVisible()
+        findClass(fabUiModel).hook("createFragment", HookStage.BEFORE) { param ->
+            param.setResult(null) // Don't let the fragment be created
+        }
+
+        findClass(roamOnBoardingFragment).hook("a", HookStage.BEFORE) { param -> // showBoostMeButton
             param.setResult(false)
         }
     }
