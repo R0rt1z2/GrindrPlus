@@ -45,7 +45,7 @@ class DisableBoosting : Hook(
 
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
-        listOf("fa.j0", "fa.m0").forEach {
+        listOf("fa.k0", "fa.m0", "fa.n0", "fa.l0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
