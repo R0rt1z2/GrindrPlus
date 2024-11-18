@@ -1,5 +1,6 @@
 package com.grindrplus.core.http
 
+import com.grindrplus.GrindrPlus
 import de.robv.android.xposed.XposedBridge
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -10,7 +11,8 @@ import okhttp3.Request.Builder
 
 class Interceptor(
     private val userSession: Any,
-    private val userAgent: Any
+    private val userAgent: Any,
+    private val deviceInfo: Any
 ) :
     Interceptor {
     private fun modifyRequest(originalRequest: Request): Request {
@@ -20,6 +22,8 @@ class Interceptor(
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
             val roles = invokeMethodSafe(userSession, "x") as String
             val userAgent = invokeMethodSafe(userAgent, "a") as String
+            val deviceInfoLazy = getFieldSafe(deviceInfo, "c") as Any
+            val lDeviceInfo = invokeMethodSafe(deviceInfoLazy, "getValue") as String
 
             val builder: Builder = originalRequest.newBuilder()
 
@@ -27,7 +31,7 @@ class Interceptor(
                 builder.header("Authorization", "Grindr3 $authToken")
                 builder.header("L-Time-Zone", TimeZone.getDefault().id)
                 builder.header("L-Grindr-Roles", roles)
-                builder.header("L-Device-Info", "00000000-0000-0000-0000-000000000000")
+                builder.header("L-Device-Info", lDeviceInfo)
             } else {
                 builder.header("L-Time-Zone", "Unknown")
             }

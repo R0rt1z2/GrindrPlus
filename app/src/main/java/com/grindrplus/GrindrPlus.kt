@@ -59,6 +59,7 @@ object GrindrPlus {
 
     private val userAgent = "d5.t"
     private val userSession = "com.grindrapp.android.storage.b"
+    private val deviceInfo = "r3.t"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     fun init(modulePath: String, application: Application) {
@@ -107,12 +108,15 @@ object GrindrPlus {
 
         instanceManager.hookClassConstructors(
             userAgent,
-            userSession
+            userSession,
+            deviceInfo
         )
 
         instanceManager.setCallback(userSession) { uSession ->
             instanceManager.setCallback(userAgent) { uAgent ->
-                httpClient = Client(Interceptor(uSession, uAgent))
+                instanceManager.setCallback(deviceInfo) { dInfo ->
+                    httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+                }
             }
         }
 
