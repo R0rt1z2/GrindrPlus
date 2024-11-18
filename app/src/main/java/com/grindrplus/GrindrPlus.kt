@@ -21,6 +21,9 @@ import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
@@ -56,6 +59,7 @@ object GrindrPlus {
 
     private val userAgent = "d5.t"
     private val userSession = "com.grindrapp.android.storage.b"
+    private val ioScope = CoroutineScope(Dispatchers.IO)
 
     fun init(modulePath: String, application: Application) {
         Log.d(
@@ -160,6 +164,17 @@ object GrindrPlus {
         runOnMainThread {
             currentActivity?.let { activity ->
                 block(activity)
+            }
+        }
+    }
+
+    fun executeAsync(block: suspend () -> Unit) {
+        ioScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                logger.log("Async operation failed: ${e.message}")
+                showToast(Toast.LENGTH_LONG, "Operation failed: ${e.message}")
             }
         }
     }
