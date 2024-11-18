@@ -61,7 +61,6 @@ class Profile(
     fun reset(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
         block(listOf(profileId, "silent"))
-        Thread.sleep(1000) // Wait for the block to take effect
         unblock(listOf(profileId, "silent"))
         openChat("$recipient:$profileId")
     }
