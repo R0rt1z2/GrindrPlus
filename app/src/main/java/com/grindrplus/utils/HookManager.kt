@@ -9,6 +9,7 @@ import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
 import com.grindrplus.hooks.DisableBoosting
 import com.grindrplus.hooks.DisableUpdates
+import com.grindrplus.hooks.EmptyCalls
 import com.grindrplus.hooks.EnableUnlimited
 import com.grindrplus.hooks.ExpiringPhotos
 import com.grindrplus.hooks.Favorites
@@ -59,7 +60,8 @@ class HookManager {
                 SignatureSpoofer(),
                 UnlimitedTaps(),
                 UnlimitedAlbums(),
-                QuickBlock()
+                QuickBlock(),
+                EmptyCalls()
             )
 
             hookList.forEach { hook ->
