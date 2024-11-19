@@ -29,32 +29,8 @@ class Profile(
 
     @Command("block", help = "Block a user")
     fun block(args: List<String>) {
-        val silent = "silent" in args
-        val profileId = if (args.isNotEmpty()) args[0] else sender
-        GrindrPlus.runCatching {
-            val response = httpClient.sendRequest(
-                "https://grindr.mobi/v3/me/blocks/$profileId",
-                "POST",
-            )
-            if (response.isSuccessful) {
-                if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "User blocked successfully"
-                    )
-                }
-            } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to block user: ${response.body?.string()}"
-                )
-            }
-        }.onFailure {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Failed to block user: ${it.message}"
-            )
-        }
+        GrindrPlus.httpClient.blockUser(
+            if (args.isNotEmpty()) args[0] else sender)
     }
 
     @Command("clear", aliases = ["reset"], help = "Reset chat with a user")
@@ -67,33 +43,8 @@ class Profile(
 
     @Command("unblock", help = "Unblock a user")
     fun unblock(args: List<String>) {
-        val silent = "silent" in args
-        if (args.isNotEmpty()) {
-            GrindrPlus.runCatching {
-                val response = httpClient.sendRequest(
-                    "https://grindr.mobi/v3/me/blocks/${args[0]}",
-                    "DELETE"
-                )
-                if (response.isSuccessful) {
-                    if (!silent) {
-                        showToast(
-                            Toast.LENGTH_LONG,
-                            "User unblocked successfully"
-                        )
-                    }
-                } else {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to unblock user: ${response.body?.string()}"
-                    )
-                }
-            }
-        } else {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
-            )
-        }
+        GrindrPlus.httpClient.unblockUser(
+            if (args.isNotEmpty()) args[0] else sender)
     }
 
     @Command("chat", help = "Open chat with a user")
@@ -112,39 +63,7 @@ class Profile(
     fun report(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
         val reason = if (args.size > 1) args[1] else "SPAM"
-        val body = """
-                {
-                    "reason": "$reason",
-                    "comment": "",
-                    "locations": [
-                        "CHAT_MESSAGE"
-                    ]
-                }
-            """.trimIndent()
-        GrindrPlus.runCatching {
-            val response = httpClient.sendRequest(
-                "https://grindr.mobi/v3.1/flags/$profileId",
-                "POST",
-                mapOf("Content-Type" to "application/json"),
-                body.toRequestBody()
-            )
-            if (response.isSuccessful) {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "User reported successfully"
-                )
-            } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to report user: ${response.body?.string()}"
-                )
-            }
-        }.onFailure {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Failed to report user: ${it.message}"
-            )
-        }
+        GrindrPlus.httpClient.reportUser(profileId, reason)
     }
 
     @SuppressLint("SetTextI18n")

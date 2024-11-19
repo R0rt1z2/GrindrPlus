@@ -112,49 +112,6 @@ class ProfileDetails : Hook(
                 }
             }
 
-        findClass("com.grindrapp.android.ui.profileV2.j").hook("F", HookStage.AFTER) { param ->
-            val jVar = param.arg(0) as Any
-            val profileViewState = param.args().getOrNull(1) ?: return@hook
-            val profileId = getObjectField(profileViewState, "profileId") as String
-            val viewBinding = getObjectField(jVar, "p")
-            val profileToolbar = getObjectField(viewBinding, "r")
-            val toolbarMenu = callMethod(profileToolbar, "getMenu") as Menu
-            val menuActions = getId("menu_actions", "id", GrindrPlus.context)
-            val actionsMenuItem = callMethod(toolbarMenu, "findItem", menuActions) as MenuItem
-
-            actionsMenuItem.setOnMenuItemClickListener { menuItem ->
-                val shouldQuickBlock = Config.get("quick_block", false) as Boolean
-                GrindrPlus.logger.log("Quick block: $shouldQuickBlock")
-                if (shouldQuickBlock) {
-                    GrindrPlus.executeAsync {
-                        val response = httpClient.sendRequest(
-                            "https://grindr.mobi/v3/me/blocks/$profileId",
-                            "POST"
-                        )
-                        if (response.isSuccessful) {
-                            showToast(Toast.LENGTH_LONG, "User blocked successfully")
-                        } else {
-                            showToast(
-                                Toast.LENGTH_LONG,
-                                "Failed to block user: ${response.body?.string()}"
-                            )
-                        }
-                    }
-                    true
-                } else {
-                    val listenerInstance = loadClass("androidx.camera.core.e")
-                        .declaredConstructors.first().apply { isAccessible = true }
-                        .newInstance(profileViewState, jVar)
-
-                    val onMenuItemClickMethod = listenerInstance::class.java.declaredMethods.first {
-                        it.name == "onMenuItemClick"
-                    }
-
-                    onMenuItemClickMethod.invoke(listenerInstance, menuItem) as Boolean
-                }
-            }
-        }
-
         findClass(distanceUtils)
             .hook("c", HookStage.AFTER) { param ->
                 val distance = param.arg<Double>(1)

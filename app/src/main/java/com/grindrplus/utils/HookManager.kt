@@ -19,6 +19,7 @@ import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
+import com.grindrplus.hooks.QuickBlock
 import com.grindrplus.hooks.RemovableMessages
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.UnlimitedAlbums
@@ -55,7 +56,8 @@ class HookManager {
                 RemovableMessages(),
                 SignatureSpoofer(),
                 UnlimitedTaps(),
-                UnlimitedAlbums()
+                UnlimitedAlbums(),
+                QuickBlock()
             )
 
             hookList.forEach { hook ->

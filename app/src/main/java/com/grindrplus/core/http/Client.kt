@@ -1,6 +1,10 @@
 package com.grindrplus.core.http
 
+import android.widget.Toast
+import com.grindrplus.GrindrPlus
+import com.grindrplus.GrindrPlus.showToast
 import okhttp3.*
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class Client(interceptor: Interceptor) {
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
@@ -30,6 +34,74 @@ class Client(interceptor: Interceptor) {
         }
 
         return httpClient.newCall(requestBuilder.build()).execute()
+    }
+
+    fun blockUser(profileId: String) {
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v3/me/blocks/$profileId",
+                "POST"
+            )
+            if (response.isSuccessful) {
+                showToast(Toast.LENGTH_LONG, "User blocked successfully")
+            } else {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to block user: ${response.body?.string()}"
+                )
+            }
+        }
+    }
+
+    fun unblockUser(profileId: String) {
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v3/me/blocks/$profileId",
+                "DELETE"
+            )
+            if (response.isSuccessful) {
+                showToast(Toast.LENGTH_LONG, "User unblocked successfully")
+            } else {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to unblock user: ${response.body?.string()}"
+                )
+            }
+        }
+    }
+
+    fun reportUser(
+        profileId: String,
+        reason: String = "SPAM",
+        comment: String = ""
+    ) {
+        GrindrPlus.executeAsync {
+            val body = """
+                {
+                    "reason": "$reason",
+                    "comment": "$comment",
+                    "locations": [
+                        "CHAT_MESSAGE"
+                    ]
+                }
+            """.trimIndent()
+
+            val response = sendRequest(
+                "https://grindr.mobi/v3.1/flags/$profileId",
+                "POST",
+                mapOf("Content-Type" to "application/json"),
+                body.toRequestBody()
+            )
+
+            if (response.isSuccessful) {
+                showToast(Toast.LENGTH_LONG, "User reported successfully")
+            } else {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to report user: ${response.body?.string()}"
+                )
+            }
+        }
     }
 }
 
