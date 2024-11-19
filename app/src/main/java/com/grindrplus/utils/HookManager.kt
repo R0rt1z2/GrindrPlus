@@ -17,6 +17,7 @@ import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
 import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.OnlineIndicator
+import com.grindrplus.hooks.PersistentIncognito
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
@@ -35,6 +36,7 @@ class HookManager {
     private fun registerAndInitHooks() {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
+                PersistentIncognito(),
                 AntiBlock(),
                 FeatureGranting(),
                 DisableUpdates(),

@@ -82,7 +82,7 @@ class DisableUpdates : Hook(
         if (versionName < GrindrPlus.context.packageManager.getPackageInfo(
                 GrindrPlus.context.packageName,
                 0
-            ).versionName
+            ).versionName.toString()
         ) {
             findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
                 setObjectField(param.thisObject(), "b", versionName)

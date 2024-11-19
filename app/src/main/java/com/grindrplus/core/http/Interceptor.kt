@@ -36,7 +36,7 @@ class Interceptor(
                 builder.header("L-Time-Zone", "Unknown")
             }
 
-            builder.header("Accept", "application/json")
+            builder.header("Accept", "application/json; charset=UTF-8")
             builder.header("User-Agent", userAgent)
             builder.header("L-Locale", "en_US")
             builder.header("Accept-language", "en-US")

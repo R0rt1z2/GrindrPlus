@@ -133,17 +133,17 @@ object GrindrPlus {
         logger.log("Initializing GrindrPlus...")
         Config.initialize(context)
 
-        bridgeClient = BridgeClient(context).apply {
-            connect {
-                localeTag = Config.get("locale", "") as String?
-                    ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        context.resources.configuration.locales.get(0).toLanguageTag()
-                    } else {
-                        context.resources.configuration.locale.toLanguageTag()
-                    }
-                translations = getTranslation(localeTag) ?: JSONObject()
-            }
-        }
+//        bridgeClient = BridgeClient(context).apply {
+//            connect {
+//                localeTag = Config.get("locale", "") as String?
+//                    ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                        context.resources.configuration.locales.get(0).toLanguageTag()
+//                    } else {
+//                        context.resources.configuration.locale.toLanguageTag()
+//                    }
+//                translations = getTranslation(localeTag) ?: JSONObject()
+//            }
+//        }
 
         /**
          * Emergency reset of the database if the flag is set.

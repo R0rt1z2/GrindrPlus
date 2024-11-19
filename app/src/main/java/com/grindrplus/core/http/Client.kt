@@ -89,8 +89,7 @@ class Client(interceptor: Interceptor) {
             val response = sendRequest(
                 "https://grindr.mobi/v3.1/flags/$profileId",
                 "POST",
-                mapOf("Content-Type" to "application/json"),
-                body.toRequestBody()
+                body = body.toRequestBody()
             )
 
             if (response.isSuccessful) {
@@ -106,26 +105,20 @@ class Client(interceptor: Interceptor) {
 
     fun updateSettings(settings: String) {
         GrindrPlus.executeAsync {
-            val response = sendRequest(
-                "https://grindr.mobi/v3/me/settings",
-                "PATCH",
-                mapOf("Content-Type" to "application/json"),
-                settings.toRequestBody()
+            sendRequest(
+                "https://grindr.mobi/v3/me/prefs/settings",
+                "PUT",
+                body = settings.toRequestBody()
             )
-
-            if (response.isSuccessful) {
-                showToast(Toast.LENGTH_LONG, "Settings updated successfully")
-            } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to update settings: ${response.body?.string()}"
-                )
-            }
         }
     }
 
     fun enableIncognito() {
         updateSettings("""{"settings":{"incognito":true}}""")
+    }
+
+    fun disableIncognito() {
+        updateSettings("""{"settings":{"incognito":false}}""")
     }
 }
 
