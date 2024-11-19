@@ -1,0 +1,51 @@
+name: Extract and Upload base APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_url:
+        description: "URL to the bundle"
+        required: true
+        default: ""
+
+jobs:
+  extract-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Create working directory
+      run: mkdir extracted_bundle
+
+    - name: Download bundle
+      run: |
+        echo "Downloading bundle from ${{ github.event.inputs.bundle_url }}"
+        curl -L -o extracted_bundle/bundle.zip "${{ github.event.inputs.bundle_url }}"
+
+    - name: Extract bundle
+      run: |
+        unzip extracted_bundle/bundle.zip -d extracted_bundle
+
+    - name: List extracted files
+      run: |
+        echo "Contents of the extracted folder:"
+        ls extracted_bundle
+
+    - name: Locate and upload base APK
+      run: |
+        if [ -f extracted_bundle/base.apk ]; then
+          echo "base.apk found. Preparing to upload..."
+        else
+          echo "base.apk not found. Make sure the bundle contains this file."
+          exit 1
+        fi
+      shell: bash
+
+    - name: Upload base APK
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: base.apk
+        path: extracted_bundle/base.apk
