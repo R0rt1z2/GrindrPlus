@@ -103,6 +103,30 @@ class Client(interceptor: Interceptor) {
             }
         }
     }
+
+    fun updateSettings(settings: String) {
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v3/me/settings",
+                "PATCH",
+                mapOf("Content-Type" to "application/json"),
+                settings.toRequestBody()
+            )
+
+            if (response.isSuccessful) {
+                showToast(Toast.LENGTH_LONG, "Settings updated successfully")
+            } else {
+                showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to update settings: ${response.body?.string()}"
+                )
+            }
+        }
+    }
+
+    fun enableIncognito() {
+        updateSettings("""{"settings":{"incognito":true}}""")
+    }
 }
 
 fun RequestBody.Companion.createEmpty(): RequestBody {

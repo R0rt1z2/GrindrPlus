@@ -383,6 +383,8 @@ class SettingsFragment : Fragment() {
         container?.addView(otherSettingsTitle)
         container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
         container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
+
+        container?.addView(createToggleableSettingView(context, "Force Incognito Mode", "Always appear as offline to other users", "force_incognito"))
     }
 
     private fun showResetConfirmationDialog() {
