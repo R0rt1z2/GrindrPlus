@@ -1,129 +1,129 @@
 {
     "global": {
         "version_mismatch": "GrindrPlus: Не совпадает версия Grindr (установлена {installedVersion}, должна быть {expectedVersion}). Мод недоступен",
-        "unable_to_fetch_translations": "Unable to fetch translations"
+        "unable_to_fetch_translations": "Не получилось перевести"
     },
     "hooks": {
         "allow_screenshots": {
-            "name": "Allow screenshots",
-            "description": "Allow screenshots everywhere in the app"
+            "name": "Разрешить скриншоты",
+            "description": "Разрешить скриншоты во всём приложении"
         },
         "chat_indicators": {
-            "name": "Chat indicators",
+            "name": "Индикаторы чата",
             "description": "Don't show chat markers / indicators to others"
         },
         "chat_terminal": {
-            "name": "Chat terminal",
-            "description": "Create a chat terminal to execute commands"
+            "name": "Терминал чата",
+            "description": "Создать терминал чата для выполнения команд"
         },
         "disable_analytics": {
-            "name": "Disable analytics",
-            "description": "Disable Grindr analytics (data collection)"
+            "name": "Выключить аналитику",
+            "description": "Выключить аналитику Grindr (сбор данных)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Выключить бустинг",
+            "description": "Убрать все сообщения о бустинге"
         },
         "disable_updates": {
-            "name": "Disable updates",
-            "description": "Disable forced updates"
+            "name": "Выключить обновления",
+            "description": "Выключить форсированные обновления"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Включить безлимит",
+            "description": "Включить фичи Grindr Unlimited"
         },
         "expiring_photos": {
-            "name": "Expiring photos",
-            "description": "Allow unlimited photo viewing"
+            "name": "Исчезающие фото",
+            "description": "Разрешить неограниченный просмотр фото"
         },
         "favorites": {
-            "name": "Favorites",
-            "description": "Customize layout for the favorites tab"
+            "name": "Избранное",
+            "description": "Настроить вид избранного"
         },
         "feature_granting": {
-            "name": "Feature granting",
-            "description": "Grant all Grindr features (including experiments)"
+            "name": "Включение фичей",
+            "description": "Включить все фичи Грайндера (включая экспериментальные)"
         },
         "local_saved_phrases": {
-            "name": "Local saved phrases",
-            "description": "Save unlimited phrases locally"
+            "name": "Сохранённые реплики",
+            "description": "Локально сохранять неограниченное количество реплик"
         },
         "location_spoofer": {
             "name": "Location spoofer",
             "description": "Spoof your location"
         },
         "mod_settings": {
-            "name": "Mod settings",
-            "description": "GrindrPlus settings"
+            "name": "Настройки мода",
+            "description": "Настройки GrindrPlus"
         },
         "online_indicator": {
-            "name": "Online indicator",
-            "description": "More accurate online status indicator"
+            "name": "Индикатор «в сети»",
+            "description": "Более точный индикатор «в сети»"
         },
         "profile_details": {
-            "name": "Profile details",
+            "name": "Детали профиля",
             "description": "",
-            "profile_id": "Profile ID",
-            "approximate_distance": "Approximate distance",
-            "found_via_teleport": "Found via teleport",
-            "favorite": "Favorite",
-            "from_viewed_me": "From viewed me",
-            "innaccessible_profile": "Inaccessible profile",
+            "profile_id": "ID профиля",
+            "approximate_distance": "Приблизительное расстояние",
+            "found_via_teleport": "Нашёл телепортом",
+            "favorite": "Избранный",
+            "from_viewed_me": "Из тех, кто меня смотрел",
+            "innaccessible_profile": "Недоступный профиль",
             "jwt_boosting": "JWT boosting",
             "new": "New",
-            "teleporting": "Teleporting",
-            "online_now": "Online now",
+            "teleporting": "Телепортация",
+            "online_now": "Сейчас онлайн",
             "hidden_profile_details": "Hidden profile details",
-            "ok": "OK",
-            "underweight": "Underweight",
-            "normal_weight": "Normal weight",
-            "overweight": "Overweight",
-            "obese": "Obese"
+            "ok": "ОК",
+            "underweight": "Худой",
+            "normal_weight": "Нормальный вес",
+            "overweight": "С лишним весом",
+            "obese": "Полный"
         },
         "profile_views": {
-            "name": "Profile views",
+            "name": "Просмотры профиля",
             "description": "Control whether others can see you've viewed their profile"
         },
         "removable_messages": {
-            "name": "Removable messages",
-            "description": "Remove messages for both parties"
+            "name": "Удаляемые сообщения",
+            "description": "Удалить сообщения для обоих"
         },
         "signature_spoofer": {
             "title": "Signature spoofer",
             "description": "Allow logging in with Google while using LSPatch"
         },
         "unlimited_albums": {
-            "name": "Unlimited albums",
+            "name": "Безлимитные альбомы",
             "description": "Ability to view unlimited albums"
         },
         "unlimited_profiles": {
-            "name": "Unlimited profiles",
+            "name": "Безлимитные профили",
             "description": "View unlimited profiles in cascade"
         }
     },
     "commands": {
         "location": {
-            "teleport_to_location": "Teleport to a locatioN",
-            "teleportation_disabled": "Teleportation disabled",
+            "teleport_to_location": "Телепортироваться в",
+            "teleportation_disabled": "Телепортация отключена",
             "teleported_to_coords": "Teleported to {lat}, {lon}",
-            "location_not_found": "Location not found",
-            "save_current_location": "Save the current location",
+            "location_not_found": "Место не найдено",
+            "save_current_location": "Сохранить текущее место",
             "provide_name_for_location": "Please provide a name for the location",
-            "successfully_updated_location": "Successfully updated {name}!",
+            "successfully_updated_location": "Успешно обновлён {name}!",
             "successfully_saved_location": "Successfully saved {name}!",
-            "delete_saved_location": "Delete a saved location",
-            "successfully_deleted_location": "Successfully deleted {name}!"
+            "delete_saved_location": "Удалить сохранённое место",
+            "successfully_deleted_location": "Успешно сохранён {name}!"
         },
         "profile": {
-            "open_user_profile": "Open a user profile",
+            "open_user_profile": "Открыть профиль пользователя",
             "provide_user_id": "Please provide a valid ID",
             "get_and_copy_id": "Get and copy profile IDs",
-            "your_id": "Your ID",
-            "profile_id": "Profile ID",
+            "your_id": "Ваш ID",
+            "profile_id": "ID профиля",
             "profile_ids": "Profile IDs",
-            "copy_my_id": "Copy my ID",
-            "copy_profile_id": "Copy profile ID",
-            "close": "Close"
+            "copy_my_id": "Скопировать мой ID",
+            "copy_profile_id": "Скопировать ID профиля",
+            "close": "Закрыть"
         }
     },
     "settings": {
@@ -150,11 +150,11 @@
         "other_settings": "Other settings",
         "online_indicator_title": "Online indicator duration (mins)",
         "online_indicator_description": "Control when online green dots disappear after inactivity",
-        "favorites_grid_size": "Favorites grid size",
+        "favorites_grid_size": "Размер сетки в избранном",
         "favorites_grid_size_description": "Customize grid size of the layout for the favorites tab",
-        "reset_grindrplus_title": "Reset GrindrPlus",
-        "reset_grindrplus_description": "This will reset the database and the config of the mod, which means your cached albums/pictures will be gone, as well as saved phrases and locations.",
-        "yes": "Yes",
-        "no": "No"
+        "reset_grindrplus_title": "Сбросить GrindrPlus",
+        "reset_grindrplus_description": "Это сбросит базу данных и конфиг мода, то есть, ваши закэшированные альбомы и фото удалятся, равно как и сохранённые фразы и места.",
+        "yes": "Да",
+        "no": "Нет"
     }
 }
