@@ -14,14 +14,14 @@ class QuickBlock : Hook(
     "Quick block",
     "Ability to block users quickly"
 ) {
-    private val blockViewModel = "H9.f"
-    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.j"
+    private val blockViewModel = "S9.b"
+    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g"
     override fun init() {
         findClass(profileViewHolder).hook("F", HookStage.AFTER) { param ->
-            val jVar = param.arg(0) as Any
+            val arg0 = param.arg(0) as Any
             val profileViewState = param.args().getOrNull(1) ?: return@hook
             val profileId = getObjectField(profileViewState, "profileId") as String
-            val viewBinding = getObjectField(jVar, "p")
+            val viewBinding = getObjectField(arg0, "p")
             val profileToolbar = getObjectField(viewBinding, "r")
             val toolbarMenu = callMethod(profileToolbar, "getMenu") as Menu
             val menuActions = getId("menu_actions", "id", GrindrPlus.context)

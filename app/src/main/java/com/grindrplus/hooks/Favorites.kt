@@ -24,7 +24,7 @@ class Favorites : Hook(
 ) {
     private val recyclerViewLayoutParams =
         "androidx.recyclerview.widget.RecyclerView\$LayoutParams"
-    private val favoritesFragment = "com.grindrapp.android.favorites.FavoritesFragment"
+    private val favoritesFragment = "com.grindrapp.android.favorites.presentation.ui.FavoritesFragment"
 
     override fun init() {
         val recyclerViewLayoutParamsConstructor = findClass(recyclerViewLayoutParams)
