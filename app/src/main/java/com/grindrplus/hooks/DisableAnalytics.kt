@@ -9,7 +9,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "L4.a"
+    private val analyticsRestService = "K4.a"
 
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)

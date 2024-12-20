@@ -22,7 +22,7 @@ class PersistentIncognito : Hook(
     "Persistent incognito",
     "Makes incognito mode persistent"
 ) {
-    private val meRestService = "C3.q"
+    private val meRestService = "v3.q"
     private val grindrSettings = "com.grindrapp.android.model.GrindrSettings"
     private val drawerProfileFragment = "com.grindrapp.android.ui.drawer.DrawerProfileFragment"
 
@@ -46,10 +46,10 @@ class PersistentIncognito : Hook(
         }
 
         findClass(drawerProfileFragment)
-            .hook("J", HookStage.BEFORE) { param ->
+            .hook("H", HookStage.BEFORE) { param ->
                 val incognito = param.arg(0) as Boolean
-                val viewModel = callMethod(param.thisObject(), "H")
-                callMethod(viewModel, "I", incognito)
+                val viewModel = callMethod(param.thisObject(), "F")
+                callMethod(viewModel, "G", incognito)
                 Config.put("incognito_mode", incognito)
                 incognito.let {
                     if (it) GrindrPlus.httpClient.enableIncognito()

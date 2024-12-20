@@ -39,7 +39,7 @@ class LocationSpoofer : Hook(
     "Spoof your location"
 ) {
     private val location = "android.location.Location"
-    private val chatBottomToolbar = "com.grindrapp.android.view.ChatBottomToolbar"
+    private val chatBottomToolbar = "com.grindrapp.android.chat.presentation.ui.view.ChatBottomToolbar"
 
     override fun init() {
         val locationClass = findClass(location)
