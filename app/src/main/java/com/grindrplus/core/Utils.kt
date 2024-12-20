@@ -30,7 +30,7 @@ object Utils {
 
     fun openChat(id: String) {
         val chatActivityInnerClass =
-            GrindrPlus.loadClass("com.grindrapp.android.ui.chat.ChatActivityV2\$a")
+            GrindrPlus.loadClass("com.grindrapp.android.chat.presentation.ui.ChatActivityV2\$a")
         val chatArgsClass =
             GrindrPlus.loadClass("com.grindrapp.android.args.ChatArgs")
         val profileTypeClass =
@@ -57,6 +57,7 @@ object Utils {
             "0xDEADBEEF", // str2
             "0xDEADBEEF", // str3
             null,
+            null, // chatMediaDrawerArgs
             844
         )
 

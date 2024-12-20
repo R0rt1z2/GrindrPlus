@@ -49,7 +49,7 @@ class PersistentIncognito : Hook(
             .hook("H", HookStage.BEFORE) { param ->
                 val incognito = param.arg(0) as Boolean
                 val viewModel = callMethod(param.thisObject(), "F")
-                callMethod(viewModel, "G", incognito)
+                callMethod(viewModel, "I", incognito)
                 Config.put("incognito_mode", incognito)
                 incognito.let {
                     if (it) GrindrPlus.httpClient.enableIncognito()

@@ -57,9 +57,9 @@ object GrindrPlus {
     var currentActivity: Activity? = null
         private set
 
-    private val userAgent = "d5.t"
+    private val userAgent = "a5.t"
     private val userSession = "com.grindrapp.android.storage.b"
-    private val deviceInfo = "r3.t"
+    private val deviceInfo = "j3.t"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     fun init(modulePath: String, application: Application) {

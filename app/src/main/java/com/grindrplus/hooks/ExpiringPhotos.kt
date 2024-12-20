@@ -10,9 +10,9 @@ class ExpiringPhotos : Hook(
     "Expiring photos",
     "Allow unlimited photo viewing"
 ) {
-    private val expiringImageBody = "com.grindrapp.android.model.ExpiringImageBody"
+    private val expiringImageBody = "com.grindrapp.android.chat.model.ExpiringImageBody"
     private val expiringImageBodyUiData =
-        "com.grindrapp.android.ui.chat.model.BodyUiData\$ExpiringImageBodyUiData"
+        "com.grindrapp.android.chat.presentation.model.BodyUiData\$ExpiringImageBodyUiData"
     private val expiringStatusResponse =
         "com.grindrapp.android.chat.api.model.ExpiringPhotoStatusResponse"
 
