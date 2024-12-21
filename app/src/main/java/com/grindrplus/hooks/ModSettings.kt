@@ -47,7 +47,7 @@ class ModSettings : Hook(
             .hook("onCreate", HookStage.AFTER) { param ->
                 val activity = param.thisObject() as Activity
 
-                val settingsViewBindingLazy = getObjectField(param.thisObject(), "e0")
+                val settingsViewBindingLazy = getObjectField(param.thisObject(), "c0")
                 val settingsViewBinding = settingsViewBindingLazy::class
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
 
