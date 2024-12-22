@@ -1,10 +1,12 @@
 package com.grindrplus.ui.fragments
 
 import Database
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.net.Uri
@@ -18,8 +20,12 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ScrollView
+import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +36,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
@@ -87,6 +94,9 @@ class SettingsFragment : Fragment() {
             id = Utils.getId("activity_content", "id", context)
         }
 
+        val customToolbar = createCustomToolbarWithMenu(context)
+        rootLayout.addView(customToolbar)
+
         val fragmentContainer = FrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -129,7 +139,6 @@ class SettingsFragment : Fragment() {
         fragmentContainer.addView(scrollView)
         rootLayout.addView(fragmentContainer)
 
-        setupToolbar(context, fragmentContainer)
         updateUIFromConfig()
 
         return rootLayout
@@ -147,7 +156,7 @@ class SettingsFragment : Fragment() {
             elevation = 6f
         }
 
-        val toolbarTitle = AppCompatTextView(context).apply {
+        val toolbarTitle = TextView(context).apply {
             text = "Mod Settings"
             textSize = 16f
             typeface = Utils.getFont("ibm_plex_sans_medium", context)
@@ -410,6 +419,7 @@ class SettingsFragment : Fragment() {
         exitProcess(0)
     }
 
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private fun createHookSwitch(
         context: Context,
         hookName: String,
@@ -450,7 +460,7 @@ class SettingsFragment : Fragment() {
             text = hookName
         }
 
-        val hookSwitch = SwitchCompat(context).apply {
+        val hookSwitch = Switch(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -587,6 +597,7 @@ class SettingsFragment : Fragment() {
         return settingLayout
     }
 
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private fun createToggleableSettingView(context: Context, title: String, description: String, key: String): View {
         val settingLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -623,7 +634,7 @@ class SettingsFragment : Fragment() {
         }
 
         val currentValue = Config.get(key, false) as Boolean
-        val settingSwitch = SwitchCompat(context).apply {
+        val settingSwitch = Switch(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -668,5 +679,90 @@ class SettingsFragment : Fragment() {
             )
         }
         return 0
+    }
+
+    private fun showPopupMenu(anchor: View, context: Context) {
+        val popupMenu = PopupMenu(context, anchor)
+        popupMenu.menu.add("Export Config")
+        popupMenu.menu.add("Import Config")
+        popupMenu.menu.add("Export Database")
+        popupMenu.menu.add("Import Database")
+        popupMenu.menu.add("Reset GrindrPlus")
+
+        popupMenu.setOnMenuItemClickListener { item ->
+            when (item.title) {
+                "Export Config" -> {
+                    promptFolderSelection(false)
+                    true
+                }
+                "Import Config" -> {
+                    promptImportSelection(false)
+                    true
+                }
+                "Export Database" -> {
+                    promptFolderSelection(true)
+                    true
+                }
+                "Import Database" -> {
+                    promptImportSelection(true)
+                    true
+                }
+                "Reset GrindrPlus" -> {
+                    showResetConfirmationDialog()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popupMenu.show()
+    }
+
+    private fun createCustomToolbarWithMenu(context: Context): LinearLayout {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Colors.grindr_dark_amoled_black)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 56f, context.resources.displayMetrics
+                ).toInt()
+            ).apply {
+                setPadding(50, 0, 16, 0)
+            }
+
+            val title = TextView(context).apply {
+                text = "Mod Settings"
+                textSize = 20f
+                setTextColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                ).also {
+                    it.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                }
+            }
+            addView(title)
+
+            val menuIcon = ImageView(context).apply {
+                setImageResource(Utils.getId(
+                    "abc_ic_menu_overflow_material",
+                    "drawable",
+                    context
+                ))
+                setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                    setMargins(0, 0, 16, 0)
+                }
+                setOnClickListener { view ->
+                    showPopupMenu(view, context)
+                }
+            }
+            addView(menuIcon)
+        }
     }
 }
