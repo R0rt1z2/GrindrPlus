@@ -51,6 +51,13 @@ class LocationSpoofer : Hook(
             ) { param ->
                 param.setResult(false)
             }
+        } else {
+            locationClass.hook(
+                "isFromMockProvider",
+                HookStage.BEFORE
+            ) { param ->
+                param.setResult(false)
+            }
         }
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
