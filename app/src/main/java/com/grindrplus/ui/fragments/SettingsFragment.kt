@@ -12,6 +12,7 @@ import android.graphics.PorterDuffColorFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
@@ -294,48 +295,82 @@ class SettingsFragment : Fragment() {
 
     private fun exportDatabaseToUri(uri: Uri) {
         val context = requireContext()
-        val databasePath = context.filesDir.absolutePath + "/grindrplus.db"
-
+        val databasePath = "${context.filesDir.absolutePath}/grindrplus.db"
         val databaseFile = File(databasePath)
-        val contentResolver = context.contentResolver
 
         try {
-            val pickedDir = DocumentFile.fromTreeUri(context, uri)
+            val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                uri,
+                DocumentsContract.getTreeDocumentId(uri)
+            )
 
-            val newFile = pickedDir?.createFile("application/x-sqlite3", "grindrplus_backup.db")
-            newFile?.uri?.let { exportUri ->
-                contentResolver.openOutputStream(exportUri)?.use { outputStream ->
+            val newFileUri = DocumentsContract.createDocument(
+                context.contentResolver,
+                childUri,
+                "application/x-sqlite3",
+                "grindrplus_backup.db"
+            )
+
+            if (newFileUri != null) {
+                context.contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
                     databaseFile.inputStream().use { inputStream ->
                         inputStream.copyTo(outputStream)
                     }
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Database exported successfully!", requireContext())
+                    GrindrPlus.showToast(
+                        Toast.LENGTH_LONG,
+                        "Database exported successfully!",
+                        context
+                    )
                 }
+            } else {
+                GrindrPlus.showToast(
+                    Toast.LENGTH_LONG,
+                    "Failed to create file in the selected folder!",
+                    context
+                )
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Failed to export database!", requireContext())
+            GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Failed to export database!",
+                context
+            )
         }
     }
 
+
     private fun exportConfigToUri(uri: Uri) {
         val context = requireContext()
+        val fileName = "grindrplus_config.json"
+        val mimeType = "application/json"
         val configJson = Config.getConfigJson()
 
-        val contentResolver = context.contentResolver
-
         try {
-            val pickedDir = DocumentFile.fromTreeUri(context, uri)
+            val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                uri,
+                DocumentsContract.getTreeDocumentId(uri)
+            )
 
-            val configFile = pickedDir?.createFile("application/json", "grindrplus_config.json")
-            configFile?.uri?.let { exportUri ->
-                contentResolver.openOutputStream(exportUri)?.use { outputStream ->
+            val newFileUri = DocumentsContract.createDocument(
+                context.contentResolver,
+                childUri,
+                mimeType,
+                fileName
+            )
+
+            if (newFileUri != null) {
+                context.contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
                     outputStream.write(configJson.toByteArray())
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Config exported successfully!", context)
+                    outputStream.flush()
                 }
+                Toast.makeText(context, "Config exported successfully!", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "Failed to create file in the selected folder!", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Failed to export config!", context)
+            Toast.makeText(context, "Failed to export config!", Toast.LENGTH_LONG).show()
         }
     }
 
