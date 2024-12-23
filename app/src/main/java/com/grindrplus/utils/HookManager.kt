@@ -37,7 +37,7 @@ class HookManager {
     private fun registerAndInitHooks() {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
-                PersistentIncognito(),
+                // PersistentIncognito(),
                 AntiBlock(),
                 FeatureGranting(),
                 DisableUpdates(),
