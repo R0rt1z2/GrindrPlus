@@ -86,6 +86,7 @@ class AntiBlock : Hook(
             } else {
                 val profile = profilesArray.getJSONObject(0)
                 val displayName = profile.optString("displayName", profileId.toString())
+                    .takeIf { it.isNotEmpty() } ?: profileId.toString()
                 GrindrPlus.logger.log("User $profileId (Name: $displayName) unblocked you")
                 sendNotification(
                     GrindrPlus.context,
