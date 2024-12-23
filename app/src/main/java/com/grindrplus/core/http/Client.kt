@@ -1,8 +1,10 @@
 package com.grindrplus.core.http
 
+import android.content.ContentValues
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.showToast
+import com.grindrplus.core.DatabaseHelper
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 
@@ -36,36 +38,60 @@ class Client(interceptor: Interceptor) {
         return httpClient.newCall(requestBuilder.build()).execute()
     }
 
-    fun blockUser(profileId: String) {
+    fun blockUser(profileId: String, silent: Boolean = false, reflectInDb: Boolean = true) {
         GrindrPlus.executeAsync {
             val response = sendRequest(
                 "https://grindr.mobi/v3/me/blocks/$profileId",
                 "POST"
             )
             if (response.isSuccessful) {
-                showToast(Toast.LENGTH_LONG, "User blocked successfully")
+                if (!silent) showToast(Toast.LENGTH_LONG, "User blocked successfully")
+                if (reflectInDb) {
+                    val order = DatabaseHelper.query(
+                        "SELECT MAX(order_) AS order_ FROM blocks"
+                    ).firstOrNull()?.get("order_") as? Int ?: 0
+                    GrindrPlus.logger.log("Adding user $profileId to block list with order ${order + 1}")
+                    DatabaseHelper.insert(
+                        "blocks",
+                        ContentValues().apply {
+                            put("profileId", profileId)
+                            put("order_", order + 1)
+                        }
+                    )
+                }
             } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to block user: ${response.body?.string()}"
-                )
+                if (!silent) {
+                    showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to block user: ${response.body?.string()}"
+                    )
+                }
             }
         }
     }
 
-    fun unblockUser(profileId: String) {
+    fun unblockUser(profileId: String, silent: Boolean = false, reflectInDb: Boolean = true) {
         GrindrPlus.executeAsync {
             val response = sendRequest(
                 "https://grindr.mobi/v3/me/blocks/$profileId",
                 "DELETE"
             )
             if (response.isSuccessful) {
-                showToast(Toast.LENGTH_LONG, "User unblocked successfully")
+                if (!silent) showToast(Toast.LENGTH_LONG, "User unblocked successfully")
+                if (reflectInDb) {
+                    DatabaseHelper.delete(
+                        "blocks",
+                        "profileId = ?",
+                        arrayOf(profileId)
+                    )
+                }
             } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to unblock user: ${response.body?.string()}"
-                )
+                if (!silent) {
+                    showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to unblock user: ${response.body?.string()}"
+                    )
+                }
             }
         }
     }

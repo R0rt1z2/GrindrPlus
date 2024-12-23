@@ -1,8 +1,15 @@
 package com.grindrplus.core
 
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.grindrplus.GrindrPlus
+import com.grindrplus.ui.Utils.getId
 import com.grindrplus.utils.RetrofitUtils
 import java.lang.reflect.Proxy
 import kotlin.math.pow
@@ -184,6 +191,38 @@ object Utils {
             GrindrPlus.logger.log("Failed to get field $fieldName from object $obj")
             e.printStackTrace()
             null
+        }
+    }
+
+    @SuppressLint("MissingPermission", "NotificationPermission")
+    fun sendNotification(
+        context: Context,
+        title: String,
+        message: String,
+        notificationId: Int,
+        channelId: String = "default_channel_id",
+        channelName: String = "Default Channel",
+        channelDescription: String = "Default notifications"
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelDescription
+            }
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(getId("applovin_ic_warning","drawable", context))
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+
+        with(NotificationManagerCompat.from(context)) {
+            notify(notificationId, notificationBuilder.build())
         }
     }
 }

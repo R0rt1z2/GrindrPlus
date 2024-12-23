@@ -30,15 +30,18 @@ class Profile(
     @Command("block", help = "Block a user")
     fun block(args: List<String>) {
         GrindrPlus.httpClient.blockUser(
-            if (args.isNotEmpty()) args[0] else sender)
+            if (args.isNotEmpty()) args[0] else sender,
+            silent = args.contains("silent"),
+            reflectInDb = !args.contains("no-reflect")
+        )
     }
 
     @Command("clear", aliases = ["reset"], help = "Reset chat with a user")
     fun reset(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
-        block(listOf(profileId, "silent"))
+        block(listOf(profileId, "silent", "no-reflect"))
         Thread.sleep(300)
-        unblock(listOf(profileId, "silent"))
+        unblock(listOf(profileId, "silent", "no-reflect"))
         Thread.sleep(300)
         openChat("$recipient:$profileId")
     }
@@ -46,7 +49,10 @@ class Profile(
     @Command("unblock", help = "Unblock a user")
     fun unblock(args: List<String>) {
         GrindrPlus.httpClient.unblockUser(
-            if (args.isNotEmpty()) args[0] else sender)
+            if (args.isNotEmpty()) args[0] else sender,
+            silent = args.contains("silent"),
+            reflectInDb = !args.contains("no-reflect")
+        )
     }
 
     @Command("chat", help = "Open chat with a user")
