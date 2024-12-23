@@ -71,11 +71,14 @@ class AntiBlock : Hook(
             val profilesArray = jsonResponse.optJSONArray("profiles")
 
             if (profilesArray == null || profilesArray.length() == 0) {
-                val name = (DatabaseHelper.query(
+                var name = (DatabaseHelper.query(
                     "SELECT name FROM chat_conversations WHERE conversation_id = ?",
                     arrayOf(profileId.toString())
                 ).firstOrNull()?.get("name") as? String)?.takeIf {
                     name -> name.isNotEmpty() } ?: profileId.toString()
+                if (name != profileId.toString()) {
+                    name += " ($profileId)"
+                }
                 GrindrPlus.logger.log("User $name has blocked you")
                 sendNotification(
                     GrindrPlus.context,
