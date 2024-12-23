@@ -8,13 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.InputType
-import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
@@ -31,13 +29,9 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.SwitchCompat
-import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.materialswitch.MaterialSwitch
+import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
@@ -45,8 +39,14 @@ import com.grindrplus.ui.colors.Colors
 import java.io.File
 import kotlin.system.exitProcess
 
+enum class FileType {
+    CONFIG,
+    DATABASE,
+    LOGS
+}
+
 class SettingsFragment : Fragment() {
-    private var isDatabaseOperation: Boolean = false
+    private var fileType: FileType = FileType.CONFIG
     private lateinit var importLauncher: ActivityResultLauncher<Intent>
     private lateinit var exportLauncher: ActivityResultLauncher<Intent>
     private lateinit var subLinearLayout: LinearLayout
@@ -57,10 +57,10 @@ class SettingsFragment : Fragment() {
         exportLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.also { uri ->
-                    if (isDatabaseOperation) {
-                        exportDatabaseToUri(uri)
-                    } else {
-                        exportConfigToUri(uri)
+                    when (fileType) {
+                        FileType.CONFIG -> exportConfigToUri(uri)
+                        FileType.DATABASE -> exportDatabaseToUri(uri)
+                        FileType.LOGS -> exportLogsToUri(uri)
                     }
                 }
             }
@@ -69,10 +69,10 @@ class SettingsFragment : Fragment() {
         importLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.also { uri ->
-                    if (isDatabaseOperation) {
-                        importDatabaseFromUri(uri)
-                    } else {
-                        importConfigFromUri(uri)
+                    when (fileType) {
+                        FileType.CONFIG -> importConfigFromUri(uri)
+                        FileType.DATABASE -> importDatabaseFromUri(uri)
+                        FileType.LOGS -> return@also // Do nothing
                     }
                 }
             }
@@ -145,81 +145,6 @@ class SettingsFragment : Fragment() {
         return rootLayout
     }
 
-    private fun setupToolbar(context: Context, container: FrameLayout) {
-        val appBarLayout = AppBarLayout(context).apply {
-            setBackgroundColor(Colors.grindr_transparent)
-            elevation = 0f
-        }
-
-        val toolbar = Toolbar(context).apply {
-            id = Utils.getId("fragment_toolbar", "id", context)
-            setBackgroundColor(Colors.grindr_dark_amoled_black)
-            elevation = 6f
-        }
-
-        val toolbarTitle = TextView(context).apply {
-            text = "Mod Settings"
-            textSize = 16f
-            typeface = Utils.getFont("ibm_plex_sans_medium", context)
-        }
-
-        toolbar.addView(toolbarTitle)
-
-        toolbar.menu.add(Menu.NONE, 1, Menu.NONE, "Export config").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-        toolbar.menu.add(Menu.NONE, 2, Menu.NONE, "Import config").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-        toolbar.menu.add(Menu.NONE, 3, Menu.NONE, "Export database").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-        toolbar.menu.add(Menu.NONE, 4, Menu.NONE, "Import database").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-        toolbar.menu.add(Menu.NONE, 5, Menu.NONE, "Reset GrindrPlus").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
-
-        toolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                1 -> {
-                    promptFolderSelection(false)
-                    true
-                }
-                2 -> {
-                    promptImportSelection(false)
-                    true
-                }
-                3 -> {
-                    promptFolderSelection(true)
-                    true
-                }
-                4 -> {
-                    promptImportSelection(true)
-                    true
-                }
-                5 -> {
-                    showResetConfirmationDialog()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        // Set black amoled background color
-        setOverflowButtonColor(toolbar, Colors.grindr_off_white)
-
-        appBarLayout.addView(toolbar)
-        container.addView(appBarLayout)
-    }
-
-    private fun setOverflowButtonColor(toolbar: Toolbar, color: Int) {
-        val overflowIcon = toolbar.overflowIcon
-        overflowIcon?.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-        toolbar.overflowIcon = overflowIcon
-    }
-
     private fun importDatabaseFromUri(uri: Uri) {
         val context = requireContext()
         val backupPath = File(context.cacheDir, "grindrplus_backup.db").absolutePath
@@ -273,11 +198,11 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    private fun promptImportSelection(isDatabase: Boolean) {
-        isDatabaseOperation = isDatabase
+    private fun promptImportSelection(fType: FileType) {
+        fileType = fType
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
-            if (isDatabase) {
+            if (fileType == FileType.DATABASE) {
                 type = "*/*"
                 putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream", "application/x-sqlite3", "application/vnd.sqlite3", "application/db", "*/*"))
             } else {
@@ -287,8 +212,8 @@ class SettingsFragment : Fragment() {
         importLauncher.launch(intent)
     }
 
-    private fun promptFolderSelection(isDatabase: Boolean) {
-        isDatabaseOperation = isDatabase
+    private fun promptFolderSelection(fType: FileType) {
+        fileType = fType
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         exportLauncher.launch(intent)
     }
@@ -339,6 +264,79 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun exportLogsToUri(uri: Uri) {
+        val context = requireContext()
+        val fileName = "grindrplus_logs.txt"
+        val mimeType = "text/plain"
+        val logFile = File(context.filesDir, "grindrplus.log")
+
+        val info = buildString {
+            appendLine("========================================")
+            appendLine("Android version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+            appendLine("ABI(s): ${Build.SUPPORTED_ABIS.joinToString(", ")}")
+            appendLine(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    "Security patch: ${Build.VERSION.SECURITY_PATCH}"
+                else "Security patch: N/A"
+            )
+            appendLine("Device model: ${Build.MODEL} (${Build.MANUFACTURER})")
+            appendLine(
+                try {
+                    val grindr = context.packageManager.getPackageInfo("com.grindrapp.android", 0)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                        "Grindr: ${grindr.versionName} (${grindr.longVersionCode})"
+                    else
+                        "Grindr: ${grindr.versionName} (${grindr.versionCode})"
+                } catch (e: Exception) {
+                    "Grindr: N/A"
+                }
+            )
+            appendLine(
+                try {
+                    val lspatch = context.packageManager.getPackageInfo("org.lsposed.lspatch", 0)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                        "LSPatch: ${lspatch.versionName} (${lspatch.longVersionCode})"
+                    else
+                        "LSPatch: ${lspatch.versionName} (${lspatch.versionCode})"
+                } catch (e: Exception) {
+                    "LSPatch: N/A"
+                }
+            )
+            appendLine("GrindrPlus: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+            appendLine("Xposed API: ${Config.get("xposed_version", "N/A") as Int}")
+            appendLine("========================================\n")
+        }
+
+        val logContent = logFile.readText()
+
+        try {
+            val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                uri,
+                DocumentsContract.getTreeDocumentId(uri)
+            )
+
+            val newFileUri = DocumentsContract.createDocument(
+                context.contentResolver,
+                childUri,
+                mimeType,
+                fileName
+            )
+
+            if (newFileUri != null) {
+                context.contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
+                    outputStream.write(info.toByteArray())
+                    outputStream.write(logContent.toByteArray())
+                    outputStream.flush()
+                }
+                Toast.makeText(context, "Logs exported successfully!", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "Failed to create file in the selected folder!", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Failed to export logs!", Toast.LENGTH_LONG).show()
+        }
+    }
 
     private fun exportConfigToUri(uri: Uri) {
         val context = requireContext()
@@ -718,6 +716,7 @@ class SettingsFragment : Fragment() {
 
     private fun showPopupMenu(anchor: View, context: Context) {
         val popupMenu = PopupMenu(context, anchor)
+        popupMenu.menu.add("Export Logs")
         popupMenu.menu.add("Export Config")
         popupMenu.menu.add("Import Config")
         popupMenu.menu.add("Export Database")
@@ -726,20 +725,24 @@ class SettingsFragment : Fragment() {
 
         popupMenu.setOnMenuItemClickListener { item ->
             when (item.title) {
+                "Export Logs" -> {
+                    promptFolderSelection(FileType.LOGS)
+                    true
+                }
                 "Export Config" -> {
-                    promptFolderSelection(false)
+                    promptFolderSelection(FileType.CONFIG)
                     true
                 }
                 "Import Config" -> {
-                    promptImportSelection(false)
+                    promptImportSelection(FileType.CONFIG)
                     true
                 }
                 "Export Database" -> {
-                    promptFolderSelection(true)
+                    promptFolderSelection(FileType.DATABASE)
                     true
                 }
                 "Import Database" -> {
-                    promptImportSelection(true)
+                    promptImportSelection(FileType.DATABASE)
                     true
                 }
                 "Reset GrindrPlus" -> {

@@ -21,6 +21,7 @@ import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
+import de.robv.android.xposed.XposedBridge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -153,6 +154,8 @@ object GrindrPlus {
             database.deleteDatabase()
             Config.put("reset_database", false)
         }
+
+        Config.put("xposed_version", XposedBridge.getXposedVersion())
 
         hookManager.init()
     }

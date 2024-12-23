@@ -7,6 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class Logger(logFile: String) {
     private val LOG_FILE = File(logFile)
@@ -24,7 +27,7 @@ class Logger(logFile: String) {
                 logFlow.collect { msg ->
                     try {
                         if (checkAndManageSize()) {
-                            LOG_FILE.appendText("$msg\n")
+                            LOG_FILE.appendText("[${getTime()}] $msg\n")
                         }
                     } catch (e: Exception) {
                         Log.wtf(LOG_TAG, "Failed to log message: ${e.message}")
@@ -35,6 +38,9 @@ class Logger(logFile: String) {
             }
         }
     }
+
+    private fun getTime(): String =
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
     fun log(msg: String) {
         XposedBridge.log("$LOG_TAG: $msg")
