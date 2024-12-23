@@ -4,9 +4,11 @@ import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
 import com.grindrplus.persistence.asAlbumBriefToAlbumEntity
 import com.grindrplus.persistence.asAlbumToAlbumEntity
+import com.grindrplus.persistence.model.AlbumContentEntity
 import com.grindrplus.persistence.toAlbumContentEntity
 import com.grindrplus.persistence.toGrindrAlbum
 import com.grindrplus.persistence.toGrindrAlbumBrief
+import com.grindrplus.persistence.toGrindrAlbumContent
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.createSuccess
@@ -18,7 +20,9 @@ import com.grindrplus.utils.RetrofitUtils.isPUT
 import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.withSuspendResult
 import de.robv.android.xposed.XposedHelpers.getObjectField
+import de.robv.android.xposed.XposedHelpers.setObjectField
 import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
 
 class UnlimitedAlbums : Hook(
     "Unlimited albums",
@@ -83,27 +87,43 @@ class UnlimitedAlbums : Hook(
         withSuspendResult(args, result) { args, result ->
             val albumId = args[0] as Long
 
-            runBlocking {
-                GrindrPlus.newDatabase.withTransaction {
-                    if (result.isSuccess()) {
-                        /**
-                         * If the request was successful, we should add its
-                         * content to the database.
-                         */
-                        saveAlbum(result.getSuccessValue())
+            val res = GrindrPlus.httpClient.sendRequest(
+                url = "https://grindr.mobi/v1/albums/$albumId",
+                method = "GET"
+            )
+
+            val responseBody = res.body?.string()
+            if (!responseBody.isNullOrEmpty()) {
+                val jsonResponse = JSONObject(responseBody)
+
+                val contentArray = jsonResponse.optJSONArray("content")
+                if (contentArray != null) {
+                    val albumContentEntities = mutableListOf<AlbumContentEntity>()
+
+                    for (i in 0 until contentArray.length()) {
+                        val contentJson = contentArray.getJSONObject(i)
+                        val albumContentEntity = AlbumContentEntity(
+                            id = contentJson.optLong("contentId"),
+                            albumId = albumId,
+                            contentType = contentJson.optString("contentType"),
+                            coverUrl = contentJson.optString("coverUrl"),
+                            thumbUrl = contentJson.optString("thumbUrl"),
+                            url = contentJson.optString("url")
+                        )
+                        albumContentEntities.add(albumContentEntity)
                     }
 
-                    val dao = GrindrPlus.newDatabase.albumDao()
-                    val dbAlbum = dao.getAlbum(albumId)
-                    if (dbAlbum != null) {
-                        val dbContent = dao.getAlbumContent(dbAlbum.id)
-                        createSuccess(dbAlbum.toGrindrAlbum(dbContent))
-                    } else {
-                        GrindrPlus.logger.log("UnlimitedAlbums: Album not found in database, returning original result")
-                        result
-                    }
+                    val grindrAlbumContentList = albumContentEntities.map { it.toGrindrAlbumContent() }
+                    val albumObject = getObjectField(result, "a")
+                    setObjectField(albumObject, "content", grindrAlbumContentList)
+
+                    GrindrPlus.logger.log("Updated content: $grindrAlbumContentList")
+                } else {
+                    GrindrPlus.logger.log("No content found in album response")
                 }
             }
+
+            result
         }
 
     private fun handleGetAlbums(args: Array<Any?>, result: Any) =
