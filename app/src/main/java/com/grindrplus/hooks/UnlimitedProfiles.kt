@@ -16,6 +16,7 @@ class UnlimitedProfiles : Hook(
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
+    private val profileTagCascadeFragment = "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment"
 
     override fun init() {
         findClass(serverDrivenCascadeCachedState)
@@ -26,6 +27,11 @@ class UnlimitedProfiles : Hook(
 
                 param.setResult(items)
             }
+
+        findClass(profileTagCascadeFragment)
+            .hook("L", HookStage.BEFORE) { param ->
+                param.setResult(true)
+        }
 
         findClass(serverDrivenCascadeCachedProfile)
             .hook("getUpsellType", HookStage.BEFORE) { param ->
