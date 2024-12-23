@@ -39,11 +39,13 @@ class Profile(
     @Command("clear", aliases = ["reset"], help = "Reset chat with a user")
     fun reset(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
+        GrindrPlus.shouldTriggerAntiblock = false
         block(listOf(profileId, "silent", "no-reflect"))
-        Thread.sleep(300)
+        Thread.sleep(200)
         unblock(listOf(profileId, "silent", "no-reflect"))
-        Thread.sleep(300)
+        Thread.sleep(200)
         openChat("$recipient:$profileId")
+        GrindrPlus.shouldTriggerAntiblock = true
     }
 
     @Command("unblock", help = "Unblock a user")

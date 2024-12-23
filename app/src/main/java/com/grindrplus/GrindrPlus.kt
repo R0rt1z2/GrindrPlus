@@ -183,7 +183,6 @@ object GrindrPlus {
                 block()
             } catch (e: Exception) {
                 logger.log("Async operation failed: ${e.message}")
-                showToast(Toast.LENGTH_LONG, "Operation failed: ${e.message}")
             }
         }
     }

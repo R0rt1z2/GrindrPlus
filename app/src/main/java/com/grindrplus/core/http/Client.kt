@@ -50,7 +50,6 @@ class Client(interceptor: Interceptor) {
                     val order = DatabaseHelper.query(
                         "SELECT MAX(order_) AS order_ FROM blocks"
                     ).firstOrNull()?.get("order_") as? Int ?: 0
-                    GrindrPlus.logger.log("Adding user $profileId to block list with order ${order + 1}")
                     DatabaseHelper.insert(
                         "blocks",
                         ContentValues().apply {
@@ -78,12 +77,16 @@ class Client(interceptor: Interceptor) {
             )
             if (response.isSuccessful) {
                 if (!silent) showToast(Toast.LENGTH_LONG, "User unblocked successfully")
-                if (reflectInDb) {
-                    DatabaseHelper.delete(
-                        "blocks",
-                        "profileId = ?",
-                        arrayOf(profileId)
-                    )
+                try {
+                    if (reflectInDb) {
+                        DatabaseHelper.delete(
+                            "blocks",
+                            "profileId = ?",
+                            arrayOf(profileId)
+                        )
+                    }
+                } catch (e: Exception) {
+                    GrindrPlus.logger.log("Error removing user from block list: ${e.message}")
                 }
             } else {
                 if (!silent) {

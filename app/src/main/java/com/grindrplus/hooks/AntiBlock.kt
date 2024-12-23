@@ -34,8 +34,18 @@ class AntiBlock : Hook(
         }
 
         findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
+            .hookConstructor(HookStage.BEFORE) { param ->
+                if (!GrindrPlus.shouldTriggerAntiblock) {
+                    param.setArg(0, emptyList<String>())
+                    return@hookConstructor
+                }
+            }
+
+        findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
             .hookConstructor(HookStage.AFTER) { param ->
-                if (!GrindrPlus.shouldTriggerAntiblock) return@hookConstructor
+                if (!GrindrPlus.shouldTriggerAntiblock) {
+                    return@hookConstructor
+                }
 
                 if (myProfileId == 0L) {
                     myProfileId = (getObjectField(instanceManager
