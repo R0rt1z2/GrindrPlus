@@ -55,6 +55,8 @@ object GrindrPlus {
     lateinit var translations: JSONObject
     lateinit var localeTag: String
 
+    var shouldTriggerAntiblock = true
+
     var currentActivity: Activity? = null
         private set
 
