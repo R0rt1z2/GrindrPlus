@@ -2,10 +2,12 @@ package com.grindrplus.commands
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.graphics.Color
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
@@ -66,6 +68,104 @@ class Profile(
                 Toast.LENGTH_LONG,
                 "Please provide valid ID"
             )
+        }
+    }
+
+    @Command("favorite", aliases = ["fav"], help = "Favorite a user")
+    fun favorite(args: List<String>) {
+        val profileId = if (args.isNotEmpty()) args[0] else sender
+        GrindrPlus.httpClient.favorite(profileId, silent = false)
+    }
+
+    @Command("unfavorite", aliases = ["unfav"], help = "Unfavorite a user")
+    fun unfavorite(args: List<String>) {
+        val profileId = if (args.isNotEmpty()) args[0] else sender
+        GrindrPlus.httpClient.unfavorite(profileId, silent = false)
+    }
+
+    @Command("blocks", help = "Get a list of blocked users")
+    fun blocks(args: List<String>) {
+        val blocks = DatabaseHelper.query("SELECT * FROM blocks")
+        val blockList = blocks.joinToString("\n") { "• ${it["profileId"]}" }
+        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+            val dialogView = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(60, 40, 60, 40)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            val textView = AppCompatTextView(activity).apply {
+                text = blockList
+                textSize = 14f
+                setTextColor(Color.WHITE)
+                setPadding(20, 20, 20, 20)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 20, 0, 0)
+                }
+            }
+
+            dialogView.addView(textView)
+
+            AlertDialog.Builder(activity)
+                .setTitle("Blocked users")
+                .setView(dialogView)
+                .setPositiveButton("Copy") { _, _ ->
+                    copyToClipboard("Blocked users", blocks.joinToString("\n") { it["profileId"] as String })
+                }
+                .setNegativeButton("Close") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+                .show()
+        }
+    }
+
+    @Command("favorites", help = "Get a list of favorited users")
+    fun favorites(args: List<String>) {
+        val favorites = DatabaseHelper.query("SELECT * FROM favorite_profile")
+        val favoriteList = favorites.joinToString("\n") { "• ${it["id"]}" }
+        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+            val dialogView = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(60, 40, 60, 40)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            val textView = AppCompatTextView(activity).apply {
+                text = favoriteList
+                textSize = 14f
+                setTextColor(Color.WHITE)
+                setPadding(20, 20, 20, 20)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 20, 0, 0)
+                }
+            }
+
+            dialogView.addView(textView)
+
+            AlertDialog.Builder(activity)
+                .setTitle("Favorited users")
+                .setView(dialogView)
+                .setPositiveButton("Copy") { _, _ ->
+                    copyToClipboard("Favorited users", favorites.joinToString("\n") { it["id"] as String })
+                }
+                .setNegativeButton("Close") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+                .show()
         }
     }
 

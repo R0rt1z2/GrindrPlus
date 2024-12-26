@@ -99,6 +99,71 @@ class Client(interceptor: Interceptor) {
         }
     }
 
+    fun favorite(
+        profileId: String,
+        silent: Boolean = false,
+        reflectInDb: Boolean = true
+    ) {
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v3/me/favorites/$profileId",
+                "POST"
+            )
+            if (response.isSuccessful) {
+                if (!silent) showToast(Toast.LENGTH_LONG, "User favorited successfully")
+                if (reflectInDb) {
+                    DatabaseHelper.insert(
+                        "favorite_profile",
+                        ContentValues().apply {
+                            put("id", profileId)
+                        }
+                    )
+                }
+            } else {
+                if (!silent) {
+                    showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to favorite user: ${response.body?.string()}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun unfavorite(
+        profileId: String,
+        silent: Boolean = false,
+        reflectInDb: Boolean = true
+    ) {
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v3/me/favorites/$profileId",
+                "DELETE"
+            )
+            if (response.isSuccessful) {
+                if (!silent) showToast(Toast.LENGTH_LONG, "User unfavorited successfully")
+                try {
+                    if (reflectInDb) {
+                        DatabaseHelper.delete(
+                            "favorite_profile",
+                            "id = ?",
+                            arrayOf(profileId)
+                        )
+                    }
+                } catch (e: Exception) {
+                    GrindrPlus.logger.log("Error removing user from favorites list: ${e.message}")
+                }
+            } else {
+                if (!silent) {
+                    showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to unfavorite user: ${response.body?.string()}"
+                    )
+                }
+            }
+        }
+    }
+
     fun reportUser(
         profileId: String,
         reason: String = "SPAM",
