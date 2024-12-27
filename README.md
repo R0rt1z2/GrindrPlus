@@ -106,7 +106,13 @@ Each installation method is completely different and comes with its own challeng
 
 <details closed>
   <summary>LSPatch</summary>
- 
+
+  #### Video instructions (click on the image to open YouTube)
+  [![YouTube Video (LSPatch instructions)](http://img.youtube.com/vi/pSskUSxH2bE/0.jpg)](http://www.youtube.com/watch?v=pSskUSxH2bE "How to install GrindrPlus (no root required)")
+
+  <details closed>
+    <summary>Written instructions</summary>
+    
   > This is a simplified version of [willysmith's XDA guide](https://xdaforums.com/t/mod-xposed-grindr-plus.4461857/page-107#post-89708211). Visit the link to read the complete (and more detailed) guide!
 
   **Requirements:**
@@ -122,7 +128,9 @@ Each installation method is completely different and comes with its own challeng
   7. Once it's done, click on install. It'll ask to uninstall the original Grindr app, just do it and wait for it to install the patched APK
   8. Go back to "Manage > Apps", click on "Grindr > Module scope" and select Grindr Plus (`com.grindrplus`), confirm by pressing the checkmark (bottom right)
   9. Open Grindr and check if Mod Settings are at the top of Grindr settings
-</details>
+
+  </details>
+ </details>
 
 <details closed>
   <summary>LSPosed</summary>
