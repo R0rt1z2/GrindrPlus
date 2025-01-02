@@ -19,6 +19,7 @@ class AntiBlock : Hook(
 ) {
     private var myProfileId: Long = 0
     private val inboxFragmentV2DeleteConversations = "na.b0\$a"
+    private val conversationDeleteNotification = "com.grindrapp.android.chat.model.ConversationDeleteNotification"
     override fun init() {
         findClass(inboxFragmentV2DeleteConversations)
             .hook("invokeSuspend", HookStage.BEFORE) { param ->
@@ -33,7 +34,7 @@ class AntiBlock : Hook(
             GrindrPlus.shouldTriggerAntiblock = true
         }
 
-        findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
+        findClass(conversationDeleteNotification)
             .hookConstructor(HookStage.BEFORE) { param ->
                 if (!GrindrPlus.shouldTriggerAntiblock) {
                     param.setArg(0, emptyList<String>())
@@ -41,7 +42,7 @@ class AntiBlock : Hook(
                 }
             }
 
-        findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
+        findClass(conversationDeleteNotification)
             .hookConstructor(HookStage.AFTER) { param ->
                 if (!GrindrPlus.shouldTriggerAntiblock) {
                     return@hookConstructor
