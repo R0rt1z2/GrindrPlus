@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.ui.Utils.getId
 import com.grindrplus.utils.RetrofitUtils
@@ -208,6 +209,45 @@ object Utils {
 
         with(NotificationManagerCompat.from(context)) {
             notify(notificationId, notificationBuilder.build())
+        }
+    }
+
+    fun getSystemInfo(context: Context, shouldAddSeparator: Boolean = true): String {
+        return buildString {
+            if (shouldAddSeparator) appendLine("========================================")
+            appendLine("Android version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+            appendLine("ABI(s): ${Build.SUPPORTED_ABIS.joinToString(", ")}")
+            appendLine(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    "Security patch: ${Build.VERSION.SECURITY_PATCH}"
+                else "Security patch: N/A"
+            )
+            appendLine("Device model: ${Build.MODEL} (${Build.MANUFACTURER})")
+            appendLine(
+                try {
+                    val grindr = context.packageManager.getPackageInfo("com.grindrapp.android", 0)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                        "Grindr: ${grindr.versionName} (${grindr.longVersionCode})"
+                    else
+                        "Grindr: ${grindr.versionName} (${grindr.versionCode})"
+                } catch (e: Exception) {
+                    "Grindr: N/A"
+                }
+            )
+            appendLine(
+                try {
+                    val lspatch = context.packageManager.getPackageInfo("org.lsposed.lspatch", 0)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                        "LSPatch: ${lspatch.versionName} (${lspatch.longVersionCode})"
+                    else
+                        "LSPatch: ${lspatch.versionName} (${lspatch.versionCode})"
+                } catch (e: Exception) {
+                    "LSPatch: N/A"
+                }
+            )
+            appendLine("GrindrPlus: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+            appendLine("Xposed API: ${Config.get("xposed_version", "N/A") as Int}")
+            if (shouldAddSeparator) appendLine("========================================")
         }
     }
 }

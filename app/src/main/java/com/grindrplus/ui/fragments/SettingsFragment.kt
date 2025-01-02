@@ -31,9 +31,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
-import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Utils.getSystemInfo
 import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
 import java.io.File
@@ -270,43 +270,7 @@ class SettingsFragment : Fragment() {
         val mimeType = "text/plain"
         val logFile = File(context.filesDir, "grindrplus.log")
 
-        val info = buildString {
-            appendLine("========================================")
-            appendLine("Android version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-            appendLine("ABI(s): ${Build.SUPPORTED_ABIS.joinToString(", ")}")
-            appendLine(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    "Security patch: ${Build.VERSION.SECURITY_PATCH}"
-                else "Security patch: N/A"
-            )
-            appendLine("Device model: ${Build.MODEL} (${Build.MANUFACTURER})")
-            appendLine(
-                try {
-                    val grindr = context.packageManager.getPackageInfo("com.grindrapp.android", 0)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        "Grindr: ${grindr.versionName} (${grindr.longVersionCode})"
-                    else
-                        "Grindr: ${grindr.versionName} (${grindr.versionCode})"
-                } catch (e: Exception) {
-                    "Grindr: N/A"
-                }
-            )
-            appendLine(
-                try {
-                    val lspatch = context.packageManager.getPackageInfo("org.lsposed.lspatch", 0)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        "LSPatch: ${lspatch.versionName} (${lspatch.longVersionCode})"
-                    else
-                        "LSPatch: ${lspatch.versionName} (${lspatch.versionCode})"
-                } catch (e: Exception) {
-                    "LSPatch: N/A"
-                }
-            )
-            appendLine("GrindrPlus: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-            appendLine("Xposed API: ${Config.get("xposed_version", "N/A") as Int}")
-            appendLine("========================================\n")
-        }
-
+        val info = getSystemInfo(context)
         val logContent = logFile.readText()
 
         try {
