@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -77,6 +78,48 @@ class Utils(
                 }
                 .create()
                 .show()
+        }
+    }
+
+    @Command("prefix", help = "Change the command prefix (default: /)")
+    fun prefix(args: List<String>) {
+        val prefix = Config.get("command_prefix", "/")
+        when {
+            args.isEmpty() -> GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "The current command prefix is $prefix"
+            )
+            args[0].isBlank() -> GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Invalid command prefix"
+            )
+            args[0] == "reset" || args[0] == "clear" -> {
+                Config.put("command_prefix", "/")
+                Toast.makeText(
+                    GrindrPlus.context,
+                    "Command prefix reset to /",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            args[0].length > 1 -> GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Command prefix must be a single character"
+            )
+            !args[0].matches(Regex("[^a-zA-Z0-9]")) -> GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Command prefix must be a special character (no letters or numbers)"
+            )
+            args[0] == prefix -> GrindrPlus.showToast(
+                Toast.LENGTH_LONG,
+                "Command prefix is already set to ${args[0]}"
+            )
+            else -> {
+                Config.put("command_prefix", args[0])
+                GrindrPlus.showToast(
+                    Toast.LENGTH_LONG,
+                    "Command prefix set to ${args[0]}"
+                )
+            }
         }
     }
 }

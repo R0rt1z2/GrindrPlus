@@ -423,8 +423,52 @@ class SettingsFragment : Fragment() {
             setTextColor(Colors.text_secondary_dark_bg)
         }
         container?.addView(otherSettingsTitle)
-        container?.addView(createDynamicSettingView(context, "Online indicator duration (mins)", "Control when your green dot disappears after inactivity", "online_indicator"))
-        container?.addView(createDynamicSettingView(context, "Favorites grid size", "Customize grid size of the layout for the favorites tab", "favorites_grid_columns"))
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Command Prefix",
+                description = "Change the command prefix (default: /)",
+                key = "command_prefix",
+                defaultValue = "/",
+                validation = { input ->
+                    when {
+                        input.isBlank() -> "Invalid command prefix"
+                        input.length > 1 -> "Command prefix must be a single character"
+                        !input.matches(Regex("[^a-zA-Z0-9]")) -> "Command prefix must be a special character"
+                        else -> null
+                    }
+                }
+            )
+        )
+
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Online indicator duration (mins)",
+                description = "Control when the green dot disappears after inactivity",
+                key = "online_indicator",
+                defaultValue = 5,
+                inputType = InputType.TYPE_CLASS_NUMBER,
+                validation = { input ->
+                    val value = input.toIntOrNull()
+                    if (value == null || value <= 0) "Duration must be a positive number" else null
+                }
+            )
+        )
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Favorites grid size",
+                description = "Set the number of columns in the favorites grid",
+                key = "favorites_grid_columns",
+                defaultValue = 3,
+                inputType = InputType.TYPE_CLASS_NUMBER,
+                validation = { input ->
+                    val value = input.toIntOrNull()
+                    if (value == null || value <= 0) "Grid size must be a positive number" else null
+                }
+            )
+        )
 
         container?.addView(createToggleableSettingView(context, "Use toasts for AntiBlock hook", "Instead of receiving Android notifications, use toasts for block/unblock notifications", "anti_block_use_toasts"))
     }
@@ -528,7 +572,15 @@ class SettingsFragment : Fragment() {
         return hookVerticalLayout
     }
 
-    private fun createDynamicSettingView(context: Context, title: String, description: String, key: String): View {
+    private fun createDynamicSettingView(
+        context: Context,
+        title: String,
+        description: String,
+        key: String,
+        defaultValue: Any,
+        inputType: Int = InputType.TYPE_CLASS_TEXT,
+        validation: ((String) -> String?)? = null
+    ): View {
         val settingLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -563,18 +615,21 @@ class SettingsFragment : Fragment() {
             text = title
         }
 
-        val currentValue = Config.get(key, 3) as Int
+        val currentValue = Config.get(key, defaultValue).toString()
 
-        val durationEditText = EditText(context).apply {
+        val editText = EditText(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            inputType = InputType.TYPE_CLASS_NUMBER
-            setText(currentValue.toString())
+            this.inputType = inputType
+            setText(currentValue)
             setSelection(text.length)
             isFocusable = false
             isClickable = true
+
+            var originalValue = currentValue
+
             setOnClickListener {
                 isFocusableInTouchMode = true
                 isFocusable = true
@@ -583,24 +638,38 @@ class SettingsFragment : Fragment() {
                 val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
             }
-            setOnEditorActionListener { v, actionId, event ->
+
+            setOnEditorActionListener { _, actionId, event ->
                 if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
+                    val newValue = text.toString()
+                    if (newValue.isBlank()) {
+                        setText(originalValue)
+                        Toast.makeText(context, "Input cannot be empty. Reverted to original value.", Toast.LENGTH_SHORT).show()
+                    } else if (newValue != originalValue) {
+                        val validationMessage = validation?.invoke(newValue)
+                        if (validationMessage != null) {
+                            Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+                            setText(originalValue)
+                        } else {
+                            originalValue = newValue
+                            Config.put(key, newValue)
+                            Toast.makeText(context, "$title set to $newValue", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                     isFocusable = false
                     isClickable = true
-                    if (text.toString().toIntOrNull() != null) {
-                        Config.put(key, text.toString().toIntOrNull()!!)
-                    }
                     true
                 } else {
                     false
                 }
             }
-            setOnFocusChangeListener { v, hasFocus ->
+
+            setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
-                    isFocusable = false
-                    isClickable = true
-                    if (text.toString().toIntOrNull() != null) {
-                        Config.put(key, text.toString().toIntOrNull()!!)
+                    if (text.toString().isBlank() || text.toString() == originalValue) {
+                        setText(originalValue)
+                        isFocusable = false
+                        isClickable = true
                     }
                 }
             }
@@ -623,7 +692,7 @@ class SettingsFragment : Fragment() {
         }
 
         horizontalLayout.addView(settingTitle)
-        horizontalLayout.addView(durationEditText)
+        horizontalLayout.addView(editText)
         settingLayout.addView(horizontalLayout)
         settingLayout.addView(settingDescription)
 
