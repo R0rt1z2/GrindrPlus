@@ -71,13 +71,13 @@ class Profile(
         }
     }
 
-    @Command("favorite", aliases = ["fav"], help = "Favorite a user")
+    @Command("favorite", aliases = ["fav", "favourite"], help = "Favorite a user")
     fun favorite(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
         GrindrPlus.httpClient.favorite(profileId, silent = false)
     }
 
-    @Command("unfavorite", aliases = ["unfav"], help = "Unfavorite a user")
+    @Command("unfavorite", aliases = ["unfav", "unfavourite"], help = "Unfavorite a user")
     fun unfavorite(args: List<String>) {
         val profileId = if (args.isNotEmpty()) args[0] else sender
         GrindrPlus.httpClient.unfavorite(profileId, silent = false)
@@ -126,7 +126,7 @@ class Profile(
         }
     }
 
-    @Command("favorites", help = "Get a list of favorited users")
+    @Command("favorites", aliases = ["favourites", "favs"], help = "Get a list of favorited users")
     fun favorites(args: List<String>) {
         val favorites = DatabaseHelper.query("SELECT * FROM favorite_profile")
         val favoriteList = favorites.joinToString("\n") { "• ${it["id"]}" }
