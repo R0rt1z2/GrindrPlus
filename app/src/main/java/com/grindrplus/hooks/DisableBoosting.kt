@@ -13,7 +13,6 @@ class DisableBoosting : Hook(
 ) {
     private val drawerProfileUiState = "ca.e\$a"
     private val radarUiModel = "X7.a\$a"
-    private val roamOnBoardingFragment = "Ha.c"
     private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUIModel"
     private val boostStateClass =
         "com.grindrapp.android.ui.drawer.model.MicrosDrawerItemState\$Unavailable"
@@ -42,20 +41,16 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "b", null) // roamButton
         }
 
+        findClass(fabUiModel).hookConstructor(HookStage.AFTER) { param ->
+            setObjectField(param.thisObject(), "isVisible", false) // isVisible
+        }
+
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
         listOf("ma.o0", "ma.q0", "ma.r0", "ma.p0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
-        }
-
-        findClass(fabUiModel).hook("createFragment", HookStage.BEFORE) { param ->
-            param.setResult(null) // Don't let the fragment be created
-        }
-
-        findClass(roamOnBoardingFragment).hook("a", HookStage.BEFORE) { param -> // showBoostMeButton
-            param.setResult(false)
         }
     }
 }
