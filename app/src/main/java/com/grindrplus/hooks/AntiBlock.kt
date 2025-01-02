@@ -77,7 +77,6 @@ class AntiBlock : Hook(
                 try {
                     val response = fetchProfileData(otherProfileId.toString())
                     handleProfileResponse(otherProfileId, conversationId, response)
-
                 } catch (e: Exception) {
                     GrindrPlus.logger.log("Error handling block/unblock request!")
                 }
@@ -85,19 +84,15 @@ class AntiBlock : Hook(
     }
 
     private fun fetchProfileData(profileId: String): String {
-        return try {
-            val response = GrindrPlus.httpClient.sendRequest(
-                url = "https://grindr.mobi/v4/profiles/$profileId",
-                method = "GET"
-            )
+        val response = GrindrPlus.httpClient.sendRequest(
+            url = "https://grindr.mobi/v4/profiles/$profileId",
+            method = "GET"
+        )
 
-            if (response.isSuccessful) {
-                response.body?.string() ?: "Empty response"
-            } else {
-                "Error: ${response.code} - ${response.message}"
-            }
-        } catch (e: Exception) {
-            "Error fetching profile: ${e.message}"
+        if (response.isSuccessful) {
+            return response.body?.string() ?: "Empty response"
+        } else {
+            throw Exception("Failed to fetch profile data: ${response.body?.string()}")
         }
     }
 
