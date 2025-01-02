@@ -272,6 +272,12 @@ class SettingsFragment : Fragment() {
 
         val info = getSystemInfo(context)
         val logContent = logFile.readText()
+        val activeHooks = buildString {
+            Config.getHooksSettings().forEach { (hookName, pair) ->
+                appendLine("$hookName: ${if (pair.second) "Enabled" else "Disabled"}")
+            }
+            appendLine("========================================")
+        }
 
         try {
             val childUri = DocumentsContract.buildDocumentUriUsingTree(
@@ -289,6 +295,7 @@ class SettingsFragment : Fragment() {
             if (newFileUri != null) {
                 context.contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
                     outputStream.write(info.toByteArray())
+                    outputStream.write(activeHooks.toByteArray())
                     outputStream.write(logContent.toByteArray())
                     outputStream.flush()
                 }
