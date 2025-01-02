@@ -114,6 +114,9 @@ class AntiBlock : Hook(
                 if (name != profileId.toString()) {
                     name += " ($profileId)"
                 }
+                if (name == "null") {
+                    name = profileId.toString()
+                }
                 GrindrPlus.logger.log("User $name has blocked you")
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $name")
@@ -128,7 +131,7 @@ class AntiBlock : Hook(
             } else {
                 val profile = profilesArray.getJSONObject(0)
                 val displayName = profile.optString("displayName", profileId.toString())
-                    .takeIf { it.isNotEmpty() } ?: profileId.toString()
+                    .takeIf { it.isNotEmpty() && it != "null" } ?: profileId.toString()
                 GrindrPlus.logger.log("User $profileId (Name: $displayName) unblocked you")
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
