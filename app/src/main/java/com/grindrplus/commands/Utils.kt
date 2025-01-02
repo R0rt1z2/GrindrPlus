@@ -6,7 +6,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
-import com.grindrplus.core.Utils.fetchProfileById
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -72,63 +71,6 @@ class Utils(
 
             AlertDialog.Builder(activity)
                 .setTitle("Output")
-                .setView(dialogView)
-                .setPositiveButton("Close") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-                .show()
-        }
-    }
-
-    @Command("getProfile", aliases = ["gp"], help = "Fetches profile information")
-    fun getProfile(args: List<String>) {
-        if (args.size != 1) {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide a profile ID"
-            )
-            return
-        }
-
-        val id = args[0].toLongOrNull()
-        if (id == null) {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
-            )
-            return
-        }
-
-        val profile = fetchProfileById(id)
-
-        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-            val dialogView = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(60, 40, 60, 40)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            val textView = AppCompatTextView(activity).apply {
-                text = profile.toString()
-                textSize = 14f
-                setTextColor(Color.WHITE)
-                setPadding(20, 20, 20, 20)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 20, 0, 0)
-                }
-            }
-
-            dialogView.addView(textView)
-
-            AlertDialog.Builder(activity)
-                .setTitle("Profile")
                 .setView(dialogView)
                 .setPositiveButton("Close") { dialog, _ ->
                     dialog.dismiss()

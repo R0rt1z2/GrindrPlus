@@ -124,21 +124,6 @@ object Utils {
         startActivityMethod.invoke(null, GrindrPlus.context, intent)
     }
 
-    fun fetchProfileById(id: Long): Any {
-        val profileRepoClass =
-            GrindrPlus.loadClass("com.grindrapp.android.persistence.repository.ProfileRepo")
-        val fetchProfileByIdMethod = profileRepoClass.declaredMethods.find {
-            it.name == "fetchProfileById"
-        }
-        val profileRepoInstance  = GrindrPlus.instanceManager.getInstance<Any>("com.grindrapp.android.persistence.repository.ProfileRepo")
-
-        val result = GrindrPlus.coroutineHelper.callSuspendFunction { continuation ->
-            fetchProfileByIdMethod?.invoke(profileRepoInstance, id, continuation)
-        }
-
-        return result
-    }
-
     fun weightToNum(isMetric: Boolean, weight: String): Double {
         return if (isMetric) {
             weight.replace("kg", "").toDouble()
