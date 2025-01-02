@@ -96,52 +96,48 @@ class AntiBlock : Hook(
         }
     }
 
-    private fun handleProfileResponse(profileId: Long, conversationIds: String, response: String) {
-        try {
-            val jsonResponse = JSONObject(response)
-            val profilesArray = jsonResponse.optJSONArray("profiles")
+private fun handleProfileResponse(profileId: Long, conversationIds: String, response: String) {
+    try {
+        val jsonResponse = JSONObject(response)
+        val profilesArray = jsonResponse.optJSONArray("profiles")
 
-            if (profilesArray == null || profilesArray.length() == 0) {
-                var name = (DatabaseHelper.query(
-                    "SELECT name FROM chat_conversations WHERE conversation_id = ?",
-                    arrayOf(conversationIds)
-                ).firstOrNull()?.get("name") as? String)?.takeIf {
-                    name -> name.isNotEmpty() } ?: profileId.toString()
-                if (name != profileId.toString()) {
-                    name += " ($profileId)"
-                }
-                if (name == "null") {
-                    name = profileId.toString()
-                }
-                GrindrPlus.logger.log("User $name has blocked you")
-                if (Config.get("anti_block_use_toasts", false) as Boolean) {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $name")
-                } else {
-                    sendNotification(
-                        GrindrPlus.context,
-                        "Blocked by User",
-                        "You have been blocked by user $name",
-                        profileId.toInt()
-                    )
-                }
+        if (profilesArray == null || profilesArray.length() == 0) {
+            var name = (DatabaseHelper.query(
+                "SELECT name FROM chat_conversations WHERE conversation_id = ?",
+                arrayOf(conversationIds)
+            ).firstOrNull()?.get("name") as? String)?.takeIf {
+                name -> name.isNotEmpty() } ?: profileId.toString()
+            name = if (name == profileId.toString() || name == "null")
+            { profileId.toString() } else { "$name ($profileId)" }
+            GrindrPlus.logger.log("User $name has blocked you")
+            if (Config.get("anti_block_use_toasts", false) as Boolean) {
+                GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $name")
             } else {
-                val profile = profilesArray.getJSONObject(0)
-                val displayName = profile.optString("displayName", profileId.toString())
-                    .takeIf { it.isNotEmpty() && it != "null" } ?: profileId.toString()
-                GrindrPlus.logger.log("User $profileId (Name: $displayName) unblocked you")
-                if (Config.get("anti_block_use_toasts", false) as Boolean) {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
-                } else {
-                    sendNotification(
-                        GrindrPlus.context,
-                        "Unblocked by $displayName",
-                        "$displayName has unblocked you.",
-                        profileId.toInt(),
-                    )
-                }
+                sendNotification(
+                    GrindrPlus.context,
+                    "Blocked by User",
+                    "You have been blocked by user $name",
+                    profileId.toInt()
+                )
             }
-        } catch (e: Exception) {
-            GrindrPlus.logger.log("Error handling profile response: ${e.message}")
+        } else {
+            val profile = profilesArray.getJSONObject(0)
+            val displayName = profile.optString("displayName", profileId.toString())
+                .takeIf { it.isNotEmpty() && it != "null" } ?: profileId.toString()
+            GrindrPlus.logger.log("User $profileId (Name: $displayName) unblocked you")
+            if (Config.get("anti_block_use_toasts", false) as Boolean) {
+                GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
+            } else {
+                sendNotification(
+                    GrindrPlus.context,
+                    "Unblocked by $displayName",
+                    "$displayName has unblocked you.",
+                    profileId.toInt(),
+                )
+            }
         }
+    } catch (e: Exception) {
+        GrindrPlus.logger.log("Error handling profile response: ${e.message}")
     }
+}
 }
