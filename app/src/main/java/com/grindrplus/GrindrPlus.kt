@@ -66,7 +66,7 @@ object GrindrPlus {
     private val deviceInfo = "j3.t"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    fun init(modulePath: String, application: Application) {
+    fun init(modulePath: String, application: Application, logger: Logger) {
         Log.d(
             TAG,
             "Initializing GrindrPlus with module path: $modulePath, application: $application"
@@ -75,7 +75,7 @@ object GrindrPlus {
         this.context = application // do not use .applicationContext as it's null at this point
         this.classLoader =
             DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
-        this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
+        this.logger = logger
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
