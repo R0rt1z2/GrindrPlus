@@ -110,20 +110,26 @@ class AntiBlock : Hook(
             val profilesArray = jsonResponse.optJSONArray("profiles")
 
             if (profilesArray == null || profilesArray.length() == 0) {
-                var name = (DatabaseHelper.query(
-                    "SELECT name FROM chat_conversations WHERE conversation_id = ?",
-                    arrayOf(conversationIds)
-                ).firstOrNull()?.get("name") as? String)?.takeIf {
-                    name -> name.isNotEmpty() } ?: profileId.toString()
-                name = if (name == profileId.toString() || name == "null")
-                { profileId.toString() } else { "$name ($profileId)" }
+                var displayName = ""
+                try {
+                    displayName = (DatabaseHelper.query(
+                        "SELECT name FROM chat_conversations WHERE conversation_id = ?",
+                        arrayOf(conversationIds)
+                    ).firstOrNull()?.get("name") as? String)?.takeIf {
+                            name -> name.isNotEmpty() } ?: profileId.toString()
+                } catch (e: Exception) {
+                    GrindrPlus.logger.log("Error getting chat name: ${e.message}")
+                    displayName = profileId.toString()
+                }
+                displayName = if (displayName == profileId.toString() || displayName == "null")
+                { profileId.toString() } else { "$displayName ($profileId)" }
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $name")
+                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $displayName")
                 } else {
                     sendNotification(
                         GrindrPlus.context,
                         "Blocked by User",
-                        "You have been blocked by user $name",
+                        "You have been blocked by user $displayName",
                         profileId.toInt()
                     )
                 }
