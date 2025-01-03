@@ -278,6 +278,13 @@ class SettingsFragment : Fragment() {
             }
             appendLine("========================================")
         }
+        val databases = buildString {
+            val dbFiles = context.databaseList()
+            if (dbFiles.isNotEmpty()) {
+                dbFiles.forEach { dbFile -> appendLine(dbFile) }
+                appendLine("========================================")
+            }
+        }
 
         try {
             val childUri = DocumentsContract.buildDocumentUriUsingTree(
@@ -296,6 +303,7 @@ class SettingsFragment : Fragment() {
                 context.contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
                     outputStream.write(info.toByteArray())
                     outputStream.write(activeHooks.toByteArray())
+                    outputStream.write(databases.toByteArray())
                     outputStream.write(logContent.toByteArray())
                     outputStream.flush()
                 }
