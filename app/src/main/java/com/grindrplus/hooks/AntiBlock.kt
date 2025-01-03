@@ -77,8 +77,8 @@ class AntiBlock : Hook(
 
                 try {
                     val response = fetchProfileData(otherProfileId.toString())
-                    if (handleProfileResponse(otherProfileId, conversationId, response))
-                        param.setResult(null)
+                    handleProfileResponse(otherProfileId, conversationId, response)
+                    param.setResult(null)
                 } catch (e: Exception) {
                     val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
                     GrindrPlus.logger.apply {
