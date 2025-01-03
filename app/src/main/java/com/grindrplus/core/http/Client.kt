@@ -39,6 +39,7 @@ class Client(interceptor: Interceptor) {
     }
 
     fun blockUser(profileId: String, silent: Boolean = false, reflectInDb: Boolean = true) {
+        GrindrPlus.shouldTriggerAntiblock = false
         GrindrPlus.executeAsync {
             val response = sendRequest(
                 "https://grindr.mobi/v3/me/blocks/$profileId",
@@ -67,9 +68,14 @@ class Client(interceptor: Interceptor) {
                 }
             }
         }
+        GrindrPlus.executeAsync {
+            Thread.sleep(500) // Wait for WS to reply
+            GrindrPlus.shouldTriggerAntiblock = true
+        }
     }
 
     fun unblockUser(profileId: String, silent: Boolean = false, reflectInDb: Boolean = true) {
+        GrindrPlus.shouldTriggerAntiblock = false
         GrindrPlus.executeAsync {
             val response = sendRequest(
                 "https://grindr.mobi/v3/me/blocks/$profileId",
@@ -96,6 +102,10 @@ class Client(interceptor: Interceptor) {
                     )
                 }
             }
+        }
+        GrindrPlus.executeAsync {
+            Thread.sleep(500) // Wait for WS to reply
+            GrindrPlus.shouldTriggerAntiblock = true
         }
     }
 
