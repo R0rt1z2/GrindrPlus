@@ -13,6 +13,7 @@ class CommandHandler(
         commandModules.add(Location(recipient, sender))
         commandModules.add(Profile(recipient, sender))
         commandModules.add(Utils(recipient, sender))
+        commandModules.add(Database(recipient, sender))
     }
 
     fun handle(input: String) {
