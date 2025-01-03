@@ -141,11 +141,10 @@ class Utils(
             )
             args[0] == "reset" || args[0] == "clear" -> {
                 Config.put("command_prefix", "/")
-                Toast.makeText(
-                    GrindrPlus.context,
+                GrindrPlus.showToast(
+                    Toast.LENGTH_LONG,
                     "Command prefix reset to /",
-                    Toast.LENGTH_LONG
-                ).show()
+                )
             }
             args[0].length > 1 -> GrindrPlus.showToast(
                 Toast.LENGTH_LONG,
