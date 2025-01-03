@@ -47,6 +47,16 @@ class Logger(logFile: String) {
         logFlow.tryEmit(msg)
     }
 
+    fun writeRaw(msg: String) {
+        try {
+            if (checkAndManageSize()) {
+                LOG_FILE.appendText(msg + "\n")
+            }
+        } catch (e: Exception) {
+            Log.wtf(LOG_TAG, "Failed to write raw log message: ${e.message}")
+        }
+    }
+
     private fun checkAndManageSize(): Boolean {
         if (LOG_FILE.length() > MAX_LOG_SIZE) {
             manageLogOverflow()
