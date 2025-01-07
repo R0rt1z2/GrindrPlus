@@ -8,6 +8,7 @@ import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
 import com.grindrplus.hooks.DisableBoosting
+import com.grindrplus.hooks.DisableShuffle
 import com.grindrplus.hooks.DisableUpdates
 import com.grindrplus.hooks.EmptyCalls
 import com.grindrplus.hooks.EnableUnlimited
@@ -42,6 +43,7 @@ class HookManager {
                 FeatureGranting(),
                 DisableUpdates(),
                 DisableBoosting(),
+                DisableShuffle(),
                 EnableUnlimited(),
                 AllowScreenshots(),
                 ChatIndicators(),
