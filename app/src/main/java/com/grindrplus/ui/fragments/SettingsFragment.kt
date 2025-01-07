@@ -402,6 +402,7 @@ class SettingsFragment : Fragment() {
             setTextColor(Colors.text_secondary_dark_bg)
         }
         container?.addView(otherSettingsTitle)
+
         container?.addView(
             createDynamicSettingView(
                 context,
@@ -419,7 +420,24 @@ class SettingsFragment : Fragment() {
                 }
             )
         )
-
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Cached Profiles Range",
+                description = "Sets how many profiles are preloaded around the current one for smoother swiping. If the range is too small, you'll need to return to the cascade to load more profiles (default: 50)",
+                key = "cache_profile_range",
+                defaultValue = "50",
+                validation = { input ->
+                    val intValue = input.toIntOrNull()
+                    when {
+                        input.isBlank() -> "Cache range cannot be empty"
+                        intValue == null -> "Cache range must be a number"
+                        intValue <= 0 -> "Cache range must be greater or equal to 0"
+                        else -> null
+                    }
+                }
+            )
+        )
         container?.addView(
             createDynamicSettingView(
                 context,
