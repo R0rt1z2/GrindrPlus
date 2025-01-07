@@ -24,6 +24,7 @@ import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
 import com.grindrplus.hooks.RemovableMessages
+import com.grindrplus.hooks.ReverseRadarTabs
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
@@ -63,7 +64,8 @@ class HookManager {
                 UnlimitedTaps(),
                 UnlimitedAlbums(),
                 QuickBlock(),
-                EmptyCalls()
+                EmptyCalls(),
+                ReverseRadarTabs()
             )
 
             hookList.forEach { hook ->
