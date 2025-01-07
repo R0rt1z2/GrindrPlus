@@ -5,17 +5,16 @@ import com.grindrplus.core.Config
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
-import de.robv.android.xposed.XposedHelpers.getObjectField
+import de.robv.android.xposed.XposedHelpers.callStaticMethod
+import java.lang.reflect.Proxy
 
 class UnlimitedProfiles : Hook(
     "Unlimited profiles",
     "Allow unlimited profiles"
 ) {
-    private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
-    private val profileModel = "com.grindrapp.android.persistence.model.Profile"
-    private val profileItemClickEvent = "com.grindrapp.android.ui.browse.s\$d"
+    private val function2 = "kotlin.jvm.functions.Function2"
+    private val profileWithPhoto = "com.grindrapp.android.persistence.pojo.ProfileWithPhoto"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
     private val serverDrivenCascadeRepo =
@@ -48,36 +47,36 @@ class UnlimitedProfiles : Hook(
             param.setArg(28, Config.get("cascade_endpoint", "v3") as String)
         }
 
-        findClass(profileItemClickEvent).hookConstructor(HookStage.AFTER) { param ->
-            val profileId = getObjectField(param.thisObject(), "a") as String
-            val cruisableProfileIds = getObjectField(param.thisObject(), "c") as List<*>
-            val cacheProfileRange = Config.get("cache_profile_range", 50) as Int
-            val ourPosition = cruisableProfileIds.indexOf(profileId)
+        val profileClass = findClass("com.grindrapp.android.persistence.model.Profile")
+        val profileWithPhotoConstructor = findClass(profileWithPhoto).getConstructor(profileClass, List::class.java)
+        val profileConstructor = profileClass.getConstructor()
 
-            val profileRepoInstance = GrindrPlus.instanceManager.getInstance<Any>(profileRepo)!!
-            val addProfile = profileRepoInstance.javaClass.declaredMethods.first { it.name == "addProfile" }
+        findClass("com.grindrapp.android.persistence.repository.ProfileRepo")
+            .hook("getProfilesWithPhotosFlow", HookStage.AFTER) { param ->
+                val originalFlow = param.getResult()
+                val requestedProfileIds = param.arg<List<String>>(0)
 
-            cruisableProfileIds.getProfilesToAdd(ourPosition, cacheProfileRange).forEach { profileId2 ->
-                createProfile(profileId2)?.let { profile ->
-                    GrindrPlus.coroutineHelper.callSuspendFunction { continuation ->
-                        addProfile.invoke(profileRepoInstance, profile, false, continuation)
+                val proxy = Proxy.newProxyInstance(GrindrPlus.classLoader, arrayOf(findClass(function2))
+                ) { _, _, args ->
+                    val profilesWithPhoto = args[0] as List<*>
+                    val profileIds = profilesWithPhoto.map {
+                        val profile = callMethod(it, "getProfile")
+                        callMethod(profile, "getProfileId") as String
                     }
+                    val missingProfiles = requestedProfileIds - profileIds.toSet()
+                    val dummyProfiles = missingProfiles.map { profileId ->
+                        val profile = profileConstructor.newInstance()
+                        callMethod(profile, "setProfileId", profileId)
+                        callMethod(profile, "setRemoteUpdatedTime", 1L)
+                        callMethod(profile, "setLocalUpdatedTime", 0L)
+                        profileWithPhotoConstructor.newInstance(profile, emptyList<Any>())
+                    }
+                    profilesWithPhoto + dummyProfiles
                 }
+
+                val transformedFlow = callStaticMethod(findClass("kotlinx.coroutines.flow.FlowKt"), "mapLatest", originalFlow, proxy)
+
+                param.setResult(transformedFlow)
             }
-        }
-    }
-
-    private fun List<*>.getProfilesToAdd(currentPosition: Int, range: Int): List<String> {
-        return (currentPosition - range..currentPosition + range)
-            .filter { it in indices }
-            .map { this[it] as String }
-    }
-
-    private fun createProfile(profileId: String): Any? {
-        return findClass(profileModel).constructors.first().newInstance().apply {
-            callMethod(this, "setProfileId", profileId)
-            callMethod(this, "setRemoteUpdatedTime", 1L)
-            callMethod(this, "setLocalUpdatedTime", 0L)
-        }
     }
 }
