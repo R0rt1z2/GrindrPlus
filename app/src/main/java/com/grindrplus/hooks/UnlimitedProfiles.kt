@@ -1,11 +1,10 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class UnlimitedProfiles : Hook(
@@ -14,6 +13,8 @@ class UnlimitedProfiles : Hook(
 ) {
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
+    private val serverDrivenCascadeRepo =
+        "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
     private val profileTagCascadeFragment = "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment"
@@ -37,6 +38,10 @@ class UnlimitedProfiles : Hook(
             .hook("getUpsellType", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
+
+        findClass(serverDrivenCascadeRepo).hook("fetchCascadePage", HookStage.BEFORE) { param ->
+            param.setArg(28, Config.get("cascade_endpoint", "v3") as String)
+        }
 
         // God forgive me for this abomination. This obviously breaks swiping between profiles
         // so I have to figure out a way to properly handle this issue, since the experiment we
