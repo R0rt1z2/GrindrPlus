@@ -70,7 +70,6 @@ class UnlimitedAlbums : Hook(
                         val albumToDelete = dao.getAlbum(albumId)
 
                         if (albumToDelete != null) {
-                            GrindrPlus.logger.log("UnlimitedAlbums: Removing album $albumId from database")
                             dao.deleteAlbum(albumId)
                             createSuccess(albumId)
                         } else {
@@ -116,8 +115,6 @@ class UnlimitedAlbums : Hook(
                     val grindrAlbumContentList = albumContentEntities.map { it.toGrindrAlbumContent() }
                     val albumObject = getObjectField(result, "a")
                     setObjectField(albumObject, "content", grindrAlbumContentList)
-
-                    GrindrPlus.logger.log("Updated content: $grindrAlbumContentList")
                 } else {
                     GrindrPlus.logger.log("No content found in album response")
                 }
@@ -198,8 +195,6 @@ class UnlimitedAlbums : Hook(
     private fun handleGetAlbumsSharesProfileId(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
             val profileId = args[0] as Long
-
-            GrindrPlus.logger.log("UnlimitedAlbums: Handling getAlbumsSharesProfileId request (result: $result)")
 
             if (result.isSuccess()) {
                 runBlocking {

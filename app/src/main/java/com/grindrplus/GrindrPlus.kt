@@ -64,9 +64,10 @@ object GrindrPlus {
     private val userAgent = "a5.t"
     private val userSession = "com.grindrapp.android.storage.b"
     private val deviceInfo = "j3.t"
+    private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    fun init(modulePath: String, application: Application) {
+    fun init(modulePath: String, application: Application, logger: Logger) {
         Log.d(
             TAG,
             "Initializing GrindrPlus with module path: $modulePath, application: $application"
@@ -75,7 +76,7 @@ object GrindrPlus {
         this.context = application // do not use .applicationContext as it's null at this point
         this.classLoader =
             DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
-        this.logger = Logger(context.filesDir.absolutePath + "/grindrplus.log")
+        this.logger = logger
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
@@ -113,7 +114,8 @@ object GrindrPlus {
         instanceManager.hookClassConstructors(
             userAgent,
             userSession,
-            deviceInfo
+            deviceInfo,
+            profileRepo
         )
 
         instanceManager.setCallback(userSession) { uSession ->

@@ -61,7 +61,6 @@ class PersistentIncognito : Hook(
 
     private fun handleGetSettings(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
-            GrindrPlus.logger.log(result.getSuccessValue().toString())
             val settings = result.getSuccessValue().asSettingsToSettings()
             val incognito = Config.get("incognito_mode", false) as Boolean
 
