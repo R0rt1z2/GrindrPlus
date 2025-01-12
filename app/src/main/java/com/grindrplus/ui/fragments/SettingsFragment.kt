@@ -765,6 +765,7 @@ class SettingsFragment : Fragment() {
     private fun showPopupMenu(anchor: View, context: Context) {
         val popupMenu = PopupMenu(context, anchor)
         popupMenu.menu.add("Export Logs")
+        popupMenu.menu.add("Clear Logs")
         popupMenu.menu.add("Export Config")
         popupMenu.menu.add("Import Config")
         popupMenu.menu.add("Export Database")
@@ -775,6 +776,14 @@ class SettingsFragment : Fragment() {
             when (item.title) {
                 "Export Logs" -> {
                     promptFolderSelection(FileType.LOGS)
+                    true
+                }
+                "Clear Logs" -> {
+                    context.filesDir.listFiles { file ->
+                        file.name.endsWith(".log") }?.forEach { file ->
+                        file.delete()
+                    }
+                    Toast.makeText(context, "Successfully cleared logs", Toast.LENGTH_SHORT).show()
                     true
                 }
                 "Export Config" -> {
