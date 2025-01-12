@@ -4,6 +4,7 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.hooks.AllowScreenshots
 import com.grindrplus.hooks.AntiBlock
+import com.grindrplus.hooks.AntiDetection
 import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
@@ -40,6 +41,7 @@ class HookManager {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
                 // PersistentIncognito(),
+                AntiDetection(),
                 AntiBlock(),
                 FeatureGranting(),
                 DisableUpdates(),
