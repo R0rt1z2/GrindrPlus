@@ -57,7 +57,6 @@ class AntiBlock : Hook(
 
                 val conversationIds = conversationId.split(":").mapNotNull { it.toLongOrNull() }
                 val otherProfileId = conversationIds.firstOrNull { it != myProfileId } ?: return@hook
-                GrindrPlus.logger.log("Other profile ID: $otherProfileId")
 
                 // FIXME: Get rid of this ugly shit
                 if (otherProfileId == myProfileId) return@hook
@@ -72,7 +71,12 @@ class AntiBlock : Hook(
                         return@hook
                     }
                 } catch(e: Exception) {
-                    GrindrPlus.logger.log("Error checking if user is blocked: ${e.message}")
+                    val message = "Error checking if user is blocked: ${e.message}"
+                    GrindrPlus.apply {
+                        showToast(Toast.LENGTH_LONG, message)
+                        logger.log(message)
+                        logger.writeRaw(e.stackTraceToString())
+                    }
                 }
 
                 try {
@@ -81,10 +85,10 @@ class AntiBlock : Hook(
                     param.setResult(null)
                 } catch (e: Exception) {
                     val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
-                    GrindrPlus.logger.apply {
-                        log(message)
-                        writeRaw(e.stackTrace.toString())
-                        e.printStackTrace()
+                    GrindrPlus.apply {
+                        showToast(Toast.LENGTH_LONG, message)
+                        logger.log(message)
+                        logger.writeRaw(e.stackTraceToString())
                     }
                 }
             }
@@ -152,7 +156,12 @@ class AntiBlock : Hook(
                 return false
             }
         } catch (e: Exception) {
-            GrindrPlus.logger.log("Error handling profile response: ${e.message}")
+            val message = "Error handling profile response: ${e.message ?: "Unknown error"}"
+            GrindrPlus.apply {
+                showToast(Toast.LENGTH_LONG, message)
+                logger.log(message)
+                logger.writeRaw(e.stackTraceToString())
+            }
             return false
         }
     }

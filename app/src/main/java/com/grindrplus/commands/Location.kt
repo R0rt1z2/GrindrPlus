@@ -160,7 +160,12 @@ class Location(
                 Pair(lat, lon)
             }
         } catch (e: Exception) {
-            GrindrPlus.logger.log("Error getting location from Nominatim: ${e.message}")
+            val message = "An error occurred while getting the location: ${e.message ?: "Unknown error"}"
+            GrindrPlus.apply {
+                showToast(Toast.LENGTH_LONG, message)
+                logger.log(message)
+                logger.writeRaw(e.stackTraceToString())
+            }
             null
         }
     }
