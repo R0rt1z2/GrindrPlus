@@ -27,7 +27,7 @@ class Logger(logFile: String) {
                 logFlow.collect { msg ->
                     try {
                         if (checkAndManageSize()) {
-                            LOG_FILE.appendText("[${getTime()}] $msg\n")
+                            appendToFile("[${getTime()}] $msg\n")
                         }
                     } catch (e: Exception) {
                         Log.wtf(LOG_TAG, "Failed to log message: ${e.message}")
@@ -50,7 +50,7 @@ class Logger(logFile: String) {
     fun writeRaw(msg: String) {
         try {
             if (checkAndManageSize()) {
-                LOG_FILE.appendText(msg + "\n")
+                appendToFile(msg + "\n")
             }
         } catch (e: Exception) {
             Log.wtf(LOG_TAG, "Failed to write raw log message: ${e.message}")
@@ -69,5 +69,10 @@ class Logger(logFile: String) {
         LOG_FILE.delete()
         LOG_FILE.createNewFile()
         XposedBridge.log("$LOG_TAG: Log file was reset due to size limit.")
+    }
+
+    @Synchronized
+    private fun appendToFile(content: String) {
+        LOG_FILE.appendText(content)
     }
 }
