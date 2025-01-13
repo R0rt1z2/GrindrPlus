@@ -6,7 +6,6 @@ import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -16,6 +15,7 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.CoroutineHelper
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
+import com.grindrplus.core.Utils.handleImports
 import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.NewDatabase
@@ -57,6 +57,8 @@ object GrindrPlus {
 
     var shouldTriggerAntiblock = true
     var blockCaller: String = ""
+    var hasTriedToImportBlocks = false
+    var isImportingSomething = false
 
     var currentActivity: Activity? = null
         private set
@@ -84,7 +86,9 @@ object GrindrPlus {
         this.instanceManager = InstanceManager(classLoader)
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                handleImports(activity)
+            }
 
             override fun onActivityStarted(activity: Activity) {}
 
@@ -92,6 +96,7 @@ object GrindrPlus {
                 if (BuildConfig.DEBUG) {
                     logger.log("Resuming activity: ${activity.javaClass.name}")
                 }
+
                 currentActivity = activity
             }
 

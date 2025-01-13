@@ -5,8 +5,11 @@ import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.showToast
 import com.grindrplus.core.DatabaseHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class Client(interceptor: Interceptor) {
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
@@ -214,6 +217,159 @@ class Client(interceptor: Interceptor) {
                 "PUT",
                 body = settings.toRequestBody()
             )
+        }
+    }
+
+    suspend fun getBlocks(): List<String> = withContext(Dispatchers.IO) {
+        try {
+            val response = sendRequest("https://grindr.mobi/v3.1/me/blocks", "GET")
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string()
+                if (!responseBody.isNullOrEmpty()) {
+                    val jsonResponse = JSONObject(responseBody)
+                    val blockingArray = jsonResponse.optJSONArray("blocking")
+                    if (blockingArray != null) {
+                        val blockedProfileIds = mutableListOf<String>()
+                        for (i in 0 until blockingArray.length()) {
+                            val blockingJson = blockingArray.getJSONObject(i)
+                            val profileId = blockingJson.optLong("profileId")
+                            blockedProfileIds.add(profileId.toString())
+                        }
+                        return@withContext blockedProfileIds
+                    }
+                }
+            }
+            emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    suspend fun getFavorites(): List<Triple<String, String, String>> = withContext(Dispatchers.IO) {
+        try {
+            val response = sendRequest("https://grindr.mobi/v6/favorites", "GET")
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string()
+                if (!responseBody.isNullOrEmpty()) {
+                    val jsonResponse = JSONObject(responseBody)
+                    val favoritesArray = jsonResponse.optJSONArray("favorites")
+                    if (favoritesArray != null) {
+                        val favoriteProfileIds = mutableListOf<Triple<String, String, String>>()
+                        for (i in 0 until favoritesArray.length()) {
+                            val favoriteJson = favoritesArray.getJSONObject(i)
+                            val profileId = favoriteJson.optString("profileId")
+
+                            val note = try {
+                                DatabaseHelper.query(
+                                    "SELECT note FROM profile_note WHERE profile_id = ?",
+                                    arrayOf(profileId)
+                                ).firstOrNull()?.get("note") as? String ?: ""
+                            } catch (e: Exception) {
+                                GrindrPlus.apply {
+                                    val message = "Failed to fetch note for profileId $profileId: ${e.message}"
+                                    showToast(Toast.LENGTH_LONG, message)
+                                    logger.log(message)
+                                    logger.writeRaw(e.stackTraceToString())
+                                }
+                                ""
+                            }
+
+                            val phoneNumber = try {
+                                DatabaseHelper.query(
+                                    "SELECT phone_number FROM profile_note WHERE profile_id = ?",
+                                    arrayOf(profileId)
+                                ).firstOrNull()?.get("phone_number") as? String ?: ""
+                            } catch (e: Exception) {
+                                GrindrPlus.apply {
+                                    val message = "Failed to fetch phone number for profileId $profileId: ${e.message}"
+                                    showToast(Toast.LENGTH_LONG, message)
+                                    logger.log(message)
+                                    logger.writeRaw(e.stackTraceToString())
+                                }
+                                ""
+                            }
+
+                            favoriteProfileIds.add(Triple(profileId, note, phoneNumber))
+                        }
+                        return@withContext favoriteProfileIds
+                    }
+                }
+            }
+            emptyList()
+        } catch (e: Exception) {
+            val message = "Failed to get favorites: ${e.message}"
+            GrindrPlus.apply {
+                showToast(Toast.LENGTH_LONG, message)
+                logger.log(message)
+                logger.writeRaw(e.stackTraceToString())
+            }
+            emptyList()
+        }
+    }
+
+    fun addProfileNote(profileId: String, notes: String, phoneNumber: String, silent: Boolean = false) {
+        if (notes.length > 250) {
+            showToast(Toast.LENGTH_LONG, "Notes are too long")
+            return
+        }
+
+        val body = """
+            {
+                "notes": "$notes",
+                "phoneNumber": "$phoneNumber"
+            }
+        """.trimIndent()
+
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v1/favorites/notes/$profileId",
+                "PUT",
+                body = body.toRequestBody(),
+                headers = mapOf("Content-Type" to "application/json; charset=utf-8")
+            )
+            if (response.isSuccessful) {
+                try {
+                    val existingNote = DatabaseHelper.query(
+                        "SELECT * FROM profile_note WHERE profile_id = ?",
+                        arrayOf(profileId)
+                    ).firstOrNull()
+                    if (existingNote != null) {
+                        DatabaseHelper.update(
+                            "profile_note",
+                            ContentValues().apply {
+                                put("note", notes)
+                                put("phone_number", phoneNumber)
+                            },
+                            "profile_id = ?",
+                            arrayOf(profileId)
+                        )
+                    } else {
+                        DatabaseHelper.insert(
+                            "profile_note",
+                            ContentValues().apply {
+                                put("profile_id", profileId)
+                                put("note", notes)
+                                put("phone_number", phoneNumber)
+                            }
+                        )
+                    }
+                } catch (e: Exception) {
+                    GrindrPlus.logger.apply {
+                        val message = "Error adding note to database: ${e.message ?: "N/A"}"
+                        log(message)
+                        writeRaw(e.stackTrace.toString())
+                    }
+                }
+                if (!silent) showToast(Toast.LENGTH_LONG, "Note added successfully")
+            } else {
+                if (!silent) {
+                    showToast(
+                        Toast.LENGTH_LONG,
+                        "Failed to add note: ${response.body?.string()}"
+                    )
+                }
+            }
         }
     }
 

@@ -85,87 +85,110 @@ class Profile(
 
     @Command("blocks", help = "Get a list of blocked users")
     fun blocks(args: List<String>) {
-        val blocks = DatabaseHelper.query("SELECT * FROM blocks")
-        val blockList = blocks.joinToString("\n") { "• ${it["profileId"]}" }
-        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-            val dialogView = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(60, 40, 60, 40)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+        GrindrPlus.executeAsync {
+            val blocks = GrindrPlus.httpClient.getBlocks() as List<String>
+            val blockList = blocks.joinToString("\n") { "• $it" }
+            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+                val dialogView = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(60, 40, 60, 40)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                val textView = AppCompatTextView(activity).apply {
+                    text = blockList
+                    textSize = 14f
+                    setTextColor(Color.WHITE)
+                    setPadding(20, 20, 20, 20)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 20, 0, 0)
+                    }
+                }
+
+                dialogView.addView(textView)
+
+                AlertDialog.Builder(activity)
+                    .setTitle("Blocked users")
+                    .setView(dialogView)
+                    .setPositiveButton("Copy") { _, _ ->
+                        copyToClipboard("Blocked users", blocks.joinToString("\n") { it })
+                    }
+                    .setNegativeButton("Close") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .setNeutralButton("Export") { _, _ ->
+                        val file = GrindrPlus.context.getFileStreamPath("blocks.txt")
+                        file.writeText(blocks.joinToString("\n") { it })
+                        GrindrPlus.showToast(
+                            Toast.LENGTH_LONG,
+                            "Exported blocked users. Use Mod Settings to access the file!"
+                        )
+                    }
+                    .create()
+                    .show()
             }
-
-            val textView = AppCompatTextView(activity).apply {
-                text = blockList
-                textSize = 14f
-                setTextColor(Color.WHITE)
-                setPadding(20, 20, 20, 20)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 20, 0, 0)
-                }
-            }
-
-            dialogView.addView(textView)
-
-            AlertDialog.Builder(activity)
-                .setTitle("Blocked users")
-                .setView(dialogView)
-                .setPositiveButton("Copy") { _, _ ->
-                    copyToClipboard("Blocked users", blocks.joinToString("\n") { it["profileId"] as String })
-                }
-                .setNegativeButton("Close") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-                .show()
         }
     }
 
     @Command("favorites", aliases = ["favourites", "favs"], help = "Get a list of favorited users")
     fun favorites(args: List<String>) {
-        val favorites = DatabaseHelper.query("SELECT * FROM favorite_profile")
-        val favoriteList = favorites.joinToString("\n") { "• ${it["id"]}" }
-        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-            val dialogView = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(60, 40, 60, 40)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+        GrindrPlus.executeAsync {
+            val favorites = GrindrPlus.httpClient.getFavorites()
+            val favoriteList = favorites.joinToString("\n") { "• ${it.first}" }
+            val favoriteListExport =
+                favorites.joinToString("\n") { "${it.first}|||${it.second}|||${it.third}" }
+
+            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+                val dialogView = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(60, 40, 60, 40)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                val textView = AppCompatTextView(activity).apply {
+                    text = favoriteList
+                    textSize = 14f
+                    setTextColor(Color.WHITE)
+                    setPadding(20, 20, 20, 20)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 20, 0, 0)
+                    }
+                }
+
+                dialogView.addView(textView)
+
+                AlertDialog.Builder(activity)
+                    .setTitle("Favorited users")
+                    .setView(dialogView)
+                    .setPositiveButton("Copy") { _, _ ->
+                        copyToClipboard("Favorited users", favoriteList)
+                    }
+                    .setNegativeButton("Close") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .setNeutralButton("Export") { _, _ ->
+                        val file = GrindrPlus.context.getFileStreamPath("favorites.txt")
+                        file.writeText(favoriteListExport)
+                        GrindrPlus.showToast(
+                            Toast.LENGTH_LONG,
+                            "Exported favorited users. Use Mod Settings to access the file!"
+                        )
+                    }
+                    .create()
+                    .show()
             }
-
-            val textView = AppCompatTextView(activity).apply {
-                text = favoriteList
-                textSize = 14f
-                setTextColor(Color.WHITE)
-                setPadding(20, 20, 20, 20)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 20, 0, 0)
-                }
-            }
-
-            dialogView.addView(textView)
-
-            AlertDialog.Builder(activity)
-                .setTitle("Favorited users")
-                .setView(dialogView)
-                .setPositiveButton("Copy") { _, _ ->
-                    copyToClipboard("Favorited users", favorites.joinToString("\n") { it["id"] as String })
-                }
-                .setNegativeButton("Close") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-                .show()
         }
     }
 

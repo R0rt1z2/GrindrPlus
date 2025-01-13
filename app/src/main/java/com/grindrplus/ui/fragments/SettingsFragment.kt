@@ -17,6 +17,7 @@ import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -42,7 +43,9 @@ import kotlin.system.exitProcess
 enum class FileType {
     CONFIG,
     DATABASE,
-    LOGS
+    LOGS,
+    BLOCK_LIST,
+    FAVORITES_LIST
 }
 
 class SettingsFragment : Fragment() {
@@ -61,6 +64,8 @@ class SettingsFragment : Fragment() {
                         FileType.CONFIG -> exportConfigToUri(uri)
                         FileType.DATABASE -> exportDatabaseToUri(uri)
                         FileType.LOGS -> exportLogsToUri(uri)
+                        FileType.BLOCK_LIST -> exportFileToUri(uri, "blocks.txt")
+                        FileType.FAVORITES_LIST -> exportFileToUri(uri, "favorites.txt")
                     }
                 }
             }
@@ -73,6 +78,8 @@ class SettingsFragment : Fragment() {
                         FileType.CONFIG -> importConfigFromUri(uri)
                         FileType.DATABASE -> importDatabaseFromUri(uri)
                         FileType.LOGS -> return@also // Do nothing
+                        FileType.BLOCK_LIST -> importFileFromUri(uri, "blocks_to_import.txt", "blocks")
+                        FileType.FAVORITES_LIST -> importFileFromUri(uri, "favorites_to_import.txt", "favorites")
                     }
                 }
             }
@@ -178,11 +185,35 @@ class SettingsFragment : Fragment() {
                 val configJson = inputStream.bufferedReader().use { it.readText() }
                 Config.importFromJson(configJson)
                 updateUIFromConfig()
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Config imported successfully!", context)
+                Toast.makeText(context, "Config imported successfully!", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Failed to import config!", context)
+            Toast.makeText(context, "Failed to import config!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun importFileFromUri(uri: Uri, name: String, type: String) {
+        val context = requireContext()
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val blocksFile = File(context.filesDir, name)
+                inputStream.copyTo(blocksFile.outputStream())
+                AlertDialog.Builder(context)
+                    .setTitle("File Import")
+                    .setMessage("The $type list will be imported on the next app restart. Do you want to proceed?")
+                    .setPositiveButton("OK") { _, _ ->
+                        closeApp()
+                    }
+                    .setNegativeButton("Cancel") { _, _ ->
+                        blocksFile.delete()
+                    }
+                    .setCancelable(false)
+                    .show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Failed to import $name!", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -205,8 +236,10 @@ class SettingsFragment : Fragment() {
             if (fileType == FileType.DATABASE) {
                 type = "*/*"
                 putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream", "application/x-sqlite3", "application/vnd.sqlite3", "application/db", "*/*"))
-            } else {
+            } else if (fileType == FileType.CONFIG) {
                 type = "application/json"
+            } else if (fileType == FileType.BLOCK_LIST || fileType == FileType.FAVORITES_LIST) {
+                type = "text/plain"
             }
         }
         importLauncher.launch(intent)
@@ -351,6 +384,43 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    fun exportFileToUri(uri: Uri, name: String) {
+        val file = File(requireContext().filesDir, name)
+
+        if (file.exists()) {
+            try {
+                val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                    uri,
+                    DocumentsContract.getTreeDocumentId(uri)
+                )
+
+                val newFileUri = DocumentsContract.createDocument(
+                    requireContext().contentResolver,
+                    childUri,
+                    "text/plain",
+                    name
+                )
+
+                if (newFileUri != null) {
+                    requireContext().contentResolver.openOutputStream(newFileUri)?.use { outputStream ->
+                        file.inputStream().use { inputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                        file.delete()
+                        Toast.makeText(context, "$name exported successfully!", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Failed to create file in the selected folder!", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed to export $name!", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(context, "No $name found!", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun updateUIFromConfig() {
         subLinearLayout.removeAllViews()
         addViewsToContainer(subLinearLayout)
@@ -450,6 +520,171 @@ class SettingsFragment : Fragment() {
         )
 
         container?.addView(createToggleableSettingView(context, "Use toasts for AntiBlock hook", "Instead of receiving Android notifications, use toasts for block/unblock notifications", "anti_block_use_toasts"))
+
+        val experimentalFeaturesTitle = AppCompatTextView(context).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also {
+                it.topMargin = 44
+                it.bottomMargin = 49
+            }
+            typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            text = "Experimental Features"
+            isAllCaps = true
+            setTextColor(Colors.text_secondary_dark_bg)
+        }
+        container?.addView(experimentalFeaturesTitle)
+
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Import Blocks Threshold",
+                description = "Set the time to wait between each block import (in milliseconds)",
+                key = "block_import_threshold",
+                defaultValue = 500,
+                inputType = InputType.TYPE_CLASS_NUMBER,
+                validation = { input ->
+                    val value = input.toIntOrNull()
+                    if (value == null || value <= 0) "Threshold must be a positive number" else null
+                }
+            )
+        )
+
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Import Favorites Threshold",
+                description = "Set the time to wait between each favorites import (in milliseconds)",
+                key = "favorites_import_threshold",
+                defaultValue = 500,
+                inputType = InputType.TYPE_CLASS_NUMBER,
+                validation = { input ->
+                    val value = input.toIntOrNull()
+                    if (value == null || value <= 0) "Threshold must be a positive number" else null
+                }
+            )
+        )
+
+        container?.addView(createExperimentalFeatureOption(context, "Manage Blocks"))
+        container?.addView(createExperimentalFeatureOption(context, "Manage Favorites"))
+    }
+
+    private fun createExperimentalFeatureOption(context: Context, title: String): View {
+        return LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { params ->
+                params.topMargin = 20
+            }
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+
+            val textView = AppCompatTextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+                text = title
+                textSize = 16f
+                setTextColor(Colors.text_primary_dark_bg)
+                typeface = Utils.getFont("ibm_plex_sans_medium", context)
+            }
+
+            val button = Button(context).apply {
+                text = "Open"
+                setOnClickListener {
+                    showExperimentalFeatureDialog(context, title)
+                }
+            }
+
+            addView(textView)
+            addView(button)
+        }
+    }
+
+    private fun showExperimentalFeatureDialog(context: Context, featureName: String) {
+        val dialogBuilder = AlertDialog.Builder(context).apply {
+            setTitle(featureName)
+            setMessage(
+                "$featureName is an experimental feature. It may result in account bans." +
+                        " Use it at your own risk. The developers take no responsibility for any consequences."
+            )
+
+            setPositiveButton("Export") { _, _ ->
+                when (featureName) {
+                    "Manage Blocks" -> {
+                        val blocksFile = File(context.filesDir, "blocks.txt")
+                        if (!blocksFile.exists()) {
+                            Toast.makeText(
+                                context,
+                                "Use /blocks to populate the block list first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@setPositiveButton
+                        }
+                        promptFolderSelection(FileType.BLOCK_LIST)
+                    }
+                    "Manage Favorites" -> {
+                        val favoritesFile = File(context.filesDir, "favorites.txt")
+                        if (!favoritesFile.exists()) {
+                            Toast.makeText(
+                                context,
+                                "Use /favorites to populate the favorites list first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@setPositiveButton
+                        }
+                        promptFolderSelection(FileType.FAVORITES_LIST)
+                    }
+                }
+            }
+
+            setNegativeButton("Import") { _, _ ->
+                when (featureName) {
+                    "Manage Blocks" -> {
+                        val pendingFavoritesFile = File(context.filesDir, "favorites_to_import.txt")
+                        if (pendingFavoritesFile.exists()) {
+                            AlertDialog.Builder(context).apply {
+                                setTitle("Import Blocked")
+                                setMessage(
+                                    "GrindrPlus has detected a pending favorites import. " +
+                                            "Please import the favorites list first before importing blocks."
+                                )
+                                setPositiveButton("OK", null)
+                            }.create().show()
+                            return@setNegativeButton
+                        }
+                        promptImportSelection(FileType.BLOCK_LIST)
+                    }
+                    "Manage Favorites" -> {
+                        val pendingBlocksFile = File(context.filesDir, "blocks_to_import.txt")
+                        if (pendingBlocksFile.exists()) {
+                            AlertDialog.Builder(context).apply {
+                                setTitle("Import Blocked")
+                                setMessage(
+                                    "GrindrPlus has detected a pending blocks import. " +
+                                            "Please import the blocks list first before importing favorites."
+                                )
+                                setPositiveButton("OK", null)
+                            }.create().show()
+                            return@setNegativeButton
+                        }
+                        promptImportSelection(FileType.FAVORITES_LIST)
+                    }
+                }
+            }
+
+            setNeutralButton("Cancel", null)
+        }
+
+        val dialog = dialogBuilder.create()
+        dialog.show()
     }
 
     private fun showResetConfirmationDialog() {
@@ -771,6 +1006,8 @@ class SettingsFragment : Fragment() {
         popupMenu.menu.add("Export Database")
         popupMenu.menu.add("Import Database")
         popupMenu.menu.add("Reset GrindrPlus")
+        popupMenu.menu.add("Reset Config")
+        popupMenu.menu.add("Clear Cache")
 
         popupMenu.setOnMenuItemClickListener { item ->
             when (item.title) {
@@ -804,6 +1041,33 @@ class SettingsFragment : Fragment() {
                 }
                 "Reset GrindrPlus" -> {
                     showResetConfirmationDialog()
+                    true
+                }
+                "Reset Config" -> {
+                    Config.resetConfig()
+                    updateUIFromConfig()
+                    Toast.makeText(context, "Config reset successfully", Toast.LENGTH_SHORT).show()
+                    AlertDialog.Builder(context)
+                        .setTitle("Config Reset")
+                        .setMessage("The app will now close to regenerate the config.")
+                        .setPositiveButton("OK") { _, _ ->
+                            closeApp()
+                        }
+                        .setCancelable(false)
+                        .show()
+                    true
+                }
+                "Clear Cache" -> {
+                    val context = requireContext()
+                    val blocksFileImport = File(context.filesDir, "blocks_to_import.txt")
+                    val favoritesFileImport = File(context.filesDir, "favorites_to_import.txt")
+                    val blocksFile = File(context.filesDir, "blocks.txt")
+                    val favoritesFile = File(context.filesDir, "favorites.txt")
+                    if (blocksFileImport.exists()) blocksFileImport.delete()
+                    if (favoritesFileImport.exists()) favoritesFileImport.delete()
+                    if (blocksFile.exists()) blocksFile.delete()
+                    if (favoritesFile.exists()) favoritesFile.delete()
+                    Toast.makeText(context, "Cache cleared", Toast.LENGTH_SHORT).show()
                     true
                 }
                 else -> false
