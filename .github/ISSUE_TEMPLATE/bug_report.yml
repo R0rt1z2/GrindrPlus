@@ -162,6 +162,12 @@ body:
       label: GrindrPlus version
       description: Please select the version of GrindrPlus you are using.
       options:
+        - Other (specify)
+        - v3.3.0-25.0.0
+        - v3.2.9-24.19.0
+        - v3.2.7-24.19.0
+        - v3.2.5-24.17.1
+        - v3.2.3-24.14.0
         - v3.2.1-24.12.0
         - v3.2.0-24.12.0
         - v3.1.5-24.9.0
