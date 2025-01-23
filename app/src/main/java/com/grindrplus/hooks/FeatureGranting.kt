@@ -16,6 +16,7 @@ class FeatureGranting : Hook(
     private val featureFlags = "M5.h"
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
+    private val expiringAlbumsExperiment = "e3.a"
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e"
     private val featureManager = FeatureManager()
@@ -65,6 +66,11 @@ class FeatureGranting : Hook(
                     param.setResult(0)
                 }
         }
+
+        findClass(expiringAlbumsExperiment)
+            .hook("b", HookStage.BEFORE) { param ->
+                param.setResult(false)
+            }
     }
 
     private fun initFeatures() {
