@@ -520,6 +520,7 @@ class SettingsFragment : Fragment() {
         )
 
         container?.addView(createToggleableSettingView(context, "Use toasts for AntiBlock hook", "Instead of receiving Android notifications, use toasts for block/unblock notifications", "anti_block_use_toasts"))
+        container?.addView(createToggleableSettingView(context, "Disable profile swipe", "Disable the swipe gesture on profiles", "disable_profile_swipe"))
 
         val experimentalFeaturesTitle = AppCompatTextView(context).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

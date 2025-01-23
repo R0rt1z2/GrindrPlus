@@ -2,11 +2,13 @@ package com.grindrplus.hooks
 
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.callStaticMethod
+import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.Proxy
 
 class UnlimitedProfiles : Hook(
@@ -78,5 +80,14 @@ class UnlimitedProfiles : Hook(
 
                 param.setResult(transformedFlow)
             }
+
+        findClass("com.grindrapp.android.ui.browse.B").hook("invokeSuspend", HookStage.BEFORE) { param ->
+            if (Config.get("disable_profile_swipe", false) as Boolean) {
+                val cachedProfile = getObjectField(param.thisObject(), "j")
+                val profileId = getObjectField(cachedProfile, "profileIdLong")
+                openProfile(profileId.toString())
+                param.setResult(null)
+            }
+        }
     }
 }
