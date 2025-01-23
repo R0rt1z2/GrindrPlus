@@ -28,7 +28,7 @@ class UnlimitedAlbums : Hook(
     "Unlimited albums",
     "Allow to be able to view unlimited albums"
 ) {
-    private val albumsService = "w3.a"
+    private val albumsService = "H3.a"
 
     override fun init() {
         val albumsService = findClass(albumsService)

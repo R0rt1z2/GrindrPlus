@@ -9,22 +9,22 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
-    private val userSession = "com.grindrapp.android.storage.b"
+    private val userSession = "V8.T"
     private val subscribeToInterstitialsList = listOf(
-        "x4.y\$a" // Chat ($1)
+        "I4.d0\$a" // Chat ($1)
     )
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // hasFeature()
-            "h", HookStage.BEFORE // done
+            "v", HookStage.BEFORE // done
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
             param.setResult(param.arg(0, String::class.java) !in disallowedFeatures)
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "l", HookStage.BEFORE
+            "k", HookStage.BEFORE
         ) { param ->
             param.setResult(true)
         }
@@ -36,13 +36,13 @@ class EnableUnlimited : Hook(
         }
 
         userSessionClass.hook( // isFree()
-            "x", HookStage.BEFORE
+            "w", HookStage.BEFORE
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "u", HookStage.BEFORE
+            "t", HookStage.BEFORE
         ) { param ->
             param.setResult(false)
         }

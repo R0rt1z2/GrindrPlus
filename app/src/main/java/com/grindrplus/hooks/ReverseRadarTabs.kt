@@ -25,7 +25,7 @@ class ReverseRadarTabs : Hook(
 
     private inline fun <reified T : Any> getJavaClass() = T::class.java
 
-    private val radarTabs = "W7.c"
+    private val radarTabs = "m8.b"
     private val radarFragment = "com.grindrapp.android.radar.presentation.ui.RadarFragment"
 
     override fun init() {
@@ -73,7 +73,7 @@ class ReverseRadarTabs : Hook(
         //This LiveData observer consumes the integer values from a flow and makes the ViewPager scroll to that position
         //This is used to make the ViewPager scroll to the taps page upon clicking such notification.
         //However, this is based on the ordinal values again, so we have to reverse the values, too.
-        findClass("K9.H0")
+        findClass("Ma.B")
             .hook("onChanged", HookStage.BEFORE) { param ->
                 //Check whether this observer is responsible for handling the ViewPager position
                 if (getIntField(param.thisObject(), "b") != 1) return@hook
@@ -84,9 +84,9 @@ class ReverseRadarTabs : Hook(
         //The modified LiveData observer will no longer scroll to the first position when receiving a value 0.
         //In order to still show the new first tab (TapsFragment) by default, we need to set the initial value to the last index,
         //so that the LiveData observer reverts it back to 0.
-        findClass("ma.t0")
+        findClass("La.s0")
             .hookConstructor(HookStage.AFTER) { param ->
-                val stateFlow = getObjectField(param.thisObject(), "I0")
+                val stateFlow = getObjectField(param.thisObject(), "J0")
                 //Set initial position to the last page, so that the onChanged hook of the LiveData observer reverts it to the new first page
                 callMethod(stateFlow, "setValue", Integer.valueOf(radarTabs.size - 1))
             }

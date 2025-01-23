@@ -11,8 +11,8 @@ class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
 ) {
-    private val drawerProfileUiState = "ca.e\$a"
-    private val radarUiModel = "X7.a\$a"
+    private val drawerProfileUiState = "Ba.e\$a"
+    private val radarUiModel = "n8.a\$a"
     private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUIModel"
     private val boostStateClass =
         "com.grindrapp.android.ui.drawer.model.MicrosDrawerItemState\$Unavailable"
@@ -30,10 +30,9 @@ class DisableBoosting : Hook(
                 "f",
                 newInstance(findClass(boostStateClass))
             ) // roamButtonState
-            setObjectField(param.thisObject(), "i", null) // showDayPassItem
-            setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
-            setObjectField(param.thisObject(), "s", false) // isRightNowTooltipVisible
-            setObjectField(param.thisObject(), "r", false) // isRightNowAvailable
+            setObjectField(param.thisObject(), "j", null) // showDayPassItem
+            setObjectField(param.thisObject(), "k", null) // unlimitedWeeklySubscriptionItem
+            setObjectField(param.thisObject(), "s", false) // isRightNowAvailable
         }
 
         findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
@@ -47,7 +46,7 @@ class DisableBoosting : Hook(
 
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
-        listOf("ma.o0", "ma.q0", "ma.r0", "ma.p0").forEach {
+        listOf("La.n0", "La.p0", "La.q0", "La.o0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }

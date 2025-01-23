@@ -17,10 +17,10 @@ class Interceptor(
     Interceptor {
     private fun modifyRequest(originalRequest: Request): Request {
         try {
-            val isLoggedIn = invokeMethodSafe(userSession, "p") as Boolean
-            val authTokenFlow = invokeMethodSafe(userSession, "t")
+            val isLoggedIn = invokeMethodSafe(userSession, "o") as Boolean
+            val authTokenFlow = invokeMethodSafe(userSession, "s")
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
-            val roles = invokeMethodSafe(userSession, "y") as String
+            val roles = invokeMethodSafe(userSession, "x") as String
             val userAgent = invokeMethodSafe(userAgent, "a") as String
             val deviceInfoLazy = getFieldSafe(deviceInfo, "c") as Any
             val lDeviceInfo = invokeMethodSafe(deviceInfoLazy, "getValue") as String
