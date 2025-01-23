@@ -83,13 +83,13 @@ jobs:
           https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Upload Debug APK as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: "Debug APK - ${{ env.DATE_TODAY }}"
           path: ${{ env.DEBUG_APK }}
 
       - name: Upload Signed Release APK as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: "Signed Release APK - ${{ env.DATE_TODAY }}"
           path: "${{ env.RELEASE_APK }}"
