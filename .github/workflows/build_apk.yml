@@ -1,9 +1,6 @@
 name: Android APK Build and Upload to Telegram & Artifacts
 
 on:
-  push:
-    branches:
-      - 'master'
   workflow_dispatch:
 
 jobs:
