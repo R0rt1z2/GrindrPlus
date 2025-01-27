@@ -10,9 +10,17 @@ object DatabaseHelper {
     private fun getDatabase(): SQLiteDatabase {
         val context = GrindrPlus.context
         val databases = context.databaseList()
-        val grindrUserDb = databases.firstOrNull { it.contains("grindr_user") }
-            ?: throw IllegalStateException("No database matching 'grindr_user' found")
-        return context.openOrCreateDatabase(grindrUserDb, Context.MODE_PRIVATE, null)
+        val grindrUserDb = databases.firstOrNull {
+            it.contains("grindr_user") && it.endsWith(".db") }
+            ?: throw IllegalStateException("No Grindr user database found!").also {
+                GrindrPlus.logger.apply {
+                    log(it.message!!)
+                    writeRaw("Available databases:\n" +
+                            "${databases.joinToString("\n") { "  $it" }}\n")
+                }
+            }
+        return context.openOrCreateDatabase(grindrUserDb.also {
+            GrindrPlus.logger.log("Using database: $it") }, Context.MODE_PRIVATE, null)
     }
 
     fun query(query: String, args: Array<String>? = null): List<Map<String, Any>> {
