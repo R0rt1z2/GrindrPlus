@@ -2,6 +2,12 @@ name: Android APK Build and Upload to Telegram & Artifacts
 
 on:
   workflow_dispatch:
+    inputs:
+      share_to_telegram:
+        description: 'Upload APK to Telegram?'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build:
@@ -69,6 +75,7 @@ jobs:
           "${{ env.RELEASE_APK }}"
 
       - name: Upload Debug APK to Telegram
+        if: ${{ github.event.inputs.share_to_telegram == 'true' }}
         run: |
           curl -F document=@"${{ env.DEBUG_APK }}" \
           -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
@@ -76,6 +83,7 @@ jobs:
           https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument
 
       - name: Upload Signed Release APK to Telegram
+        if: ${{ github.event.inputs.share_to_telegram == 'true' }}
         run: |
           curl -F document=@"${{ env.RELEASE_APK }}" \
           -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
