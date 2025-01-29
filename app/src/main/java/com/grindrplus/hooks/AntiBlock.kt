@@ -9,6 +9,7 @@ import com.grindrplus.core.Utils.sendNotification
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
+import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import org.json.JSONObject
 
@@ -20,75 +21,84 @@ class AntiBlock : Hook(
     private val inboxFragmentV2DeleteConversations = "Ma.v0\$a"
 
     override fun init() {
-        findClass(inboxFragmentV2DeleteConversations)
-            .hook("invokeSuspend", HookStage.BEFORE) { param ->
-                GrindrPlus.shouldTriggerAntiblock = false
-                GrindrPlus.blockCaller = "inboxFragmentV2DeleteConversations"
-        }
-
-        findClass(inboxFragmentV2DeleteConversations)
-            .hook("invokeSuspend", HookStage.AFTER) { param ->
-                val numberOfChatsToDelete = (getObjectField(param.thisObject(), "j") as List<*>).size
-                Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
-                GrindrPlus.shouldTriggerAntiblock = true
-                GrindrPlus.blockCaller = ""
-        }
-
-        findClass("v4.c").hook("b", HookStage.BEFORE) { param ->
-            if (!GrindrPlus.shouldTriggerAntiblock) {
-                val whitelist = listOf(
-                    "inboxFragmentV2DeleteConversations",
-                )
-                if (GrindrPlus.blockCaller !in whitelist) {
-                    param.setResult(null)
+        if (Config.get("force_old_anti_block_behavior", false) as Boolean) {
+            findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
+                .hookConstructor(HookStage.BEFORE) { param ->
+                    @Suppress("UNCHECKED_CAST")
+                    val profiles = param.args().firstOrNull() as? List<String> ?: emptyList()
+                    param.setArg(0, emptyList<String>())
                 }
-                return@hook
-            } else {
-                if (myProfileId == 0L) {
-                    myProfileId = (getObjectField(instanceManager
-                        .getInstance("V8.T"),
-                        "p") as String).toLong()
+        } else {
+            findClass(inboxFragmentV2DeleteConversations)
+                .hook("invokeSuspend", HookStage.BEFORE) { param ->
+                    GrindrPlus.shouldTriggerAntiblock = false
+                    GrindrPlus.blockCaller = "inboxFragmentV2DeleteConversations"
                 }
 
-                val conversationId = (param.args().firstOrNull()?.let { getObjectField(it, "payload") } as? JSONObject)
-                    ?.optJSONArray("conversationIds")
-                    ?.let { (0 until it.length()).joinToString(",") { index -> it.getString(index) } }
-                    ?: return@hook
+            findClass(inboxFragmentV2DeleteConversations)
+                .hook("invokeSuspend", HookStage.AFTER) { param ->
+                    val numberOfChatsToDelete = (getObjectField(param.thisObject(), "j") as List<*>).size
+                    Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
+                    GrindrPlus.shouldTriggerAntiblock = true
+                    GrindrPlus.blockCaller = ""
+                }
 
-                val conversationIds = conversationId.split(":").mapNotNull { it.toLongOrNull() }
-                val otherProfileId = conversationIds.firstOrNull { it != myProfileId } ?: return@hook
-
-                // FIXME: Get rid of this ugly shit
-                if (otherProfileId == myProfileId) return@hook
-                Thread.sleep(300)
-
-                try {
-                    if (DatabaseHelper.query(
-                            "SELECT * FROM blocks WHERE profileId = ?",
-                            arrayOf(otherProfileId.toString())
-                        ).isNotEmpty()
-                    ) {
-                        return@hook
+            findClass("v4.c").hook("b", HookStage.BEFORE) { param ->
+                if (!GrindrPlus.shouldTriggerAntiblock) {
+                    val whitelist = listOf(
+                        "inboxFragmentV2DeleteConversations",
+                    )
+                    if (GrindrPlus.blockCaller !in whitelist) {
+                        param.setResult(null)
                     }
-                } catch(e: Exception) {
-                    val message = "Error checking if user is blocked: ${e.message}"
-                    GrindrPlus.apply {
-                        showToast(Toast.LENGTH_LONG, message)
-                        logger.log(message)
-                        logger.writeRaw(e.stackTraceToString())
+                    return@hook
+                } else {
+                    if (myProfileId == 0L) {
+                        myProfileId = (getObjectField(instanceManager
+                            .getInstance("V8.T"),
+                            "p") as String).toLong()
                     }
-                }
 
-                try {
-                    val response = fetchProfileData(otherProfileId.toString())
-                    handleProfileResponse(otherProfileId, conversationId, response)
-                    param.setResult(null)
-                } catch (e: Exception) {
-                    val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
-                    GrindrPlus.apply {
-                        showToast(Toast.LENGTH_LONG, message)
-                        logger.log(message)
-                        logger.writeRaw(e.stackTraceToString())
+                    val conversationId = (param.args().firstOrNull()?.let { getObjectField(it, "payload") } as? JSONObject)
+                        ?.optJSONArray("conversationIds")
+                        ?.let { (0 until it.length()).joinToString(",") { index -> it.getString(index) } }
+                        ?: return@hook
+
+                    val conversationIds = conversationId.split(":").mapNotNull { it.toLongOrNull() }
+                    val otherProfileId = conversationIds.firstOrNull { it != myProfileId } ?: return@hook
+
+                    // FIXME: Get rid of this ugly shit
+                    if (otherProfileId == myProfileId) return@hook
+                    Thread.sleep(300)
+
+                    try {
+                        if (DatabaseHelper.query(
+                                "SELECT * FROM blocks WHERE profileId = ?",
+                                arrayOf(otherProfileId.toString())
+                            ).isNotEmpty()
+                        ) {
+                            return@hook
+                        }
+                    } catch(e: Exception) {
+                        val message = "Error checking if user is blocked: ${e.message}"
+                        GrindrPlus.apply {
+                            showToast(Toast.LENGTH_LONG, message)
+                            logger.log(message)
+                            logger.writeRaw(e.stackTraceToString())
+                        }
+                    }
+
+                    try {
+                        val response = fetchProfileData(otherProfileId.toString())
+                        handleProfileResponse(otherProfileId, conversationId, response)
+                        param.setResult(null)
+                    } catch (e: Exception) {
+                        val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
+                        GrindrPlus.apply {
+                            showToast(Toast.LENGTH_LONG, message)
+                            logger.log(message)
+                            logger.writeRaw(e.stackTraceToString())
+                        }
                     }
                 }
             }
