@@ -119,7 +119,7 @@ Each installation method is completely different and comes with its own challeng
   - `Shizuku` [**installed**](https://shizuku.rikka.app/guide/setup) and fully functional
 
   **Process:**
-  1. Download [JingMatrix's LSPatch fork](https://xdaforums.com/attachments/lspatch-manager-v0-6-418-release-apk.6143894) and install it (as of September 2024, official LSPatch doesn't work anymore with latest Android versions)
+  1. Download [JingMatrix's LSPatch fork](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPatch-v0.7-430-9703dc4-release.apk) and install it (as of September 2024, official LSPatch doesn't work anymore with latest Android versions)
   2. Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`)
   3. Download the latest Grindr app [from Play Store](https://play.google.com/store/apps/details?id=com.grindrapp.android&hl=en) or use [SAI](https://github.com/Aefyr/SAI/releases) to install [bundles from APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/)
   4. Open `LSPatch` to make sure everything is set up correctly up to this point. In the **home tab**, confirm you see _Shizuku service available_ at the very top
@@ -135,7 +135,7 @@ Each installation method is completely different and comes with its own challeng
 <details closed>
   <summary>LSPosed</summary>
 
-  > If you're using the official LSPosed, the mod might not work. **It is highly recommended to switch to [JingMatrix's fork of LSPosed](https://xdaforums.com/t/mod-xposed-grindr-plus.4461857/page-105#post-89706407)!**
+  > If you're using the official LSPosed, the mod might not work. **It is highly recommended to switch to [JingMatrix's fork of LSPosed](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPosed-v1.10.1-7167-zygisk-release.zip)!**
   
   **Requirements:**
   - Rooted using `Magisk` or `KernelSU`
