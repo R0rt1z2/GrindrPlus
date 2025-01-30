@@ -16,7 +16,7 @@ android {
     defaultConfig {
         val gitCommitHash = getGitCommitHash() ?: "unknown"
         applicationId = "com.grindrplus"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
         versionCode = 14
         versionName = "3.3.0-${grindrVersions.joinToString("_")}_$gitCommitHash"

@@ -10,6 +10,10 @@ import android.os.Build
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import com.grindrplus.GrindrPlus
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 object Utils {
     fun getId(name: String, defType: String, context: Context): Int {
@@ -60,10 +64,15 @@ object Utils {
     }
 
     fun copyToClipboard(label: String, text: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val clipboard = GrindrPlus.context.getSystemService(ClipboardManager::class.java)
-            clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
-        }
+        val clipboard = GrindrPlus.context.getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+        GrindrPlus.showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
+    }
+
+    fun formatEpochSeconds(epochSec: Long): String {
+        val instant = Instant.ofEpochSecond(epochSec)
+        val dt = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
+        val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd '~'")
+        return dt.format(fmt)
     }
 }
