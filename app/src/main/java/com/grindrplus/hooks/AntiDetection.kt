@@ -1,13 +1,12 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 
 class AntiDetection : Hook(
-    "Anti detection",
+    "Anti Detection",
     "Hides root, emulator, and environment detections"
 ) {
     private val devicePropertiesCollector = "siftscience.android.DevicePropertiesCollector"
@@ -15,6 +14,15 @@ class AntiDetection : Hook(
     private val osData = "com.google.firebase.crashlytics.internal.model.AutoValue_StaticSessionData_OsData"
 
     override fun init() {
+
+        /**
+         * Grindr 25.0.0 introduces an emulator block. Kinda gay...
+         */
+        findClass("ga.r")
+            .hook("H", HookStage.AFTER) { param ->
+                param.setResult(false)
+            }
+
         findClass(commonUtils)
             .hook("isRooted", HookStage.BEFORE) { param ->
                 param.setResult(false)
