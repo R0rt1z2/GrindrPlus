@@ -77,6 +77,24 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                 "okhttp3.CertificatePinner",
                 XC_MethodReplacement.DO_NOTHING
             )
+
+            // Hook TrustManagerImpl to be able to unpin more information
+            findAndHookMethod(
+                "com.android.org.conscrypt.TrustManagerImpl",
+                lpparam.classLoader,
+                "verifyChain",
+                List::class.java,  // List<X509Certificate> untrustedChain
+                List::class.java,  // List<TrustAnchor> trustAnchorChain
+                String::class.java, // String host
+                Boolean::class.java, // boolean clientAuth
+                ByteArray::class.java, // byte[] ocspData
+                ByteArray::class.java, // byte[] tlsSctData
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam<*>) {
+                        param.result = param.args[0]
+                    }
+                }
+            )
         }
 
         Application::class.java.hook("attach", HookStage.AFTER) {
