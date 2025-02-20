@@ -33,6 +33,7 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
+import de.robv.android.xposed.XposedHelpers.setObjectField
 
 class LocationSpoofer : Hook(
     "Location spoofer",
@@ -40,9 +41,11 @@ class LocationSpoofer : Hook(
 ) {
     private val location = "android.location.Location"
     private val chatBottomToolbar = "com.grindrapp.android.chat.presentation.ui.view.ChatBottomToolbar"
+    private val appConfiguration = "com.grindrapp.android.base.config.AppConfiguration"
 
     override fun init() {
         val locationClass = findClass(location)
+        val appConfigurationClass = findClass(appConfiguration)
 
         if (Build.VERSION.SDK_INT >= 31) {
             locationClass.hook(
@@ -59,6 +62,12 @@ class LocationSpoofer : Hook(
                 param.setResult(false)
             }
         }
+
+        appConfigurationClass
+            .hookConstructor(HookStage.AFTER) { param ->
+                // isMockLocationAllowed
+                setObjectField(param.thisObject(), "j", true)
+            }
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
             (Config.get("current_location", "") as String).takeIf {
