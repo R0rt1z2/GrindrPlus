@@ -50,6 +50,11 @@ class AntiDetection : Hook(
                 param.setResult(emptyList<String>())
             }
 
+        findClass(devicePropertiesCollector)
+            .hook("existingDangerousProperties", HookStage.BEFORE) { param ->
+                param.setResult(emptyList<String>())
+            }
+
         findClass(osData)
             .hookConstructor(HookStage.BEFORE) { param ->
                 param.setArg(2, false) // isRooted
