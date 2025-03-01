@@ -21,7 +21,7 @@ class Interceptor(
             val isLoggedIn = invokeMethodSafe(userSession, "r") as Boolean
 
             // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
-            val authTokenFlow = invokeMethodSafe(userSession, "s")
+            val authTokenFlow = invokeMethodSafe(userSession, "v")
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
 
             // search for one line method returning an string in userSession
