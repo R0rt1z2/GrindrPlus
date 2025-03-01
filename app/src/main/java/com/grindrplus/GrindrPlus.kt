@@ -57,7 +57,6 @@ object GrindrPlus {
 
     var shouldTriggerAntiblock = true
     var blockCaller: String = ""
-    var hasTriedToImportBlocks = false
     var isImportingSomething = false
 
     var currentActivity: Activity? = null
