@@ -64,7 +64,7 @@ class HookManager {
                 RemovableMessages(),
                 SignatureSpoofer(),
                 UnlimitedTaps(),
-                UnlimitedAlbums(),
+                // UnlimitedAlbums(),
                 QuickBlock(),
                 EmptyCalls(),
                 ReverseRadarTabs()

@@ -449,7 +449,7 @@ class SettingsFragment : Fragment() {
 
         val hooks = Config.getHooksSettings()
         hooks.forEach { (hookName, pair) ->
-            if (hookName != "Mod settings" && hookName != "Persistent incognito") {
+            if (hookName != "Mod settings" && hookName != "Persistent incognito" && hookName != "Unlimited albums") {
                 val hookView = createHookSwitch(context, hookName, pair.second, pair.first)
                 container?.addView(hookView)
             }
