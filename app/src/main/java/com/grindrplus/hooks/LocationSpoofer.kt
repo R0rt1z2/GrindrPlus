@@ -41,7 +41,7 @@ class LocationSpoofer : Hook(
 ) {
     private val location = "android.location.Location"
     private val chatBottomToolbar = "com.grindrapp.android.chat.presentation.ui.view.ChatBottomToolbar"
-    private val appConfiguration = "com.grindrapp.android.base.config.AppConfiguration"
+    private val appConfiguration = "com.grindrapp.android.platform.config.AppConfiguration"
 
     override fun init() {
         val locationClass = findClass(location)

@@ -13,12 +13,12 @@ class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "M5.h"
+    private val featureFlags = "w6.c" // search for ' @NotNull String featureFlagName, @NotNull'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
-    private val expiringAlbumsExperiment = "e3.a"
+    private val expiringAlbumsExperiment = "y3.a" // search for '("SeeAlbumOptions", 1, "see-album-options")'
     private val settingDistanceVisibilityViewModel =
-        "com.grindrapp.android.ui.settings.distance.a\$e"
+        "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
     private val featureManager = FeatureManager()
 
     override fun init() {

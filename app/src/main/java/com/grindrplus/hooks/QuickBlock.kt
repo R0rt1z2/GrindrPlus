@@ -14,8 +14,8 @@ class QuickBlock : Hook(
     "Quick block",
     "Ability to block users quickly"
 ) {
-    private val blockViewModel = "qa.b"
-    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g"
+    private val blockViewModel = "Lb.b" // search for '("STATUS_BLOCK_DIALOG_SHOWN", 1)'
+    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g" // search for 'com.grindrapp.android.ui.profileV2.ProfileViewHolder$onBind$3'
     private val profileModel = "com.grindrapp.android.persistence.model.Profile"
 
     override fun init() {

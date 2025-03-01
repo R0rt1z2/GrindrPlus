@@ -9,17 +9,14 @@ class AntiDetection : Hook(
     "Anti Detection",
     "Hides root, emulator, and environment detections"
 ) {
+    private val grindrMiscClass = "Ab.u" // search for '"sdk_gphone", "emulator", "simulator", "google_sdk"'
     private val devicePropertiesCollector = "siftscience.android.DevicePropertiesCollector"
     private val commonUtils = "com.google.firebase.crashlytics.internal.common.CommonUtils"
     private val osData = "com.google.firebase.crashlytics.internal.model.AutoValue_StaticSessionData_OsData"
 
     override fun init() {
-
-        /**
-         * Grindr 25.0.0 introduces an emulator block. Kinda gay...
-         */
-        findClass("ga.r")
-            .hook("H", HookStage.AFTER) { param ->
+        findClass(grindrMiscClass)
+            .hook("I", HookStage.AFTER) { param ->
                 param.setResult(false)
             }
 

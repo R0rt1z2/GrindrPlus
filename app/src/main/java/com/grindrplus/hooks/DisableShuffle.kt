@@ -10,7 +10,7 @@ class DisableShuffle : Hook(
     "Disable shuffle",
     "Forcefully disable the shuffle feature"
 ) {
-    private val shuffleUiState = "com.grindrapp.android.ui.browse.s\$g"
+    private val shuffleUiState = "com.grindrapp.android.ui.browse.t\$g" // search for 'ShuffleUiState(isShuffleEnabled='
 
     override fun init() {
         findClass(shuffleUiState).hookConstructor(HookStage.AFTER) { param ->
@@ -20,6 +20,8 @@ class DisableShuffle : Hook(
             setObjectField(param.thisObject(), "d", false) // showShuffleTooltip
             setObjectField(param.thisObject(), "f", false) // isShuffleTopBarVisible
             setObjectField(param.thisObject(), "g", false) // showShuffleUpsell
+            setObjectField(param.thisObject(), "h", true)  // isDisabledByFavorites
+            setObjectField(param.thisObject(), "i", true)  // isDisabledByRightNow
         }
     }
 }

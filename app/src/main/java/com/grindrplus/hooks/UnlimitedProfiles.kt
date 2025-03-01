@@ -16,6 +16,7 @@ class UnlimitedProfiles : Hook(
     "Allow unlimited profiles"
 ) {
     private val function2 = "kotlin.jvm.functions.Function2"
+    private val onProfileClicked = "com.grindrapp.android.ui.browse.C" // search for 'com.grindrapp.android.ui.browse.ServerDrivenCascadeViewModel$onProfileClicked$1'
     private val profileWithPhoto = "com.grindrapp.android.persistence.pojo.ProfileWithPhoto"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
@@ -81,7 +82,7 @@ class UnlimitedProfiles : Hook(
                 param.setResult(transformedFlow)
             }
 
-        findClass("com.grindrapp.android.ui.browse.B").hook("invokeSuspend", HookStage.BEFORE) { param ->
+        findClass(onProfileClicked).hook("invokeSuspend", HookStage.BEFORE) { param ->
             if (Config.get("disable_profile_swipe", false) as Boolean) {
                 val cachedProfile = getObjectField(param.thisObject(), "j")
                 val profileId = getObjectField(cachedProfile, "profileIdLong")

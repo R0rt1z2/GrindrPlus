@@ -17,11 +17,20 @@ class Interceptor(
     Interceptor {
     private fun modifyRequest(originalRequest: Request): Request {
         try {
-            val isLoggedIn = invokeMethodSafe(userSession, "o") as Boolean
+            // search for 'return value != null && value.length() > 0' in userSession
+            val isLoggedIn = invokeMethodSafe(userSession, "r") as Boolean
+
+            // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
             val authTokenFlow = invokeMethodSafe(userSession, "s")
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
+
+            // search for one line method returning an string in userSession
             val roles = invokeMethodSafe(userSession, "x") as String
+
+            // search for 'getValue().getNameTitleCase()' in userAgent
             val userAgent = invokeMethodSafe(userAgent, "a") as String
+
+            // search for 'if (info == null) {' in deviceInfo
             val deviceInfoLazy = getFieldSafe(deviceInfo, "c") as Any
             val lDeviceInfo = invokeMethodSafe(deviceInfoLazy, "getValue") as String
 

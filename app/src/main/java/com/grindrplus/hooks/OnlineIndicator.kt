@@ -10,11 +10,11 @@ class OnlineIndicator : Hook(
     "Online indicator",
     "Customize online indicator duration"
 ) {
-    val utils = "zb.b0"
+    val utils = "bd.h0" // search for ' <= 600000;'
 
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
-            .hook("a", HookStage.BEFORE) { param ->
+            .hook("b", HookStage.BEFORE) { param ->
                 val savedDuration = Config.get("online_indicator", 3).toString().toInt()
                 param.setResult(System.currentTimeMillis() - param.arg<Long>(0) <= savedDuration.minutes.inWholeMilliseconds)
             }

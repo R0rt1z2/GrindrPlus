@@ -1,21 +1,17 @@
 package com.grindrplus.hooks
 
 import android.app.Activity
-import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.children
 import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
-import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class ModSettings : Hook(
@@ -47,12 +43,12 @@ class ModSettings : Hook(
             .hook("onCreate", HookStage.AFTER) { param ->
                 val activity = param.thisObject() as Activity
 
-                val settingsViewBindingLazy = getObjectField(param.thisObject(), "d0")
+                val settingsViewBindingLazy = getObjectField(param.thisObject(), "d0") // good luck
                 val settingsViewBinding = settingsViewBindingLazy::class
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
 
                 var settingsRoot =
-                    param.thisObject()::class.java.getMethod("E").invoke(param.thisObject())
+                    param.thisObject()::class.java.getMethod("E").invoke(param.thisObject()) // good luck
                 settingsRoot::class.java.declaredFields.reversed().forEach { field ->
                     field.isAccessible = true
                     val fieldValue = field.get(settingsRoot)
