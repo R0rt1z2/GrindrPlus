@@ -82,6 +82,7 @@ object Utils {
             "0xDEADBEEF", // str3
             null,
             null, // chatMediaDrawerArgs
+            null,
             844
         )
 
