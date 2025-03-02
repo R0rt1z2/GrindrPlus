@@ -95,9 +95,7 @@ class LocationSpoofer : Hook(
                 layoutParams = LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.MATCH_PARENT
                 ).apply { weight = 1f }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    focusable = ImageButton.FOCUSABLE
-                }
+                focusable = ImageButton.FOCUSABLE
                 scaleType = ImageView.ScaleType.CENTER
                 isClickable = true
                 setBackgroundResource(

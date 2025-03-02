@@ -203,15 +203,13 @@ object Utils {
         channelName: String = "Default Channel",
         channelDescription: String = "Default notifications"
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(channelId, channelName, importance).apply {
-                description = channelDescription
-            }
-            val notificationManager: NotificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(channelId, channelName, importance).apply {
+            description = channelDescription
         }
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(getId("applovin_ic_warning","drawable", context))
@@ -231,9 +229,7 @@ object Utils {
             appendLine("Android version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
             appendLine("ABI(s): ${Build.SUPPORTED_ABIS.joinToString(", ")}")
             appendLine(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    "Security patch: ${Build.VERSION.SECURITY_PATCH}"
-                else "Security patch: N/A"
+                "Security patch: ${Build.VERSION.SECURITY_PATCH}"
             )
             appendLine("Device model: ${Build.MODEL} (${Build.MANUFACTURER})")
             appendLine(

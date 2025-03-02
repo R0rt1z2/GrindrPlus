@@ -430,9 +430,7 @@ class SettingsFragment : Fragment() {
         val context = requireContext()
 
         val manageHooksTitle = AppCompatTextView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
-            }
+            setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -456,9 +454,7 @@ class SettingsFragment : Fragment() {
         }
 
         val otherSettingsTitle = AppCompatTextView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
-            }
+            setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -519,15 +515,12 @@ class SettingsFragment : Fragment() {
             )
         )
 
-        // force_old_anti_block_behavior
         container?.addView(createToggleableSettingView(context, "Force old AntiBlock behavior", "Use the old AntiBlock behavior (don't use this, required for testing)", "force_old_anti_block_behavior"))
         container?.addView(createToggleableSettingView(context, "Use toasts for AntiBlock hook", "Instead of receiving Android notifications, use toasts for block/unblock notifications", "anti_block_use_toasts"))
         container?.addView(createToggleableSettingView(context, "Disable profile swipe", "Disable the swipe gesture on profiles", "disable_profile_swipe"))
 
         val experimentalFeaturesTitle = AppCompatTextView(context).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
-            }
+            setTextAppearance(Utils.getId("TextAppearanceH6AllCaps", "styles", context))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
