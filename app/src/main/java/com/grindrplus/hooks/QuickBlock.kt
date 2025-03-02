@@ -30,7 +30,7 @@ class QuickBlock : Hook(
             actionsMenuItem.setOnMenuItemClickListener { GrindrPlus.httpClient.blockUser(profileId as String); true }
         }
 
-        findClass(blockViewModel).hook("B", HookStage.BEFORE) { param ->
+        findClass(blockViewModel).hook("O", HookStage.BEFORE) { param ->
             GrindrPlus.httpClient.blockUser(getObjectField(param.thisObject(), "y") as String)
             param.setResult(null)
         }
