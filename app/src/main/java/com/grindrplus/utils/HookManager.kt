@@ -19,6 +19,7 @@ import com.grindrplus.hooks.FeatureGranting
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
 import com.grindrplus.hooks.ModSettings
+import com.grindrplus.hooks.NotificationAlerts
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
@@ -39,6 +40,7 @@ class HookManager {
                 // PersistentIncognito(),
                 AntiDetection(),
                 AntiBlock(),
+                NotificationAlerts(),
                 FeatureGranting(),
                 DisableUpdates(),
                 DisableBoosting(),
