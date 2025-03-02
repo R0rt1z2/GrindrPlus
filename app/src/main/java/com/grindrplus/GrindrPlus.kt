@@ -20,13 +20,21 @@ import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
+import com.grindrplus.utils.PCHIP
 import dalvik.system.DexClassLoader
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import kotlin.system.measureTimeMillis
 
 private const val TAG = "GrindrPlus"
@@ -61,6 +69,27 @@ object GrindrPlus {
     var isImportingSomething = false
     var myProfileId: String = ""
 
+    var spline = PCHIP(
+        listOf(
+            1238563200L to 0,          // 2009-04-01
+            1285027200L to 1000000,    // 2010-09-21
+            1462924800L to 35512000,   // 2016-05-11
+            1501804800L to 132076000,  // 2017-08-04
+            1546547829L to 201948000,  // 2019-01-03
+            1618531200L to 351220000,  // 2021-04-16
+            1636150385L to 390338000,  // 2021-11-05
+            1637963460L to 394800000,  // 2021-11-26
+            1680393600L to 505225000,  // 2023-04-02
+            1717200000L to 630495000,  // 2024-06-01
+            1717372800L to 634942000,  // 2024-06-03
+            1729950240L to 699724000,  // 2024-10-26
+            1732986600L to 710609000,  // 2024-11-30
+            1733349060L to 711676000,  // 2024-12-04
+            1735229820L to 718934000,  // 2024-12-26
+            1738065780L to 730248000   // 2025-01-29
+        )
+    )
+
     var currentActivity: Activity? = null
         private set
 
@@ -69,6 +98,9 @@ object GrindrPlus {
     private val deviceInfo = "P3.t" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
     private val ioScope = CoroutineScope(Dispatchers.IO)
+
+    private val splineDataEndpoint =
+        "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
 
     fun init(modulePath: String, application: Application, logger: Logger) {
         Log.d(
@@ -131,6 +163,11 @@ object GrindrPlus {
                     httpClient = Client(Interceptor(uSession, uAgent, dInfo))
                 }
             }
+        }
+
+        fetchRemoteData(splineDataEndpoint) { points ->
+            spline = PCHIP(points)
+            logger.log("Updated spline with remote data")
         }
 
         try {
@@ -225,5 +262,42 @@ object GrindrPlus {
     fun reloadTranslations(locale: String) {
         localeTag = locale
         translations = bridgeClient.getTranslation(localeTag) ?: JSONObject()
+    }
+
+    private fun fetchRemoteData(url: String, callback: (List<Pair<Long, Int>>) -> Unit) {
+        val client = OkHttpClient()
+        val request = Request.Builder().url(url).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                GrindrPlus.logger.apply {
+                    log("Failed to fetch remote data: ${e.message}")
+                    writeRaw(e.stackTraceToString())
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.string()?.let { jsonString ->
+                    try {
+                        val jsonArray = JSONArray(jsonString)
+                        val parsedPoints = mutableListOf<Pair<Long, Int>>()
+
+                        for (i in 0 until jsonArray.length()) {
+                            val obj = jsonArray.getJSONObject(i)
+                            val time = obj.getLong("time")
+                            val id = obj.getInt("id")
+                            parsedPoints.add(time to id)
+                        }
+
+                        callback(parsedPoints)
+                    } catch (e: Exception) {
+                        GrindrPlus.logger.apply {
+                            log("Failed to parse remote data: ${e.message}")
+                            writeRaw(e.stackTraceToString())
+                        }
+                    }
+                }
+            }
+        })
     }
 }

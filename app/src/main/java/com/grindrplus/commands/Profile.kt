@@ -11,6 +11,7 @@ import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
+import com.grindrplus.ui.Utils.formatEpochSeconds
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class Profile(
@@ -202,6 +203,9 @@ class Profile(
     @SuppressLint("SetTextI18n")
     @Command("id", help = "Get and copy profile IDs")
     fun id(args: List<String>) {
+        val accountCreationTime = formatEpochSeconds(
+            GrindrPlus.spline.invert(sender.toDouble()).toLong())
+
         GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
             val dialogView = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -214,7 +218,7 @@ class Profile(
 
             val textView = activity.let {
                 AppCompatTextView(it).apply {
-                    text = "• Your ID: $recipient\n• Profile ID: $sender"
+                    text = "• Your ID: $recipient\n• Profile ID: $sender\n• Estimated creation: $accountCreationTime"
                     textSize = 18f
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,

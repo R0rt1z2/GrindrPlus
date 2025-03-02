@@ -72,7 +72,7 @@ object Utils {
     fun formatEpochSeconds(epochSec: Long): String {
         val instant = Instant.ofEpochSecond(epochSec)
         val dt = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
-        val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd '~'")
+        val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd '≈'")
         return dt.format(fmt)
     }
 }
