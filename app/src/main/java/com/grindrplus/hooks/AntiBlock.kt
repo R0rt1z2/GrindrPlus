@@ -45,6 +45,7 @@ class AntiBlock : Hook(
                 }
 
             findClass(chatDeleteConversationPlugin).hook("b", HookStage.BEFORE) { param ->
+                myProfileId = GrindrPlus.myProfileId.toLong()
                 if (!GrindrPlus.shouldTriggerAntiblock) {
                     val whitelist = listOf(
                         "inboxFragmentV2DeleteConversations",
@@ -54,12 +55,6 @@ class AntiBlock : Hook(
                     }
                     return@hook
                 } else {
-                    if (myProfileId == 0L) {
-                        myProfileId = (getObjectField(instanceManager
-                            .getInstance("V8.T"),
-                            "p") as String).toLong()
-                    }
-
                     val conversationId = (param.args().firstOrNull()?.let { getObjectField(it, "payload") } as? JSONObject)
                         ?.optJSONArray("conversationIds")
                         ?.let { (0 until it.length()).joinToString(",") { index -> it.getString(index) } }

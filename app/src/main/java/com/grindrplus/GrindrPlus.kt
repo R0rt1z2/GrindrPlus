@@ -22,6 +22,7 @@ import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import dalvik.system.DexClassLoader
 import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,6 +59,7 @@ object GrindrPlus {
     var shouldTriggerAntiblock = true
     var blockCaller: String = ""
     var isImportingSomething = false
+    var myProfileId: String = ""
 
     var currentActivity: Activity? = null
         private set
@@ -123,6 +125,7 @@ object GrindrPlus {
         )
 
         instanceManager.setCallback(userSession) { uSession ->
+            myProfileId = getObjectField(uSession, "r") as String
             instanceManager.setCallback(userAgent) { uAgent ->
                 instanceManager.setCallback(deviceInfo) { dInfo ->
                     httpClient = Client(Interceptor(uSession, uAgent, dInfo))
