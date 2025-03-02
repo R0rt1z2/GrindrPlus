@@ -78,7 +78,6 @@ class AntiBlock : Hook(
                     } catch(e: Exception) {
                         val message = "Error checking if user is blocked: ${e.message}"
                         GrindrPlus.apply {
-                            showToast(Toast.LENGTH_LONG, message)
                             logger.log(message)
                             logger.writeRaw(e.stackTraceToString())
                         }
@@ -91,7 +90,6 @@ class AntiBlock : Hook(
                     } catch (e: Exception) {
                         val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
                         GrindrPlus.apply {
-                            showToast(Toast.LENGTH_LONG, message)
                             logger.log(message)
                             logger.writeRaw(e.stackTraceToString())
                         }
