@@ -25,7 +25,7 @@ class Interceptor(
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
 
             // search for one line method returning an string in userSession
-            val roles = invokeMethodSafe(userSession, "x") as String
+            val roles = invokeMethodSafe(userSession, "A") as String
 
             // search for 'getValue().getNameTitleCase()' in userAgent
             val userAgent = invokeMethodSafe(userAgent, "a") as String
