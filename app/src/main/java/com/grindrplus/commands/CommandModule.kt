@@ -19,10 +19,10 @@ abstract class CommandModule(
             commandMethod.invoke(this, args)
             true
         } catch (e: Exception) {
-            val message = "An error occurred while executing the command: ${e.message ?: "Unknown error"}"
+            val message = "Unable to execute command. Check logs for more information."
             GrindrPlus.apply {
                 showToast(Toast.LENGTH_LONG, message)
-                logger.log(message)
+                logger.log("An error occurred while executing the command: ${e.message ?: "Unknown error"}")
                 logger.writeRaw(e.stackTraceToString())
             }
             false
