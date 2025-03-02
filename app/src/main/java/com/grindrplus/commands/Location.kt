@@ -23,6 +23,8 @@ class Location(
                 Config.put("current_location", "")
                 return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
             }
+
+            return GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a location")
         }
 
         /**
@@ -34,6 +36,11 @@ class Location(
          * - "city, country" (e.g. "San Francisco, United States") for city and country.
          */
         when {
+            args.size == 1 && args[0] == "off" -> {
+                Config.put("current_location", "")
+                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
+            }
+
             args.size == 1 && args[0].contains(",") -> {
                 val (lat, lon) = args[0].split(",").map { it.toDouble() }
                 Config.put("current_location", "$lat,$lon")
