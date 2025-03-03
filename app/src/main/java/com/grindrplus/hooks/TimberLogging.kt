@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
@@ -32,6 +33,11 @@ class TimberLogging : Hook(
     private val appConfigurationDebugField = "d"
 
     override fun init() {
+
+        // Only enable this hook in debug builds
+        if (!BuildConfig.DEBUG) {
+            return
+        }
 
         findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
 
