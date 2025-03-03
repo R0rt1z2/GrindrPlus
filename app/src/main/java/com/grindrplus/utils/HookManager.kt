@@ -26,6 +26,7 @@ import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
 import com.grindrplus.hooks.ReverseRadarTabs
 import com.grindrplus.hooks.SignatureSpoofer
+import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedProfiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -64,6 +65,7 @@ class HookManager {
                 QuickBlock(),
                 EmptyCalls(),
                 // ReverseRadarTabs()
+                TimberLogging()
             )
 
             hookList.forEach { hook ->
