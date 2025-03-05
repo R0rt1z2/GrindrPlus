@@ -38,6 +38,7 @@ import com.grindrplus.core.Utils.getSystemInfo
 import com.grindrplus.ui.Utils
 import com.grindrplus.ui.colors.Colors
 import java.io.File
+import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 enum class FileType {
@@ -511,6 +512,24 @@ class SettingsFragment : Fragment() {
                 validation = { input ->
                     val value = input.toIntOrNull()
                     if (value == null || value <= 0) "Grid size must be a positive number" else null
+                }
+            )
+        )
+
+        container?.addView(
+            createDynamicSettingView(
+                context,
+                title = "Date format",
+                description = "Set the date format used to show the estimation account creation date",
+                key = "date_format",
+                defaultValue = "yyyy-MM-dd",
+                validation = { input ->
+                    return@createDynamicSettingView try {
+                        DateTimeFormatter.ofPattern(input)
+                        null
+                    } catch (e: IllegalArgumentException) {
+                        "Invalid date format: ${e.message}"
+                    }
                 }
             )
         )

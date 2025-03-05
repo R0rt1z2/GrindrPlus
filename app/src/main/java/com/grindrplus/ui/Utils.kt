@@ -10,6 +10,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -70,9 +71,14 @@ object Utils {
     }
 
     fun formatEpochSeconds(epochSec: Long): String {
-        val instant = Instant.ofEpochSecond(epochSec)
-        val dt = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
-        val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd '≈'")
-        return dt.format(fmt)
+        return try {
+            val formatter = DateTimeFormatter.ofPattern(Config.get(
+                "date_format", "yyyy-MM-dd") as String)
+            val instant = Instant.ofEpochSecond(epochSec)
+            val dt = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
+            dt.format(formatter)
+        } catch (e: Exception) {
+            "Invalid date format"
+        }
     }
 }
