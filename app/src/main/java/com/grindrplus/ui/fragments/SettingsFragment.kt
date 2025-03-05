@@ -517,6 +517,7 @@ class SettingsFragment : Fragment() {
 
         container?.addView(createToggleableSettingView(context, "Force old AntiBlock behavior", "Use the old AntiBlock behavior (don't use this, required for testing)", "force_old_anti_block_behavior"))
         container?.addView(createToggleableSettingView(context, "Use toasts for AntiBlock hook", "Instead of receiving Android notifications, use toasts for block/unblock notifications", "anti_block_use_toasts"))
+        container?.addView(createToggleableSettingView(context, "Keep separated favorites section", "Keep the favorites section separated from the main cascade", "separated_favorites_section", true))
         container?.addView(createToggleableSettingView(context, "Disable profile swipe", "Disable the swipe gesture on profiles", "disable_profile_swipe"))
 
         val experimentalFeaturesTitle = AppCompatTextView(context).apply {
@@ -910,7 +911,7 @@ class SettingsFragment : Fragment() {
     }
 
     @SuppressLint("UseSwitchCompatOrMaterialCode")
-    private fun createToggleableSettingView(context: Context, title: String, description: String, key: String): View {
+    private fun createToggleableSettingView(context: Context, title: String, description: String, key: String, defaultKeyValue: Boolean = false): View {
         val settingLayout = LinearLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -945,7 +946,7 @@ class SettingsFragment : Fragment() {
             text = title
         }
 
-        val currentValue = Config.get(key, false) as Boolean
+        val currentValue = Config.get(key, defaultKeyValue) as Boolean
         val settingSwitch = Switch(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,

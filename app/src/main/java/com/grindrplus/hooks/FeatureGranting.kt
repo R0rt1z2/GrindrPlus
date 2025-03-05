@@ -1,6 +1,7 @@
 package com.grindrplus.hooks
 
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
 import com.grindrplus.utils.Hook
@@ -59,7 +60,9 @@ class FeatureGranting : Hook(
 
         findClass(favoritesExperiment)
             .hook("e", HookStage.BEFORE) { param ->
-                param.setResult(false) // I'm afraid this will get deprecated soon
+                if (Config.get("separated_favorites_section", true) as Boolean) {
+                    param.setResult(false)
+                }
             }
     }
 
