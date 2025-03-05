@@ -6,10 +6,6 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.setObjectField
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject

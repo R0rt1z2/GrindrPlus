@@ -2,7 +2,6 @@ package com.grindrplus.hooks
 
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
-import com.grindrplus.GrindrPlus.instanceManager
 import com.grindrplus.core.Config
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.sendNotification

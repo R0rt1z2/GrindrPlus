@@ -1,4 +1,5 @@
 package com.grindrplus.utils
+
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import java.lang.reflect.Member

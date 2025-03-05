@@ -24,7 +24,6 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
-import com.grindrplus.hooks.ReverseRadarTabs
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedProfiles

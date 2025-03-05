@@ -1,22 +1,10 @@
 package com.grindrplus.hooks
 
-import android.os.Handler
-import android.util.Log
-import android.view.View
-import android.widget.Toast
-import com.grindrplus.GrindrPlus
-import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
-import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
-import java.lang.Thread.sleep
-import java.util.ArrayList
-import java.util.Arrays
-import java.util.Collections
-import kotlin.concurrent.thread
 
 class ReverseRadarTabs : Hook(
     "Reverse radar tabs",

@@ -1,6 +1,7 @@
 package com.grindrplus.core
 
 import android.util.Log
+import com.grindrplus.BuildConfig
 import de.robv.android.xposed.XposedBridge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,12 @@ class Logger(logFile: String) {
     fun log(msg: String) {
         XposedBridge.log("$LOG_TAG: $msg")
         logFlow.tryEmit(msg)
+    }
+
+    fun debug(msg: String) {
+        if (!BuildConfig.DEBUG) {
+            log(msg)
+        }
     }
 
     fun writeRaw(msg: String) {

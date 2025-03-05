@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook

@@ -8,13 +8,11 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
-import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "I6.d" // search for ' @NotNull String featureFlagName, @NotNull'
     private val isFeatureFlagEnabled = "O8.b" // search for 'implements IsFeatureFlagEnabled {'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
@@ -27,39 +25,13 @@ class FeatureGranting : Hook(
     override fun init() {
         initFeatures()
 
-        val featureFlagsClass = findClass(featureFlags)
-
-        featureFlagsClass.hook(
-            "isEnabled", HookStage.BEFORE
-        ) { param ->
-            val featureFlagName = getObjectField(
-                param.thisObject(),
-                "featureFlagName"
-            ) as String
-            if (featureManager.isManaged(featureFlagName)) {
-                param.setResult(featureManager.isEnabled(featureFlagName))
-            }
-        }
-
         findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
             val flagKey = callMethod(param.args()[0], "toString") as String
             if (featureManager.isManaged(flagKey)) {
-                GrindrPlus.logger.log("Will return ${featureManager.isEnabled(flagKey)} for $flagKey")
+                GrindrPlus.logger.debug("Returning ${featureManager.isEnabled(flagKey)} for $flagKey")
                 param.setResult(featureManager.isEnabled(flagKey))
             } else {
-                GrindrPlus.logger.log("Unhandled feature flag $flagKey")
-            }
-        }
-
-        featureFlagsClass.hook(
-            "isDisabled", HookStage.BEFORE
-        ) { param ->
-            val featureFlagName = getObjectField(
-                param.thisObject(),
-                "featureFlagName"
-            ) as String
-            if (featureManager.isManaged(featureFlagName)) {
-                param.setResult(!featureManager.isEnabled(featureFlagName))
+                GrindrPlus.logger.debug("Unhandled feature flag $flagKey")
             }
         }
 

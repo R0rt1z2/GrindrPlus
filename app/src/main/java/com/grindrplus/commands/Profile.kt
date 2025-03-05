@@ -7,12 +7,10 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
-import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
-import okhttp3.RequestBody.Companion.toRequestBody
 
 class Profile(
     recipient: String,

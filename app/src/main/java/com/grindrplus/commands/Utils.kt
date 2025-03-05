@@ -167,26 +167,4 @@ class Utils(
             }
         }
     }
-
-    @Command("cascade_endpoint", aliases = ["ce"], help = "Change the cascade endpoint (default: v3)")
-    fun cascadeEndpoint(args: List<String>) {
-        val endpoint = Config.get("cascade_endpoint", "v3") as String
-        when {
-            args.isEmpty() -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "The current cascade endpoint is $endpoint"
-            )
-            args[0] == "v1" || args[0] == "v3" -> {
-                Config.put("cascade_endpoint", args[0])
-                GrindrPlus.showToast(
-                    Toast.LENGTH_LONG,
-                    "Cascade endpoint set to ${args[0]}"
-                )
-            }
-            else -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Invalid cascade endpoint (allowed values: v1, v3)"
-            )
-        }
-    }
 }

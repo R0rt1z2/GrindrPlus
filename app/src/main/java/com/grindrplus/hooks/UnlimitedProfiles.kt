@@ -46,10 +46,6 @@ class UnlimitedProfiles : Hook(
                 param.setResult(null)
             }
 
-        findClass(serverDrivenCascadeRepo).hook("fetchCascadePage", HookStage.BEFORE) { param ->
-            param.setArg(28, Config.get("cascade_endpoint", "v3") as String)
-        }
-
         val profileClass = findClass("com.grindrapp.android.persistence.model.Profile")
         val profileWithPhotoConstructor = findClass(profileWithPhoto).getConstructor(profileClass, List::class.java)
         val profileConstructor = profileClass.getConstructor()

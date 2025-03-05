@@ -12,7 +12,6 @@ import com.grindrplus.persistence.toGrindrAlbumContent
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.createSuccess
-import com.grindrplus.utils.RetrofitUtils.getFailValue
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET

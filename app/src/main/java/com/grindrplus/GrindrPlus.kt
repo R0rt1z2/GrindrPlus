@@ -126,17 +126,12 @@ object GrindrPlus {
             override fun onActivityStarted(activity: Activity) {}
 
             override fun onActivityResumed(activity: Activity) {
-                if (BuildConfig.DEBUG) {
-                    logger.log("Resuming activity: ${activity.javaClass.name}")
-                }
-
+                logger.debug("Resuming activity: ${activity.javaClass.name}")
                 currentActivity = activity
             }
 
             override fun onActivityPaused(activity: Activity) {
-                if (BuildConfig.DEBUG) {
-                    logger.log("Pausing activity: ${activity.javaClass.name}")
-                }
+                logger.log("Pausing activity: ${activity.javaClass.name}")
                 if (currentActivity == activity) {
                     currentActivity = null
                 }

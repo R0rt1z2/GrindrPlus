@@ -1,12 +1,9 @@
 package com.grindrplus.hooks
 
 import com.grindrplus.BuildConfig
-import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
-import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
