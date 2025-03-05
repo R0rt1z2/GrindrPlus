@@ -137,7 +137,8 @@ class AntiBlock : Hook(
                         GrindrPlus.context,
                         "Blocked by User",
                         "You have been blocked by user $displayName",
-                        profileId.toInt()
+                        profileId.toInt(),
+                        channelId = "block_${profileId}"
                     )
                 }
                 return true
@@ -154,6 +155,7 @@ class AntiBlock : Hook(
                         "Unblocked by $displayName",
                         "$displayName has unblocked you.",
                         profileId.toInt(),
+                        channelId = "unblock_${profileId}"
                     )
                 }
                 return false
