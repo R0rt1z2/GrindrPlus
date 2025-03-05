@@ -21,6 +21,7 @@ import com.grindrplus.GrindrPlus.context
 import com.grindrplus.GrindrPlus.httpClient
 import com.grindrplus.GrindrPlus.isImportingSomething
 import com.grindrplus.GrindrPlus.shouldTriggerAntiblock
+import com.grindrplus.core.Constants.NEWLINE
 import com.grindrplus.ui.Utils.getId
 import com.grindrplus.utils.RetrofitUtils
 import kotlinx.coroutines.CoroutineScope
@@ -466,9 +467,10 @@ object Utils {
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             favorites.forEachIndexed { index, id ->
-                                val profileId = id.split("|||")[0]
-                                val note = id.split("|||")[1]
-                                val phoneNumber = id.split("|||")[2]
+                                val parts = id.split("|||")
+                                val profileId = parts.getOrNull(0) ?: ""
+                                val note = parts.getOrNull(1)?.replace(NEWLINE, "\n") ?: ""
+                                val phoneNumber = parts.getOrNull(2)?.replace(NEWLINE, "\n") ?: ""
                                 httpClient.favorite(
                                     profileId,
                                     silent = true,

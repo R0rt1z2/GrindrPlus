@@ -316,7 +316,7 @@ class Client(interceptor: Interceptor) {
 
         val body = """
             {
-                "notes": "$notes",
+                "notes": "${notes.replace("\n", "\\n")}",
                 "phoneNumber": "$phoneNumber"
             }
         """.trimIndent()

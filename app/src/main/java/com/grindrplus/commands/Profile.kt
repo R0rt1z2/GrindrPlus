@@ -7,6 +7,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Constants.NEWLINE
 import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
@@ -78,6 +79,13 @@ class Profile(
 
     @Command("unfavorite", aliases = ["unfav", "unfavourite"], help = "Unfavorite a user")
     fun unfavorite(args: List<String>) {
+        if (args.isNotEmpty() && args[0] == "all") {
+            GrindrPlus.executeAsync {
+                val favorites = GrindrPlus.httpClient.getFavorites()
+                Thread.sleep(1000)
+                favorites.forEach { GrindrPlus.httpClient.unfavorite(it.first, silent = true) }
+            }
+        }
         val profileId = if (args.isNotEmpty()) args[0] else sender
         GrindrPlus.httpClient.unfavorite(profileId, silent = false)
     }
@@ -140,8 +148,12 @@ class Profile(
         GrindrPlus.executeAsync {
             val favorites = GrindrPlus.httpClient.getFavorites()
             val favoriteList = favorites.joinToString("\n") { "• ${it.first}" }
-            val favoriteListExport =
-                favorites.joinToString("\n") { "${it.first}|||${it.second}|||${it.third}" }
+
+            val favoriteListExport = favorites.joinToString("\n") {
+                val sanitizedNote = it.second.replace("\r\n", NEWLINE).replace("\r", NEWLINE).replace("\n", NEWLINE)
+                val sanitizedPhone = it.third.replace("\r\n", NEWLINE).replace("\r", NEWLINE).replace("\n", NEWLINE)
+                "${it.first}|||$sanitizedNote|||$sanitizedPhone"
+            }
 
             GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
                 val dialogView = LinearLayout(activity).apply {
