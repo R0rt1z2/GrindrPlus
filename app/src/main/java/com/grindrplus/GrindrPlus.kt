@@ -93,9 +93,9 @@ object GrindrPlus {
     var currentActivity: Activity? = null
         private set
 
-    private val userAgent = "S5.t" // search for 'grindr3/'
-    private val userSession = "aa.V" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
-    private val deviceInfo = "P3.t" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    private val userAgent = "e6.y" // search for 'grindr3/'
+    private val userSession = "sa.T" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val deviceInfo = "V3.t" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 

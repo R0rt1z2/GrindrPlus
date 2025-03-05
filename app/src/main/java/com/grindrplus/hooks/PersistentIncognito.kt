@@ -22,7 +22,7 @@ class PersistentIncognito : Hook(
     "Persistent incognito",
     "Makes incognito mode persistent"
 ) {
-    private val meRestService = "b4.q" // search for 'v3/me/location'
+    private val meRestService = "h4.q" // search for 'v3/me/location'
     private val grindrSettings = "com.grindrapp.android.model.GrindrSettings"
     private val drawerProfileFragment = "com.grindrapp.android.ui.drawer.DrawerProfileFragment"
 

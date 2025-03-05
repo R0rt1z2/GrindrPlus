@@ -9,7 +9,7 @@ class EmptyCalls : Hook(
     "Video calls",
     "Allow video calls on empty chats"
 ) {
-    private val individualChatNavViewModel = "t5.N" // search for 'com.grindrapp.android.chat.presentation.viewmodel.IndividualChatNavViewModel'
+    private val individualChatNavViewModel = "A5.O" // search for 'com.grindrapp.android.chat.presentation.viewmodel.IndividualChatNavViewModel'
     private val createVideoCallResponse = "com.grindrapp.android.chat.api.model.CreateVideoCallResponse"
     private val videoCallInfoResponse = "com.grindrapp.android.chat.api.model.VideoCallInfoResponse"
 

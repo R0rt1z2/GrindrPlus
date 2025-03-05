@@ -9,22 +9,22 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
-    private val userSession = "aa.V" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val userSession = "sa.T" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
-        "n5.E\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
+        "u5.E\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
     )
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // hasFeature()
-            "y", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(feature, "feature")' in userSession
+            "x", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(feature, "feature")' in userSession
         ) { param ->
             val disallowedFeatures = setOf("DisableScreenshot")
             param.setResult(param.arg(0, String::class.java) !in disallowedFeatures)
         }
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "n", HookStage.BEFORE // search for '()) ? false : true;' in userSession
+            "m", HookStage.BEFORE // search for '()) ? false : true;' in userSession
         ) { param ->
             param.setResult(true)
         }
@@ -36,19 +36,19 @@ class EnableUnlimited : Hook(
         }
 
         userSessionClass.hook( // isFree()
-            "z", HookStage.BEFORE // search for '.isEmpty();' in userSession
+            "y", HookStage.BEFORE // search for '.isEmpty();' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "w", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
+            "v", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeUnlimited()
-            "B", HookStage.BEFORE // search for 'Role.UNLIMITED, Role.FREE_UNLIMITED' in userSession
+            "D", HookStage.BEFORE // search for 'Role.UNLIMITED, Role.FREE_UNLIMITED' in userSession
         ) { param ->
             param.setResult(true)
         }

@@ -7,16 +7,19 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
+import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlags = "w6.c" // search for ' @NotNull String featureFlagName, @NotNull'
+    private val featureFlags = "I6.d" // search for ' @NotNull String featureFlagName, @NotNull'
+    private val isFeatureFlagEnabled = "O8.b" // search for 'implements IsFeatureFlagEnabled {'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
-    private val expiringAlbumsExperiment = "y3.a" // search for '("SeeAlbumOptions", 1, "see-album-options")'
+    private val expiringAlbumsExperiment = "B3.a" // search for '("SeeAlbumOptions", 1, "see-album-options")'
+    private val favoritesExperiment = "com.grindrapp.android.favoritesv2.domain.experiment.FavoritesV2Experiment" // search for 'public final class FavoritesV2Experiment'
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
     private val featureManager = FeatureManager()
@@ -35,6 +38,16 @@ class FeatureGranting : Hook(
             ) as String
             if (featureManager.isManaged(featureFlagName)) {
                 param.setResult(featureManager.isEnabled(featureFlagName))
+            }
+        }
+
+        findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
+            val flagKey = callMethod(param.args()[0], "toString") as String
+            if (featureManager.isManaged(flagKey)) {
+                GrindrPlus.logger.log("Will return ${featureManager.isEnabled(flagKey)} for $flagKey")
+                param.setResult(featureManager.isEnabled(flagKey))
+            } else {
+                GrindrPlus.logger.log("Unhandled feature flag $flagKey")
             }
         }
 
@@ -71,28 +84,35 @@ class FeatureGranting : Hook(
             .hook("b", HookStage.BEFORE) { param ->
                 param.setResult(false)
             }
+
+        findClass(favoritesExperiment)
+            .hook("e", HookStage.BEFORE) { param ->
+                param.setResult(false) // I'm afraid this will get deprecated soon
+            }
     }
 
     private fun initFeatures() {
-        featureManager.add(Feature("ad-backfill", false))
-        featureManager.add(Feature("profile-redesign-20230214", true))
-        featureManager.add(Feature("notification-action-chat-20230206", true))
-        featureManager.add(Feature("gender-updates", true))
-        featureManager.add(Feature("gender-filter", true))
-        featureManager.add(Feature("gender-exclusion", true))
-        featureManager.add(Feature("calendar-ui", true))
-        featureManager.add(Feature("vaccine-profile-field", true))
-        featureManager.add(Feature("tag-search", true))
-        featureManager.add(Feature("approximate-distance", true))
-        featureManager.add(Feature("spectrum_solicitation_sex", true))
-        featureManager.add(Feature("allow-mock-location", true))
-        featureManager.add(Feature("spectrum-solicitation-of-drugs", true))
-        featureManager.add(Feature("side-profile-link", true))
-        featureManager.add(Feature("sk-privacy-policy-20230130", false))
-        featureManager.add(Feature("intro-offer-free-trial-20221222", true))
-        featureManager.add(Feature("canceled-screen", true))
-        featureManager.add(Feature("takemehome-button", true))
-        featureManager.add(Feature("download-my-data", true))
-        featureManager.add(Feature("face-auth-android", true))
+        featureManager.add(Feature("PasswordComplexity", false))
+        featureManager.add(Feature("TimedBans", false))
+        featureManager.add(Feature("ChatInterstitialFeatureFlag", false))
+        featureManager.add(Feature("SideDrawerDeeplinkKillSwitch", true))
+        featureManager.add(Feature("SponsoredRoamKillSwitch", true))
+        featureManager.add(Feature("UnifiedProfileAvatarFeatureFlag", true))
+        featureManager.add(Feature("ApproximateDistanceFeatureFlag", false))
+        featureManager.add(Feature("DoxyPEP", true))
+        featureManager.add(Feature("CascadeRewriteFeatureFlag", false))
+        featureManager.add(Feature("AdsLogs", false))
+        featureManager.add(Feature("ClientTelemetryTracking", false))
+        featureManager.add(Feature("LTOAds", false))
+        featureManager.add(Feature("SponsorProfileAds", false))
+        featureManager.add(Feature("ConversationAds", false))
+        featureManager.add(Feature("InboxNativeAds", false))
+        featureManager.add(Feature("ReportingLagTime", false))
+        featureManager.add(Feature("MrecNewFlow", false))
+        featureManager.add(Feature("RunningOnEmulatorFeatureFlag", false))
+        featureManager.add(Feature("BannerNewFlow", false))
+        featureManager.add(Feature("CalendarUi", true))
+        featureManager.add(Feature("CookieTap", false))
+        featureManager.add(Feature("TakenOnGrindrWatermarkFlag", false))
     }
 }
