@@ -1,5 +1,7 @@
 package com.grindrplus.utils
 
+import kotlin.math.abs
+
 /**
  * Fritsch–Carlson PCHIP (Piecewise Cubic Hermite Interpolation)
  * for monotonically increasing functions. By https://github.com/Supersonic
@@ -89,9 +91,37 @@ class PCHIP(points: List<Pair<Long, Int>>) {
      * Given a target Y (ID), find X via bisection search within the relevant interval,
      */
     fun invert(targetY: Double): Double {
+        // ensure we have at least two points
+        require(n >= 2) { "Need at least two data points for interpolation" }
+
         // clamp if targetY is outside [y[0], y[n-1]]
         if (targetY <= y[0]) return x[0]
-        if (targetY >= y[n - 1]) return x[n - 1]
+
+        // use a linear extension for targetY larger than y[n-1]. Clamp to no later than now
+        if (targetY >= y[n - 1]) {
+            // prevent division by zero or index out of bounds by checking we have at least 2 points
+            val extendedX = if (n > 1) {
+                val yDiff = y[n-1] - y[n-2]
+                val xDiff = x[n-1] - x[n-2]
+
+                if (abs(yDiff) > 1e-10) {
+                    val slopeXbyY = xDiff / yDiff
+                    val deltaY = targetY - y[n-1]
+                    x[n-1] + deltaY * slopeXbyY
+                } else {
+                    // if Y values are essentially the same, use the last known X value
+                    x[n-1]
+                }
+            } else {
+                // fallback to the only point if there's just one point
+                x[0]
+            }
+
+            // use current system time as the upper bound
+            val nowX = System.currentTimeMillis() / 1000.0
+
+            return minOf(extendedX, nowX)
+        }
 
         val i = findIntervalByY(targetY)
         var left = x[i]
@@ -109,7 +139,6 @@ class PCHIP(points: List<Pair<Long, Int>>) {
         }
         return 0.5 * (left + right)
     }
-
 
     private fun findInterval(X: Double): Int {
         if (X <= x[0]) return 0
