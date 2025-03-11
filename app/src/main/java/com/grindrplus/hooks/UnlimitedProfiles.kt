@@ -80,10 +80,16 @@ class UnlimitedProfiles : Hook(
 
         findClass(onProfileClicked).hook("invokeSuspend", HookStage.BEFORE) { param ->
             if (Config.get("disable_profile_swipe", false) as Boolean) {
-                val cachedProfile = getObjectField(param.thisObject(), "j")
-                val profileId = getObjectField(cachedProfile, "profileIdLong")
-                openProfile(profileId.toString())
-                param.setResult(null)
+                getObjectField(param.thisObject(), param.thisObject().javaClass.declaredFields
+                    .firstOrNull { it.type.name.contains("ServerDrivenCascadeCachedProfile") }?.name
+                )?.let { cachedProfile ->
+                    runCatching { getObjectField(cachedProfile, "profileIdLong").toString() }
+                        .onSuccess { profileId ->
+                            openProfile(profileId)
+                            param.setResult(null)
+                        }
+                        .onFailure { GrindrPlus.logger.log("Profile ID not found in cached profile") }
+                }
             }
         }
     }
