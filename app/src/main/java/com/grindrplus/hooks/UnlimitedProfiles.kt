@@ -20,8 +20,6 @@ class UnlimitedProfiles : Hook(
     private val profileWithPhoto = "com.grindrapp.android.persistence.pojo.ProfileWithPhoto"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
-    private val serverDrivenCascadeRepo =
-        "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
     private val profileTagCascadeFragment = "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment"
