@@ -20,7 +20,7 @@ object DatabaseHelper {
                 }
             }
         return context.openOrCreateDatabase(grindrUserDb.also {
-            GrindrPlus.logger.log("Using database: $it") }, Context.MODE_PRIVATE, null)
+            GrindrPlus.logger.debug("Using database: $it") }, Context.MODE_PRIVATE, null)
     }
 
     fun query(query: String, args: Array<String>? = null): List<Map<String, Any>> {
