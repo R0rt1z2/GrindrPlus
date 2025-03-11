@@ -18,7 +18,7 @@ class AntiBlock : Hook(
 ) {
     private var myProfileId: Long = 0
     private val chatDeleteConversationPlugin = "i5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "Bc.R0\$a" // search for 'com.grindrapp.android.ui.inbox.InboxFragmentV2$deleteConversations$1$1'
+    private val inboxFragmentV2DeleteConversations = "T6.b" // search for '("chat_read_receipt", conversationId, null);'
 
     override fun init() {
         if (Config.get("force_old_anti_block_behavior", false) as Boolean) {
@@ -30,14 +30,16 @@ class AntiBlock : Hook(
                 }
         } else {
             findClass(inboxFragmentV2DeleteConversations)
-                .hook("invokeSuspend", HookStage.BEFORE) { param ->
+                .hook("d", HookStage.BEFORE) { param ->
                     GrindrPlus.shouldTriggerAntiblock = false
                     GrindrPlus.blockCaller = "inboxFragmentV2DeleteConversations"
                 }
 
             findClass(inboxFragmentV2DeleteConversations)
-                .hook("invokeSuspend", HookStage.AFTER) { param ->
-                    val numberOfChatsToDelete = (getObjectField(param.thisObject(), "j") as List<*>).size
+                .hook("d", HookStage.AFTER) { param ->
+                    val numberOfChatsToDelete = (param.args().firstOrNull() as? List<*>)?.size ?: 0
+                    if (numberOfChatsToDelete == 0) return@hook
+                    GrindrPlus.logger.debug("Request to delete $numberOfChatsToDelete chats")
                     Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
                     GrindrPlus.shouldTriggerAntiblock = true
                     GrindrPlus.blockCaller = ""
