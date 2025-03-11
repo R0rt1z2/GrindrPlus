@@ -49,7 +49,7 @@ class Logger(logFile: String) {
     }
 
     fun debug(msg: String) {
-        if (!BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             log(msg)
         }
     }
