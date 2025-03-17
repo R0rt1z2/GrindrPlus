@@ -24,9 +24,9 @@ class ProfileDetails : Hook(
     "Add extra fields and details to profiles"
 ) {
     private var boostedProfilesList = emptyList<String>()
-    val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
-    val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
-    val profileViewState = "com.grindrapp.android.ui.profileV2.model.ProfileViewState"
+    private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
+    private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
+    private val profileViewState = "com.grindrapp.android.ui.profileV2.model.ProfileViewState"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
     private val serverDrivenCascadeCachedProfile =

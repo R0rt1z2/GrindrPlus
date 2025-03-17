@@ -1,8 +1,12 @@
 package com.grindrplus.hooks
 
+import android.view.View
+import com.grindrplus.GrindrPlus
+import com.grindrplus.ui.Utils.getId
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
+import de.robv.android.xposed.XposedHelpers.callMethod
 
 class EnableUnlimited : Hook(
     "Enable unlimited",
@@ -62,6 +66,11 @@ class EnableUnlimited : Hook(
                         param.setResult(null)
                     }
                 }
+        }
+
+        // search for '(str, "treatment_exact_count") ?'
+        findClass("S1.a").hook("b", HookStage.BEFORE) { param ->
+           param.setResult(false)
         }
     }
 }

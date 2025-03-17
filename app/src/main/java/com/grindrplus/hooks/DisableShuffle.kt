@@ -22,6 +22,7 @@ class DisableShuffle : Hook(
             setObjectField(param.thisObject(), "g", false) // showShuffleUpsell
             setObjectField(param.thisObject(), "h", true)  // isDisabledByFavorites
             setObjectField(param.thisObject(), "i", true)  // isDisabledByRightNow
+            setObjectField(param.thisObject(), "j", false) // reshowTopBarAfterTurningOffBlockingFilters
         }
     }
 }
