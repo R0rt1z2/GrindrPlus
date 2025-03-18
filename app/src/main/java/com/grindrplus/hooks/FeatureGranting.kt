@@ -9,11 +9,13 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
+    private val featureFlagManager = "I6.d" // search for 'experiments, @NotNull String featureFlagName,'
     private val isFeatureFlagEnabled = "O8.b" // search for 'implements IsFeatureFlagEnabled {'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
@@ -21,6 +23,7 @@ class FeatureGranting : Hook(
     private val favoritesExperiment = "com.grindrapp.android.favoritesv2.domain.experiment.FavoritesV2Experiment" // search for 'public final class FavoritesV2Experiment'
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
+    private val featureModel = "com.grindrapp.android.usersession.model.Feature"
     private val featureManager = FeatureManager()
 
     override fun init() {
@@ -29,11 +32,14 @@ class FeatureGranting : Hook(
         findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
             val flagKey = callMethod(param.args()[0], "toString") as String
             if (featureManager.isManaged(flagKey)) {
-                GrindrPlus.logger.debug("Returning ${featureManager.isEnabled(flagKey)} for $flagKey")
                 param.setResult(featureManager.isEnabled(flagKey))
-            } else {
-                GrindrPlus.logger.debug("Unhandled feature flag $flagKey")
             }
+        }
+
+        findClass(featureModel).hook("isGranted", HookStage.BEFORE) { param ->
+            val disallowedFeatures = setOf("DisableScreenshot")
+            val feature = callMethod(param.thisObject(), "toString") as String
+            param.setResult(feature !in disallowedFeatures)
         }
 
         findClass(settingDistanceVisibilityViewModel)
@@ -64,6 +70,14 @@ class FeatureGranting : Hook(
                     param.setResult(false)
                 }
             }
+
+        findClass(featureFlagManager)
+            .hook("b", HookStage.AFTER) { param ->
+                val featureFlagName = getObjectField(param.thisObject(), "b") as String
+                if (featureManager.isManaged(featureFlagName)) {
+                    param.setResult(featureManager.isEnabled(featureFlagName))
+                }
+            }
     }
 
     private fun initFeatures() {
@@ -89,5 +103,8 @@ class FeatureGranting : Hook(
         featureManager.add(Feature("CalendarUi", true))
         featureManager.add(Feature("CookieTap", false))
         featureManager.add(Feature("TakenOnGrindrWatermarkFlag", false))
+        featureManager.add(Feature("gender-filter", true))
+        featureManager.add(Feature("enable-chat-summaries", true))
+        featureManager.add(Feature("enable-mutual-taps-no-paywall", !(Config.get("enable_interest_section", false) as Boolean)))
     }
 }

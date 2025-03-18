@@ -1,12 +1,8 @@
 package com.grindrplus.hooks
 
-import android.view.View
-import com.grindrplus.GrindrPlus
-import com.grindrplus.ui.Utils.getId
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import de.robv.android.xposed.XposedHelpers.callMethod
 
 class EnableUnlimited : Hook(
     "Enable unlimited",
@@ -18,13 +14,6 @@ class EnableUnlimited : Hook(
     )
     override fun init() {
         val userSessionClass = findClass(userSession)
-
-        userSessionClass.hook( // hasFeature()
-            "x", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(feature, "feature")' in userSession
-        ) { param ->
-            val disallowedFeatures = setOf("DisableScreenshot")
-            param.setResult(param.arg(0, String::class.java) !in disallowedFeatures)
-        }
 
         userSessionClass.hook( // isNoXtraUpsell()
             "m", HookStage.BEFORE // search for '()) ? false : true;' in userSession
