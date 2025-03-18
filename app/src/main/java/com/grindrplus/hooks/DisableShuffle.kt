@@ -10,6 +10,7 @@ class DisableShuffle : Hook(
     "Disable shuffle",
     "Forcefully disable the shuffle feature"
 ) {
+    private val viewState = "com.grindrapp.android.ui.browse.u\$j" // search for 'ViewState(isRefreshing='
     private val shuffleUiState = "com.grindrapp.android.ui.browse.u\$g" // search for 'ShuffleUiState(isShuffleEnabled='
 
     override fun init() {
@@ -23,6 +24,11 @@ class DisableShuffle : Hook(
             setObjectField(param.thisObject(), "h", true)  // isDisabledByFavorites
             setObjectField(param.thisObject(), "i", true)  // isDisabledByRightNow
             setObjectField(param.thisObject(), "j", false) // reshowTopBarAfterTurningOffBlockingFilters
+        }
+
+        findClass(viewState).hookConstructor(HookStage.AFTER) { param ->
+            setObjectField(param.thisObject(), "b", false) // isRightNowUpsellBannerVisible
+            setObjectField(param.thisObject(), "d", false) // shouldShowFloatingRatingBanner
         }
     }
 }
