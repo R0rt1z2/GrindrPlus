@@ -75,7 +75,7 @@ object Config {
     }
 
     fun get(name: String, default: Any): Any {
-        return config.opt(name) ?: default
+        return config.opt(name) ?: default.also { put(name, default) }
     }
 
     fun getConfigJson(): String {
