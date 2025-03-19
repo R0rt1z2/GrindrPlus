@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 data class LogEntry(
     val timestamp: Long = System.currentTimeMillis(),
-    val message: String,
+    var message: String,
     val type: LogType = LogType.INFO
 )
 

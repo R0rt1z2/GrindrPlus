@@ -29,10 +29,12 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     private val TAG = "GrindrPlus"
-    private val DATA_URL = "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/manager-data.json"
+    private val DATA_URL =
+        "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/manager-data.json"
 
     private val logEntries = mutableStateListOf<LogEntry>()
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var progress by mutableFloatStateOf(0f)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,7 +121,10 @@ class MainActivity : ComponentActivity() {
                                         versionData.clear()
                                         versionData.addAll(data)
                                         isLoading = false
-                                        addLog("Found ${data.size} available versions", LogType.SUCCESS)
+                                        addLog(
+                                            "Found ${data.size} available versions",
+                                            LogType.SUCCESS
+                                        )
                                     },
                                     onError = { error ->
                                         errorMessage = error
@@ -151,6 +156,14 @@ class MainActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -164,16 +177,24 @@ class MainActivity : ComponentActivity() {
                                                     this@MainActivity, true, selectedVersion?.modVer
                                                 )
                                             }
-                                            addLog("Cleaned up old installation files", LogType.SUCCESS)
+                                            addLog(
+                                                "Cleaned up old installation files",
+                                                LogType.SUCCESS
+                                            )
                                         } catch (e: Exception) {
-                                            addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
+                                            addLog(
+                                                "Failed to clean up: ${e.localizedMessage}",
+                                                LogType.ERROR
+                                            )
                                         }
                                     }
                                 },
                                 enabled = !isInstalling,
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = MaterialTheme.colorScheme.primary,
-                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
                                 ),
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -202,8 +223,12 @@ class MainActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.12f
+                                    ),
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
                                 ),
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -272,7 +297,7 @@ class MainActivity : ComponentActivity() {
         selectedVersion: Data?,
         onVersionSelected: (Data) -> Unit,
         isEnabled: Boolean = true,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
     ) {
         var expanded by remember { mutableStateOf(false) }
 
@@ -345,7 +370,7 @@ class MainActivity : ComponentActivity() {
 
     private fun loadVersionData(
         onSuccess: (List<Data>) -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
     ) {
         activityScope.launch(Dispatchers.IO) {
             try {
@@ -411,7 +436,7 @@ class MainActivity : ComponentActivity() {
     private fun startInstallation(
         version: Data,
         onStarted: () -> Unit,
-        onCompleted: () -> Unit
+        onCompleted: () -> Unit,
     ) {
         onStarted()
 
@@ -427,13 +452,21 @@ class MainActivity : ComponentActivity() {
                 )
 
                 withContext(Dispatchers.IO) {
-                    installation.install { output ->
-                        Log.d(TAG, output)
-                        val logType = ConsoleLogger.parseLogType(output)
-                        runOnUiThread {
-                            addLog(output, logType)
+                    installation.install(
+                        print = { output ->
+                            Log.d(TAG, output)
+                            val logType = ConsoleLogger.parseLogType(output)
+                            runOnUiThread {
+                                addLog(output, logType)
+                            }
+                        },
+
+                        progress = {
+                            runOnUiThread {
+                                progress = it
+                            }
                         }
-                    }
+                    )
                 }
 
                 addLog("Installation completed successfully!", LogType.SUCCESS)
@@ -457,7 +490,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun addLog(message: String, type: LogType = LogType.INFO) {
-        val logEntry = ConsoleLogger.log(message, type)
+        if (message.contains("<>:")) {
+            val prefix = message.split("<>:")[0]
+
+            logEntries.find { it.message.startsWith(prefix) }?.let {
+                logEntries.remove(it)
+            }
+        }
+
+        val logEntry = ConsoleLogger.log(message.replace("<>:", ":"), type)
         logEntries.add(logEntry)
     }
 
@@ -474,5 +515,5 @@ class MainActivity : ComponentActivity() {
 data class Data(
     val modVer: String,
     val grindrUrl: String,
-    val modUrl: String
+    val modUrl: String,
 )

@@ -1,4 +1,4 @@
-package com.grindrplus.utils
+package com.grindrplus.manager.utils
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
@@ -80,7 +80,8 @@ class SessionInstaller(private val context: Context) {
         // Validate all APK files exist
         val missingApks = apks.filter { !it.exists() || it.length() <= 0 }
         if (missingApks.isNotEmpty()) {
-            val message = "Missing or empty APK files: ${missingApks.joinToString { it.absolutePath }}"
+            val message =
+                "Missing or empty APK files: ${missingApks.joinToString { it.absolutePath }}"
             Log.e(TAG, message)
             callback?.invoke(false, message)
             continuation.resumeWithException(IOException(message))
@@ -119,8 +120,12 @@ class SessionInstaller(private val context: Context) {
                 try {
                     context.unregisterReceiver(this)
 
-                    val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
-                    val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "Unknown status"
+                    val status = intent.getIntExtra(
+                        PackageInstaller.EXTRA_STATUS,
+                        PackageInstaller.STATUS_FAILURE
+                    )
+                    val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+                        ?: "Unknown status"
 
                     Log.d(TAG, "Installation status: $status, message: $message")
 
@@ -129,14 +134,19 @@ class SessionInstaller(private val context: Context) {
                             callback?.invoke(true, "Installation successful")
                             continuation.resume(true)
                         }
+
                         PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                             Log.d(TAG, "Installation requires user confirmation")
-                            val confirmationIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                            } else {
-                                @Suppress("DEPRECATION")
-                                intent.getParcelableExtra(Intent.EXTRA_INTENT)
-                            }
+                            val confirmationIntent =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    intent.getParcelableExtra(
+                                        Intent.EXTRA_INTENT,
+                                        Intent::class.java
+                                    )
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    intent.getParcelableExtra(Intent.EXTRA_INTENT)
+                                }
                             if (confirmationIntent != null) {
                                 confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 context.startActivity(confirmationIntent)
@@ -147,6 +157,7 @@ class SessionInstaller(private val context: Context) {
                                 continuation.resumeWithException(IOException(errorMsg))
                             }
                         }
+
                         else -> {
                             val errorMsg = "Installation failed: $message (code: $status)"
                             Log.e(TAG, errorMsg)
@@ -200,11 +211,13 @@ class SessionInstaller(private val context: Context) {
         } catch (e: Exception) {
             try {
                 packageInstaller.abandonSession(sessionId)
-            } catch (ignored: Exception) {}
+            } catch (ignored: Exception) {
+            }
 
             try {
                 context.unregisterReceiver(installCompleteReceiver)
-            } catch (ignored: Exception) {}
+            } catch (ignored: Exception) {
+            }
 
             val message = "Installation failed: ${e.message}"
             Log.e(TAG, message, e)
@@ -225,31 +238,48 @@ class SessionInstaller(private val context: Context) {
  * @param onProgressUpdate Callback to report download progress
  * @return True if download succeeded, false otherwise
  */
+
+data class DownloadResult(val success: Boolean, val reason: String?) {
+    companion object {
+        fun success() = DownloadResult(true, null)
+        fun failure(reason: String) = DownloadResult(false, reason)
+        fun failure(reason: Int) = DownloadResult(
+            false, when (reason) {
+                DownloadManager.ERROR_CANNOT_RESUME -> "Cannot resume download"
+                DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
+                DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
+                DownloadManager.ERROR_FILE_ERROR -> "File error"
+                DownloadManager.ERROR_HTTP_DATA_ERROR -> "HTTP data error"
+                DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Insufficient space"
+                DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Too many redirects"
+                DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Unhandled HTTP code"
+                DownloadManager.ERROR_UNKNOWN -> "Unknown error"
+                else -> "Unknown reason"
+            }
+        )
+    }
+}
+
 suspend fun download(
     context: Context,
     out: File,
     url: String,
     onProgressUpdate: (Float?) -> Unit,
-): Boolean {
+): DownloadResult {
     // Ensure parent directory exists
     out.parentFile?.mkdirs()
 
     if (out.exists() && out.length() > 0) {
         try {
-            // Attempt to validate file integrity if needed
-            // For ZIP files we could try to open them as a test
-            if (out.extension == "zip" || out.extension == "xapk") {
-                try {
-                    withContext(Dispatchers.IO) {
-                        ZipFile(out).close()
-                    }
-                    return true
-                } catch (e: Exception) {
-                    Log.w("Download", "Existing file ${out.name} is corrupt, redownloading", e)
-                    out.delete()
+            try {
+                withContext(Dispatchers.IO) {
+                    ZipFile(out).close()
                 }
-            } else {
-                return true
+
+                return DownloadResult.failure("Existing file ${out.name} is valid")
+            } catch (e: Exception) {
+                Log.w("Download", "Existing file ${out.name} is corrupt, redownloading", e)
+                out.delete()
             }
         } catch (e: Exception) {
             Log.e("Download", "Error checking existing file", e)
@@ -280,7 +310,7 @@ suspend fun download(
     var lastProgressUpdate = 0L
 
     try {
-        return withTimeout(60 * 60 * 1000L) { // TODO: This is probably absurdly long
+        return withTimeout(60 * 60 * 60 * 1000L) { // TODO: This is probably absurdly long
             while (true) {
                 try {
                     delay(progressUpdateInterval)
@@ -288,16 +318,17 @@ suspend fun download(
                     Log.i("Download", "Download cancelled, removing download ID $downloadId")
                     downloadManager.remove(downloadId)
                     if (out.exists()) out.delete()
-                    return@withTimeout false
+                    return@withTimeout DownloadResult.failure("Download cancelled")
                 }
 
                 val query = DownloadManager.Query().setFilterById(downloadId)
-                val cursor = downloadManager.query(query) ?: return@withTimeout false
+                val cursor =
+                    downloadManager.query(query) ?: return@withTimeout DownloadResult.success()
 
                 if (!cursor.moveToFirst()) {
                     cursor.close()
                     Log.e("Download", "Download $downloadId no longer exists in DownloadManager")
-                    return@withTimeout out.exists() && out.length() > 0
+                    return@withTimeout DownloadResult(out.exists() && out.length() > 0, "Download $downloadId no longer exists in DownloadManager")
                 }
 
                 val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
@@ -313,7 +344,7 @@ suspend fun download(
                 when (status) {
                     DownloadManager.STATUS_SUCCESSFUL -> {
                         cursor.close()
-                        return@withTimeout validateDownload(out)
+                        return@withTimeout DownloadResult(validateDownload(out), null)
                     }
 
                     DownloadManager.STATUS_FAILED -> {
@@ -321,9 +352,13 @@ suspend fun download(
                         val reason = if (reasonIndex >= 0) cursor.getInt(reasonIndex) else -1
                         cursor.close()
 
-                        Log.e("Download", "Download failed with reason code $reason")
+                        Log.e(
+                            "Download",
+                            "Download failed with reason code $reason"
+                        )
+
                         if (out.exists()) out.delete()
-                        return@withTimeout false
+                        return@withTimeout DownloadResult.failure(reason)
                     }
 
                     DownloadManager.STATUS_PAUSED -> {
@@ -332,7 +367,7 @@ suspend fun download(
                             Log.w("Download", "Download stalled in paused state for too long")
                             downloadManager.remove(downloadId)
                             if (out.exists()) out.delete()
-                            return@withTimeout false
+                            return@withTimeout DownloadResult.failure("Download stalled in paused state for too long")
                         }
 
                         if (currentTime - lastProgressUpdate > 1000) {
@@ -347,7 +382,7 @@ suspend fun download(
                             Log.w("Download", "Download stalled in pending state for too long")
                             downloadManager.remove(downloadId)
                             if (out.exists()) out.delete()
-                            return@withTimeout false
+                            return@withTimeout DownloadResult.failure("Download stalled in pending state for too long")
                         }
 
                         if (currentTime - lastProgressUpdate > 1000) {
@@ -357,8 +392,10 @@ suspend fun download(
                     }
 
                     DownloadManager.STATUS_RUNNING -> {
-                        val bytesDownloadedIndex = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                        val totalBytesIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                        val bytesDownloadedIndex =
+                            cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                        val totalBytesIndex =
+                            cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
 
                         if (bytesDownloadedIndex >= 0 && totalBytesIndex >= 0) {
                             val bytesDownloaded = cursor.getLong(bytesDownloadedIndex)
@@ -367,10 +404,13 @@ suspend fun download(
                             if (bytesDownloaded > 0 && bytesDownloaded == lastProgressBytes) {
                                 if (currentTime - lastProgressTime > progressStagnationTimeout) {
                                     cursor.close()
-                                    Log.w("Download", "Download stalled - no progress for 30 seconds")
+                                    Log.w(
+                                        "Download",
+                                        "Download stalled - no progress for 30 seconds"
+                                    )
                                     downloadManager.remove(downloadId)
                                     if (out.exists()) out.delete()
-                                    return@withTimeout false
+                                    return@withTimeout DownloadResult.failure("Download stalled - no progress for 30 seconds")
                                 }
                             } else if (bytesDownloaded > lastProgressBytes) {
                                 lastProgressBytes = bytesDownloaded
@@ -389,7 +429,7 @@ suspend fun download(
                 cursor.close()
             }
 
-            false // needed by the compiler???
+            DownloadResult.failure("Failed to download file")
         }
     } catch (e: Exception) {
         Log.e("Download", "Download failed with exception", e)
@@ -433,8 +473,8 @@ fun File.unzip(unzipLocationRoot: File? = null) {
         throw IOException("ZIP file doesn't exist or is empty: $absolutePath")
     }
 
-    val rootFolder = unzipLocationRoot ?:
-    File(parentFile.absolutePath + File.separator + nameWithoutExtension)
+    val rootFolder =
+        unzipLocationRoot ?: File(parentFile.absolutePath + File.separator + nameWithoutExtension)
 
     if (!rootFolder.exists()) {
         if (!rootFolder.mkdirs()) {

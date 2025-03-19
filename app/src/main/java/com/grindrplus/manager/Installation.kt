@@ -3,10 +3,10 @@ package com.grindrplus.manager
 import android.content.Context
 import android.widget.Toast
 import com.grindrplus.manager.utils.StorageUtils
-import com.grindrplus.utils.SessionInstaller
-import com.grindrplus.utils.download
-import com.grindrplus.utils.newKeystore
-import com.grindrplus.utils.unzip
+import com.grindrplus.manager.utils.SessionInstaller
+import com.grindrplus.manager.utils.download
+import com.grindrplus.manager.utils.newKeystore
+import com.grindrplus.manager.utils.unzip
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +21,7 @@ class Installation(
     private val context: Context,
     modVer: String,
     private val modUrl: String,
-    private val grindrUrl: String
+    private val grindrUrl: String,
 ) {
     private val keyStore by lazy {
         File(context.cacheDir, "keystore.jks").also {
@@ -36,29 +36,29 @@ class Installation(
         }
     }
 
-    private val folder = context.getExternalFilesDir(null) ?:
-    throw IOException("External files directory not available")
+    private val folder = context.getExternalFilesDir(null)
+        ?: throw IOException("External files directory not available")
     private val unzipFolder = File(folder, "splitApks/").also { it.mkdirs() }
     private val outputDir = File(folder, "LSPatchOutput/").also { it.mkdirs() }
     private val modFile = File(folder, "mod-$modVer.zip")
     private val xapkFile = File(folder, "grindr-$modVer.xapk")
 
-    suspend fun install(print: (String) -> Unit) = try {
+    suspend fun install(print: (String) -> Unit, progress: (Float) -> Unit) = try {
         withContext(Dispatchers.IO) {
             stepWithProgress("Checking storage space", print) {
                 checkStorageSpace(print)
             }
 
             stepWithProgress("Downloading Grindr APK", print) {
-                downloadGrindrApk(print)
+                downloadGrindrApk(print, progress)
             }
 
             stepWithProgress("Downloading Mod", print) {
-                downloadMod(print)
+                downloadMod(print, progress)
             }
 
             stepWithProgress("Patching Grindr APK", print) {
-                patchGrindrApk(print)
+                patchGrindrApk(print, progress)
             }
 
             stepWithProgress("Installing Grindr APK", print) {
@@ -87,29 +87,30 @@ class Installation(
         print("Available storage space: ${availableSpace / 1024 / 1024}MB")
 
         if (availableSpace < requiredSpace) {
-            throw IOException("Not enough storage space. Need ${requiredSpace/1024/1024}MB, but only ${availableSpace/1024/1024}MB available.")
+            throw IOException("Not enough storage space. Need ${requiredSpace / 1024 / 1024}MB, but only ${availableSpace / 1024 / 1024}MB available.")
         }
 
         print("Storage space check passed")
     }
 
-    private suspend fun downloadGrindrApk(print: (String) -> Unit) {
+    private suspend fun downloadGrindrApk(print: (String) -> Unit, progress: (Float) -> Unit) {
         if (!xapkFile.exists() || xapkFile.length() <= 0) {
             print("Downloading Grindr XAPK file...")
 
-            val success = download(
+            val result = download(
                 context,
                 xapkFile,
                 grindrUrl
             ) { progress ->
                 progress?.let {
                     val percentage = (it * 100).toInt()
-                    print("Grindr apk download: $percentage%")
+                    progress(it)
+                    print("Grindr apk download<>: $percentage%")
                 } ?: print("Preparing Grindr apk download...")
             }
 
-            if (!success || !xapkFile.exists() || xapkFile.length() <= 0) {
-                throw IOException("Failed to download Grindr APK")
+            if (!result.success || !xapkFile.exists() || xapkFile.length() <= 0) {
+                throw IOException("Failed to download Grindr APK, reason ${result.reason}")
             }
 
             print("Grindr XAPK download completed (${xapkFile.length() / 1024 / 1024}MB)")
@@ -124,7 +125,8 @@ class Installation(
             print("Extracting XAPK file...")
             xapkFile.unzip(unzipFolder)
 
-            val apkFiles = unzipFolder.listFiles()?.filter { it.name.endsWith(".apk") } ?: emptyList()
+            val apkFiles =
+                unzipFolder.listFiles()?.filter { it.name.endsWith(".apk") } ?: emptyList()
             if (apkFiles.isEmpty()) {
                 throw IOException("No APK files found in the XAPK archive")
             }
@@ -134,37 +136,41 @@ class Installation(
             apkFiles.forEachIndexed { index, file ->
                 print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")
             }
+
+            progress(0f)
         } catch (e: Exception) {
             throw IOException("Failed to extract XAPK file: ${e.localizedMessage}")
         }
     }
 
-    private suspend fun downloadMod(print: (String) -> Unit) {
+    private suspend fun downloadMod(print: (String) -> Unit, progress: (Float) -> Unit) {
         if (!modFile.exists() || modFile.length() <= 0) {
             print("Downloading mod file...")
 
-            val success = download(
+            val result = download(
                 context,
                 modFile,
                 modUrl
             ) { progress ->
                 progress?.let {
                     val percentage = (it * 100).toInt()
-                    print("Mod download: $percentage%")
+                    progress(it)
+                    print("Mod download<>: $percentage%")
                 } ?: print("Preparing mod download...")
             }
 
-            if (!success || !modFile.exists() || modFile.length() <= 0) {
-                throw IOException("Failed to download mod file")
+            if (!result.success || !modFile.exists() || modFile.length() <= 0) {
+                throw IOException("Failed to download mod file, ${result.reason}")
             }
 
             print("Mod download completed (${modFile.length() / 1024}KB)")
+            progress(0f)
         } else {
             print("Using existing mod file (${modFile.length() / 1024}KB)")
         }
     }
 
-    private suspend fun patchGrindrApk(print: (String) -> Unit) {
+    private suspend fun patchGrindrApk(print: (String) -> Unit, progress: (Float) -> Unit) {
         try {
             print("Cleaning output directory...")
             outputDir.listFiles()?.forEach { it.delete() }
@@ -236,7 +242,8 @@ class Installation(
             throw IOException("No patched APK files found for installation")
         }
 
-        val filteredApks = patchedFiles.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
+        val filteredApks =
+            patchedFiles.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
         if (filteredApks.isEmpty()) {
             throw IOException("No valid APK files found for installation")
         }
@@ -272,7 +279,11 @@ class Installation(
         }
     }
 
-    private suspend fun stepWithProgress(name: String, print: (String) -> Unit, action: suspend () -> Unit) {
+    private suspend fun stepWithProgress(
+        name: String,
+        print: (String) -> Unit,
+        action: suspend () -> Unit,
+    ) {
         try {
             print("===== STEP: $name =====")
             action()
