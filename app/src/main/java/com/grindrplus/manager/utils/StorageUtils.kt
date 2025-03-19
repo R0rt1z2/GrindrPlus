@@ -31,7 +31,6 @@ object StorageUtils {
     ) {
         try {
             val folder = context.getExternalFilesDir(null) ?: return
-
             val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000)
 
             val splitApksDir = File(folder, "splitApks/")
