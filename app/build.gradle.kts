@@ -91,6 +91,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     compileOnly(fileTree("libs") { include("*.jar") })
+    implementation(fileTree("libs") { include("lspatch.jar") })
 
     val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
     implementation(composeBom)
@@ -104,7 +105,7 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.activity:activity-compose:1.10.0")
-
+    compileOnly("org.bouncycastle:bcprov-jdk18on:1.80")
 }
 
 tasks.register("setupLSPatch") {
@@ -130,11 +131,19 @@ tasks.register("setupLSPatch") {
             File("/tmp/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
 
         exec {
-            commandLine = listOf("unzip", "-o", jarPath, "assets/lspatch/*", "-d", "src/main/")
+            commandLine = listOf("unzip", "-o", jarPath, "assets/lspatch/so*", "-d", "src/main/")
         }
 
         exec {
             commandLine = listOf("mv", jarPath, "./libs/lspatch.jar")
+        }
+
+        exec {
+            commandLine = listOf("zip", "-d", "./libs/lspatch.jar", "com/google/common/util/concurrent/ListenableFuture.class")
+        }
+
+        exec {
+            commandLine = listOf("zip", "-d", "./libs/lspatch.jar", "com/google/errorprone/annotations/*")
         }
     }
 }

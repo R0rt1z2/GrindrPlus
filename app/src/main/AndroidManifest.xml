@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
             android:allowBackup="true"
@@ -36,7 +37,7 @@
         </service>
 
         <activity
-                android:name=".MainActivity"
+                android:name=".manager.MainActivity"
                 android:theme="@style/Theme.Material3.DayNight.NoActionBar"
                 android:exported="true">
             <intent-filter>
@@ -44,6 +45,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>
