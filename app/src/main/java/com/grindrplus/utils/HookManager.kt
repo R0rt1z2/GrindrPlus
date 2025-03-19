@@ -21,6 +21,7 @@ import com.grindrplus.hooks.LocationSpoofer
 import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.NotificationAlerts
 import com.grindrplus.hooks.OnlineIndicator
+import com.grindrplus.hooks.OpenChatToolbar
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
@@ -40,6 +41,7 @@ class HookManager {
                 FeatureGranting(),
                 TimberLogging(),
                 // PersistentIncognito(),
+                OpenChatToolbar(),
                 AntiDetection(),
                 AntiBlock(),
                 NotificationAlerts(),
