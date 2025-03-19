@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.square.okhttp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.runtime.android)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     compileOnly(fileTree("libs") { include("*.jar") })
