@@ -101,7 +101,6 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun GrindrPlusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Android 12+ only??
     dynamicColor: Boolean = false, // TODO: Review this
     content: @Composable () -> Unit
 ) {
