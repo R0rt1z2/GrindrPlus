@@ -254,10 +254,18 @@ class Installation(
         }
 
         print("Launching installer...")
-        val success = SessionInstaller(context).installApks(
+        val success = SessionInstaller().installApks(
             context,
             filteredApks,
-            false
+            false,
+            log = print,
+            callback = { success, string ->
+                if (success) {
+                    print("APK installation completed successfully")
+                } else {
+                    print("APK installation failed: $string")
+                }
+            }
         )
 
         if (!success) {

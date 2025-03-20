@@ -46,7 +46,7 @@ import androidx.core.net.toUri
 /**
  * Helper class for installing APK files using the PackageInstaller API
  */
-class SessionInstaller(private val context: Context) {
+class SessionInstaller {
     companion object {
         private const val TAG = "SessionInstaller"
         private const val ACTION_INSTALL_COMPLETE = "com.grindrplus.INSTALL_COMPLETE"
@@ -68,6 +68,7 @@ class SessionInstaller(private val context: Context) {
         apks: List<File>,
         silent: Boolean = false,
         callback: ((success: Boolean, message: String) -> Unit)? = null,
+        log: (String) -> Unit
     ): Boolean = suspendCoroutine { continuation ->
         if (apks.isEmpty()) {
             val message = "No APK files provided."
@@ -83,6 +84,7 @@ class SessionInstaller(private val context: Context) {
             val message =
                 "Missing or empty APK files: ${missingApks.joinToString { it.absolutePath }}"
             Log.e(TAG, message)
+            log("ERROR: $message")
             callback?.invoke(false, message)
             continuation.resumeWithException(IOException(message))
             return@suspendCoroutine
@@ -108,6 +110,7 @@ class SessionInstaller(private val context: Context) {
         } catch (e: IOException) {
             val message = "Failed to create install session: ${e.message}"
             Log.e(TAG, message, e)
+            log("ERROR: $message")
             callback?.invoke(false, message)
             continuation.resumeWithException(e)
             return@suspendCoroutine
@@ -128,15 +131,18 @@ class SessionInstaller(private val context: Context) {
                         ?: "Unknown status"
 
                     Log.d(TAG, "Installation status: $status, message: $message")
+                    log("DEBUG: $message")
 
                     when (status) {
                         PackageInstaller.STATUS_SUCCESS -> {
                             callback?.invoke(true, "Installation successful")
+                            log("Installed!")
                             continuation.resume(true)
                         }
 
                         PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                             Log.d(TAG, "Installation requires user confirmation")
+                            log("DEBUG: Installation requires user confirmation")
                             val confirmationIntent =
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     intent.getParcelableExtra(
@@ -152,6 +158,7 @@ class SessionInstaller(private val context: Context) {
                                 context.startActivity(confirmationIntent)
                             } else {
                                 val errorMsg = "Missing confirmation intent"
+                                log("ERROR: $errorMsg")
                                 Log.e(TAG, errorMsg)
                                 callback?.invoke(false, errorMsg)
                                 continuation.resumeWithException(IOException(errorMsg))
