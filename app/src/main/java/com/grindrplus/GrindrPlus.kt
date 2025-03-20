@@ -34,6 +34,8 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
@@ -112,8 +114,13 @@ object GrindrPlus {
         )
 
         this.context = application // do not use .applicationContext as it's null at this point
+
+        val newModule = File(context.filesDir, "grindrplus.dex")
+        File(modulePath).copyTo(newModule, true)
+        newModule.setReadOnly()
+
         this.classLoader =
-            DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
+            DexClassLoader(newModule.absolutePath, null, null, context.classLoader)
         this.logger = logger
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
