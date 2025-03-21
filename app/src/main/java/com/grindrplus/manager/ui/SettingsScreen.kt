@@ -155,30 +155,29 @@ class SettingsViewModel(
                     // More switch settings...
                 )
 
-                // Experimental settings
-                val experimentalSettings = listOf(
-                    TextSetting(
-                        id = "block_import_threshold",
-                        title = "Import Blocks Threshold",
-                        description = "Set the time to wait between each block import (in milliseconds)",
-                        value = (Config.get("block_import_threshold", 500) as Number).toString(),
-                        onValueChange = {
-                            val value = it.toIntOrNull() ?: 500
+                val managerSettings = listOf(
+                    SwitchSetting(
+                        id = "material_you",
+                        title = "Enable dynamic colors",
+                        description = "Use Material You colors for the app",
+                        isChecked = Config.get("material_you", false) as Boolean,
+                        onCheckedChange = {
                             viewModelScope.launch {
-                                Config.put("block_import_threshold", value)
+                                Config.put("material_you", it)
                                 loadSettings()
                             }
-                        },
-                        keyboardType = KeyboardType.Number,
-                        validator = { input ->
-                            val value = input.toIntOrNull()
-                            if (value == null || value <= 0) "Threshold must be a positive number" else null
                         }
-                    ),
+                    )
                 )
+
 
                 // Create setting groups
                 _settingGroups.value = listOf(
+                    SettingGroup(
+                        id = "manager",
+                        title = "Manager Settings",
+                        settings = managerSettings
+                    ),
                     SettingGroup(
                         id = "hooks",
                         title = "Manage Hooks",
@@ -188,7 +187,7 @@ class SettingsViewModel(
                         id = "other",
                         title = "Other Settings",
                         settings = otherSettings
-                    ),
+                    )
                 )
             } finally {
                 _isLoading.value = false

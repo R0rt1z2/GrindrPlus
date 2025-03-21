@@ -4,6 +4,8 @@ import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement.Center
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -26,8 +28,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -66,11 +71,22 @@ sealed class MainNavItem(
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
 
     data object Home : MainNavItem(Icons.Rounded.Home, "Home", { HomeScreen(this) })
-    data object Albums : MainNavItem(Icons.Rounded.PhotoAlbum, "Albums", { })
-    data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { })
+    data object Albums : MainNavItem(Icons.Rounded.PhotoAlbum, "Albums", { ComingSoon() })
+    data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
         val VALUES by lazy { listOf(Settings, InstallPage, Home, Albums, Experiments) }
+    }
+}
+
+@Composable
+fun ComingSoon() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Center
+    ) {
+        Text("Coming soon!", fontSize = TextUnit(24f, TextUnitType.Sp))
     }
 }
 
@@ -92,7 +108,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            GrindrPlusTheme {
+            GrindrPlusTheme(
+                dynamicColor = Config.get("dynamicColor", true) as Boolean, //TODO: broken gg, should use diff shit for manager settings
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
