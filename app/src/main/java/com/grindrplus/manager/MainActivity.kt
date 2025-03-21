@@ -1,27 +1,19 @@
 package com.grindrplus.manager
 
 import android.app.Activity
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PhotoAlbum
 import androidx.compose.material.icons.rounded.Science
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,17 +29,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.view.WindowCompat
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.grindrplus.GrindrPlus
+import com.grindrplus.bridge.BridgeClient
+import com.grindrplus.core.Config
 import com.grindrplus.manager.ui.HomeScreen
 import com.grindrplus.manager.ui.InstallPage
+import com.grindrplus.manager.ui.SettingsScreen
+import com.grindrplus.manager.ui.SettingGroup
+import com.grindrplus.manager.ui.SwitchSetting
+import com.grindrplus.manager.ui.TextSetting
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -59,7 +58,10 @@ sealed class MainNavItem(
     var title: String,
     val composable: @Composable PaddingValues.(Activity) -> Unit,
 ) {
-    data object Settings : MainNavItem(Icons.Filled.Settings, "Settings", { })
+    data object Settings : MainNavItem(Icons.Filled.Settings, "Settings", {
+        SettingsScreen(this)
+    })
+
     data object InstallPage :
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
 
@@ -80,6 +82,13 @@ class MainActivity : ComponentActivity() {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
+        }
+
+        GrindrPlus.bridgeClient = BridgeClient(this)
+        GrindrPlus.bridgeClient.connect()
+
+        runBlocking {
+            Config.initialize(this@MainActivity)
         }
 
         setContent {

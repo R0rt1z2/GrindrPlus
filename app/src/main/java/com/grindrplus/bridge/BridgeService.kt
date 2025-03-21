@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
+import java.io.File
 import java.io.InputStream
 
 class BridgeService : Service() {
@@ -37,6 +38,27 @@ class BridgeService : Service() {
             } catch (e: Exception) {
                 Log.e("BridgeService", "Error listing translation files", e)
                 emptyList()
+            }
+        }
+
+        override fun getConfig(): String {
+            println("Called getConfig on ${getExternalFilesDir(null)}")
+            val configFile = File(getExternalFilesDir(null), "grindrplus.json");
+            return try {
+                configFile.readText()
+            } catch (e: Exception) {
+                Log.e("BridgeService", "Error reading config file", e)
+                "{}"
+            }
+        }
+
+        override fun setConfig(config: String?) {
+            println("Called setConfig on ${getExternalFilesDir(null)}")
+            val configFile = File(getExternalFilesDir(null), "grindrplus.json");
+            try {
+                configFile.writeText(config ?: "{}")
+            } catch (e: Exception) {
+                Log.e("BridgeService", "Error writing config file", e)
             }
         }
     }

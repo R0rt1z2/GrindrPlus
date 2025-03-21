@@ -27,6 +27,7 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -54,7 +55,7 @@ object GrindrPlus {
     lateinit var database: Database
         private set
     lateinit var bridgeClient: BridgeClient
-        private set
+        internal set
     lateinit var coroutineHelper: CoroutineHelper
         private set
     lateinit var instanceManager: InstanceManager
@@ -186,7 +187,13 @@ object GrindrPlus {
 
     private fun init() {
         logger.log("Initializing GrindrPlus...")
-        Config.initialize(context)
+
+        bridgeClient = BridgeClient(context).apply {
+            connect()
+            runBlocking {
+                Config.initialize(context)
+            }
+        }
 
 //        bridgeClient = BridgeClient(context).apply {
 //            connect {
