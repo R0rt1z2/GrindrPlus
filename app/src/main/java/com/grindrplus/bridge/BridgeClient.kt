@@ -17,7 +17,7 @@ import org.json.JSONObject
 import java.util.concurrent.Executors
 
 class BridgeClient(private val context: Context) : ServiceConnection {
-    private var isBound = false
+    public var isBound = false
     private var bridgeService: IBridgeService? = null
     private var onConnectedCallback: (() -> Unit)? = null
 
@@ -34,7 +34,8 @@ class BridgeClient(private val context: Context) : ServiceConnection {
         GrindrPlus.logger.log("Disconnected from the bridge service!")
     }
 
-    fun connect() {
+    fun connect(onConnectedCallback: (() -> Unit)? = null) {
+        println("connecting...")
         runCatching {
             val intent = Intent().setClassName(
                 BuildConfig.APPLICATION_ID,
@@ -62,6 +63,8 @@ class BridgeClient(private val context: Context) : ServiceConnection {
         }.onFailure {
             println("Failed to bind to the bridge service: ${it.message}")
             throw it
+        }.onSuccess {
+            this.onConnectedCallback = onConnectedCallback
         }
     }
 

@@ -42,6 +42,17 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import androidx.core.net.toUri
+import com.tonyodev.fetch2.DefaultFetchNotificationManager
+import com.tonyodev.fetch2.Download
+import com.tonyodev.fetch2.Error
+import com.tonyodev.fetch2.Fetch
+import com.tonyodev.fetch2.FetchConfiguration
+import com.tonyodev.fetch2.FetchListener
+import com.tonyodev.fetch2.NetworkType
+import com.tonyodev.fetch2.Priority
+import com.tonyodev.fetch2.Request
+import com.tonyodev.fetch2core.DownloadBlock
+import com.tonyodev.fetch2okhttp.OkHttpDownloader
 
 /**
  * Helper class for installing APK files using the PackageInstaller API
@@ -68,7 +79,7 @@ class SessionInstaller {
         apks: List<File>,
         silent: Boolean = false,
         callback: ((success: Boolean, message: String) -> Unit)? = null,
-        log: (String) -> Unit
+        log: (String) -> Unit,
     ): Boolean = suspendCoroutine { continuation ->
         if (apks.isEmpty()) {
             val message = "No APK files provided."
@@ -236,7 +247,7 @@ class SessionInstaller {
 }
 
 /**
- * Downloads a file using the Android DownloadManager
+ * Downloads a file using the Fetch download manager
  * with proper error handling and progress monitoring
  *
  * @param context Android context
@@ -250,20 +261,6 @@ data class DownloadResult(val success: Boolean, val reason: String?) {
     companion object {
         fun success() = DownloadResult(true, null)
         fun failure(reason: String) = DownloadResult(false, reason)
-        fun failure(reason: Int) = DownloadResult(
-            false, when (reason) {
-                DownloadManager.ERROR_CANNOT_RESUME -> "Cannot resume download"
-                DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
-                DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
-                DownloadManager.ERROR_FILE_ERROR -> "File error"
-                DownloadManager.ERROR_HTTP_DATA_ERROR -> "HTTP data error"
-                DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Insufficient space"
-                DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Too many redirects"
-                DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Unhandled HTTP code"
-                DownloadManager.ERROR_UNKNOWN -> "Unknown error"
-                else -> "Unknown reason"
-            }
-        )
     }
 }
 
@@ -271,178 +268,100 @@ suspend fun download(
     context: Context,
     out: File,
     url: String,
-    onProgressUpdate: (Float?) -> Unit,
-): DownloadResult {
-    // Ensure parent directory exists
+    onProgressUpdate: (Float?, Long?) -> Unit,
+): DownloadResult = suspendCoroutine { continuation ->
     out.parentFile?.mkdirs()
 
-    if (out.exists() && out.length() > 0) {
-        try {
-            try {
-                withContext(Dispatchers.IO) {
-                    ZipFile(out).close()
-                }
+    val fetchConfiguration = FetchConfiguration.Builder(context)
+        .setDownloadConcurrentLimit(1)
+        .enableAutoStart(true)
+        .setHttpDownloader(OkHttpDownloader())
+        .build()
 
-                return DownloadResult.failure("Existing file ${out.name} is valid")
-            } catch (e: Exception) {
-                Log.w("Download", "Existing file ${out.name} is corrupt, redownloading", e)
-                out.delete()
+    val fetch = Fetch.getInstance(fetchConfiguration)
+
+    val request = Request(url, out.absolutePath).apply {
+        priority = Priority.HIGH
+        networkType = NetworkType.ALL
+    }
+
+    val fetchListener = object : FetchListener {
+        override fun onStarted(
+            download: Download,
+            downloadBlocks: List<DownloadBlock>,
+            totalBlocks: Int,
+        ) {
+            onProgressUpdate(0f, null)
+        }
+
+        override fun onProgress(
+            download: Download,
+            etaInMilliSeconds: Long,
+            downloadedBytesPerSecond: Long,
+        ) {
+            val progress = download.downloaded.toFloat() / download.total
+            onProgressUpdate(progress, etaInMilliSeconds)
+        }
+
+        override fun onPaused(download: Download) {
+            onProgressUpdate(null, null)
+        }
+
+        override fun onResumed(download: Download) {
+            // Resume tracking progress
+        }
+
+        override fun onCancelled(download: Download) {
+            fetch.removeListener(this)
+            if (out.exists()) out.delete()
+            continuation.resume(DownloadResult.failure("Download cancelled"))
+        }
+
+        override fun onCompleted(download: Download) {
+            fetch.removeListener(this)
+            if (validateDownload(out)) {
+                continuation.resume(DownloadResult.success())
+            } else {
+                if (out.exists()) out.delete()
+                continuation.resume(DownloadResult.failure("Downloaded file validation failed"))
             }
-        } catch (e: Exception) {
-            Log.e("Download", "Error checking existing file", e)
+        }
+
+        override fun onError(download: Download, error: Error, throwable: Throwable?) {
+            fetch.removeListener(this)
+            Log.e("Download", "Download failed", throwable)
+            if (out.exists()) out.delete()
+            continuation.resume(DownloadResult.failure(throwable?.message ?: error.name))
+        }
+
+        override fun onWaitingNetwork(download: Download) {
+            onProgressUpdate(null, null)
+        }
+
+        override fun onAdded(download: Download) {}
+        override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
+        override fun onRemoved(download: Download) {}
+        override fun onDeleted(download: Download) {}
+        override fun onDownloadBlockUpdated(
+            download: Download,
+            downloadBlock: DownloadBlock,
+            totalBlocks: Int,
+        ) {
         }
     }
-
-    val downloadManager = context.getSystemService<DownloadManager>()
-        ?: throw IllegalStateException("DownloadManager service is not available")
-
-    val downloadId = try {
-        DownloadManager.Request(url.toUri()).apply {
-            setTitle("GrindrPlus")
-            setDescription("Downloading ${out.name}")
-            setDestinationUri(Uri.fromFile(out))
-            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-            setAllowedOverMetered(true)
-            setAllowedOverRoaming(true)
-        }.let(downloadManager::enqueue)
-    } catch (e: Exception) {
-        Log.e("Download", "Failed to enqueue download", e)
-        throw IOException("Failed to start download: ${e.localizedMessage}")
-    }
-
-    val progressUpdateInterval = 200L
-    val progressStagnationTimeout = 30000L
-    var lastProgressBytes = 0L
-    var lastProgressTime = System.currentTimeMillis()
-    var lastProgressUpdate = 0L
 
     try {
-        return withTimeout(60 * 60 * 60 * 1000L) { // TODO: This is probably absurdly long
-            while (true) {
-                try {
-                    delay(progressUpdateInterval)
-                } catch (e: CancellationException) {
-                    Log.i("Download", "Download cancelled, removing download ID $downloadId")
-                    downloadManager.remove(downloadId)
-                    if (out.exists()) out.delete()
-                    return@withTimeout DownloadResult.failure("Download cancelled")
-                }
-
-                val query = DownloadManager.Query().setFilterById(downloadId)
-                val cursor =
-                    downloadManager.query(query) ?: return@withTimeout DownloadResult.success()
-
-                if (!cursor.moveToFirst()) {
-                    cursor.close()
-                    Log.e("Download", "Download $downloadId no longer exists in DownloadManager")
-                    return@withTimeout DownloadResult(out.exists() && out.length() > 0, "Download $downloadId no longer exists in DownloadManager")
-                }
-
-                val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                if (statusIndex < 0) {
-                    cursor.close()
-                    Log.e("Download", "Cannot get status column")
-                    continue
-                }
-
-                val status = cursor.getInt(statusIndex)
-                val currentTime = System.currentTimeMillis()
-
-                when (status) {
-                    DownloadManager.STATUS_SUCCESSFUL -> {
-                        cursor.close()
-                        return@withTimeout DownloadResult(validateDownload(out), null)
-                    }
-
-                    DownloadManager.STATUS_FAILED -> {
-                        val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                        val reason = if (reasonIndex >= 0) cursor.getInt(reasonIndex) else -1
-                        cursor.close()
-
-                        Log.e(
-                            "Download",
-                            "Download failed with reason code $reason"
-                        )
-
-                        if (out.exists()) out.delete()
-                        return@withTimeout DownloadResult.failure(reason)
-                    }
-
-                    DownloadManager.STATUS_PAUSED -> {
-                        if (currentTime - lastProgressTime > progressStagnationTimeout) {
-                            cursor.close()
-                            Log.w("Download", "Download stalled in paused state for too long")
-                            downloadManager.remove(downloadId)
-                            if (out.exists()) out.delete()
-                            return@withTimeout DownloadResult.failure("Download stalled in paused state for too long")
-                        }
-
-                        if (currentTime - lastProgressUpdate > 1000) {
-                            onProgressUpdate(null)
-                            lastProgressUpdate = currentTime
-                        }
-                    }
-
-                    DownloadManager.STATUS_PENDING -> {
-                        if (currentTime - lastProgressTime > progressStagnationTimeout) {
-                            cursor.close()
-                            Log.w("Download", "Download stalled in pending state for too long")
-                            downloadManager.remove(downloadId)
-                            if (out.exists()) out.delete()
-                            return@withTimeout DownloadResult.failure("Download stalled in pending state for too long")
-                        }
-
-                        if (currentTime - lastProgressUpdate > 1000) {
-                            onProgressUpdate(null)
-                            lastProgressUpdate = currentTime
-                        }
-                    }
-
-                    DownloadManager.STATUS_RUNNING -> {
-                        val bytesDownloadedIndex =
-                            cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                        val totalBytesIndex =
-                            cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-
-                        if (bytesDownloadedIndex >= 0 && totalBytesIndex >= 0) {
-                            val bytesDownloaded = cursor.getLong(bytesDownloadedIndex)
-                            val totalBytes = cursor.getLong(totalBytesIndex)
-
-                            if (bytesDownloaded > 0 && bytesDownloaded == lastProgressBytes) {
-                                if (currentTime - lastProgressTime > progressStagnationTimeout) {
-                                    cursor.close()
-                                    Log.w(
-                                        "Download",
-                                        "Download stalled - no progress for 30 seconds"
-                                    )
-                                    downloadManager.remove(downloadId)
-                                    if (out.exists()) out.delete()
-                                    return@withTimeout DownloadResult.failure("Download stalled - no progress for 30 seconds")
-                                }
-                            } else if (bytesDownloaded > lastProgressBytes) {
-                                lastProgressBytes = bytesDownloaded
-                                lastProgressTime = currentTime
-                            }
-
-                            if (totalBytes > 0 && currentTime - lastProgressUpdate > progressUpdateInterval) {
-                                val progress = bytesDownloaded.toFloat() / totalBytes
-                                onProgressUpdate(progress)
-                                lastProgressUpdate = currentTime
-                            }
-                        }
-                    }
-                }
-
-                cursor.close()
-            }
-
-            DownloadResult.failure("Failed to download file")
-        }
+        fetch.addListener(fetchListener)
+        fetch.enqueue(
+            request,
+            { Log.d("Download", "Download started: $url") },
+            { Log.e("Download", "Failed to start download", it.throwable) }
+        )
     } catch (e: Exception) {
-        Log.e("Download", "Download failed with exception", e)
-        downloadManager.remove(downloadId)
+        Log.e("Download", "Failed to start download", e)
+        fetch.removeListener(fetchListener)
         if (out.exists()) out.delete()
-        throw IOException("Download failed: ${e.localizedMessage}")
+        continuation.resume(DownloadResult.failure(e.message ?: "Unknown error"))
     }
 }
 

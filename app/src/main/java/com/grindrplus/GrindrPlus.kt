@@ -189,11 +189,8 @@ object GrindrPlus {
         logger.log("Initializing GrindrPlus...")
 
         bridgeClient = BridgeClient(context).apply {
-            connect()
-            runBlocking {
+            connect {
                 Config.initialize(context)
-            }
-        }
 
 //        bridgeClient = BridgeClient(context).apply {
 //            connect {
@@ -207,18 +204,20 @@ object GrindrPlus {
 //            }
 //        }
 
-        /**
-         * Emergency reset of the database if the flag is set.
-         */
-        if ((Config.get("reset_database", false) as Boolean)) {
-            logger.log("Resetting database...")
-            database.deleteDatabase()
-            Config.put("reset_database", false)
+                /**
+                 * Emergency reset of the database if the flag is set.
+                 */
+                if ((Config.get("reset_database", false) as Boolean)) {
+                    logger.log("Resetting database...")
+                    database.deleteDatabase()
+                    Config.put("reset_database", false)
+                }
+
+                Config.put("xposed_version", XposedBridge.getXposedVersion())
+
+                hookManager.init()
+            }
         }
-
-        Config.put("xposed_version", XposedBridge.getXposedVersion())
-
-        hookManager.init()
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {

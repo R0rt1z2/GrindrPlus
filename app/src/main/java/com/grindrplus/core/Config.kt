@@ -17,7 +17,8 @@ object Config {
     private lateinit var configFile: File
     private var localConfig = JSONObject()
 
-    suspend fun initialize(context: Context?) {
+    fun initialize(context: Context?) {
+        println("Called initialize")
         if (context != null) {
             configFile = File(context.filesDir, "grindrplus.json")
             if (configFile.exists()) {
@@ -35,7 +36,9 @@ object Config {
 
     private fun readRemoteConfig(): JSONObject {
         return try {
-            GrindrPlus.bridgeClient.getConfig() ?: JSONObject().put("hooks", JSONObject())
+            val value = GrindrPlus.bridgeClient.getConfig()
+            println("Called readRemoteConfig, isNull: ${value == null}")
+            value ?: JSONObject().put("hooks", JSONObject())
         } catch (e: Exception) {
             Log.e("GrindrPlus", "Error reading config file", e)
             JSONObject().put("hooks", JSONObject())
@@ -44,6 +47,7 @@ object Config {
 
     private fun writeRemoteConfig(json: JSONObject) {
         try {
+            println("Called writeRemoteConfig")
             GrindrPlus.bridgeClient.setConfig(json)
         } catch (e: IOException) {
             Log.e("GrindrPlus", "Failed to write config file", e)
@@ -51,29 +55,38 @@ object Config {
     }
 
     fun put(name: String, value: Any) {
+        println("called put on $name")
         localConfig.put(name, value)
         writeRemoteConfig(localConfig)
     }
 
     fun get(name: String, default: Any): Any {
-        return readRemoteConfig().opt(name) ?: default.also { put(name, default) }
+        val get = localConfig.opt(name)
+        println("called get: $name val $get")
+        return get ?: default.also { put(name, default) }
     }
 
     fun setHookEnabled(hookName: String, enabled: Boolean) {
-        val hooks = localConfig.optJSONObject("hooks") ?: JSONObject().also { localConfig.put("hooks", it) }
+        val hooks =
+            localConfig.optJSONObject("hooks") ?: JSONObject().also { localConfig.put("hooks", it) }
         hooks.optJSONObject(hookName)?.put("enabled", enabled)
-         writeRemoteConfig(localConfig)
+        writeRemoteConfig(localConfig)
     }
 
     fun isHookEnabled(hookName: String): Boolean {
-        val hooks = readRemoteConfig().optJSONObject("hooks") ?: return false
+        val hooks = localConfig.optJSONObject("hooks") ?: return false
         return hooks.optJSONObject(hookName)?.getBoolean("enabled") ?: false
     }
 
     suspend fun initHookSettings(name: String, description: String, state: Boolean) {
         if (localConfig.optJSONObject("hooks")?.optJSONObject(name) == null) {
             val hooks =
-                localConfig.optJSONObject("hooks") ?: JSONObject().also { localConfig.put("hooks", it) }
+                localConfig.optJSONObject("hooks") ?: JSONObject().also {
+                    localConfig.put(
+                        "hooks",
+                        it
+                    )
+                }
             hooks.put(name, JSONObject().apply {
                 put("description", description)
                 put("enabled", state)

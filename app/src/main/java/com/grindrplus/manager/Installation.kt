@@ -1,7 +1,9 @@
 package com.grindrplus.manager
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
+import com.grindrplus.manager.utils.DownloadResult
 import com.grindrplus.manager.utils.StorageUtils
 import com.grindrplus.manager.utils.SessionInstaller
 import com.grindrplus.manager.utils.download
@@ -16,6 +18,8 @@ import org.lsposed.patch.LSPatch
 import org.lsposed.patch.util.Logger
 import java.io.File
 import java.io.IOException
+import java.util.zip.ZipFile
+import kotlin.coroutines.resume
 
 class Installation(
     private val context: Context,
@@ -93,30 +97,52 @@ class Installation(
         print("Storage space check passed")
     }
 
-    private suspend fun downloadGrindrApk(print: (String) -> Unit, progress: (Float) -> Unit) {
-        if (!xapkFile.exists() || xapkFile.length() <= 0) {
-            print("Downloading Grindr XAPK file...")
+    private suspend fun genericDownload(
+        file: File,
+        url: String,
+        print: (String) -> Unit,
+        progress: (Float) -> Unit,
+        fileType: String,
+    ): Boolean {
+        print("Downloading $fileType file...")
 
-            val result = download(
-                context,
-                xapkFile,
-                grindrUrl
-            ) { progress ->
-                progress?.let {
-                    val percentage = (it * 100).toInt()
-                    progress(it)
-                    print("Grindr apk download<>: $percentage%")
-                } ?: print("Preparing Grindr apk download...")
+        if (file.exists() && file.length() > 0) {
+            try {
+                withContext(Dispatchers.IO) {
+                    ZipFile(file).close()
+                }
+
+                print("Existing $fileType file found, skipping download")
+                return true
+            } catch (e: Exception) {
+                Log.w("Download", "Existing file ${file.name} is corrupt, redownloading", e)
+                file.delete()
             }
-
-            if (!result.success || !xapkFile.exists() || xapkFile.length() <= 0) {
-                throw IOException("Failed to download Grindr APK, reason ${result.reason}")
-            }
-
-            print("Grindr XAPK download completed (${xapkFile.length() / 1024 / 1024}MB)")
-        } else {
-            print("Using existing Grindr XAPK file (${xapkFile.length() / 1024 / 1024}MB)")
         }
+
+        val result = download(context, file, url) { progress, eta ->
+            progress?.let {
+                val percentage = (it * 100).toInt()
+                progress(it)
+                print(
+                    "$fileType download<>: $percentage% " +
+                            "(ETA:${eta?.div(60000)}m${(eta?.rem(60000))?.div(1000)}s)"
+                )
+            } ?: print("Preparing $fileType download...")
+        }
+
+        if (!result.success || !file.exists() || file.length() <= 0) {
+            throw IOException("Failed to download $fileType, reason ${result.reason}")
+        }
+
+        val sizeMB = file.length() / 1024 / (if (fileType == "mod") 1 else 1024)
+        print("$fileType download completed (${sizeMB}${if (fileType == "mod") "KB" else "MB"})")
+        progress(0f)
+        return true
+    }
+
+    private suspend fun downloadGrindrApk(print: (String) -> Unit, progress: (Float) -> Unit) {
+        genericDownload(xapkFile, grindrUrl, print, progress, "Grindr apk")
 
         try {
             print("Cleaning extraction directory...")
@@ -144,30 +170,7 @@ class Installation(
     }
 
     private suspend fun downloadMod(print: (String) -> Unit, progress: (Float) -> Unit) {
-        if (!modFile.exists() || modFile.length() <= 0) {
-            print("Downloading mod file...")
-
-            val result = download(
-                context,
-                modFile,
-                modUrl
-            ) { progress ->
-                progress?.let {
-                    val percentage = (it * 100).toInt()
-                    progress(it)
-                    print("Mod download<>: $percentage%")
-                } ?: print("Preparing mod download...")
-            }
-
-            if (!result.success || !modFile.exists() || modFile.length() <= 0) {
-                throw IOException("Failed to download mod file, ${result.reason}")
-            }
-
-            print("Mod download completed (${modFile.length() / 1024}KB)")
-            progress(0f)
-        } else {
-            print("Using existing mod file (${modFile.length() / 1024}KB)")
-        }
+        genericDownload(modFile, modUrl, print, progress, "mod")
     }
 
     private suspend fun patchGrindrApk(print: (String) -> Unit, progress: (Float) -> Unit) {

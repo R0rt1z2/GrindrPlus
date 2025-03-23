@@ -103,7 +103,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             .padding(16.dp)
             .fillMaxSize()
     ) {
-
         if (isLoading) {
             LoadingScreen()
         } else if (errorMessage != null) {
@@ -132,6 +131,21 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 }
             }
         } else {
+            // Warning message
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "⚠️ Do not close the app while installation is in progress ⚠️",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
             // Version selector dropdown
             VersionSelector(
                 versions = versionData,

@@ -1,6 +1,5 @@
 package com.grindrplus.manager.ui
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,224 +34,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.grindrplus.core.Config
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-
-class SettingsViewModel(
-    private val context: Context,
-) : ViewModel() {
-
-    private val _settingGroups = MutableStateFlow<List<SettingGroup>>(emptyList())
-    val settingGroups: StateFlow<List<SettingGroup>> = _settingGroups
-
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    init {
-        loadSettings()
-    }
-
-    fun loadSettings() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            Config.initialize(null)
-
-            try {
-                // Get hooks from Config
-                val hooks = Config.getHooksSettings()
-                val hookSettings = hooks.filter {
-                    it.key != "Mod settings" &&
-                            it.key != "Persistent incognito" &&
-                            it.key != "Unlimited albums"
-                }.map { (hookName, pair) ->
-                    SwitchSetting(
-                        id = hookName,
-                        title = hookName,
-                        description = pair.first,
-                        isChecked = pair.second,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.setHookEnabled(hookName, it)
-                                loadSettings()
-                            }
-                        }
-                    )
-                }
-
-                // Create other settings
-                val otherSettings = listOf(
-                    TextSetting(
-                        id = "command_prefix",
-                        title = "Command Prefix",
-                        description = "Change the command prefix (default: /)",
-                        value = Config.get("command_prefix", "/") as String,
-                        onValueChange = {
-                            viewModelScope.launch {
-                                Config.put("command_prefix", it)
-                                loadSettings()
-                            }
-                        },
-                        validator = { input ->
-                            when {
-                                input.isBlank() -> "Invalid command prefix"
-                                input.length > 1 -> "Command prefix must be a single character"
-                                !input.matches(Regex("[^a-zA-Z0-9]")) -> "Command prefix must be a special character"
-                                else -> null
-                            }
-                        }
-                    ),
-                    TextSetting(
-                        id = "online_indicator",
-                        title = "Online indicator duration (mins)",
-                        description = "Control when the green dot disappears after inactivity",
-                        value = (Config.get("online_indicator", 5) as Number).toString(),
-                        onValueChange = {
-                            val value = it.toIntOrNull() ?: 5
-                            viewModelScope.launch {
-                                Config.put("online_indicator", value)
-                                loadSettings()
-                            }
-                        },
-                        keyboardType = KeyboardType.Number,
-                        validator = { input ->
-                            val value = input.toIntOrNull()
-                            if (value == null || value <= 0) "Duration must be a positive number" else null
-                        }
-                    ),
-                    // More text settings...
-
-                    // Toggle settings
-                    SwitchSetting(
-                        id = "force_old_anti_block_behavior",
-                        title = "Force old AntiBlock behavior",
-                        description = "Use the old AntiBlock behavior (don't use this, required for testing)",
-                        isChecked = Config.get("force_old_anti_block_behavior", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("force_old_anti_block_behavior", it)
-                                loadSettings()
-                            }
-                        }
-                    ),
-                    SwitchSetting(
-                        id = "anti_block_use_toasts",
-                        title = "Use toasts for AntiBlock hook",
-                        description = "Instead of receiving Android notifications, use toasts for block/unblock notifications",
-                        isChecked = Config.get("anti_block_use_toasts", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("anti_block_use_toasts", it)
-                                loadSettings()
-                            }
-                        }
-                    ),
-                    // More switch settings...
-                )
-
-                val managerSettings = listOf(
-                    SwitchSetting(
-                        id = "material_you",
-                        title = "Enable dynamic colors",
-                        description = "Use Material You colors for the app",
-                        isChecked = Config.get("material_you", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("material_you", it)
-                                loadSettings()
-                            }
-                        }
-                    )
-                )
-
-
-                // Create setting groups
-                _settingGroups.value = listOf(
-                    SettingGroup(
-                        id = "manager",
-                        title = "Manager Settings",
-                        settings = managerSettings
-                    ),
-                    SettingGroup(
-                        id = "hooks",
-                        title = "Manage Hooks",
-                        settings = hookSettings
-                    ),
-                    SettingGroup(
-                        id = "other",
-                        title = "Other Settings",
-                        settings = otherSettings
-                    )
-                )
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-}
-
-// Setting types
-sealed class Setting(open val id: String, open val title: String)
-
-data class SwitchSetting(
-    override val id: String,
-    override val title: String,
-    val description: String? = null,
-    val isChecked: Boolean,
-    val onCheckedChange: (Boolean) -> Unit,
-) : Setting(id, title)
-
-data class TextSetting(
-    override val id: String,
-    override val title: String,
-    val description: String? = null,
-    val value: String,
-    val onValueChange: (String) -> Unit,
-    val keyboardType: KeyboardType = KeyboardType.Text,
-    val validator: ((String) -> String?)? = null,
-) : Setting(id, title)
-
-data class ButtonSetting(
-    override val id: String,
-    override val title: String,
-    val onClick: () -> Unit,
-) : Setting(id, title)
-
-// Represents a group of settings
-data class SettingGroup(
-    val id: String,
-    val title: String,
-    val settings: List<Setting>,
-)
-
-// Keyboard type enum
-enum class KeyboardType {
-    Text, Number, Email, Password, Phone
-}
-
-class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            return SettingsViewModel(context) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-    }
-}
-
-@Composable
-fun rememberViewModel(): SettingsViewModel {
-    val context = LocalContext.current
-    val factory = remember(context) { SettingsViewModelFactory(context) }
-    return viewModel(factory = factory)
-}
+import com.grindrplus.manager.settings.ButtonSetting
+import com.grindrplus.manager.settings.KeyboardType
+import com.grindrplus.manager.settings.Setting
+import com.grindrplus.manager.settings.SettingGroup
+import com.grindrplus.manager.settings.SettingsViewModel
+import com.grindrplus.manager.settings.SwitchSetting
+import com.grindrplus.manager.settings.TextSetting
+import com.grindrplus.manager.settings.rememberViewModel
 
 // Compose UI components
 @Composable
@@ -380,7 +173,6 @@ fun TextSettingItem(setting: TextSetting) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
         OutlinedTextField(
             value = text,
             onValueChange = { value ->
@@ -401,6 +193,14 @@ fun TextSettingItem(setting: TextSetting) {
                     KeyboardType.Password -> androidx.compose.ui.text.input.KeyboardType.Password
                     KeyboardType.Phone -> androidx.compose.ui.text.input.KeyboardType.Phone
                     else -> androidx.compose.ui.text.input.KeyboardType.Text
+                },
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (errorMessage == null) {
+                        setting.onValueChange(text)
+                    }
                 }
             ),
             singleLine = true,
@@ -410,7 +210,7 @@ fun TextSettingItem(setting: TextSetting) {
                         setting.onValueChange(text)
                     }
                 }) {
-                    Icons.Default.Done
+                    Icon(Icons.Default.Done, contentDescription = "Save")
                 }
             }
         )

@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,15 +44,12 @@ import com.grindrplus.core.Config
 import com.grindrplus.manager.ui.HomeScreen
 import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
-import com.grindrplus.manager.ui.SettingGroup
-import com.grindrplus.manager.ui.SwitchSetting
-import com.grindrplus.manager.ui.TextSetting
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
+import com.grindrplus.utils.HookManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -63,9 +61,8 @@ sealed class MainNavItem(
     var title: String,
     val composable: @Composable PaddingValues.(Activity) -> Unit,
 ) {
-    data object Settings : MainNavItem(Icons.Filled.Settings, "Settings", {
-        SettingsScreen(this)
-    })
+    data object Settings :
+        MainNavItem(Icons.Filled.Settings, "Settings", { SettingsScreen(this) })
 
     data object InstallPage :
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
@@ -79,17 +76,6 @@ sealed class MainNavItem(
     }
 }
 
-@Composable
-fun ComingSoon() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = CenterHorizontally,
-        verticalArrangement = Center
-    ) {
-        Text("Coming soon!", fontSize = TextUnit(24f, TextUnitType.Sp))
-    }
-}
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,16 +86,26 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightNavigationBars = false
         }
 
-        GrindrPlus.bridgeClient = BridgeClient(this)
-        GrindrPlus.bridgeClient.connect()
-
-        runBlocking {
-            Config.initialize(this@MainActivity)
-        }
-
         setContent {
+            var serviceBound by remember { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
+                GrindrPlus.bridgeClient.connect {
+                    Config.initialize(null)
+                    HookManager().registerHooks(false)
+                    serviceBound = true
+                }
+            }
+
+            if (!serviceBound) {
+                //TODO: Loading UI? probably pointless as its really fast
+                //TODO: Error handling??
+                return@setContent
+            }
+
             GrindrPlusTheme(
-                dynamicColor = Config.get("dynamicColor", true) as Boolean, //TODO: broken gg, should use diff shit for manager settings
+                dynamicColor = Config.get("material_you", true) as Boolean,
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -187,6 +183,17 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         activityScope.cancel() // I always forget about this
         super.onDestroy()
+    }
+}
+
+@Composable
+fun ComingSoon() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Center
+    ) {
+        Text("Coming soon!", fontSize = TextUnit(24f, TextUnitType.Sp))
     }
 }
 
