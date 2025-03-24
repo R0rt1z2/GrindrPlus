@@ -2,6 +2,7 @@ package com.grindrplus.core
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import com.grindrplus.GrindrPlus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi

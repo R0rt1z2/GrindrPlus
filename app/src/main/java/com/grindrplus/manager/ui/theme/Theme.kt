@@ -101,7 +101,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun GrindrPlusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // TODO: Review this
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -42,17 +42,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import androidx.core.net.toUri
-import com.tonyodev.fetch2.DefaultFetchNotificationManager
-import com.tonyodev.fetch2.Download
-import com.tonyodev.fetch2.Error
-import com.tonyodev.fetch2.Fetch
-import com.tonyodev.fetch2.FetchConfiguration
-import com.tonyodev.fetch2.FetchListener
-import com.tonyodev.fetch2.NetworkType
-import com.tonyodev.fetch2.Priority
-import com.tonyodev.fetch2.Request
-import com.tonyodev.fetch2core.DownloadBlock
-import com.tonyodev.fetch2okhttp.OkHttpDownloader
 
 /**
  * Helper class for installing APK files using the PackageInstaller API
@@ -246,8 +235,30 @@ class SessionInstaller {
     }
 }
 
+
+data class DownloadResult(val success: Boolean, val reason: String?) {
+    companion object {
+        fun success() = DownloadResult(true, null)
+        fun failure(reason: String) = DownloadResult(false, reason)
+        fun failure(reason: Int) = DownloadResult(
+            false, when (reason) {
+                DownloadManager.ERROR_CANNOT_RESUME -> "Download cannot be resumed"
+                DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
+                DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
+                DownloadManager.ERROR_FILE_ERROR -> "File error"
+                DownloadManager.ERROR_HTTP_DATA_ERROR -> "HTTP data error"
+                DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Insufficient space"
+                DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Too many redirects"
+                DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Unhandled HTTP code"
+                DownloadManager.ERROR_UNKNOWN -> "Unknown error"
+                else -> "Unknown error #2"
+            }
+        )
+    }
+}
+
 /**
- * Downloads a file using the Fetch download manager
+ * Downloads a file using Android's DownloadManager
  * with proper error handling and progress monitoring
  *
  * @param context Android context
@@ -256,112 +267,113 @@ class SessionInstaller {
  * @param onProgressUpdate Callback to report download progress
  * @return True if download succeeded, false otherwise
  */
-
-data class DownloadResult(val success: Boolean, val reason: String?) {
-    companion object {
-        fun success() = DownloadResult(true, null)
-        fun failure(reason: String) = DownloadResult(false, reason)
-    }
-}
-
 suspend fun download(
     context: Context,
     out: File,
     url: String,
     onProgressUpdate: (Float?, Long?) -> Unit,
-): DownloadResult = suspendCoroutine { continuation ->
-    out.parentFile?.mkdirs()
-
-    val fetchConfiguration = FetchConfiguration.Builder(context)
-        .setDownloadConcurrentLimit(1)
-        .enableAutoStart(true)
-        .setHttpDownloader(OkHttpDownloader())
-        .build()
-
-    val fetch = Fetch.getInstance(fetchConfiguration)
-
-    val request = Request(url, out.absolutePath).apply {
-        priority = Priority.HIGH
-        networkType = NetworkType.ALL
-    }
-
-    val fetchListener = object : FetchListener {
-        override fun onStarted(
-            download: Download,
-            downloadBlocks: List<DownloadBlock>,
-            totalBlocks: Int,
-        ) {
-            onProgressUpdate(0f, null)
-        }
-
-        override fun onProgress(
-            download: Download,
-            etaInMilliSeconds: Long,
-            downloadedBytesPerSecond: Long,
-        ) {
-            val progress = download.downloaded.toFloat() / download.total
-            onProgressUpdate(progress, etaInMilliSeconds)
-        }
-
-        override fun onPaused(download: Download) {
-            onProgressUpdate(null, null)
-        }
-
-        override fun onResumed(download: Download) {
-            // Resume tracking progress
-        }
-
-        override fun onCancelled(download: Download) {
-            fetch.removeListener(this)
-            if (out.exists()) out.delete()
-            continuation.resume(DownloadResult.failure("Download cancelled"))
-        }
-
-        override fun onCompleted(download: Download) {
-            fetch.removeListener(this)
-            if (validateDownload(out)) {
-                continuation.resume(DownloadResult.success())
-            } else {
-                if (out.exists()) out.delete()
-                continuation.resume(DownloadResult.failure("Downloaded file validation failed"))
-            }
-        }
-
-        override fun onError(download: Download, error: Error, throwable: Throwable?) {
-            fetch.removeListener(this)
-            Log.e("Download", "Download failed", throwable)
-            if (out.exists()) out.delete()
-            continuation.resume(DownloadResult.failure(throwable?.message ?: error.name))
-        }
-
-        override fun onWaitingNetwork(download: Download) {
-            onProgressUpdate(null, null)
-        }
-
-        override fun onAdded(download: Download) {}
-        override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
-        override fun onRemoved(download: Download) {}
-        override fun onDeleted(download: Download) {}
-        override fun onDownloadBlockUpdated(
-            download: Download,
-            downloadBlock: DownloadBlock,
-            totalBlocks: Int,
-        ) {
-        }
-    }
-
+): DownloadResult = withContext(Dispatchers.IO) {
     try {
-        fetch.addListener(fetchListener)
-        fetch.enqueue(
-            request,
-            { Log.d("Download", "Download started: $url") },
-            { Log.e("Download", "Failed to start download", it.throwable) }
-        )
-    } catch (e: Exception) {
-        Log.e("Download", "Failed to start download", e)
-        fetch.removeListener(fetchListener)
+        out.parentFile?.mkdirs()
+
+        val downloadManager = context.getSystemService<DownloadManager>()
+            ?: return@withContext DownloadResult.failure("DownloadManager not available")
+
+        val request = DownloadManager.Request(url.toUri()).apply {
+            setTitle("Downloading $out...")
+            setDescription(out.name)
+            setDestinationUri(out.toUri())
+            setAllowedOverMetered(true)
+            setAllowedOverRoaming(true)
+            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+        }
+
+        val downloadId = downloadManager.enqueue(request)
+
+        var lastUpdateTime = System.currentTimeMillis()
+        var lastBytesDownloaded = 0L
+        var averageSpeed = 0.0
+
+        withTimeout(60 * 60 * 60 * 60 * 1000) {
+            var lastProgress = 0f
+
+            while (true) {
+                val query = DownloadManager.Query().setFilterById(downloadId)
+                downloadManager.query(query).use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val status =
+                            cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                        val bytesDownloaded =
+                            cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                        val bytesTotal =
+                            cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+
+                        when (status) {
+                            DownloadManager.STATUS_SUCCESSFUL -> {
+                                onProgressUpdate(1f, 0)
+
+                                if (validateDownload(out)) {
+                                    return@withTimeout DownloadResult.success()
+                                } else {
+                                    if (out.exists()) out.delete()
+                                    return@withTimeout DownloadResult.failure("Downloaded file validation failed")
+                                }
+                            }
+
+                            DownloadManager.STATUS_FAILED -> {
+                                val reason =
+                                    cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+
+                                if (out.exists()) out.delete()
+                                return@withTimeout DownloadResult.failure(reason)
+                            }
+
+                            DownloadManager.STATUS_RUNNING -> {
+                                if (bytesTotal > 0) {
+                                    val progress = bytesDownloaded.toFloat() / bytesTotal
+                                    if (progress != lastProgress) {
+                                        lastProgress = progress
+
+                                        val currentTime = System.currentTimeMillis()
+                                        val timeDelta = currentTime - lastUpdateTime
+                                        if (timeDelta > 0) {
+                                            val bytesDelta = bytesDownloaded - lastBytesDownloaded
+                                            val currentSpeed = bytesDelta.toDouble() / timeDelta
+                                            averageSpeed = if (averageSpeed == 0.0) currentSpeed
+                                            else (averageSpeed * 0.7 + currentSpeed * 0.3)
+
+                                            val remainingBytes = bytesTotal - bytesDownloaded
+                                            val eta = if (averageSpeed > 0)
+                                                (remainingBytes / averageSpeed).toLong()
+                                            else null
+
+                                            onProgressUpdate(progress, eta)
+
+                                            lastUpdateTime = currentTime
+                                            lastBytesDownloaded = bytesDownloaded
+                                        }
+                                    }
+                                }
+                            }
+
+                            DownloadManager.STATUS_PAUSED -> {
+                                onProgressUpdate(null, null)
+                            }
+                        }
+                    }
+                }
+
+                delay(500)
+            }
+
+            DownloadResult.failure("Download timeout")
+        }
+    } catch (e: CancellationException) {
         if (out.exists()) out.delete()
-        continuation.resume(DownloadResult.failure(e.message ?: "Unknown error"))
+        throw e
+    } catch (e: Exception) {
+        if (out.exists()) out.delete()
+        DownloadResult.failure(e.message ?: "Unknown error")
     }
 }
 

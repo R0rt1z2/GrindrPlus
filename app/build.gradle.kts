@@ -109,8 +109,9 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.10.0")
     compileOnly("org.bouncycastle:bcprov-jdk18on:1.80")
     implementation("androidx.navigation:navigation-compose:2.8.9")
-    implementation("com.github.tonyofrancis.Fetch:fetch2:3.4.1")
-    implementation("com.github.tonyofrancis.Fetch:fetch2okhttp:3.4.1")
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
+    implementation("com.github.jeziellago:compose-markdown:0.5.7")
 }
 
 tasks.register("setupLSPatch") {

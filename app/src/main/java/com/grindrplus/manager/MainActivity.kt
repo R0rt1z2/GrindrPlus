@@ -23,18 +23,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.core.view.WindowCompat
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -100,16 +104,15 @@ class MainActivity : ComponentActivity() {
 
             if (!serviceBound) {
                 //TODO: Loading UI? probably pointless as its really fast
-                //TODO: Error handling??
+                //TODO: Error handling?? don't think its needed
                 return@setContent
             }
 
             GrindrPlusTheme(
-                dynamicColor = Config.get("material_you", true) as Boolean,
+                dynamicColor = Config.get("material_you", false) as Boolean,
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
 
@@ -123,10 +126,10 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 for (item in MainNavItem.VALUES) {
                                     composable(item.toString()) {
-                                        item.composable(
-                                            innerPadding,
-                                            this@MainActivity
-                                        )
+                                            item.composable(
+                                                innerPadding,
+                                                this@MainActivity
+                                            )
                                     }
                                 }
                             }
@@ -157,16 +160,7 @@ class MainActivity : ComponentActivity() {
                                             onClick = {
                                                 selectedItem = index
                                                 currentRoute = item.toString()
-                                                navController.navigate(item.toString()) {
-                                                    navController.graph.startDestinationRoute?.let { route ->
-                                                        popUpTo(route) {
-                                                            saveState = true
-                                                        }
-                                                    }
-
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
+                                                navController.navigateItem(item)
                                             }
                                         )
                                     }
@@ -179,10 +173,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     override fun onDestroy() {
         activityScope.cancel() // I always forget about this
         super.onDestroy()
+    }
+}
+
+fun NavController.navigateItem(item: MainNavItem) {
+    navigate(item.toString()) {
+        graph.startDestinationRoute?.let { route ->
+            popUpTo(route) {
+                saveState = true
+            }
+        }
+
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
