@@ -8,6 +8,11 @@ import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Download
@@ -15,6 +20,8 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PhotoAlbum
 import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -31,11 +38,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -50,10 +62,15 @@ import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
 import com.grindrplus.utils.HookManager
+import com.onebusaway.plausible.android.AndroidResourcePlausibleConfig
+import com.onebusaway.plausible.android.NetworkFirstPlausibleClient
+import com.onebusaway.plausible.android.Plausible
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import timber.log.Timber
+import timber.log.Timber.DebugTree
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -80,9 +97,13 @@ sealed class MainNavItem(
     }
 }
 
+var plausible: Plausible? = null
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Timber.plant(DebugTree())
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -92,6 +113,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var serviceBound by remember { mutableStateOf(false) }
+            var firstLaunchDialog by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
@@ -99,6 +121,27 @@ class MainActivity : ComponentActivity() {
                     Config.initialize(null)
                     HookManager().registerHooks(false)
                     serviceBound = true
+
+                    if (Config.get("analytics", true) as Boolean) {
+                        val config = AndroidResourcePlausibleConfig(this@MainActivity).also {
+                            it.domain = "grindrplus.lol"
+                            it.host = "https://plausible.gmmz.dev/api/"
+                            it.enable = true
+                        }
+
+                        plausible = Plausible(
+                            config = config,
+                            client = NetworkFirstPlausibleClient(config)
+                        )
+
+                        plausible?.enable(true)
+                        plausible?.pageView("app://grindrplus/home")
+                    }
+
+                    if (Config.get("first_launch", true) as Boolean) {
+                        firstLaunchDialog = true
+                        Config.put("first_launch", false)
+                    }
                 }
             }
 
@@ -111,6 +154,64 @@ class MainActivity : ComponentActivity() {
             GrindrPlusTheme(
                 dynamicColor = Config.get("material_you", false) as Boolean,
             ) {
+                if (firstLaunchDialog) {
+                    Dialog(
+                        onDismissRequest = { firstLaunchDialog = false }) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                verticalArrangement = Center
+                            ) {
+                                Text(
+                                    text = "Welcome to GrindrPlus!",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text =
+                                        "We collect totally anonymous data to improve the app.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text =
+                                        "You can disable this in the settings.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "Data collected:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Text(
+                                    text = "• App opens\n• Installation success/failure\n• Eventual failure reason",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Button(
+                                    onClick = { firstLaunchDialog = false },
+                                    modifier = Modifier.align(CenterHorizontally).padding(top = 16.dp)
+                                ) {
+                                    Text("Ok, got it")
+                                }
+                            }
+                        }
+                    }
+
+                    return@GrindrPlusTheme
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
@@ -122,14 +223,14 @@ class MainActivity : ComponentActivity() {
                         content = { innerPadding ->
                             NavHost(
                                 navController,
-                                startDestination = MainNavItem.InstallPage.toString()
+                                startDestination = MainNavItem.Home.toString()
                             ) {
                                 for (item in MainNavItem.VALUES) {
                                     composable(item.toString()) {
-                                            item.composable(
-                                                innerPadding,
-                                                this@MainActivity
-                                            )
+                                        item.composable(
+                                            innerPadding,
+                                            this@MainActivity
+                                        )
                                     }
                                 }
                             }
@@ -137,7 +238,7 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             BottomAppBar(modifier = Modifier) {
                                 var selectedItem by remember { mutableIntStateOf(0) }
-                                var currentRoute by remember { mutableStateOf(MainNavItem.InstallPage.toString()) }
+                                var currentRoute by remember { mutableStateOf(MainNavItem.Home.toString()) }
 
                                 MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
                                     if (navigationItem.toString() == currentRoute) {

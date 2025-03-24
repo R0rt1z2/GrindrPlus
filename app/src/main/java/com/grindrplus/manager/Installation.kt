@@ -20,6 +20,7 @@ import java.io.File
 import java.io.IOException
 import java.util.zip.ZipFile
 import kotlin.coroutines.resume
+import kotlin.system.measureTimeMillis
 
 class Installation(
     private val context: Context,
@@ -49,35 +50,51 @@ class Installation(
 
     suspend fun install(print: (String) -> Unit, progress: (Float) -> Unit) = try {
         withContext(Dispatchers.IO) {
-            stepWithProgress("Checking storage space", print) {
-                checkStorageSpace(print)
+            plausible?.pageView("app://grindrplus/install")
+
+            val time = measureTimeMillis {
+                stepWithProgress("Checking storage space", print) {
+                    checkStorageSpace(print)
+                }
+
+                stepWithProgress("Downloading Grindr APK", print) {
+                    downloadGrindrApk(print, progress)
+                }
+
+                stepWithProgress("Downloading Mod", print) {
+                    downloadMod(print, progress)
+                }
+
+                stepWithProgress("Patching Grindr APK", print) {
+                    patchGrindrApk(print, progress)
+                }
             }
 
-            stepWithProgress("Downloading Grindr APK", print) {
-                downloadGrindrApk(print, progress)
-            }
-
-            stepWithProgress("Downloading Mod", print) {
-                downloadMod(print, progress)
-            }
-
-            stepWithProgress("Patching Grindr APK", print) {
-                patchGrindrApk(print, progress)
-            }
+            print("Patching completed successfully in ${time / 1000 / 60}m${time / 1000}s!")
+            plausible?.event(
+                "install_success",
+                "app://grindrplus/install_success",
+                props = mapOf("time" to time)
+            )
 
             stepWithProgress("Installing Grindr APK", print) {
                 installGrindrApk(print)
             }
 
-            print("Installation completed successfully!")
             showToast("Installation completed successfully!")
         }
     } catch (e: CancellationException) {
         print("Installation was cancelled")
         showToast("Installation was cancelled")
+        plausible?.event("install_cancelled", "app://grindrplus/install_cancelled")
         throw e
     } catch (e: Exception) {
         val errorMsg = "Installation failed: ${e.localizedMessage}"
+        plausible?.event(
+            "install_failed",
+            "app://grindrplus/install_failure",
+            props = mapOf("error" to e.message)
+        )
         print(errorMsg)
         showToast(errorMsg)
         cleanupOnFailure()

@@ -124,7 +124,18 @@ class SettingsViewModel(
                 )
 
                 val managerSettings = mutableListOf<Setting>(
-
+                    SwitchSetting(
+                        id = "analytics",
+                        title = "Opt-in analytics",
+                        description = "Help improve the app by sending anonymous usage data",
+                        isChecked = Config.get("analytics", true) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("analytics", it)
+                                loadSettings()
+                            }
+                        }
+                    )
                 )
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
