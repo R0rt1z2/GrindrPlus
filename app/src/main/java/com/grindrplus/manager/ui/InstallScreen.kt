@@ -61,6 +61,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -166,14 +167,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -407,7 +400,7 @@ private fun loadVersionData(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading version data", e)
+            Timber.tag(TAG).e(e, "Error loading version data")
             withContext(Dispatchers.Main) {
                 onError(e.localizedMessage ?: "Unknown error")
             }
@@ -438,7 +431,7 @@ private fun parseVersionData(jsonData: String): List<Data> {
 
         return result.sortedByDescending { it.modVer }
     } catch (e: JSONException) {
-        Log.e(TAG, "Error parsing JSON", e)
+        Timber.tag(TAG).e(e, "Error parsing JSON")
         throw IOException("Invalid data format: ${e.localizedMessage}")
     }
 }
@@ -465,7 +458,7 @@ private fun startInstallation(
             withContext(Dispatchers.IO) {
                 installation.install(
                     print = { output ->
-                        Log.d(TAG, output)
+                        Timber.tag(TAG).d(output)
                         val logType = ConsoleLogger.parseLogType(output)
                         context.runOnUiThread {
                             addLog(output, logType)
@@ -483,7 +476,7 @@ private fun startInstallation(
             addLog("Installation completed successfully!", LogType.SUCCESS)
             showToast(context, "Installation complete!")
         } catch (e: Exception) {
-            Log.e(TAG, "Installation failed", e)
+            Timber.tag(TAG).e(e, "Installation failed")
             val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
             addLog(errorMessage, LogType.ERROR)
             showToast(context, "Installation failed: ${e.localizedMessage}")

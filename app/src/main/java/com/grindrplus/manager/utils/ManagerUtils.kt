@@ -1,5 +1,6 @@
 package com.grindrplus.manager.utils
 
+import com.grindrplus.R
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.app.PendingIntent
@@ -10,21 +11,29 @@ import android.content.IntentFilter
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageInstaller.SessionParams
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
+import com.tonyodev.fetch2.Download
+import com.tonyodev.fetch2.Error
+import com.tonyodev.fetch2.Fetch
+import com.tonyodev.fetch2.FetchConfiguration
+import com.tonyodev.fetch2.FetchListener
+import com.tonyodev.fetch2.NetworkType
+import com.tonyodev.fetch2.Priority
+import com.tonyodev.fetch2.Request
+import com.tonyodev.fetch2core.DownloadBlock
+import com.tonyodev.fetch2okhttp.OkHttpDownloader
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import okhttp3.OkHttpClient
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
@@ -33,15 +42,18 @@ import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.cert.Certificate
+import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import androidx.core.net.toUri
 
 /**
  * Helper class for installing APK files using the PackageInstaller API
@@ -51,7 +63,6 @@ class SessionInstaller {
         private const val TAG = "SessionInstaller"
         private const val ACTION_INSTALL_COMPLETE = "com.grindrplus.INSTALL_COMPLETE"
         private const val DEFAULT_BUFFER_SIZE = 8192
-        private const val INSTALL_TIMEOUT_MS = 120000L // 2 minutes
     }
 
     /**
@@ -72,7 +83,7 @@ class SessionInstaller {
     ): Boolean = suspendCoroutine { continuation ->
         if (apks.isEmpty()) {
             val message = "No APK files provided."
-            Log.e(TAG, message)
+            Timber.tag(TAG).e(message)
             callback?.invoke(false, message)
             continuation.resumeWithException(IOException(message))
             return@suspendCoroutine
@@ -83,7 +94,7 @@ class SessionInstaller {
         if (missingApks.isNotEmpty()) {
             val message =
                 "Missing or empty APK files: ${missingApks.joinToString { it.absolutePath }}"
-            Log.e(TAG, message)
+            Timber.tag(TAG).e(message)
             log("ERROR: $message")
             callback?.invoke(false, message)
             continuation.resumeWithException(IOException(message))
@@ -109,7 +120,7 @@ class SessionInstaller {
             packageInstaller.createSession(params)
         } catch (e: IOException) {
             val message = "Failed to create install session: ${e.message}"
-            Log.e(TAG, message, e)
+            Timber.tag(TAG).e(e, message)
             log("ERROR: $message")
             callback?.invoke(false, message)
             continuation.resumeWithException(e)
@@ -127,10 +138,11 @@ class SessionInstaller {
                         PackageInstaller.EXTRA_STATUS,
                         PackageInstaller.STATUS_FAILURE
                     )
+
                     val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
                         ?: "Unknown status"
 
-                    Log.d(TAG, "Installation status: $status, message: $message")
+                    Timber.tag(TAG).d("Installation status: $status, message: $message")
                     log("DEBUG: $message")
 
                     when (status) {
@@ -141,7 +153,7 @@ class SessionInstaller {
                         }
 
                         PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                            Log.d(TAG, "Installation requires user confirmation")
+                            Timber.tag(TAG).d("Installation requires user confirmation")
                             log("DEBUG: Installation requires user confirmation")
                             val confirmationIntent =
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -159,7 +171,7 @@ class SessionInstaller {
                             } else {
                                 val errorMsg = "Missing confirmation intent"
                                 log("ERROR: $errorMsg")
-                                Log.e(TAG, errorMsg)
+                                Timber.tag(TAG).e(errorMsg)
                                 callback?.invoke(false, errorMsg)
                                 continuation.resumeWithException(IOException(errorMsg))
                             }
@@ -167,13 +179,13 @@ class SessionInstaller {
 
                         else -> {
                             val errorMsg = "Installation failed: $message (code: $status)"
-                            Log.e(TAG, errorMsg)
+                            Timber.tag(TAG).e(errorMsg)
                             callback?.invoke(false, errorMsg)
                             continuation.resumeWithException(IOException(errorMsg))
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in broadcast receiver", e)
+                    Timber.tag(TAG).e(e, "Error in broadcast receiver")
                     callback?.invoke(false, "Error processing installation result: ${e.message}")
                     continuation.resumeWithException(e)
                 }
@@ -202,7 +214,7 @@ class SessionInstaller {
 
             packageInstaller.openSession(sessionId).use { session ->
                 for (apk in apks) {
-                    Log.d(TAG, "Writing APK to session: ${apk.name} (${apk.length()} bytes)")
+                    Timber.tag(TAG).d("Writing APK to session: ${apk.name} (${apk.length()} bytes)")
 
                     apk.inputStream().use { inputStream ->
                         session.openWrite(apk.name, 0, apk.length()).use { outputStream ->
@@ -212,22 +224,22 @@ class SessionInstaller {
                     }
                 }
 
-                Log.d(TAG, "Committing installation session...")
+                Timber.tag(TAG).d("Committing installation session...")
                 session.commit(pendingIntent.intentSender)
             }
         } catch (e: Exception) {
             try {
                 packageInstaller.abandonSession(sessionId)
-            } catch (ignored: Exception) {
+            } catch (_: Exception) {
             }
 
             try {
                 context.unregisterReceiver(installCompleteReceiver)
-            } catch (ignored: Exception) {
+            } catch (_: Exception) {
             }
 
             val message = "Installation failed: ${e.message}"
-            Log.e(TAG, message, e)
+            Timber.tag(TAG).e(e, message)
             callback?.invoke(false, message)
             continuation.resumeWithException(e)
             return@suspendCoroutine
@@ -240,20 +252,6 @@ data class DownloadResult(val success: Boolean, val reason: String?) {
     companion object {
         fun success() = DownloadResult(true, null)
         fun failure(reason: String) = DownloadResult(false, reason)
-        fun failure(reason: Int) = DownloadResult(
-            false, when (reason) {
-                DownloadManager.ERROR_CANNOT_RESUME -> "Download cannot be resumed"
-                DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
-                DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
-                DownloadManager.ERROR_FILE_ERROR -> "File error"
-                DownloadManager.ERROR_HTTP_DATA_ERROR -> "HTTP data error"
-                DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Insufficient space"
-                DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Too many redirects"
-                DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Unhandled HTTP code"
-                DownloadManager.ERROR_UNKNOWN -> "Unknown error"
-                else -> "Unknown error #2"
-            }
-        )
     }
 }
 
@@ -264,123 +262,148 @@ data class DownloadResult(val success: Boolean, val reason: String?) {
  * @param context Android context
  * @param out Destination file
  * @param url URL to download from
- * @param onProgressUpdate Callback to report download progress
+ * @param print Callback to report download progress
  * @return True if download succeeded, false otherwise
  */
+
 suspend fun download(
     context: Context,
     out: File,
     url: String,
-    onProgressUpdate: (Float?, Long?) -> Unit,
+    printConsole: (String) -> Unit,
 ): DownloadResult = withContext(Dispatchers.IO) {
     try {
         out.parentFile?.mkdirs()
-
-        val downloadManager = context.getSystemService<DownloadManager>()
-            ?: return@withContext DownloadResult.failure("DownloadManager not available")
-
-        val request = DownloadManager.Request(url.toUri()).apply {
-            setTitle("Downloading $out...")
-            setDescription(out.name)
-            setDestinationUri(out.toUri())
-            setAllowedOverMetered(true)
-            setAllowedOverRoaming(true)
-            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-        }
-
-        val downloadId = downloadManager.enqueue(request)
 
         var lastUpdateTime = System.currentTimeMillis()
         var lastBytesDownloaded = 0L
         var averageSpeed = 0.0
 
-        withTimeout(60 * 60 * 60 * 60 * 1000) {
-            var lastProgress = 0f
+        val fetch = Fetch.getInstance(
+            FetchConfiguration.Builder(context)
+                .setDownloadConcurrentLimit(1)
+                .enableLogging(true)
+                .setHttpDownloader(
+                    OkHttpDownloader(
+                        getCustomTrustedOkHttpClient(context)
+                    )
+                )
+                .build()
+        )
 
-            while (true) {
-                val query = DownloadManager.Query().setFilterById(downloadId)
-                downloadManager.query(query).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val status =
-                            cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                        val bytesDownloaded =
-                            cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                        val bytesTotal =
-                            cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+        val request = Request(url, out.absolutePath).apply {
+            priority = Priority.HIGH
+            networkType = NetworkType.ALL
+        }
 
-                        when (status) {
-                            DownloadManager.STATUS_SUCCESSFUL -> {
-                                onProgressUpdate(1f, 0)
+        return@withContext suspendCoroutine { continuation ->
+            fetch.addListener(object : FetchListener {
+                override fun onStarted(
+                    download: Download,
+                    downloadBlocks: List<DownloadBlock>,
+                    totalBlocks: Int,
+                ) {
+                    printConsole("Starting download...")
+                }
 
-                                if (validateDownload(out)) {
-                                    return@withTimeout DownloadResult.success()
-                                } else {
-                                    if (out.exists()) out.delete()
-                                    return@withTimeout DownloadResult.failure("Downloaded file validation failed")
-                                }
-                            }
+                @SuppressLint("DefaultLocale")
+                override fun onProgress(
+                    download: Download,
+                    etaInMilliSeconds: Long,
+                    downloadedBytesPerSecond: Long,
+                ) {
+                    val currentTime = System.currentTimeMillis()
+                    val timeDelta = currentTime - lastUpdateTime
 
-                            DownloadManager.STATUS_FAILED -> {
-                                val reason =
-                                    cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                    if (timeDelta > 0) {
+                        val bytesDelta = download.downloaded - lastBytesDownloaded
+                        val currentSpeed = bytesDelta.toDouble() / timeDelta / 1024 / 1024
+                        averageSpeed = if (averageSpeed == 0.0) currentSpeed
+                        else (averageSpeed * 0.7 + currentSpeed * 0.3)
 
-                                if (out.exists()) out.delete()
-                                return@withTimeout DownloadResult.failure(reason)
-                            }
+                        val percentage = download.progress
+                        printConsole(
+                            "Download status<>: " +
+                                    "$percentage% ${String.format("%.2f", averageSpeed)} Mb/s " +
+                                    "(ETA:${etaInMilliSeconds.div(60000)}m${
+                                        (etaInMilliSeconds.rem(
+                                            60000
+                                        )).div(1000)
+                                    }s)"
+                        )
 
-                            DownloadManager.STATUS_RUNNING -> {
-                                if (bytesTotal > 0) {
-                                    val progress = bytesDownloaded.toFloat() / bytesTotal
-                                    if (progress != lastProgress) {
-                                        lastProgress = progress
-
-                                        val currentTime = System.currentTimeMillis()
-                                        val timeDelta = currentTime - lastUpdateTime
-                                        if (timeDelta > 0) {
-                                            val bytesDelta = bytesDownloaded - lastBytesDownloaded
-                                            val currentSpeed = bytesDelta.toDouble() / timeDelta
-                                            averageSpeed = if (averageSpeed == 0.0) currentSpeed
-                                            else (averageSpeed * 0.7 + currentSpeed * 0.3)
-
-                                            val remainingBytes = bytesTotal - bytesDownloaded
-                                            val eta = if (averageSpeed > 0)
-                                                (remainingBytes / averageSpeed).toLong()
-                                            else null
-
-                                            onProgressUpdate(progress, eta)
-
-                                            lastUpdateTime = currentTime
-                                            lastBytesDownloaded = bytesDownloaded
-                                        }
-                                    }
-                                }
-                            }
-
-                            DownloadManager.STATUS_PAUSED -> {
-                                onProgressUpdate(null, null)
-                            }
-                        }
+                        lastUpdateTime = currentTime
+                        lastBytesDownloaded = download.downloaded
                     }
                 }
 
-                delay(500)
-            }
+                override fun onError(download: Download, error: Error, throwable: Throwable?) {
+                    fetch.removeListener(this)
+                    fetch.close()
+                    if (out.exists()) out.delete()
+                    continuation.resume(DownloadResult.failure(error.name))
+                }
 
-            DownloadResult.failure("Download timeout")
+                override fun onCompleted(download: Download) {
+                    fetch.removeListener(this)
+                    fetch.close()
+                    printConsole("Completed download")
+
+                    if (validateFile(out)) {
+                        continuation.resume(DownloadResult.success())
+                    } else {
+                        if (out.exists()) out.delete()
+                        continuation.resume(DownloadResult.failure("Downloaded file validation failed"))
+                    }
+                }
+
+                override fun onCancelled(download: Download) {
+                    fetch.removeListener(this)
+                    fetch.close()
+                    if (out.exists()) out.delete()
+                    continuation.resume(DownloadResult.failure("Download cancelled"))
+                }
+
+                override fun onPaused(download: Download) {
+                    printConsole("Paused.")
+                }
+
+                override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
+                override fun onRemoved(download: Download) {}
+                override fun onDeleted(download: Download) {}
+                override fun onResumed(download: Download) {}
+                override fun onWaitingNetwork(download: Download) {}
+                override fun onAdded(download: Download) {}
+                override fun onDownloadBlockUpdated(
+                    download: Download,
+                    downloadBlock: DownloadBlock,
+                    totalBlocks: Int,
+                ) {
+                }
+            })
+
+            try {
+                fetch.removeAll()
+                fetch.enqueue(request)
+            } catch (e: Exception) {
+                fetch.close()
+                if (out.exists()) out.delete()
+                continuation.resume(DownloadResult.failure(e.message ?: "Unknown error"))
+            }
         }
     } catch (e: CancellationException) {
         if (out.exists()) out.delete()
         throw e
     } catch (e: Exception) {
         if (out.exists()) out.delete()
-        DownloadResult.failure(e.message ?: "Unknown error")
+        return@withContext DownloadResult.failure(e.message ?: "Unknown error")
     }
 }
 
 /**
  * Validates that a downloaded file is complete and not corrupted
  */
-private fun validateDownload(file: File): Boolean {
+private fun validateFile(file: File): Boolean {
     if (!file.exists() || file.length() <= 0) {
         return false
     }
@@ -390,14 +413,70 @@ private fun validateDownload(file: File): Boolean {
             ZipFile(file).close()
             return true
         } catch (e: Exception) {
-            Log.e("Download", "Invalid ZIP file: ${e.localizedMessage}")
+            Timber.tag("Download").e("Invalid ZIP file: ${e.localizedMessage}")
             file.delete()
             return false
         }
     }
 
-    // TODO: Add more validation checks for other file types
     return true
+}
+
+fun getCustomTrustedOkHttpClient(context: Context): OkHttpClient {
+    // Load the default trust manager
+    val defaultTrustManager =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
+            init(null as KeyStore?)
+        }.trustManagers[0] as X509TrustManager
+
+    // Load custom certificate
+    val certificateFactory = CertificateFactory.getInstance("X.509")
+    val customCertificate = context.resources.openRawResource(R.raw.cert)
+        .use { certificateFactory.generateCertificate(it) }
+
+    // Create keystore with custom certificate
+    val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+        load(null, null)
+        setCertificateEntry("custom", customCertificate)
+    }
+
+    // Create custom trust manager
+    val customTrustManager =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
+            init(keyStore)
+        }.trustManagers[0] as X509TrustManager
+
+    // Combine both trust managers
+    val combinedTrustManager = @SuppressLint("CustomX509TrustManager")
+    object : X509TrustManager {
+        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
+            try {
+                defaultTrustManager.checkClientTrusted(chain, authType)
+            } catch (_: Exception) {
+                customTrustManager.checkClientTrusted(chain, authType)
+            }
+        }
+
+        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
+            try {
+                defaultTrustManager.checkServerTrusted(chain, authType)
+            } catch (_: Exception) {
+                customTrustManager.checkServerTrusted(chain, authType)
+            }
+        }
+
+        override fun getAcceptedIssuers(): Array<X509Certificate> =
+            defaultTrustManager.acceptedIssuers + customTrustManager.acceptedIssuers
+    }
+
+    val sslContext = SSLContext.getInstance("TLS").apply {
+        init(null, arrayOf(combinedTrustManager), SecureRandom())
+    }
+
+    return OkHttpClient.Builder()
+        .sslSocketFactory(sslContext.socketFactory, combinedTrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
 }
 
 /**
@@ -412,7 +491,7 @@ fun File.unzip(unzipLocationRoot: File? = null) {
     }
 
     val rootFolder =
-        unzipLocationRoot ?: File(parentFile.absolutePath + File.separator + nameWithoutExtension)
+        unzipLocationRoot ?: File(parentFile!!.absolutePath + File.separator + nameWithoutExtension)
 
     if (!rootFolder.exists()) {
         if (!rootFolder.mkdirs()) {
@@ -539,8 +618,3 @@ private fun createKey(): KeySet {
  * Data class to hold a key pair for APK signing
  */
 class KeySet(val publicKey: X509Certificate, val privateKey: PrivateKey)
-
-/**
- * Data class for ZIP operations
- */
-data class ZipIO(val entry: ZipEntry, val output: File)

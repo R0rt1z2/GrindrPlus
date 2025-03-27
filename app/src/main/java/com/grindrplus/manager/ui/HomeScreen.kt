@@ -47,6 +47,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import timber.log.Timber
 import java.time.Instant
 
 @Composable
@@ -117,7 +118,7 @@ fun HomeScreen(innerPadding: PaddingValues) {
                 }
             }
         } catch (e: Exception) {
-            Log.e("HomeScreen", "Failed to fetch data", e)
+            Timber.tag("HomeScreen").e(e, "Failed to fetch data")
             errorMessage = "An error occurred: ${e.message}"
         } finally {
             isLoading = false
@@ -175,7 +176,6 @@ fun HomeScreen(innerPadding: PaddingValues) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
                     items(contributors.size) { index ->
                         val (login, avatarUrl) = contributors.entries.elementAt(contributors.size - index - 1)
                         AsyncImage(

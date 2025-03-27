@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.lsposed.patch.LSPatch
 import org.lsposed.patch.util.Logger
+import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.util.zip.ZipFile
@@ -132,21 +133,12 @@ class Installation(
                 print("Existing $fileType file found, skipping download")
                 return true
             } catch (e: Exception) {
-                Log.w("Download", "Existing file ${file.name} is corrupt, redownloading", e)
+                Timber.tag("Download").w(e, "Existing file ${file.name} is corrupt, redownloading")
                 file.delete()
             }
         }
 
-        val result = download(context, file, url) { progress, eta ->
-            progress?.let {
-                val percentage = (it * 100).toInt()
-                progress(it)
-                print(
-                    "$fileType download<>: $percentage% " +
-                            "(ETA:${eta?.div(60000)}m${(eta?.rem(60000))?.div(1000)}s)"
-                )
-            } ?: print("Preparing $fileType download...")
-        }
+        val result = download(context, file, url, print)
 
         if (!result.success || !file.exists() || file.length() <= 0) {
             throw IOException("Failed to download $fileType, reason ${result.reason}")
