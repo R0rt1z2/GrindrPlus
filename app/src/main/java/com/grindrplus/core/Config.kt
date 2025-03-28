@@ -2,111 +2,103 @@ package com.grindrplus.core
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import com.grindrplus.GrindrPlus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 
 object Config {
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     private val scope = CoroutineScope(newSingleThreadContext("Config"))
     private lateinit var configFile: File
-    private lateinit var config: JSONObject
+    private var localConfig = JSONObject()
 
-    fun initialize(context: Context) {
-        configFile = File(context.filesDir, "grindrplus.json")
-        if (!configFile.exists()) {
-            try {
-                configFile.createNewFile()
-                val initialConfig = JSONObject().put("hooks", JSONObject())
-                writeConfig(initialConfig)
-            } catch (e: IOException) {
-                Log.e("GrindrPlus", "Failed to create config file", e)
+    fun initialize(context: Context?) {
+        println("Called initialize")
+        if (context != null) {
+            configFile = File(context.filesDir, "grindrplus.json")
+            if (configFile.exists()) {
+                File(
+                    context.filesDir,
+                    "pre-migration-config-backup-should-be-empty.json"
+                ).writeText(readRemoteConfig().toString())
+                writeRemoteConfig(JSONObject(configFile.readText()))
+                configFile.delete()
             }
         }
-        config = readConfig(configFile)
+
+        localConfig = readRemoteConfig()
     }
 
-    private fun readConfig(file: File): JSONObject {
+    private fun readRemoteConfig(): JSONObject {
         return try {
-            JSONObject(file.readText())
+            val value = GrindrPlus.bridgeClient.getConfig()
+            println("Called readRemoteConfig, isNull: ${value == null}")
+            value ?: JSONObject().put("hooks", JSONObject())
         } catch (e: Exception) {
             Log.e("GrindrPlus", "Error reading config file", e)
             JSONObject().put("hooks", JSONObject())
         }
     }
 
-    private fun writeConfig(json: JSONObject) {
+    private fun writeRemoteConfig(json: JSONObject) {
         try {
-            FileOutputStream(configFile).use { fos ->
-                fos.write(json.toString(4).toByteArray(Charsets.UTF_8))
-            }
+            println("Called writeRemoteConfig")
+            GrindrPlus.bridgeClient.setConfig(json)
         } catch (e: IOException) {
             Log.e("GrindrPlus", "Failed to write config file", e)
         }
     }
 
-    fun resetConfig(shouldResetDb: Boolean = false) {
-        config = JSONObject().put("hooks", JSONObject())
-        if (shouldResetDb) {
-            config.put("reset_database", true)
-        }
-        scope.launch { writeConfig(config) }
-    }
-
-    fun importFromJson(jsonString: String) {
-        try {
-            val newConfig = JSONObject(jsonString)
-            config = newConfig
-            scope.launch { writeConfig(newConfig) }
-        } catch (e: Exception) {
-            Log.e("GrindrPlus", "Failed to import config", e)
-        }
-    }
-
     fun put(name: String, value: Any) {
-        config.put(name, value)
-        scope.launch { writeConfig(config) }
+        println("called put on $name")
+        localConfig.put(name, value)
+        writeRemoteConfig(localConfig)
     }
 
     fun get(name: String, default: Any): Any {
-        return config.opt(name) ?: default.also { put(name, default) }
-    }
-
-    fun getConfigJson(): String {
-        return config.toString(4)
+        val get = localConfig.opt(name)
+        println("called get: $name val $get")
+        return get ?: default.also { put(name, default) }
     }
 
     fun setHookEnabled(hookName: String, enabled: Boolean) {
-        val hooks = config.optJSONObject("hooks") ?: JSONObject().also { config.put("hooks", it) }
+        val hooks =
+            localConfig.optJSONObject("hooks") ?: JSONObject().also { localConfig.put("hooks", it) }
         hooks.optJSONObject(hookName)?.put("enabled", enabled)
-        scope.launch { writeConfig(config) }
+        writeRemoteConfig(localConfig)
     }
 
     fun isHookEnabled(hookName: String): Boolean {
-        val hooks = config.optJSONObject("hooks") ?: return false
+        val hooks = localConfig.optJSONObject("hooks") ?: return false
         return hooks.optJSONObject(hookName)?.getBoolean("enabled") ?: false
     }
 
-    fun initHookSettings(name: String, description: String, state: Boolean) {
-        if (config.optJSONObject("hooks")?.optJSONObject(name) == null) {
+    suspend fun initHookSettings(name: String, description: String, state: Boolean) {
+        if (localConfig.optJSONObject("hooks")?.optJSONObject(name) == null) {
             val hooks =
-                config.optJSONObject("hooks") ?: JSONObject().also { config.put("hooks", it) }
+                localConfig.optJSONObject("hooks") ?: JSONObject().also {
+                    localConfig.put(
+                        "hooks",
+                        it
+                    )
+                }
             hooks.put(name, JSONObject().apply {
                 put("description", description)
                 put("enabled", state)
             })
-            writeConfig(config)
+
+            writeRemoteConfig(localConfig)
         }
     }
 
     fun getHooksSettings(): Map<String, Pair<String, Boolean>> {
-        val hooks = config.optJSONObject("hooks") ?: return emptyMap()
+        val hooks = readRemoteConfig().optJSONObject("hooks") ?: return emptyMap()
         val map = mutableMapOf<String, Pair<String, Boolean>>()
 
         val keys = hooks.keys()

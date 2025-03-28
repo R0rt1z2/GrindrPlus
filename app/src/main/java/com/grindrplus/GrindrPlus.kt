@@ -27,6 +27,7 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -34,6 +35,8 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
@@ -52,7 +55,7 @@ object GrindrPlus {
     lateinit var database: Database
         private set
     lateinit var bridgeClient: BridgeClient
-        private set
+        internal set
     lateinit var coroutineHelper: CoroutineHelper
         private set
     lateinit var instanceManager: InstanceManager
@@ -97,7 +100,8 @@ object GrindrPlus {
 
     private val userAgent = "e6.x" // search for 'grindr3/'
     private val userSession = "sa.T" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
-    private val deviceInfo = "V3.t" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    private val deviceInfo =
+        "V3.t" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -111,8 +115,13 @@ object GrindrPlus {
         )
 
         this.context = application // do not use .applicationContext as it's null at this point
+
+        val newModule = File(context.filesDir, "grindrplus.dex")
+        File(modulePath).copyTo(newModule, true)
+        newModule.setReadOnly()
+
         this.classLoader =
-            DexClassLoader(modulePath, context.cacheDir.absolutePath, null, context.classLoader)
+            DexClassLoader(newModule.absolutePath, null, null, context.classLoader)
         this.logger = logger
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
@@ -178,7 +187,10 @@ object GrindrPlus {
 
     private fun init() {
         logger.log("Initializing GrindrPlus...")
-        Config.initialize(context)
+
+        bridgeClient = BridgeClient(context).apply {
+            connect {
+                Config.initialize(context)
 
 //        bridgeClient = BridgeClient(context).apply {
 //            connect {
@@ -192,18 +204,20 @@ object GrindrPlus {
 //            }
 //        }
 
-        /**
-         * Emergency reset of the database if the flag is set.
-         */
-        if ((Config.get("reset_database", false) as Boolean)) {
-            logger.log("Resetting database...")
-            database.deleteDatabase()
-            Config.put("reset_database", false)
+                /**
+                 * Emergency reset of the database if the flag is set.
+                 */
+                if ((Config.get("reset_database", false) as Boolean)) {
+                    logger.log("Resetting database...")
+                    database.deleteDatabase()
+                    Config.put("reset_database", false)
+                }
+
+                Config.put("xposed_version", XposedBridge.getXposedVersion())
+
+                hookManager.init()
+            }
         }
-
-        Config.put("xposed_version", XposedBridge.getXposedVersion())
-
-        hookManager.init()
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
