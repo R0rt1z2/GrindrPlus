@@ -34,7 +34,7 @@ import kotlin.reflect.KClass
 class HookManager {
     private var hooks = mutableMapOf<KClass<out Hook>, Hook>()
 
-    private fun registerAndInitHooks() {
+    public fun registerHooks(init: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
                 FeatureGranting(),
@@ -73,6 +73,8 @@ class HookManager {
                 )
             }
 
+            if (!init) return@runBlocking
+
             hooks = hookList.associateBy { it::class }.toMutableMap()
 
             hooks.values.forEach { hook ->
@@ -90,12 +92,12 @@ class HookManager {
         runBlocking(Dispatchers.IO) {
             hooks.values.forEach { hook -> hook.cleanup() }
             hooks.clear()
-            registerAndInitHooks()
+            registerHooks()
             GrindrPlus.logger.log("Hooks reloaded successfully.")
         }
     }
 
     fun init() {
-        registerAndInitHooks()
+        registerHooks()
     }
 }
