@@ -132,8 +132,6 @@ class SessionInstaller {
             @SuppressLint("UnsafeIntentLaunch")
             override fun onReceive(context: Context, intent: Intent) {
                 try {
-                    context.unregisterReceiver(this)
-
                     val status = intent.getIntExtra(
                         PackageInstaller.EXTRA_STATUS,
                         PackageInstaller.STATUS_FAILURE
@@ -149,6 +147,7 @@ class SessionInstaller {
                         PackageInstaller.STATUS_SUCCESS -> {
                             callback?.invoke(true, "Installation successful")
                             log("Installed!")
+                            context.unregisterReceiver(this)
                             continuation.resume(true)
                         }
 
@@ -167,25 +166,54 @@ class SessionInstaller {
                                 }
                             if (confirmationIntent != null) {
                                 confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                context.startActivity(confirmationIntent)
+                                try {
+                                    context.startActivity(confirmationIntent)
+                                    // Don't complete the coroutine yet - wait for final result
+                                } catch (e: Exception) {
+                                    val errorMsg =
+                                        "Failed to start installer activity: ${e.message}"
+                                    log("ERROR: $errorMsg")
+                                    Timber.tag(TAG).e(e, errorMsg)
+                                    context.unregisterReceiver(this)
+                                    callback?.invoke(false, errorMsg)
+                                    continuation.resumeWithException(IOException(errorMsg))
+                                }
                             } else {
                                 val errorMsg = "Missing confirmation intent"
                                 log("ERROR: $errorMsg")
                                 Timber.tag(TAG).e(errorMsg)
+                                context.unregisterReceiver(this)
                                 callback?.invoke(false, errorMsg)
                                 continuation.resumeWithException(IOException(errorMsg))
                             }
                         }
 
-                        else -> {
+                        PackageInstaller.STATUS_FAILURE,
+                        PackageInstaller.STATUS_FAILURE_ABORTED,
+                        PackageInstaller.STATUS_FAILURE_BLOCKED,
+                        PackageInstaller.STATUS_FAILURE_CONFLICT,
+                        PackageInstaller.STATUS_FAILURE_INCOMPATIBLE,
+                        PackageInstaller.STATUS_FAILURE_INVALID,
+                        PackageInstaller.STATUS_FAILURE_STORAGE,
+                            -> {
                             val errorMsg = "Installation failed: $message (code: $status)"
                             Timber.tag(TAG).e(errorMsg)
+                            context.unregisterReceiver(this)
+                            callback?.invoke(false, errorMsg)
+                            continuation.resumeWithException(IOException(errorMsg))
+                        }
+
+                        else -> {
+                            val errorMsg = "Unknown status code: $status - $message"
+                            Timber.tag(TAG).e(errorMsg)
+                            context.unregisterReceiver(this)
                             callback?.invoke(false, errorMsg)
                             continuation.resumeWithException(IOException(errorMsg))
                         }
                     }
                 } catch (e: Exception) {
                     Timber.tag(TAG).e(e, "Error in broadcast receiver")
+                    context.unregisterReceiver(this)
                     callback?.invoke(false, "Error processing installation result: ${e.message}")
                     continuation.resumeWithException(e)
                 }
@@ -195,6 +223,7 @@ class SessionInstaller {
         try {
             val intent = Intent(ACTION_INSTALL_COMPLETE).apply {
                 setPackage(context.packageName)
+                addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
             }
 
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -242,7 +271,6 @@ class SessionInstaller {
             Timber.tag(TAG).e(e, message)
             callback?.invoke(false, message)
             continuation.resumeWithException(e)
-            return@suspendCoroutine
         }
     }
 }
@@ -320,11 +348,17 @@ suspend fun download(
                         val currentSpeed = bytesDelta.toDouble() / timeDelta / 1024 / 1024
                         averageSpeed = if (averageSpeed == 0.0) currentSpeed
                         else (averageSpeed * 0.7 + currentSpeed * 0.3)
-
                         val percentage = download.progress
+
+                        val speedText = when {
+                            averageSpeed >= 1.0 -> String.format("%.2f Mb/s", averageSpeed * 8)
+                            averageSpeed >= 0.001 -> String.format("%.2f Kb/s", averageSpeed * 1024 * 8)
+                            else -> String.format("%.2f b/s", averageSpeed * 1024 * 1024 * 8)
+                        }
+
                         printConsole(
                             "Download status<>: " +
-                                    "$percentage% ${String.format("%.2f", averageSpeed)} Mb/s " +
+                                    "$percentage% $speedText " +
                                     "(ETA:${etaInMilliSeconds.div(60000)}m${
                                         (etaInMilliSeconds.rem(
                                             60000
