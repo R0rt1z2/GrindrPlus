@@ -44,6 +44,7 @@ import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
 import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.MessageBanner
+import com.grindrplus.manager.ui.components.VersionSelector
 import com.grindrplus.manager.utils.ConsoleLogger
 import com.grindrplus.manager.utils.ConsoleOutput
 import com.grindrplus.manager.utils.ErrorHandler
@@ -280,83 +281,6 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
             )
         ) {
             Text("Retry")
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun VersionSelector(
-    modifier: Modifier = Modifier,
-    versions: List<Data>,
-    selectedVersion: Data?,
-    onVersionSelected: (Data) -> Unit,
-    isEnabled: Boolean = true,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = {
-                if (isEnabled) {
-                    expanded = !expanded
-                }
-            }
-        ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(MenuAnchorType.PrimaryEditable, true),
-                readOnly = true,
-                enabled = isEnabled,
-                value = selectedVersion?.modVer ?: "",
-                onValueChange = { },
-                label = { Text("Select a GrindrPlus version") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                )
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (versions.isEmpty()) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                "No versions available",
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        onClick = { expanded = false },
-                        enabled = false
-                    )
-                } else {
-                    versions.forEach { version ->
-                        DropdownMenuItem(
-                            text = {
-                                Text("Version ${version.modVer}")
-                            },
-                            onClick = {
-                                onVersionSelected(version)
-                                expanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
         }
     }
 }
