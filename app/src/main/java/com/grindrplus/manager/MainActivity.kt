@@ -1,9 +1,12 @@
 package com.grindrplus.manager
 
 import android.app.Activity
+import android.graphics.Color.TRANSPARENT
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -98,11 +101,26 @@ class MainActivity : ComponentActivity() {
 
         Timber.plant(DebugTree())
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
+        val isSystemInDarkTheme = resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        val statusBarStyle = if (isSystemInDarkTheme) {
+            SystemBarStyle.dark(TRANSPARENT)
+        } else {
+            SystemBarStyle.light(TRANSPARENT, TRANSPARENT)
         }
+
+        val navigationBarStyle = if (isSystemInDarkTheme) {
+            SystemBarStyle.dark(TRANSPARENT)
+        } else {
+            SystemBarStyle.light(TRANSPARENT, TRANSPARENT)
+        }
+
+        enableEdgeToEdge(
+            statusBarStyle = statusBarStyle,
+            navigationBarStyle = navigationBarStyle
+        )
 
         setContent {
             var serviceBound by remember { mutableStateOf(false) }
