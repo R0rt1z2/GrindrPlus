@@ -2,6 +2,7 @@ package com.grindrplus.manager.ui
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,15 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.Installation
 import com.grindrplus.manager.TAG
@@ -72,6 +67,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     val versionData = remember { mutableStateListOf<Data>() }
     var selectedVersion by remember { mutableStateOf<Data?>(null) }
     var isInstalling by remember { mutableStateOf(false) }
+    var installationSuccessful by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -204,19 +200,26 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
 
                 Button(
                     onClick = {
-                        if (selectedVersion == null) {
-                            showToast(context, "Please select a version first")
-                            return@Button
-                        }
+                        if (installationSuccessful) {
+                            launchGrindr(context)
+                        } else {
+                            if (selectedVersion == null) {
+                                showToast(context, "Please select a version first")
+                                return@Button
+                            }
 
-                        startInstallation(
-                            selectedVersion!!,
-                            onStarted = { isInstalling = true },
-                            onCompleted = { isInstalling = false },
-                            context
-                        )
+                            startInstallation(
+                                selectedVersion!!,
+                                onStarted = { isInstalling = true },
+                                onCompleted = { success ->
+                                    isInstalling = false
+                                    installationSuccessful = success
+                                },
+                                context
+                            )
+                        }
                     },
-                    enabled = selectedVersion != null && !isInstalling,
+                    enabled = (selectedVersion != null && !isInstalling) || installationSuccessful,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -230,7 +233,13 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = if (isInstalling) "Installing..." else "Install",
+                        text = if (isInstalling) {
+                            "Installing..."
+                        } else if (installationSuccessful) {
+                            "Open Grindr"
+                        } else {
+                            "Install"
+                        },
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -353,7 +362,7 @@ private fun parseVersionData(jsonData: String): List<Data> {
 private fun startInstallation(
     version: Data,
     onStarted: () -> Unit,
-    onCompleted: () -> Unit,
+    onCompleted: (Boolean) -> Unit,
     context: Activity,
 ) {
     onStarted()
@@ -389,6 +398,7 @@ private fun startInstallation(
 
             addLog("Installation completed successfully!", LogType.SUCCESS)
             showToast(context, "Installation complete!")
+            onCompleted(true)
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Installation failed")
             val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
@@ -401,8 +411,7 @@ private fun startInstallation(
                 "Installation failed for version ${version.modVer}",
                 e
             )
-        } finally {
-            onCompleted()
+            onCompleted(false)
         }
     }
 }
@@ -422,6 +431,19 @@ private fun addLog(message: String, type: LogType = LogType.INFO) {
 
 private fun showToast(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+private fun launchGrindr(context: Context) {
+    try {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(GRINDR_PACKAGE_NAME)
+        if (launchIntent != null) {
+            context.startActivity(launchIntent)
+        } else {
+            showToast(context, "Could not launch Grindr. App may need to be opened manually.")
+        }
+    } catch (e: Exception) {
+        showToast(context, "Error launching Grindr: ${e.localizedMessage}")
+    }
 }
 
 data class Data(
