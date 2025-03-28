@@ -2,6 +2,7 @@ package com.grindrplus.manager
 
 import android.app.Activity
 import android.graphics.Color.TRANSPARENT
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -146,11 +147,12 @@ class MainActivity : ComponentActivity() {
                         )
 
                         plausible?.enable(true)
-                        plausible?.pageView("app://grindrplus/home")
+                        plausible?.pageView("app://grindrplus/home", props = mapOf("android_version" to Build.VERSION.SDK_INT))
                     }
 
                     if (Config.get("first_launch", true) as Boolean) {
                         firstLaunchDialog = true
+                        plausible?.pageView("app://grindrplus/first_launch")
                         Config.put("first_launch", false)
                     }
                 }
@@ -204,7 +206,7 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 Text(
-                                    text = "• App opens\n• Installation success/failure\n• Eventual failure reason",
+                                    text = "• App opens\n• Installation success/failure\n• Eventual failure reason\n• Android version",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
 
