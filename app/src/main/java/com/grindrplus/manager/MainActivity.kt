@@ -82,11 +82,11 @@ sealed class MainNavItem(
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
 
     data object Home : MainNavItem(Icons.Rounded.Home, "Home", { HomeScreen(this) })
-    data object Albums : MainNavItem(Icons.Rounded.PhotoAlbum, "Albums", { ComingSoon() })
-    data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
+    // data object Albums : MainNavItem(Icons.Rounded.PhotoAlbum, "Albums", { ComingSoon() })
+    // data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
-        val VALUES by lazy { listOf(Settings, InstallPage, Home, Albums, Experiments) }
+        val VALUES by lazy { listOf(Settings, Home, InstallPage) }
     }
 }
 
