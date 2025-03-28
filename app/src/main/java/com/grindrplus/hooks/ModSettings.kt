@@ -48,7 +48,8 @@ class ModSettings : Hook(
                     .java.getMethod("getValue").invoke(settingsViewBindingLazy)
 
                 var settingsRoot =
-                    param.thisObject()::class.java.getMethod("E").invoke(param.thisObject()) // good luck
+                    param.thisObject()::class.java.getMethod("E")
+                        .invoke(param.thisObject()) // good luck
                 settingsRoot::class.java.declaredFields.reversed().forEach { field ->
                     field.isAccessible = true
                     val fieldValue = field.get(settingsRoot)
@@ -94,7 +95,8 @@ class ModSettings : Hook(
                     }
 
                     val modHeader = TextView(activity).apply {
-                        text = "GrindrPlus"
+                        text =
+                            "GrindrPlus v${BuildConfig.VERSION_NAME} for Grindr v${BuildConfig.TARGET_GRINDR_VERSIONS.joinToString()}"
                         layoutParams = settingsExampleHeader.layoutParams
                         setPadding(
                             settingsExampleHeader.paddingLeft, settingsExampleHeader.paddingTop,
@@ -109,53 +111,53 @@ class ModSettings : Hook(
                         setTextColor(settingsExampleHeader.currentTextColor)
                     }
 
-                    val modSubContainer = LinearLayout(activity).apply {
-                        layoutParams = settingsExampleSubContainer.layoutParams
-                        orientation = settingsExampleSubContainer.orientation
-                        setPadding(
-                            settingsExampleSubContainer.paddingLeft,
-                            settingsExampleSubContainer.paddingTop,
-                            settingsExampleSubContainer.paddingRight,
-                            settingsExampleSubContainer.paddingBottom
-                        )
-                        id = View.generateViewId()
-                        textAlignment = settingsExampleSubContainer.textAlignment
-                    }
-
-                    val modSubContainerTextView = TextView(activity).apply {
-                        text = "Mod Settings"
-                        layoutParams = settingsExampleSubContainerTextView.layoutParams
-                        setPadding(
-                            settingsExampleSubContainerTextView.paddingLeft,
-                            settingsExampleSubContainerTextView.paddingTop,
-                            settingsExampleSubContainerTextView.paddingRight,
-                            settingsExampleSubContainerTextView.paddingBottom
-                        )
-                        textSize = 16f
-                        setTypeface(
-                            settingsExampleSubContainerTextView.typeface,
-                            settingsExampleSubContainerTextView.typeface.style
-                        )
-                        setTextColor(settingsExampleSubContainerTextView.currentTextColor)
-                        visibility = View.VISIBLE
-                    }
-
-                    modSubContainer.setOnClickListener {
-                        val hooksFragmentInstance =
-                            findClass(settingsFragment).constructors.first().newInstance()
-                        val supportFragmentManager = getSupportFragmentManager.invoke(activity)
-                        val fragmentTransaction = beginTransaction.invoke(supportFragmentManager)
-                        addFragmentTransaction.invoke(
-                            fragmentTransaction,
-                            android.R.id.content,
-                            hooksFragmentInstance
-                        )
-                        commitFragmentTransaction.invoke(fragmentTransaction)
-                    }
-
-                    modSubContainer.addView(modSubContainerTextView, 0)
+//                    val modSubContainer = LinearLayout(activity).apply {
+//                        layoutParams = settingsExampleSubContainer.layoutParams
+//                        orientation = settingsExampleSubContainer.orientation
+//                        setPadding(
+//                            settingsExampleSubContainer.paddingLeft,
+//                            settingsExampleSubContainer.paddingTop,
+//                            settingsExampleSubContainer.paddingRight,
+//                            settingsExampleSubContainer.paddingBottom
+//                        )
+//                        id = View.generateViewId()
+//                        textAlignment = settingsExampleSubContainer.textAlignment
+//                    }
+//
+//                    val modSubContainerTextView = TextView(activity).apply {
+//                        text = "Mod Settings"
+//                        layoutParams = settingsExampleSubContainerTextView.layoutParams
+//                        setPadding(
+//                            settingsExampleSubContainerTextView.paddingLeft,
+//                            settingsExampleSubContainerTextView.paddingTop,
+//                            settingsExampleSubContainerTextView.paddingRight,
+//                            settingsExampleSubContainerTextView.paddingBottom
+//                        )
+//                        textSize = 16f
+//                        setTypeface(
+//                            settingsExampleSubContainerTextView.typeface,
+//                            settingsExampleSubContainerTextView.typeface.style
+//                        )
+//                        setTextColor(settingsExampleSubContainerTextView.currentTextColor)
+//                        visibility = View.VISIBLE
+//                    }
+//
+//                    modSubContainer.setOnClickListener {
+//                        val hooksFragmentInstance =
+//                            findClass(settingsFragment).constructors.first().newInstance()
+//                        val supportFragmentManager = getSupportFragmentManager.invoke(activity)
+//                        val fragmentTransaction = beginTransaction.invoke(supportFragmentManager)
+//                        addFragmentTransaction.invoke(
+//                            fragmentTransaction,
+//                            android.R.id.content,
+//                            hooksFragmentInstance
+//                        )
+//                        commitFragmentTransaction.invoke(fragmentTransaction)
+//                    }
+//
+//                    modSubContainer.addView(modSubContainerTextView, 0)
                     modContainer.addView(modHeader, 0)
-                    modContainer.addView(modSubContainer, 1)
+                    //modContainer.addView(modSubContainer, 1)
                     settingsScrollingContentLayout.addView(modContainer, 0)
                 }
             }
