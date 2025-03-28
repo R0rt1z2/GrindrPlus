@@ -142,7 +142,7 @@ class SettingsViewModel(
                     managerSettings += SwitchSetting(
                         id = "material_you",
                         title = "Enable dynamic colors",
-                        description = "Use Material You colors for the app; Restart the app to apply changes",
+                        description = "Use Material You colors for the app\nRestart the app to apply changes",
                         isChecked = Config.get("material_you", false) as Boolean,
                         onCheckedChange = {
                             viewModelScope.launch {
