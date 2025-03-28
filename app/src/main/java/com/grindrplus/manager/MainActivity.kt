@@ -86,7 +86,7 @@ sealed class MainNavItem(
     // data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
-        val VALUES by lazy { listOf(Settings, Home, InstallPage) }
+        val VALUES by lazy { listOf(InstallPage, Home, Settings ) }
     }
 }
 
