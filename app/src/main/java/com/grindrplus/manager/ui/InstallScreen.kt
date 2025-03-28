@@ -2,7 +2,6 @@ package com.grindrplus.manager.ui
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
@@ -42,19 +40,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.Installation
-import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
+import com.grindrplus.manager.ui.components.BannerType
+import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.utils.ConsoleLogger
 import com.grindrplus.manager.utils.ConsoleOutput
 import com.grindrplus.manager.utils.ErrorHandler
 import com.grindrplus.manager.utils.LogEntry
 import com.grindrplus.manager.utils.LogType
 import com.grindrplus.manager.utils.StorageUtils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -108,7 +104,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             LoadingScreen()
         } else if (errorMessage != null) {
             ErrorScreen(errorMessage!!) {
-                // Retry loading
                 isLoading = true
                 errorMessage = null
                 activityScope.launch {
@@ -132,22 +127,14 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 }
             }
         } else {
-            // Warning message
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "⚠️ Do not close the app while installation is in progress ⚠️",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+            MessageBanner(
+                text = "Don't close the app while installation is in progress",
+                isVisible = true,
+                isPulsating = isInstalling,
+                modifier = Modifier.fillMaxWidth(),
+                type = BannerType.WARNING
+            )
 
-            // Version selector dropdown
             VersionSelector(
                 versions = versionData,
                 selectedVersion = selectedVersion,
@@ -312,7 +299,6 @@ fun VersionSelector(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        // Dropdown anchor
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = {
