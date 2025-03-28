@@ -164,6 +164,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             ConsoleOutput(
                 logEntries = logEntries,
                 modifier = Modifier.weight(0.5f),
+                onClear = {
+                    logEntries.clear()
+                    addLog("Successfully cleared logs!", LogType.SUCCESS)
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
