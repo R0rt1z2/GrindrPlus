@@ -81,6 +81,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             onSuccess = { data ->
                 versionData.clear()
                 versionData.addAll(data)
+                if (data.isNotEmpty()) {
+                    selectedVersion = data.first()
+                    addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
+                }
                 isLoading = false
                 addLog("Found ${data.size} available versions", LogType.SUCCESS)
             },
