@@ -1,6 +1,10 @@
 package com.grindrplus.manager.utils
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,7 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.ui.draw.clip
+import androidx.core.content.ContextCompat.getSystemService
+import kotlinx.coroutines.delay
 
 data class LogEntry(
     val timestamp: Long = System.currentTimeMillis(),
@@ -31,114 +40,129 @@ enum class LogType {
 fun ConsoleOutput(
     logEntries: List<LogEntry>,
     modifier: Modifier = Modifier,
+    onClear: (() -> Unit)? = null
 ) {
-    val context = LocalContext.current
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var showCopiedToast by remember { mutableStateOf(false) }
+    val logs = logEntries.joinToString("\n") { it.message }
 
     LaunchedEffect(logEntries.size) {
         if (logEntries.isNotEmpty()) {
-            coroutineScope.launch {
-                listState.animateScrollToItem(logEntries.size - 1)
-            }
+            listState.animateScrollToItem(logEntries.size - 1)
         }
     }
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(modifier = Modifier.padding(8.dp)) {
+    LaunchedEffect(showCopiedToast) {
+        if (showCopiedToast) {
+            delay(2000)
+            showCopiedToast = false
+        }
+    }
+
+    Column(modifier = modifier) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Logs",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = "Logs (${logEntries.size} entries)",
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Text(
-                    text = "${logEntries.size} entries",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-            }
+                Spacer(modifier = Modifier.weight(1f))
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-
-            if (logEntries.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                IconButton(
+                    onClick = {
+                        val clipboard = getSystemService(context, ClipboardManager::class.java)
+                        val clip = ClipData.newPlainText("Console Logs", logs)
+                        clipboard?.setPrimaryClip(clip)
+                        showCopiedToast = true
+                    }
                 ) {
-                    Text(
-                        text = "No log entries yet",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy logs",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.wrapContentHeight()
-                ) {
-                    items(logEntries) { entry ->
-                        LogEntryItem(entry)
-                    }
 
-                    item {
-                        Divider(
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            thickness = 1.dp
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            TextButton(
-                                onClick = {
-                                    val shareText = logEntries.joinToString("\n") { it.message }
-                                    val intent = Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, shareText)
-                                        putExtra(Intent.EXTRA_SUBJECT, "GrindrPlus Logs")
-                                    }
-
-                                    context.startActivity(
-                                        Intent.createChooser(
-                                            intent,
-                                            "Share logs"
-                                        )
-                                    )
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Share logs",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Share")
-                            }
+                IconButton(
+                    onClick = {
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, logs)
+                            type = "text/plain"
                         }
+                        val shareIntent = Intent.createChooser(sendIntent, "Share installation logs")
+                        context.startActivity(shareIntent)
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share logs",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (onClear != null) {
+                    IconButton(onClick = onClear) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear logs",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                )
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                state = listState
+            ) {
+                items(logEntries) { entry ->
+                    LogEntryItem(entry)
+                }
+            }
+
+            if (showCopiedToast) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "Copied to clipboard",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }
