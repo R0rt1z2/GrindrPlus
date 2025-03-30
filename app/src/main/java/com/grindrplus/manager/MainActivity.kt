@@ -140,7 +140,6 @@ class MainActivity : ComponentActivity() {
             var serviceBound by remember { mutableStateOf(false) }
             var firstLaunchDialog by remember { mutableStateOf(false) }
             var patchInfoDialog by remember { mutableStateOf(false) }
-
             var showUninstallDialogState by remember { showUninstallDialog }
 
             LaunchedEffect(Unit) {
@@ -168,9 +167,9 @@ class MainActivity : ComponentActivity() {
 
                     if (Config.get("first_launch", true) as Boolean) {
                         firstLaunchDialog = true
+                        patchInfoDialog = true
                         plausible?.pageView("app://grindrplus/first_launch")
                         Config.put("first_launch", false)
-                        patchInfoDialog = true
 
                     }
                 }

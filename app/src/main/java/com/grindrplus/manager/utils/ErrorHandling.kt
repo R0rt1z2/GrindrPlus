@@ -7,6 +7,7 @@ import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -21,7 +22,7 @@ object ErrorHandler {
     private const val LOG_FILE_PREFIX = "grindrplus_log_"
 
     fun logError(context: Context, tag: String, message: String, error: Throwable?) {
-        Log.e(tag, message, error)
+        Timber.tag(tag).e(error, message)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -38,7 +39,7 @@ object ErrorHandler {
                 FileOutputStream(logFile, true).use { output ->
                     val writer = PrintWriter(output)
 
-                    writer.println("---- ERROR LOG ${timestamp} ----")
+                    writer.println("---- ERROR LOG $timestamp ----")
                     writer.println("Device: ${Build.MANUFACTURER} ${Build.MODEL}")
                     writer.println("Android: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
                     writer.println("Message: $message")
@@ -56,7 +57,7 @@ object ErrorHandler {
                     writer.flush()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to write to error log", e)
+                Timber.tag(TAG).e(e, "Failed to write to error log")
             }
         }
     }
@@ -67,6 +68,7 @@ object ErrorHandler {
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun cleanupOldLogs(logDir: File, keepCount: Int) {
         try {
             val logFiles = logDir.listFiles { file ->
@@ -81,7 +83,7 @@ object ErrorHandler {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to cleanup old logs", e)
+            Timber.tag(TAG).e(e, "Failed to cleanup old logs")
         }
     }
 }

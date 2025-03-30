@@ -1,8 +1,9 @@
-package com.grindrplus.manager.utils
+package com.grindrplus.manager.ui
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,9 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.core.content.ContextCompat.getSystemService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.Socket
+import java.net.URL
 
 data class LogEntry(
     val timestamp: Long = System.currentTimeMillis(),
@@ -40,12 +47,14 @@ enum class LogType {
 fun ConsoleOutput(
     logEntries: List<LogEntry>,
     modifier: Modifier = Modifier,
-    onClear: (() -> Unit)? = null
+    onClear: (() -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     val context = LocalContext.current
     var showCopiedToast by remember { mutableStateOf(false) }
     val logs = logEntries.joinToString("\n") { it.message }
+    var uploadingLogs by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(logEntries.size) {
         if (logEntries.isNotEmpty()) {
@@ -99,13 +108,32 @@ fun ConsoleOutput(
 
                 IconButton(
                     onClick = {
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, logs)
-                            type = "text/plain"
+                        if (uploadingLogs) return@IconButton
+                        uploadingLogs = true
+                        scope.launch {
+                            Toast.makeText(context, "Uploading logs...", Toast.LENGTH_SHORT).show()
+
+                            val response = withContext(Dispatchers.IO) {
+                                Socket("termbin.com", 9999).use { socket ->
+                                    socket.getOutputStream().write(logs.toByteArray())
+                                    socket.getInputStream().bufferedReader().readText()
+                                }.trim().replace("\n", "")
+                            }
+
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, response)
+                            }
+
+                            val shareIntent =
+                                Intent.createChooser(sendIntent, "Share installation logs")
+                            context.startActivity(shareIntent)
+
+                            delay(1000) // Prevent from spamming upload button
+                        }.invokeOnCompletion {
+                            uploadingLogs = false // should be always invoked
                         }
-                        val shareIntent = Intent.createChooser(sendIntent, "Share installation logs")
-                        context.startActivity(shareIntent)
                     }
                 ) {
                     Icon(
@@ -180,19 +208,38 @@ private fun LogEntryItem(entry: LogEntry) {
         LogType.INFO -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = entry.message,
-            color = logColor,
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.weight(1f)
-        )
+    Column {
+        val progressBar =
+            "<progressBar:([0-9.]+):>".toRegex().find(entry.message)?.groupValues?.get(1)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = entry.message.replace("<progressBar:$progressBar:>", ""),
+                color = logColor,
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        val progress = progressBar?.toFloatOrNull()
+        if (progress != null) {
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = logColor,
+                trackColor = logColor.copy(alpha = 0.3f),
+            )
+        }
     }
 }
 

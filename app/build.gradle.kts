@@ -116,6 +116,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.github.tonyofrancis.Fetch:fetch2:3.4.1")
     implementation("com.github.tonyofrancis.Fetch:fetch2okhttp:3.4.1")
+    implementation("com.scottyab:rootbeer-lib:0.1.1")
 }
 
 tasks.register("setupLSPatch") {
