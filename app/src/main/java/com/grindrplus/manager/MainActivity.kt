@@ -126,6 +126,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             var serviceBound by remember { mutableStateOf(false) }
             var firstLaunchDialog by remember { mutableStateOf(false) }
+            var patchInfoDialog by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
@@ -154,6 +155,8 @@ class MainActivity : ComponentActivity() {
                         firstLaunchDialog = true
                         plausible?.pageView("app://grindrplus/first_launch")
                         Config.put("first_launch", false)
+                        patchInfoDialog = true
+
                     }
                 }
             }
@@ -221,6 +224,48 @@ class MainActivity : ComponentActivity() {
                     }
 
                     return@GrindrPlusTheme
+                }
+
+                if (patchInfoDialog) {
+                    Dialog(
+                        onDismissRequest = { patchInfoDialog = false }) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                verticalArrangement = Center
+                            ) {
+                                Text(
+                                    text = "Installation Method",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "• If you were using LSPatch previously, go to the Install section and install the latest version.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+
+                                Text(
+                                    text = "• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Button(
+                                    onClick = { patchInfoDialog = false },
+                                    modifier = Modifier.align(CenterHorizontally).padding(top = 8.dp)
+                                ) {
+                                    Text("Understood")
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Surface(
