@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.Installation
+import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
 import com.grindrplus.manager.ui.components.BannerType
@@ -408,6 +409,16 @@ private fun startInstallation(
             val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
             addLog(errorMessage, LogType.ERROR)
             showToast(context, "Installation failed: ${e.localizedMessage}")
+
+            if (errorMessage.contains("INCOMPATIBLE") || e.message?.contains("INCOMPATIBLE") == true) {
+                if (context is MainActivity) {
+                    context.runOnUiThread { MainActivity.showUninstallDialog.value = true }
+                } else {
+                    showToast(context, "Installation failed: Signature mismatch. Please uninstall Grindr first.")
+                }
+            } else {
+                showToast(context, "Installation failed: ${e.localizedMessage}")
+            }
 
             ErrorHandler.logError(
                 context,

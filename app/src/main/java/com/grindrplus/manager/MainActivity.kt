@@ -1,16 +1,20 @@
 package com.grindrplus.manager
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color.TRANSPARENT
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,6 +59,7 @@ import androidx.navigation.compose.rememberNavController
 import com.grindrplus.GrindrPlus
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
+import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.ui.HomeScreen
 import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
@@ -68,6 +74,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import timber.log.Timber
 import timber.log.Timber.DebugTree
+import androidx.core.net.toUri
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -94,12 +101,14 @@ sealed class MainNavItem(
     }
 }
 
-var plausible: Plausible? = null
-
 class MainActivity : ComponentActivity() {
+    companion object {
+        var plausible: Plausible? = null
+        val showUninstallDialog = mutableStateOf(false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         Timber.plant(DebugTree())
 
         val isSystemInDarkTheme = resources.configuration.uiMode and
@@ -127,6 +136,8 @@ class MainActivity : ComponentActivity() {
             var serviceBound by remember { mutableStateOf(false) }
             var firstLaunchDialog by remember { mutableStateOf(false) }
             var patchInfoDialog by remember { mutableStateOf(false) }
+
+            var showUninstallDialogState by remember { showUninstallDialog }
 
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
@@ -224,6 +235,75 @@ class MainActivity : ComponentActivity() {
                     }
 
                     return@GrindrPlusTheme
+                }
+
+                if (showUninstallDialogState) {
+                    Dialog(
+                        onDismissRequest = { showUninstallDialogState = false }
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                verticalArrangement = Center
+                            ) {
+                                Text(
+                                    text = "Installation Error",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "The installation failed because the app signatures don't match.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "Please uninstall Grindr manually first, then try the installation again.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { showUninstallDialogState = false },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Cancel")
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_DELETE)
+                                                intent.data = "package:$GRINDR_PACKAGE_NAME".toUri()
+                                                startActivity(intent)
+                                                showUninstallDialogState = false
+                                            } catch (e: Exception) {
+                                                Toast.makeText(
+                                                    this@MainActivity,
+                                                    "Error: ${e.localizedMessage}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Uninstall")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (patchInfoDialog) {

@@ -51,7 +51,7 @@ class Installation(
 
     suspend fun install(print: (String) -> Unit, progress: (Float) -> Unit) = try {
         withContext(Dispatchers.IO) {
-            plausible?.pageView("app://grindrplus/install")
+            MainActivity.plausible?.pageView("app://grindrplus/install")
 
             val time = measureTimeMillis {
                 stepWithProgress("Checking storage space", print) {
@@ -72,7 +72,7 @@ class Installation(
             }
 
             print("Patching completed successfully in ${time / 1000 / 60}m${time / 1000}s!")
-            plausible?.event(
+            MainActivity.plausible?.event(
                 "install_success",
                 "app://grindrplus/install_success",
                 props = mapOf("time" to time)
@@ -87,11 +87,11 @@ class Installation(
     } catch (e: CancellationException) {
         print("Installation was cancelled")
         showToast("Installation was cancelled")
-        plausible?.event("install_cancelled", "app://grindrplus/install_cancelled")
+        MainActivity.plausible?.event("install_cancelled", "app://grindrplus/install_cancelled")
         throw e
     } catch (e: Exception) {
         val errorMsg = "Installation failed: ${e.localizedMessage}"
-        plausible?.event(
+        MainActivity.plausible?.event(
             "install_failed",
             "app://grindrplus/install_failure",
             props = mapOf("error" to e.message)
