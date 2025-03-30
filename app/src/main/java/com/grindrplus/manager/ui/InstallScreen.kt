@@ -2,7 +2,6 @@ package com.grindrplus.manager.ui
 
 import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,19 +33,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.DATA_URL
-import com.grindrplus.manager.Installation
+import com.grindrplus.manager.installation.Installation
 import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
 import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.ui.components.VersionSelector
-import com.grindrplus.manager.utils.ConsoleLogger
-import com.grindrplus.manager.utils.ConsoleOutput
 import com.grindrplus.manager.utils.ErrorHandler
-import com.grindrplus.manager.utils.LogEntry
-import com.grindrplus.manager.utils.LogType
 import com.grindrplus.manager.utils.StorageUtils
+import com.scottyab.rootbeer.RootBeer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -69,6 +65,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var selectedVersion by remember { mutableStateOf<Data?>(null) }
     var isInstalling by remember { mutableStateOf(false) }
     var installationSuccessful by remember { mutableStateOf(false) }
+    val isRooted = remember { RootBeer(context).isRooted }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -136,6 +133,15 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 modifier = Modifier.fillMaxWidth(),
                 type = BannerType.WARNING
             )
+
+            if (isRooted) {
+                MessageBanner(
+                    text = "We detected that your device is rooted.\nThe recommended way to use GrindrPlus with root is LSPosed.",
+                    isVisible = true,
+                    isPulsating = true,
+                    type = BannerType.ERROR
+                )
+            }
 
             VersionSelector(
                 versions = versionData,
