@@ -46,7 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -332,7 +336,13 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 Text(
-                                    text = "• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope.",
+                                    text = buildAnnotatedString {
+                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope. ")
+
+                                        withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                                            append("Do not use the Install section if you're using LSPosed.")
+                                        }
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
