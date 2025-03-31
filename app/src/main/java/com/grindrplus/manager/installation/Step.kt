@@ -8,15 +8,15 @@ import java.io.IOException
 interface Step {
     val name: String
 
-    suspend fun execute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit)
+    suspend fun execute(context: Context, print: Print)
 }
 
 abstract class BaseStep : Step {
-    override suspend fun execute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit) {
+    override suspend fun execute(context: Context, print: Print) {
         try {
             print("===== STEP: $name =====")
             withContext(Dispatchers.IO) {
-                doExecute(context, print, progress)
+                doExecute(context, print)
             }
             print("===== COMPLETED: $name =====")
         } catch (e: Exception) {
@@ -25,5 +25,5 @@ abstract class BaseStep : Step {
         }
     }
 
-    protected abstract suspend fun doExecute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit)
+    protected abstract suspend fun doExecute(context: Context, print: Print)
 }

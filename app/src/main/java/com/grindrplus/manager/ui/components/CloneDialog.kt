@@ -11,20 +11,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
+import com.grindrplus.manager.installation.steps.numberToWords
 import com.grindrplus.manager.utils.AppCloneUtils
 
 @Composable
 fun CloneDialog(
     context: Context,
     onDismiss: () -> Unit,
-    onStartCloning: (packageName: String, appName: String) -> Unit
+    onStartCloning: (packageName: String, appName: String, debuggable: Boolean) -> Unit,
 ) {
     val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
-
-    var packageName by remember { mutableStateOf("$GRINDR_PACKAGE_NAME.$nextCloneNumber") }
     var appName by remember { mutableStateOf("Grindr $nextCloneNumber") }
+    var debuggable by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
+    var packageName by remember {
+        mutableStateOf("$GRINDR_PACKAGE_NAME.${numberToWords(nextCloneNumber).lowercase()}")
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -61,7 +64,7 @@ fun CloneDialog(
                         if (isError) {
                             Text(errorText, color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text("Package name must be unique")
+                            Text("Package name must be unique and have no numbers in it")
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
@@ -83,6 +86,18 @@ fun CloneDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Debuggable")
+                    Switch(
+                        checked = debuggable,
+                        onCheckedChange = { debuggable = it }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
@@ -99,13 +114,21 @@ fun CloneDialog(
                                 return@Button
                             }
 
-                            if (AppCloneUtils.getExistingClones(context).contains(packageName)) {
+                            if (AppCloneUtils.getExistingClones(context)
+                                    .contains(packageName)
+                            ) {
                                 isError = true
                                 errorText = "This package name already exists"
                                 return@Button
                             }
 
-                            onStartCloning(packageName, appName)
+                            if (packageName.any { it.isDigit() }) {
+                                isError = true
+                                errorText = "Package name must not contain numbers"
+                                return@Button
+                            }
+
+                            onStartCloning(packageName, appName, debuggable)
                         }
                     ) {
                         Text("Clone")

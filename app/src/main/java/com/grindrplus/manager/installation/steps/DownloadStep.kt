@@ -2,6 +2,7 @@ package com.grindrplus.manager.installation.steps
 
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
+import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.download
 import com.grindrplus.manager.utils.validateFile
 import timber.log.Timber
@@ -16,7 +17,7 @@ class DownloadStep(
 ) : BaseStep() {
     override val name = "Downloading $fileType"
 
-    override suspend fun doExecute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit) {
+    override suspend fun doExecute(context: Context, print: Print) {
         print("Downloading $fileType file...")
 
         if (file.exists() && file.length() > 0) {
@@ -37,6 +38,5 @@ class DownloadStep(
 
         val sizeMB = file.length() / 1024 / (if (fileType == "mod") 1 else 1024)
         print("$fileType download completed (${sizeMB}${if (fileType == "mod") "KB" else "MB"})")
-        progress(0f)
     }
 }

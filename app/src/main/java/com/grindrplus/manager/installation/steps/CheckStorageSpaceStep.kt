@@ -3,6 +3,7 @@ package com.grindrplus.manager.installation.steps
 import android.app.ActivityManager
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
+import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.StorageUtils
 import timber.log.Timber
 import java.io.File
@@ -14,8 +15,7 @@ class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
 
     override suspend fun doExecute(
         context: Context,
-        print: (String) -> Unit,
-        progress: (Float) -> Unit,
+        print: Print,
     ) {
         // Check storage space
         val required = 200 * 1024 * 1024 // 200MB as a safe minimum

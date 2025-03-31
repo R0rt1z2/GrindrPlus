@@ -2,6 +2,7 @@ package com.grindrplus.manager.installation.steps
 
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
+import com.grindrplus.manager.installation.Print
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.lsposed.patch.LSPatch
@@ -18,7 +19,7 @@ class PatchApkStep(
 ) : BaseStep() {
     override val name = "Patching Grindr APK"
 
-    override suspend fun doExecute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit) {
+    override suspend fun doExecute(context: Context, print: Print) {
         print("Cleaning output directory...")
         outputDir.listFiles()?.forEach { it.delete() }
 

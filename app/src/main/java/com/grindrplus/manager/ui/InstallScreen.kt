@@ -2,6 +2,7 @@ package com.grindrplus.manager.ui
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +45,6 @@ import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.CloneDialog
 import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.ui.components.VersionSelector
-import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.ErrorHandler
 import com.grindrplus.manager.utils.StorageUtils
 import com.scottyab.rootbeer.RootBeer
@@ -59,9 +59,9 @@ import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
+import com.grindrplus.manager.installation.Print
 
 private val logEntries = mutableStateListOf<LogEntry>()
-private var progress by mutableFloatStateOf(0f)
 
 @Composable
 fun InstallPage(context: Activity, innerPadding: PaddingValues) {
@@ -73,8 +73,26 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var isCloning by remember { mutableStateOf(false) }
     var installationSuccessful by remember { mutableStateOf(false) }
     val isRooted = remember { RootBeer(context).isRooted }
-    val isGrindrInstalled = remember { AppCloneUtils.isGrindrInstalled(context) }
     var showCloneDialog by remember { mutableStateOf(false) }
+    var installation by remember { mutableStateOf<Installation?>(null) }
+
+    val print: Print = { output ->
+        Timber.tag(TAG).d(output)
+        val logType = ConsoleLogger.parseLogType(output)
+        context.runOnUiThread {
+            addLog(output, logType)
+        }
+    }
+
+    LaunchedEffect(selectedVersion) {
+        if (selectedVersion == null) return@LaunchedEffect
+        installation = Installation(
+            context,
+            selectedVersion!!.modVer,
+            selectedVersion!!.modUrl,
+            selectedVersion!!.grindrUrl
+        )
+    }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -107,7 +125,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         CloneDialog(
             context = context,
             onDismiss = { showCloneDialog = false },
-            onStartCloning = { packageName, appName ->
+            onStartCloning = { packageName, appName, debuggable ->
                 showCloneDialog = false
                 isCloning = true
                 activityScope.launch {
@@ -115,17 +133,17 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                     addLog("Target package: $packageName", LogType.INFO)
                     addLog("Target app name: $appName", LogType.INFO)
 
-                    val success = AppCloneUtils.cloneGrindr(
-                        context = context,
-                        newPackageName = packageName,
-                        newAppName = appName,
-                        print = { message ->
-                            addLog(message, ConsoleLogger.parseLogType(message))
-                        },
-                        progress = { progressValue ->
-                            progress = progressValue
-                        }
-                    )
+                    val success = try {
+                        installation!!.cloneGrindr(
+                            packageName, appName, debuggable,
+                            print
+                        )
+                        true
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).e(e, "Cloning failed")
+                        addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
+                        false
+                    }
 
                     if (success) {
                         addLog("Grindr clone created successfully!", LogType.SUCCESS)
@@ -272,7 +290,8 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                                     isInstalling = false
                                     installationSuccessful = success
                                 },
-                                context
+                                context,
+                                print
                             )
                         }
                     },
@@ -302,7 +321,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 }
             }
 
-            if (isGrindrInstalled) {
+            if (isGrindrInstalled(context)) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
@@ -445,6 +464,7 @@ private fun startInstallation(
     onStarted: () -> Unit,
     onCompleted: (Boolean) -> Unit,
     context: Activity,
+    print: Print
 ) {
     onStarted()
 
@@ -461,19 +481,7 @@ private fun startInstallation(
 
             withContext(Dispatchers.IO) {
                 installation.install(
-                    print = { output ->
-                        Timber.tag(TAG).d(output)
-                        val logType = ConsoleLogger.parseLogType(output)
-                        context.runOnUiThread {
-                            addLog(output, logType)
-                        }
-                    },
-
-                    progress = {
-                        context.runOnUiThread {
-                            progress = it
-                        }
-                    }
+                    print = print
                 )
             }
 
@@ -534,6 +542,15 @@ private fun launchGrindr(context: Context) {
         }
     } catch (e: Exception) {
         showToast(context, "Error launching Grindr: ${e.localizedMessage}")
+    }
+}
+
+private fun isGrindrInstalled(context: Context): Boolean {
+    return try {
+        context.packageManager.getPackageInfo(GRINDR_PACKAGE_NAME, 0)
+        true
+    } catch (_: PackageManager.NameNotFoundException) {
+        false
     }
 }
 
