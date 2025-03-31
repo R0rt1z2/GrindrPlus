@@ -93,6 +93,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             }
         )
     }
+
     Column(
         modifier = Modifier
             .padding(innerPadding)
@@ -127,7 +128,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             }
         } else {
             MessageBanner(
-                text = "Don't close the app while installation is in progress",
+                text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
                 isVisible = true,
                 isPulsating = isInstalling,
                 modifier = Modifier.fillMaxWidth(),
