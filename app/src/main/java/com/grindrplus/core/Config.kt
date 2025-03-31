@@ -9,6 +9,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
@@ -35,23 +36,23 @@ object Config {
         localConfig = readRemoteConfig()
     }
 
-    private fun readRemoteConfig(): JSONObject {
+    fun readRemoteConfig(): JSONObject {
         return try {
             val value = GrindrPlus.bridgeClient.getConfig()
             println("Called readRemoteConfig, isNull: ${value == null}")
             value ?: JSONObject().put("hooks", JSONObject())
         } catch (e: Exception) {
-            Log.e("GrindrPlus", "Error reading config file", e)
+            Timber.tag("GrindrPlus").e(e, "Error reading config file")
             JSONObject().put("hooks", JSONObject())
         }
     }
 
-    private fun writeRemoteConfig(json: JSONObject) {
+    fun writeRemoteConfig(json: JSONObject) {
         try {
             println("Called writeRemoteConfig")
             GrindrPlus.bridgeClient.setConfig(json)
         } catch (e: IOException) {
-            Log.e("GrindrPlus", "Failed to write config file", e)
+            Timber.tag("GrindrPlus").e(e, "Failed to write config file")
         }
     }
 
@@ -76,7 +77,7 @@ object Config {
 
     fun isHookEnabled(hookName: String): Boolean {
         val hooks = localConfig.optJSONObject("hooks") ?: return false
-        return hooks.optJSONObject(hookName)?.getBoolean("enabled") ?: false
+        return hooks.optJSONObject(hookName)?.getBoolean("enabled") == true
     }
 
     suspend fun initHookSettings(name: String, description: String, state: Boolean) {

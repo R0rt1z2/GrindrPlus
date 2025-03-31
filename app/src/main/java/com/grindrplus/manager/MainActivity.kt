@@ -77,6 +77,7 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 import androidx.core.net.toUri
 import com.grindrplus.manager.ui.CalculatorScreen
+import com.grindrplus.manager.utils.FileOperationHandler
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -112,6 +113,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(DebugTree())
+        FileOperationHandler.init(this)
 
         val isSystemInDarkTheme = resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK ==

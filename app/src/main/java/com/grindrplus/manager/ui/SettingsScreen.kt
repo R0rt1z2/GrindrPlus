@@ -25,7 +25,14 @@ import com.grindrplus.manager.settings.*
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
 import android.content.Intent
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.Info
+import com.grindrplus.core.Config
+import com.grindrplus.manager.utils.FileOperationHandler
+import com.grindrplus.manager.utils.uploadAndShare
+import org.json.JSONObject
+import kotlin.toString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +51,8 @@ fun SettingsScreen(
         AboutDialog(
             onDismiss = { showAboutDialog = false },
             onViewSourceCode = {
-                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/R0rt1z2/GrindrPlus".toUri())
+                val intent =
+                    Intent(Intent.ACTION_VIEW, "https://github.com/R0rt1z2/GrindrPlus".toUri())
                 context.startActivity(intent)
             }
         )
@@ -71,6 +79,44 @@ fun SettingsScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Export settings") },
+                                onClick = {
+                                    expanded = false
+                                    scope.launch {
+                                        val result = Config.readRemoteConfig()
+                                        FileOperationHandler.exportFile(
+                                            "grindrplus_settings.json",
+                                            result.toString()
+                                        )
+                                        snackbarHostState.showSnackbar("Settings exported successfully")
+                                    }
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Import settings") },
+                                onClick = {
+                                    expanded = false
+                                    try {
+                                        FileOperationHandler.importFile(
+                                            arrayOf("application/json")
+                                        ) {
+                                            Config.writeRemoteConfig(JSONObject(it))
+                                            viewModel.loadSettings()
+
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Settings imported successfully")
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Failed to import settings: ${e.message}")
+                                        }
+                                    }
+                                }
+                            )
+
                             DropdownMenuItem(
                                 text = { Text("About") },
                                 onClick = {
@@ -129,7 +175,7 @@ fun SettingsScreen(
 @Composable
 fun AboutDialog(
     onDismiss: () -> Unit,
-    onViewSourceCode: () -> Unit
+    onViewSourceCode: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -186,7 +232,10 @@ fun AboutDialog(
                                     color = MaterialTheme.colorScheme.primary
                                 ),
                                 modifier = Modifier.clickable {
-                                    val intent = Intent(Intent.ACTION_VIEW, "https://github.com/R0rt1z2".toUri())
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        "https://github.com/R0rt1z2".toUri()
+                                    )
                                     context.startActivity(intent)
                                 }
                             )
@@ -202,7 +251,10 @@ fun AboutDialog(
                                     color = MaterialTheme.colorScheme.primary
                                 ),
                                 modifier = Modifier.clickable {
-                                    val intent = Intent(Intent.ACTION_VIEW, "https://github.com/Rattly".toUri())
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        "https://github.com/Rattly".toUri()
+                                    )
                                     context.startActivity(intent)
                                 }
                             )
@@ -252,7 +304,7 @@ fun AboutDialog(
 @Composable
 fun SettingGroupSection(
     group: SettingGroup,
-    onSettingChanged: () -> Unit
+    onSettingChanged: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -290,7 +342,7 @@ fun SettingGroupSection(
 @Composable
 fun ImprovedSettingItem(
     setting: Setting,
-    onSettingChanged: () -> Unit
+    onSettingChanged: () -> Unit,
 ) {
     when (setting) {
         is SwitchSetting -> ImprovedSwitchSetting(setting) { onSettingChanged() }
@@ -302,7 +354,7 @@ fun ImprovedSettingItem(
 @Composable
 fun ImprovedSwitchSetting(
     setting: SwitchSetting,
-    onChanged: () -> Unit
+    onChanged: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -352,7 +404,7 @@ fun ImprovedSwitchSetting(
 @Composable
 fun ImprovedTextSetting(
     setting: TextSetting,
-    onChanged: () -> Unit
+    onChanged: () -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var text by remember { mutableStateOf(setting.value) }
