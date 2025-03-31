@@ -1,18 +1,56 @@
 package com.grindrplus.manager.ui
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,23 +59,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.grindrplus.manager.settings.*
-import kotlinx.coroutines.launch
 import androidx.core.net.toUri
-import android.content.Intent
-import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.filled.Info
 import com.grindrplus.core.Config
+import com.grindrplus.manager.settings.ButtonSetting
+import com.grindrplus.manager.settings.KeyboardType
+import com.grindrplus.manager.settings.Setting
+import com.grindrplus.manager.settings.SettingGroup
+import com.grindrplus.manager.settings.SettingsViewModel
+import com.grindrplus.manager.settings.SwitchSetting
+import com.grindrplus.manager.settings.TextSetting
+import com.grindrplus.manager.settings.rememberViewModel
 import com.grindrplus.manager.utils.FileOperationHandler
-import com.grindrplus.manager.utils.uploadAndShare
+import kotlinx.coroutines.launch
 import org.json.JSONObject
-import kotlin.toString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    paddingValues: PaddingValues,
     viewModel: SettingsViewModel = rememberViewModel(),
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
@@ -85,10 +123,12 @@ fun SettingsScreen(
                                     expanded = false
                                     scope.launch {
                                         val result = Config.readRemoteConfig()
+
                                         FileOperationHandler.exportFile(
                                             "grindrplus_settings.json",
-                                            result.toString()
+                                            result.toString(4)
                                         )
+
                                         snackbarHostState.showSnackbar("Settings exported successfully")
                                     }
                                 }

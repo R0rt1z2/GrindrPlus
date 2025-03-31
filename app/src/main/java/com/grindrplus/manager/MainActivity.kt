@@ -76,6 +76,7 @@ import kotlinx.coroutines.cancel
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 import androidx.core.net.toUri
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.utils.FileOperationHandler
 
@@ -90,7 +91,7 @@ sealed class MainNavItem(
     val composable: @Composable PaddingValues.(Activity) -> Unit,
 ) {
     data object Settings :
-        MainNavItem(Icons.Filled.Settings, "Settings", { SettingsScreen(this) })
+        MainNavItem(Icons.Filled.Settings, "Settings", { SettingsScreen() })
 
     data object InstallPage :
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
@@ -100,7 +101,7 @@ sealed class MainNavItem(
     // data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
-        val VALUES by lazy { listOf(InstallPage, Home, Settings ) }
+        val VALUES by lazy { listOf(InstallPage, Home, Settings) }
     }
 }
 
@@ -164,7 +165,10 @@ class MainActivity : ComponentActivity() {
                         )
 
                         plausible?.enable(true)
-                        plausible?.pageView("app://grindrplus/home", props = mapOf("android_version" to Build.VERSION.SDK_INT))
+                        plausible?.pageView(
+                            "app://grindrplus/home",
+                            props = mapOf("android_version" to Build.VERSION.SDK_INT)
+                        )
                     }
 
                     if (Config.get("first_launch", true) as Boolean) {
@@ -236,7 +240,9 @@ class MainActivity : ComponentActivity() {
 
                                 Button(
                                     onClick = { firstLaunchDialog = false },
-                                    modifier = Modifier.align(CenterHorizontally).padding(top = 16.dp)
+                                    modifier = Modifier
+                                        .align(CenterHorizontally)
+                                        .padding(top = 16.dp)
                                 ) {
                                     Text("Ok, got it")
                                 }
@@ -355,7 +361,9 @@ class MainActivity : ComponentActivity() {
 
                                 Button(
                                     onClick = { patchInfoDialog = false },
-                                    modifier = Modifier.align(CenterHorizontally).padding(top = 8.dp)
+                                    modifier = Modifier
+                                        .align(CenterHorizontally)
+                                        .padding(top = 8.dp)
                                 ) {
                                     Text("Understood")
                                 }
@@ -390,7 +398,9 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             BottomAppBar(modifier = Modifier) {
                                 var selectedItem by remember { mutableIntStateOf(0) }
-                                var currentRoute by remember { mutableStateOf(MainNavItem.Home.toString()) }
+                                var currentRoute =
+                                    navController.currentBackStackEntryAsState().value?.destination?.route
+                                        ?: MainNavItem.Home.toString()
 
                                 MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
                                     if (navigationItem.toString() == currentRoute) {
@@ -442,17 +452,6 @@ fun NavController.navigateItem(item: MainNavItem) {
 
         launchSingleTop = true
         restoreState = true
-    }
-}
-
-@Composable
-fun ComingSoon() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = CenterHorizontally,
-        verticalArrangement = Center
-    ) {
-        Text("Coming soon!", fontSize = TextUnit(24f, TextUnitType.Sp))
     }
 }
 
