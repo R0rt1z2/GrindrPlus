@@ -13,6 +13,7 @@ import com.tonyodev.fetch2.NetworkType
 import com.tonyodev.fetch2.Priority
 import com.tonyodev.fetch2.Request
 import com.tonyodev.fetch2core.DownloadBlock
+import com.tonyodev.fetch2core.Downloader
 import com.tonyodev.fetch2okhttp.OkHttpDownloader
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
@@ -67,14 +68,15 @@ suspend fun download(
         if (_fetch == null) {
             _fetch = Fetch.Impl.getInstance(
                 FetchConfiguration.Builder(context)
-                    .setDownloadConcurrentLimit(1)
+                    .setDownloadConcurrentLimit(10)
                     .setAutoRetryMaxAttempts(3)
                     .enableLogging(true)
                     .enableAutoStart(true)
                     .enableRetryOnNetworkGain(true)
                     .setHttpDownloader(
                         OkHttpDownloader(
-                            getCustomTrustedOkHttpClient(context)
+                            getCustomTrustedOkHttpClient(context),
+                            Downloader.FileDownloaderType.PARALLEL
                         )
                     )
                     .setNotificationManager(
