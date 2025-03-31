@@ -2,14 +2,15 @@ package com.grindrplus.manager.installation
 
 import android.content.Context
 import android.widget.Toast
-import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.MainActivity.Companion.plausible
 import com.grindrplus.manager.installation.steps.CheckStorageSpaceStep
+import com.grindrplus.manager.installation.steps.CloneGrindrStep
 import com.grindrplus.manager.installation.steps.DownloadStep
 import com.grindrplus.manager.installation.steps.ExtractBundleStep
 import com.grindrplus.manager.installation.steps.InstallApkStep
 import com.grindrplus.manager.installation.steps.PatchApkStep
-import com.grindrplus.manager.utils.newKeystore
+import com.grindrplus.manager.installation.steps.SignClonedGrindrApk
+import com.grindrplus.manager.utils.KeyStoreUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,72 +20,74 @@ import java.io.File
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
+typealias Print = (String) -> Unit
+
 class Installation(
     private val context: Context,
-    modVer: String,
+    val version: String,
     modUrl: String,
     grindrUrl: String,
 ) {
+    private val keyStoreUtils = KeyStoreUtils(context)
     private val folder = context.getExternalFilesDir(null)
         ?: throw IOException("External files directory not available")
     private val unzipFolder = File(folder, "splitApks/").also { it.mkdirs() }
     private val outputDir = File(folder, "LSPatchOutput/").also { it.mkdirs() }
-    private val modFile = File(folder, "mod-$modVer.zip")
-    private val bundleFile = File(folder, "grindr-$modVer.zip")
-    private val keyStore by lazy {
-        File(context.cacheDir, "keystore.jks").also {
-            if (!it.exists()) {
-                try {
-                    newKeystore(it)
-                } catch (e: Exception) {
-                    showToast("Failed to create keystore: ${e.localizedMessage}")
-                    throw e
-                }
-            }
-        }
-    }
+    private val modFile = File(folder, "mod-$version.zip")
+    private val bundleFile = File(folder, "grindr-$version.zip")
 
-    // Order matters
-    private val steps = listOf<Step>(
+    private val installStep = InstallApkStep(outputDir)
+    private val patchApkStep = PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore)
+    private val commonSteps = listOf(
+        // Order matters
         CheckStorageSpaceStep(folder),
         DownloadStep(bundleFile, grindrUrl, "Grindr bundle"),
-        ExtractBundleStep(bundleFile, unzipFolder),
         DownloadStep(modFile, modUrl, "mod"),
-        PatchApkStep(unzipFolder, outputDir, modFile, keyStore),
-        InstallApkStep(outputDir)
+        ExtractBundleStep(bundleFile, unzipFolder),
     )
 
-    suspend fun install(print: (String) -> Unit, progress: (Float) -> Unit) = try {
+    suspend fun performOperation(
+        steps: List<Step>,
+        operationName: String,
+        onSuccess: suspend () -> Unit = {},
+        print: Print,
+    ) = try {
         withContext(Dispatchers.IO) {
-            plausible?.pageView("app://grindrplus/install")
+            plausible?.pageView("app://grindrplus/$operationName")
 
             val time = measureTimeMillis {
-                for (step in steps.dropLast(1)) {
-                    step.execute(context, print, progress)
+                for (step in steps) {
+                    print("Executing step: ${step.name}")
+
+                    val time = measureTimeMillis {
+                        step.execute(context, print)
+                    }
+
+                    print("Step ${step.name} completed in ${time / 1000} seconds")
                 }
             }
 
-            print("Patching completed successfully in ${time / 1000 / 60}m${time / 1000}s!")
             plausible?.event(
-                "install_success",
-                "app://grindrplus/install_success",
+                "${operationName}_success",
+                "app://grindrplus/${operationName}_success",
                 props = mapOf("time" to time)
             )
 
-            steps.last().execute(context, print, progress)
-
-            showToast("Installation completed successfully!")
+            onSuccess()
         }
     } catch (e: CancellationException) {
-        print("Installation was cancelled")
-        showToast("Installation was cancelled")
-        plausible?.event("install_cancelled", "app://grindrplus/install_cancelled")
+        print("$operationName was cancelled")
+        showToast("$operationName was cancelled")
+        plausible?.event(
+            "${operationName}_cancelled",
+            "app://grindrplus/${operationName}_cancelled"
+        )
         throw e
     } catch (e: Exception) {
-        val errorMsg = "Installation failed: ${e.localizedMessage}"
+        val errorMsg = "$operationName failed: ${e.localizedMessage}"
         plausible?.event(
-            "install_failed",
-            "app://grindrplus/install_failure",
+            "${operationName}_failed",
+            "app://grindrplus/${operationName}_failure",
             props = mapOf("error" to e.message)
         )
         print(errorMsg)
@@ -92,6 +95,31 @@ class Installation(
         cleanupOnFailure()
         throw e
     }
+
+    suspend fun install(print: Print) = performOperation(
+        steps = commonSteps + listOf(patchApkStep, installStep),
+        operationName = "install",
+        print = print,
+    )
+
+    suspend fun cloneGrindr(
+        packageName: String,
+        appName: String,
+        debuggable: Boolean,
+        print: Print,
+    ) = performOperation(
+        steps = commonSteps + listOf(
+            patchApkStep,
+            CloneGrindrStep(
+                folder = outputDir,
+                packageName = packageName,
+                appName = appName,
+                debuggable = debuggable
+            ), SignClonedGrindrApk(keyStoreUtils, outputDir), installStep
+        ),
+        operationName = "clone",
+        print = print,
+    )
 
     private fun cleanupOnFailure() {
         try {
@@ -104,7 +132,7 @@ class Installation(
         }
     }
 
-    private fun showToast(message: String) {
+    fun showToast(message: String) {
         CoroutineScope(Dispatchers.Main).launch {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }

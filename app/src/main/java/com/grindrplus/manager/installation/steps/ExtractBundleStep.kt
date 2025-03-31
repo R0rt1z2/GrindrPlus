@@ -2,6 +2,7 @@ package com.grindrplus.manager.installation.steps
 
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
+import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.unzip
 import java.io.File
 import java.io.IOException
@@ -13,7 +14,7 @@ class ExtractBundleStep(
 ) : BaseStep() {
     override val name = "Extracting Bundle"
 
-    override suspend fun doExecute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit) {
+    override suspend fun doExecute(context: Context, print: Print) {
         try {
             print("Cleaning extraction directory...")
             unzipFolder.listFiles()?.forEach { it.delete() }
@@ -31,8 +32,6 @@ class ExtractBundleStep(
             apkFiles.forEachIndexed { index, file ->
                 print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")
             }
-
-            progress(0f)
         } catch (e: Exception) {
             throw IOException("Failed to extract bundle file: ${e.localizedMessage}")
         }

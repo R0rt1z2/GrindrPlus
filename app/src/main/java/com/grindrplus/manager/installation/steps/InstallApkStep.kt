@@ -2,6 +2,7 @@ package com.grindrplus.manager.installation.steps
 
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
+import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.SessionInstaller
 import java.io.File
 import java.io.IOException
@@ -12,7 +13,7 @@ class InstallApkStep(
 ) : BaseStep() {
     override val name = "Installing Grindr APK"
 
-    override suspend fun doExecute(context: Context, print: (String) -> Unit, progress: (Float) -> Unit) {
+    override suspend fun doExecute(context: Context, print: Print) {
         val patchedFiles = outputDir.listFiles()?.toList() ?: emptyList()
         if (patchedFiles.isEmpty()) {
             throw IOException("No patched APK files found for installation")
