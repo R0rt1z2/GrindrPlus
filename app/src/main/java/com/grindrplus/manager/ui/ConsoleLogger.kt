@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.core.content.ContextCompat.getSystemService
+import com.grindrplus.manager.utils.uploadAndShare
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -112,24 +113,7 @@ fun ConsoleOutput(
                         uploadingLogs = true
                         scope.launch {
                             Toast.makeText(context, "Uploading logs...", Toast.LENGTH_SHORT).show()
-
-                            val response = withContext(Dispatchers.IO) {
-                                Socket("termbin.com", 9999).use { socket ->
-                                    socket.getOutputStream().write(logs.toByteArray())
-                                    socket.getInputStream().bufferedReader().readText()
-                                }.trim().replace("\n", "")
-                            }
-
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, response)
-                            }
-
-                            val shareIntent =
-                                Intent.createChooser(sendIntent, "Share installation logs")
-                            context.startActivity(shareIntent)
-
+                            uploadAndShare(logs, context)
                             delay(1000) // Prevent from spamming upload button
                         }.invokeOnCompletion {
                             uploadingLogs = false // should be always invoked
