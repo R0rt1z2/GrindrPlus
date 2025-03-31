@@ -23,8 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.PhotoAlbum
-import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -55,7 +53,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -142,12 +139,14 @@ class MainActivity : ComponentActivity() {
             var firstLaunchDialog by remember { mutableStateOf(false) }
             var patchInfoDialog by remember { mutableStateOf(false) }
             var showUninstallDialogState by remember { showUninstallDialog }
+            var calculatorScreen = remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
                 GrindrPlus.bridgeClient.connect {
                     Config.initialize(null)
                     HookManager().registerHooks(false)
+                    calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
                     serviceBound = true
 
                     if (Config.get("analytics", true) as Boolean) {
@@ -183,8 +182,8 @@ class MainActivity : ComponentActivity() {
             GrindrPlusTheme(
                 dynamicColor = Config.get("material_you", false) as Boolean,
             ) {
-                if (Config.get("discreet_icon", false) as Boolean) {
-                    CalculatorScreen()
+                if (calculatorScreen.value) {
+                    CalculatorScreen(calculatorScreen)
                     return@GrindrPlusTheme
                 }
 
