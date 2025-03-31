@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -58,7 +57,6 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                 ),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Display
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,17 +66,24 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
+                val formattedDisplay = remember(display) {
+                    if (display.length > 12) {
+                        display.chunked(12).joinToString("\n")
+                    } else {
+                        display
+                    }
+                }
+
                 Text(
-                    text = display,
+                    text = formattedDisplay,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Normal,
-                    maxLines = 1,
-                    overflow = TextOverflow.Visible,
-                    textAlign = TextAlign.End
+                    maxLines = 3,
+                    textAlign = TextAlign.End,
+                    lineHeight = 52.sp
                 )
             }
-
             Spacer(modifier = Modifier.height(12.dp))
 
             Column(
