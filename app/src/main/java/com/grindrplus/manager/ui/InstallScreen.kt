@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -33,13 +36,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.DATA_URL
-import com.grindrplus.manager.installation.Installation
 import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
+import com.grindrplus.manager.installation.Installation
 import com.grindrplus.manager.ui.components.BannerType
+import com.grindrplus.manager.ui.components.CloneDialog
 import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.ui.components.VersionSelector
+import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.ErrorHandler
 import com.grindrplus.manager.utils.StorageUtils
 import com.scottyab.rootbeer.RootBeer
@@ -53,6 +58,7 @@ import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import androidx.core.net.toUri
 
 private val logEntries = mutableStateListOf<LogEntry>()
 private var progress by mutableFloatStateOf(0f)
@@ -64,8 +70,11 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     val versionData = remember { mutableStateListOf<Data>() }
     var selectedVersion by remember { mutableStateOf<Data?>(null) }
     var isInstalling by remember { mutableStateOf(false) }
+    var isCloning by remember { mutableStateOf(false) }
     var installationSuccessful by remember { mutableStateOf(false) }
     val isRooted = remember { RootBeer(context).isRooted }
+    val isGrindrInstalled = remember { AppCloneUtils.isGrindrInstalled(context) }
+    var showCloneDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -90,6 +99,42 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 errorMessage = error
                 isLoading = false
                 addLog("Failed to load version data: $error", LogType.ERROR)
+            }
+        )
+    }
+
+    if (showCloneDialog) {
+        CloneDialog(
+            context = context,
+            onDismiss = { showCloneDialog = false },
+            onStartCloning = { packageName, appName ->
+                showCloneDialog = false
+                isCloning = true
+                activityScope.launch {
+                    addLog("Starting Grindr cloning process...", LogType.INFO)
+                    addLog("Target package: $packageName", LogType.INFO)
+                    addLog("Target app name: $appName", LogType.INFO)
+
+                    val success = AppCloneUtils.cloneGrindr(
+                        context = context,
+                        newPackageName = packageName,
+                        newAppName = appName,
+                        print = { message ->
+                            addLog(message, ConsoleLogger.parseLogType(message))
+                        },
+                        progress = { progressValue ->
+                            progress = progressValue
+                        }
+                    )
+
+                    if (success) {
+                        addLog("Grindr clone created successfully!", LogType.SUCCESS)
+                    } else {
+                        addLog("Failed to clone Grindr", LogType.ERROR)
+                    }
+
+                    isCloning = false
+                }
             }
         )
     }
@@ -130,7 +175,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             MessageBanner(
                 text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
                 isVisible = true,
-                isPulsating = isInstalling,
+                isPulsating = isInstalling || isCloning,
                 modifier = Modifier.fillMaxWidth(),
                 type = BannerType.WARNING
             )
@@ -151,7 +196,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                     selectedVersion = it
                     addLog("Selected version ${it.modVer}", LogType.INFO)
                 },
-                isEnabled = !isInstalling,
+                isEnabled = !isInstalling && !isCloning,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -193,7 +238,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                             }
                         }
                     },
-                    enabled = !isInstalling,
+                    enabled = !isInstalling && !isCloning,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
@@ -231,7 +276,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                             )
                         }
                     },
-                    enabled = (selectedVersion != null && !isInstalling) || installationSuccessful,
+                    enabled = (selectedVersion != null && !isInstalling && !isCloning) || installationSuccessful,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -252,6 +297,30 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                         } else {
                             "Install"
                         },
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+
+            if (isGrindrInstalled) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { showCloneDialog = true },
+                    enabled = !isInstalling && !isCloning,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Clone",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = if (isCloning) "Cloning..." else "Clone Grindr",
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
