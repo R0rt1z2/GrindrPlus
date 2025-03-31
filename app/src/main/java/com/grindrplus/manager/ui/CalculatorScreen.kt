@@ -24,6 +24,10 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
     var newNumber by remember { mutableStateOf(true) }
     var showPasswordDialog by remember { mutableStateOf(false) }
 
+    val windowInsets = WindowInsets.systemBars
+    val topInset = windowInsets.asPaddingValues().calculateTopPadding()
+    val bottomInset = windowInsets.asPaddingValues().calculateBottomPadding()
+
     LaunchedEffect(Unit) {
         showPasswordDialog = Config.get("calculator_first_launch", true) as Boolean
     }
@@ -42,7 +46,12 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = topInset + 16.dp,
+                    bottom = bottomInset + 16.dp
+                ),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Display
@@ -68,7 +77,6 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Buttons grid in fixed layout
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
