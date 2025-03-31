@@ -79,6 +79,7 @@ import kotlinx.coroutines.cancel
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 import androidx.core.net.toUri
+import com.grindrplus.manager.ui.CalculatorScreen
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -182,6 +183,11 @@ class MainActivity : ComponentActivity() {
             GrindrPlusTheme(
                 dynamicColor = Config.get("material_you", false) as Boolean,
             ) {
+                if (Config.get("discreet_icon", false) as Boolean) {
+                    CalculatorScreen()
+                    return@GrindrPlusTheme
+                }
+
                 if (firstLaunchDialog) {
                     Dialog(
                         onDismissRequest = { firstLaunchDialog = false }) {
