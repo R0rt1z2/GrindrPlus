@@ -33,7 +33,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(paddingValues),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         if (isLoading) {

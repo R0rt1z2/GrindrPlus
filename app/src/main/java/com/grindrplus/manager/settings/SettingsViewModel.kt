@@ -2,6 +2,7 @@ package com.grindrplus.manager.settings
 
 import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -10,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.grindrplus.core.Config
+import com.grindrplus.manager.utils.AppIconManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -133,6 +135,27 @@ class SettingsViewModel(
                             viewModelScope.launch {
                                 Config.put("analytics", it)
                                 loadSettings()
+                            }
+                        }
+                    ),
+                    SwitchSetting(
+                        id = "discreet_icon",
+                        title = "Camouflage app",
+                        description = "Hide the app icon and use a different name",
+                        isChecked = Config.get("discreet_icon", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("discreet_icon", it)
+                                loadSettings()
+
+                                val appIconManager = AppIconManager(context)
+                                appIconManager.changeAppIcon(if (it) AppIconManager.DISCREET_ICON else AppIconManager.DEFAULT_ICON)
+
+                                Toast.makeText(
+                                    context,
+                                    "App icon changed. It may take a moment to update.",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
                     )
