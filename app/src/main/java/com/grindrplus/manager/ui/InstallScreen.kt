@@ -75,6 +75,8 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     val isRooted = remember { RootBeer(context).isRooted }
     var showCloneDialog by remember { mutableStateOf(false) }
     var installation by remember { mutableStateOf<Installation?>(null) }
+    var warningBannerVisible by remember { mutableStateOf(true) }
+    var rootedBannerVisible by remember { mutableStateOf(isRooted) }
 
     val print: Print = { output ->
         Timber.tag(TAG).d(output)
@@ -192,18 +194,21 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         } else {
             MessageBanner(
                 text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
-                isVisible = true,
+                isVisible = warningBannerVisible,
                 isPulsating = isInstalling || isCloning,
                 modifier = Modifier.fillMaxWidth(),
-                type = BannerType.WARNING
+                type = BannerType.WARNING,
+                onDismiss = { warningBannerVisible = false }
             )
 
             if (isRooted) {
                 MessageBanner(
                     text = "We detected that your device is rooted.\nThe recommended way to use GrindrPlus with root is LSPosed.",
-                    isVisible = true,
+                    isVisible = rootedBannerVisible,
                     isPulsating = true,
-                    type = BannerType.ERROR
+                    modifier = Modifier.fillMaxWidth(),
+                    type = BannerType.ERROR,
+                    onDismiss = { rootedBannerVisible = false }
                 )
             }
 

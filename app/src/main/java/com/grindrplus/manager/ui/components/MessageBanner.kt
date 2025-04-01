@@ -10,12 +10,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Error
@@ -25,6 +27,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -47,8 +52,11 @@ fun MessageBanner(
     modifier: Modifier = Modifier,
     type: BannerType = BannerType.INFO,
     isVisible: Boolean = true,
-    isPulsating: Boolean = false
+    isPulsating: Boolean = false,
+    onDismiss: (() -> Unit)? = null
 ) {
+    var bannerVisible by remember { mutableStateOf(isVisible) }
+
     val (backgroundColor, borderColor, iconTint, icon) = when (type) {
         BannerType.INFO -> Quad(
             Color(0xFF2196F3).copy(alpha = 0.15f),
@@ -77,7 +85,7 @@ fun MessageBanner(
     }
 
     AnimatedVisibility(
-        visible = isVisible,
+        visible = bannerVisible,
         enter = fadeIn(animationSpec = tween(300)),
         exit = fadeOut(animationSpec = tween(300))
     ) {
@@ -96,7 +104,7 @@ fun MessageBanner(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
-                .alpha(if (isPulsating && isVisible) alpha else 1f)
+                .alpha(if (isPulsating && bannerVisible) alpha else 1f)
                 .clip(RoundedCornerShape(8.dp))
                 .border(
                     width = 1.dp,
@@ -126,6 +134,20 @@ fun MessageBanner(
                     textAlign = TextAlign.Start,
                     modifier = Modifier.weight(1f)
                 )
+
+                if (onDismiss != null) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Dismiss",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .clickable {
+                                bannerVisible = false
+                                onDismiss()
+                            }
+                    )
+                }
             }
         }
     }
