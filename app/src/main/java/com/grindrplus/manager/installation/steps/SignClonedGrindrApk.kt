@@ -17,10 +17,19 @@ class SignClonedGrindrApk(val keyStoreUtils: KeyStoreUtils, val outputDir: File)
                 continue
             }
 
-            print("Signing ${file.name}...")
+//            val outFile = File(outputDir, "${file.name}-aligned.apk")
+//            val zipIn = RandomAccessFile(file, "r");
+//            val zipOut = outFile.outputStream();
+//
+//            print("Aligning ${file.name}...")
+//
+//            ZipAlign.alignZip(zipIn, zipOut)
+//
+//            print("Signing ${outFile.name}...")
 
             try {
-                keyStoreUtils.signApk(file, File(outputDir, "signed-${file.name}.apk"))
+                keyStoreUtils.signApk(file, File(outputDir, "${file.name}-signed.apk"))
+                //outFile.delete()
                 file.delete()
             } catch (e: Exception) {
                 print("Failed to sign ${file.name}: ${e.localizedMessage}")
