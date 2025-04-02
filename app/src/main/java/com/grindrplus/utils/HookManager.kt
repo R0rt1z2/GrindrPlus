@@ -60,7 +60,6 @@ class HookManager {
                 UnlimitedProfiles(),
                 ProfileDetails(),
                 ProfileViews(),
-                SignatureSpoofer(),
                 // UnlimitedAlbums(),
                 QuickBlock(),
                 EmptyCalls(),
