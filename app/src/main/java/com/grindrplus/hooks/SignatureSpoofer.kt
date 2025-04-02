@@ -14,6 +14,7 @@ class SignatureSpoofer :
         "com.google.firebase.remoteconfig.internal.ConfigRealtimeHttpClient"
     private val configFetchHttpClient =
         "com.google.firebase.remoteconfig.internal.ConfigFetchHttpClient"
+    private val imgAndroidG = "ly.img.android.g"
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun init() {
@@ -31,6 +32,10 @@ class SignatureSpoofer :
             findClass(className).hook("getFingerprintHashForPackage", HookStage.BEFORE) { param ->
                 param.setResult(packageSignature)
             }
+        }
+
+        findClass(imgAndroidG).hook("a", HookStage.BEFORE) { param ->
+            param.setResult(true)
         }
     }
 }
