@@ -118,6 +118,7 @@ dependencies {
     implementation("com.github.tonyofrancis.Fetch:fetch2okhttp:3.4.1")
     implementation("com.scottyab:rootbeer-lib:0.1.1")
     implementation("io.github.diamondminer88:zip-android:2.2.0@aar")
+    implementation("com.github.iyxan23:zipalign-java:1.2.1")
 }
 
 tasks.register("setupLSPatch") {

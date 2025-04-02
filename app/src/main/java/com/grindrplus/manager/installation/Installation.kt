@@ -109,13 +109,13 @@ class Installation(
         print: Print,
     ) = performOperation(
         steps = commonSteps + listOf(
-            patchApkStep,
             CloneGrindrStep(
-                folder = outputDir,
+                folder = unzipFolder,
                 packageName = packageName,
                 appName = appName,
                 debuggable = debuggable
-            ), SignClonedGrindrApk(keyStoreUtils, outputDir), installStep
+            ), SignClonedGrindrApk(keyStoreUtils, unzipFolder),
+            patchApkStep, installStep
         ),
         operationName = "clone",
         print = print,

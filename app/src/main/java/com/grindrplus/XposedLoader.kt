@@ -30,7 +30,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     }
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (lpparam.packageName != GRINDR_PACKAGE_NAME) return
+        if (!lpparam.packageName.contains(GRINDR_PACKAGE_NAME)) return
 
         if (BuildConfig.DEBUG) {
             // disable SSL pinning if running in debug mode
