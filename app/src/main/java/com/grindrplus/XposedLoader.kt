@@ -4,6 +4,7 @@ import android.app.Application
 import android.widget.Toast
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
+import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.IXposedHookLoadPackage
@@ -30,7 +31,13 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     }
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (!lpparam.packageName.contains(GRINDR_PACKAGE_NAME)) return
+        if (!lpparam.packageName.contains(GRINDR_PACKAGE_NAME)) {
+            println("Module mismatch! package is ${lpparam.packageName}, expected $GRINDR_PACKAGE_NAME")
+            return
+        }
+
+        println("Spoofing signatures..")
+        SignatureSpoofer().init(lpparam)
 
         if (BuildConfig.DEBUG) {
             // disable SSL pinning if running in debug mode
@@ -42,13 +49,13 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                         val trustAlLCerts = arrayOf<TrustManager>(object : X509TrustManager {
                             override fun checkClientTrusted(
                                 chain: Array<out X509Certificate>?,
-                                authType: String?
+                                authType: String?,
                             ) {
                             }
 
                             override fun checkServerTrusted(
                                 chain: Array<out X509Certificate>?,
-                                authType: String?
+                                authType: String?,
                             ) {
                             }
 
@@ -105,10 +112,20 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
             if (pkgInfo.versionName !in BuildConfig.TARGET_GRINDR_VERSIONS) {
                 Toast.makeText(
                     application,
-                    "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${BuildConfig.TARGET_GRINDR_VERSIONS.joinToString("_")}). Mod disabled.",
+                    "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${
+                        BuildConfig.TARGET_GRINDR_VERSIONS.joinToString(
+                            "_"
+                        )
+                    }). Mod disabled.",
                     Toast.LENGTH_LONG
                 ).show()
-                logger.log("Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${BuildConfig.TARGET_GRINDR_VERSIONS.joinToString("_")}). Mod disabled.")
+                logger.log(
+                    "Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${
+                        BuildConfig.TARGET_GRINDR_VERSIONS.joinToString(
+                            "_"
+                        )
+                    }). Mod disabled."
+                )
                 return@hook
             }
 
