@@ -7,10 +7,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.installation.steps.numberToWords
 import com.grindrplus.manager.utils.AppCloneUtils
 
@@ -25,8 +32,30 @@ fun CloneDialog(
     var debuggable by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
-    var packageName by remember {
-        mutableStateOf("$GRINDR_PACKAGE_NAME.${numberToWords(nextCloneNumber).lowercase()}")
+
+    val packagePrefix = "com.grindrapp.android."
+    var packageSuffix by remember { mutableStateOf(numberToWords(nextCloneNumber).lowercase()) }
+    val fullPackageName = "$packagePrefix$packageSuffix"
+
+    val prefixVisualTransformation = VisualTransformation { text ->
+        val prefixedText = buildAnnotatedString {
+            withStyle(SpanStyle(color = Color.Gray)) {
+                append(packagePrefix)
+            }
+            append(text)
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                return offset + packagePrefix.length
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                return if (offset <= packagePrefix.length) 0 else offset - packagePrefix.length
+            }
+        }
+
+        TransformedText(prefixedText, offsetMapping)
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -52,9 +81,9 @@ fun CloneDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = packageName,
+                    value = packageSuffix,
                     onValueChange = {
-                        packageName = it
+                        packageSuffix = it
                         isError = false
                     },
                     label = { Text("Package Name") },
@@ -64,11 +93,12 @@ fun CloneDialog(
                         if (isError) {
                             Text(errorText, color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text("Package name must be unique and have no numbers in it")
+                            Text("Suffix must be unique and have no numbers in it")
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-                    singleLine = true
+                    singleLine = true,
+                    visualTransformation = prefixVisualTransformation
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -108,27 +138,27 @@ fun CloneDialog(
 
                     Button(
                         onClick = {
-                            if (packageName.isBlank() || !packageName.contains(".")) {
+                            if (packageSuffix.isBlank()) {
                                 isError = true
-                                errorText = "Please enter a valid package name"
+                                errorText = "Please enter a valid suffix"
                                 return@Button
                             }
 
                             if (AppCloneUtils.getExistingClones(context)
-                                    .contains(packageName)
+                                    .contains(fullPackageName)
                             ) {
                                 isError = true
                                 errorText = "This package name already exists"
                                 return@Button
                             }
 
-                            if (packageName.any { it.isDigit() }) {
+                            if (packageSuffix.any { it.isDigit() }) {
                                 isError = true
                                 errorText = "Package name must not contain numbers"
                                 return@Button
                             }
 
-                            onStartCloning(packageName, appName, debuggable)
+                            onStartCloning(fullPackageName, appName, debuggable)
                         }
                     ) {
                         Text("Clone")
