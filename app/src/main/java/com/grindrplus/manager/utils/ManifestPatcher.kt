@@ -161,10 +161,21 @@ object ManifestPatcher {
                                     val visitor = super.child(ns, name)
 
                                     return when (name) {
-                                        "activity" -> ReplaceAttrsVisitor(
-                                            visitor,
-                                            mapOf("label" to appName)
-                                        )
+                                        "activity-alias" -> object : NodeVisitor(visitor) {
+                                            override fun attr(
+                                                ns: String?,
+                                                name: String?,
+                                                resourceId: Int,
+                                                type: Int,
+                                                value: Any?,
+                                            ) {
+                                                if (name == "label") {
+                                                    super.attr(ns, name, resourceId, TYPE_STRING, appName)
+                                                } else {
+                                                    super.attr(ns, name, resourceId, type, value)
+                                                }
+                                            }
+                                        }
 
                                         "provider" -> object : NodeVisitor(visitor) {
                                             override fun attr(
@@ -239,11 +250,14 @@ object ManifestPatcher {
 
         reader.accept(
             object : AxmlVisitor(writer) {
-                override fun child(ns: String?, name: String?): ReplaceAttrsVisitor {
-                    return ReplaceAttrsVisitor(
-                        super.child(ns, name),
-                        mapOf("package" to packageName)
-                    )
+                override fun child(ns: String?, name: String?): NodeVisitor {
+                    val nv = super.child(ns, name)
+
+                    if (name == "manifest") {
+                        return ReplaceAttrsVisitor(nv, mapOf("package" to packageName))
+                    }
+
+                    return nv
                 }
             }
         )
