@@ -2,19 +2,13 @@ package com.grindrplus.manager.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.File
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
-import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.installation.steps.numberToWords
-import java.io.FileOutputStream
-import java.io.IOException
 
 object AppCloneUtils {
+    const val GRINDR_PACKAGE_PREFIX = "com.grindrapp.android."
+    const val GRINDR_PACKAGE_NAME = "com.grindr"
+
     /**
      * Check if Grindr is installed on the device
      */
@@ -34,7 +28,7 @@ object AppCloneUtils {
         val pm = context.packageManager
         val packages = pm.getInstalledPackages(0)
         return packages
-            .filter { it.packageName.startsWith("$GRINDR_PACKAGE_NAME.") }
+            .filter { it.packageName.startsWith(GRINDR_PACKAGE_PREFIX) }
             .map { it.packageName }
     }
 
@@ -45,8 +39,7 @@ object AppCloneUtils {
         val clones = getExistingClones(context)
         var nextNum = 1
 
-        while (clones.contains("$GRINDR_PACKAGE_NAME.$nextNum") ||
-            clones.any { it.endsWith(".${numberToWords(nextNum).lowercase()}") }) {
+        while (clones.any { it == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
             nextNum++
         }
 
