@@ -15,17 +15,10 @@ class EmptyCalls : Hook(
     private val videoCallInfoResponse = "com.grindrapp.android.chat.api.model.VideoCallInfoResponse"
 
     override fun init() {
-        val viewModelClass = findClass(individualChatNavViewModel)
-
-        viewModelClass.methods.firstOrNull { method ->
-            GrindrPlus.logger.log("EmptyCalls: method: ${method.name}")
-            GrindrPlus.logger.log("size: ${method.parameterTypes.size}")
-            GrindrPlus.logger.log("types: ${method.parameterTypes.joinToString()}")
-            method.parameterTypes.size == 3 &&
-                    method.parameterTypes[0] == String::class.java &&
-                    method.parameterTypes[1] == String::class.java &&
-                    method.returnType == Boolean::class.java
-        }?.hook(HookStage.BEFORE) { param -> param.setResult(true) }
+        findClass(individualChatNavViewModel) // isTalkBefore()
+            .hook("M",  HookStage.BEFORE) { param ->
+                param.setResult(true)
+            }
 
         findClass(createVideoCallResponse)
             .hook("getRemainingSeconds", HookStage.BEFORE) { param ->
