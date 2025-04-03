@@ -3,6 +3,7 @@ package com.grindrplus.manager.ui
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +41,7 @@ import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
 import com.grindrplus.manager.activityScope
 import com.grindrplus.manager.installation.Installation
+import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.CloneDialog
 import com.grindrplus.manager.ui.components.MessageBanner
@@ -56,10 +57,10 @@ import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-import androidx.core.net.toUri
-import com.grindrplus.manager.installation.Print
+import com.grindrplus.manager.ui.components.FileDialog
 
 private val logEntries = mutableStateListOf<LogEntry>()
 
@@ -77,6 +78,11 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var installation by remember { mutableStateOf<Installation?>(null) }
     var warningBannerVisible by remember { mutableStateOf(true) }
     var rootedBannerVisible by remember { mutableStateOf(isRooted) }
+    var showCustomFileDialog by remember { mutableStateOf(false) }
+    var useCustomFiles by remember { mutableStateOf(false) }
+    var customVersionName by remember { mutableStateOf("custom") }
+    var customBundleUri by remember { mutableStateOf<Uri?>(null) }
+    var customModUri by remember { mutableStateOf<Uri?>(null) }
 
     val print: Print = { output ->
         Timber.tag(TAG).d(output)
@@ -123,6 +129,46 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         )
     }
 
+    fun startCustomInstallation() {
+        if (customBundleUri == null || customModUri == null) {
+            showToast(context, "Please select both bundle and mod files")
+            return
+        }
+
+        isInstalling = true
+        addLog("Starting custom installation with version name: $customVersionName...", LogType.INFO)
+
+        activityScope.launch {
+            try {
+                val bundleFile = createTempFileFromUri(context, customBundleUri!!, "grindr-$customVersionName.zip")
+                val modFile = createTempFileFromUri(context, customModUri!!, "mod-$customVersionName.zip")
+
+                val customInstallation = Installation(
+                    context,
+                    customVersionName,
+                    modFile.absolutePath,
+                    bundleFile.absolutePath
+                )
+
+                withContext(Dispatchers.IO) {
+                    customInstallation.installCustom(
+                        bundleFile,
+                        modFile,
+                        print
+                    )
+                }
+
+                addLog("Custom installation completed successfully!", LogType.SUCCESS)
+                showToast(context, "Installation complete!")
+                installationSuccessful = true
+            } catch (e: Exception) {
+                handleInstallationError(e, context)
+            } finally {
+                isInstalling = false
+            }
+        }
+    }
+
     if (showCloneDialog) {
         CloneDialog(
             context = context,
@@ -155,6 +201,22 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
 
                     isCloning = false
                 }
+            }
+        )
+    }
+
+    if (showCustomFileDialog) {
+        FileDialog(
+            context = context,
+            onDismiss = { showCustomFileDialog = false },
+            onSelect = { versionName, bundleUri, modUri ->
+                customVersionName = versionName
+                customBundleUri = bundleUri
+                customModUri = modUri
+                useCustomFiles = true
+                showCustomFileDialog = false
+                addLog("Custom files selected. Version: $versionName", LogType.INFO)
+                addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
             }
         )
     }
@@ -212,16 +274,34 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 )
             }
 
-            VersionSelector(
-                versions = versionData,
-                selectedVersion = selectedVersion,
-                onVersionSelected = {
-                    selectedVersion = it
-                    addLog("Selected version ${it.modVer}", LogType.INFO)
-                },
-                isEnabled = !isInstalling && !isCloning,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                VersionSelector(
+                    versions = if (useCustomFiles)
+                        listOf(Data(customVersionName, "", "")) + versionData
+                    else
+                        versionData,
+                    selectedVersion = if (useCustomFiles && customBundleUri != null)
+                        Data(customVersionName, "", "")
+                    else
+                        selectedVersion,
+                    onVersionSelected = { selected ->
+                        if (selected.modVer == customVersionName && useCustomFiles) {
+                        } else if (selected.modVer == "custom") {
+                            showCustomFileDialog = true
+                        } else {
+                            selectedVersion = selected
+                            useCustomFiles = false
+                            addLog("Selected version ${selected.modVer}", LogType.INFO)
+                        }
+                    },
+                    isEnabled = !isInstalling && !isCloning,
+                    modifier = Modifier.fillMaxWidth(),
+                    customOption = "Use Custom Files..."
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -283,24 +363,29 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                         if (installationSuccessful) {
                             launchGrindr(context)
                         } else {
-                            if (selectedVersion == null) {
-                                showToast(context, "Please select a version first")
-                                return@Button
-                            }
+                            if (useCustomFiles && customBundleUri != null && customModUri != null) {
+                                startCustomInstallation()
+                            } else {
+                                if (selectedVersion == null) {
+                                    showToast(context, "Please select a version first")
+                                    return@Button
+                                }
 
-                            startInstallation(
-                                selectedVersion!!,
-                                onStarted = { isInstalling = true },
-                                onCompleted = { success ->
-                                    isInstalling = false
-                                    installationSuccessful = success
-                                },
-                                context,
-                                print
-                            )
+                                startInstallation(
+                                    selectedVersion!!,
+                                    onStarted = { isInstalling = true },
+                                    onCompleted = { success ->
+                                        isInstalling = false
+                                        installationSuccessful = success
+                                    },
+                                    context,
+                                    print
+                                )
+                            }
                         }
                     },
-                    enabled = (selectedVersion != null && !isInstalling && !isCloning) || installationSuccessful,
+                    enabled = ((selectedVersion != null || (useCustomFiles && customBundleUri != null && customModUri != null)) ||
+                            installationSuccessful) && !isInstalling && !isCloning,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -494,30 +579,45 @@ private fun startInstallation(
             showToast(context, "Installation complete!")
             onCompleted(true)
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Installation failed")
-            val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
-            addLog(errorMessage, LogType.ERROR)
-            showToast(context, "Installation failed: ${e.localizedMessage}")
-
-            if (errorMessage.contains("INCOMPATIBLE") || e.message?.contains("INCOMPATIBLE") == true) {
-                if (context is MainActivity) {
-                    context.runOnUiThread { MainActivity.showUninstallDialog.value = true }
-                } else {
-                    showToast(context, "Installation failed: Signature mismatch. Please uninstall Grindr first.")
-                }
-            } else {
-                showToast(context, "Installation failed: ${e.localizedMessage}")
-            }
-
-            ErrorHandler.logError(
-                context,
-                TAG,
-                "Installation failed for version ${version.modVer}",
-                e
-            )
+            handleInstallationError(e, context)
             onCompleted(false)
         }
     }
+}
+
+private suspend fun createTempFileFromUri(context: Context, uri: Uri, filename: String): File {
+    return withContext(Dispatchers.IO) {
+        val tempFile = File(context.filesDir, filename)
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            tempFile.outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        } ?: throw IOException("Failed to open input stream for URI: $uri")
+        tempFile
+    }
+}
+
+private fun handleInstallationError(e: Exception, context: Context) {
+    Timber.tag(TAG).e(e, "Installation failed")
+    val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
+    addLog(errorMessage, LogType.ERROR)
+
+    if (errorMessage.contains("INCOMPATIBLE") || e.message?.contains("INCOMPATIBLE") == true) {
+        if (context is MainActivity) {
+            context.runOnUiThread { MainActivity.showUninstallDialog.value = true }
+        } else {
+            showToast(context, "Installation failed: Signature mismatch. Please uninstall Grindr first.")
+        }
+    } else {
+        showToast(context, "Installation failed: ${e.localizedMessage}")
+    }
+
+    ErrorHandler.logError(
+        context,
+        TAG,
+        "Installation failed",
+        e
+    )
 }
 
 private fun addLog(message: String, type: LogType = LogType.INFO) {

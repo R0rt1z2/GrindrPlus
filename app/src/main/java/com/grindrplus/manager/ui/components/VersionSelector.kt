@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,6 +29,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -39,7 +42,8 @@ fun VersionSelector(
     onVersionSelected: (Data) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
-    label: String = "Select a GrindrPlus version"
+    label: String = "Select a GrindrPlus version",
+    customOption: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
@@ -97,6 +101,31 @@ fun VersionSelector(
             modifier = Modifier
                 .width(with(localDensity) { textFieldSize.width.toDp() })
         ) {
+            if (customOption != null) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            customOption,
+                            fontStyle = FontStyle.Italic
+                        )
+                    },
+                    onClick = {
+                        onVersionSelected(Data("custom", "", ""))
+                        expanded = false
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Custom"
+                        )
+                    }
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+
             if (versions.isEmpty()) {
                 DropdownMenuItem(
                     text = {
@@ -109,13 +138,15 @@ fun VersionSelector(
                 )
             } else {
                 versions.forEach { version ->
-                    DropdownMenuItem(
-                        text = { Text("Version ${version.modVer}") },
-                        onClick = {
-                            onVersionSelected(version)
-                            expanded = false
-                        }
-                    )
+                    if (version.modVer != "custom") {
+                        DropdownMenuItem(
+                            text = { Text("Version ${version.modVer}") },
+                            onClick = {
+                                onVersionSelected(version)
+                                expanded = false
+                            }
+                        )
+                    }
                 }
             }
         }
