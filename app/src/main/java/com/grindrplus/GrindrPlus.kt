@@ -8,7 +8,6 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
@@ -22,21 +21,17 @@ import com.grindrplus.persistence.NewDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import dalvik.system.DexClassLoader
-import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
@@ -64,8 +59,6 @@ object GrindrPlus {
         private set
 
     lateinit var hookManager: HookManager
-    lateinit var translations: JSONObject
-    lateinit var localeTag: String
 
     var shouldTriggerAntiblock = true
     var blockCaller: String = ""
@@ -110,16 +103,24 @@ object GrindrPlus {
 
     fun init(modulePath: String, application: Application, logger: Logger) {
         this.context = application // do not use .applicationContext as it's null at this point
-
-        val startupInfo = buildString {
+        logger.log(buildString {
             appendLine("Initializing GrindrPlus:")
             appendLine("  Package: ${context.packageName}")
             appendLine("  Module path: $modulePath")
             appendLine("  Version: ${BuildConfig.VERSION_NAME}")
             appendLine("  Grindr version: ${application.packageManager
                 .getPackageInfo(context.packageName, 0).versionName}")
+        })
+
+        this.bridgeClient = BridgeClient(context)
+        val serviceConnected = bridgeClient.connectBlocking(10000)
+        if (!serviceConnected) {
+            logger.log("WARNING: Failed to connect to bridge service within timeout")
+            showToast(Toast.LENGTH_LONG, "Bridge service connection timed out")
+        } else {
+            logger.log("Successfully connected to bridge service")
+            Config.initialize(context, context.packageName)
         }
-        logger.log(startupInfo)
 
         val newModule = File(context.filesDir, "grindrplus.dex")
         File(modulePath).copyTo(newModule, true)
@@ -193,24 +194,13 @@ object GrindrPlus {
     private fun init() {
         logger.log("Initializing GrindrPlus...")
 
-        bridgeClient = BridgeClient(context).apply {
-            connect {
-                Config.initialize(context, context.packageName)
-
-                /**
-                 * Emergency reset of the database if the flag is set.
-                 */
-                if ((Config.get("reset_database", false) as Boolean)) {
-                    logger.log("Resetting database...")
-                    database.deleteDatabase()
-                    Config.put("reset_database", false)
-                }
-
-                Config.put("xposed_version", XposedBridge.getXposedVersion())
-
-                hookManager.init()
-            }
+        if ((Config.get("reset_database", false) as Boolean)) {
+            logger.log("Resetting database...")
+            database.deleteDatabase()
+            Config.put("reset_database", false)
         }
+
+        hookManager.init()
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
@@ -249,25 +239,6 @@ object GrindrPlus {
         return classLoader.loadClass(name)
     }
 
-    fun getTranslation(key: String, vararg placeholders: Pair<String, String>): String {
-        var translation = translations.optString(key, key)
-
-        placeholders.forEach { (placeholder, value) ->
-            translation = translation.replace("{$placeholder}", value)
-        }
-
-        return translation
-    }
-
-    fun getTranslation(key: String): String {
-        return translations.optString(key, key)
-    }
-
-    fun reloadTranslations(locale: String) {
-        localeTag = locale
-        translations = bridgeClient.getTranslation(localeTag) ?: JSONObject()
-    }
-
     private fun fetchRemoteData(url: String, callback: (List<Pair<Long, Int>>) -> Unit) {
         val client = OkHttpClient()
         val request = Request.Builder().url(url).build()
@@ -295,7 +266,7 @@ object GrindrPlus {
 
                         callback(parsedPoints)
                     } catch (e: Exception) {
-                        GrindrPlus.logger.apply {
+                        logger.apply {
                             log("Failed to parse remote data: ${e.message}")
                             writeRaw(e.stackTraceToString())
                         }
