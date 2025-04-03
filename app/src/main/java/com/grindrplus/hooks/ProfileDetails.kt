@@ -137,6 +137,7 @@ class ProfileDetails : Hook(
                         w2n("kg" in weight.toString(), weight.toString()),
                         h2n("kg" in weight.toString(), height.toString())
                     )
+                    if (weight.toString().contains("(")) return@hook
                     param.setResult("$weight - ${String.format("%.1f", BMI)} (${
                         mapOf(
                             "Underweight" to 18.5,
