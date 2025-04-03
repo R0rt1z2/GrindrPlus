@@ -1,5 +1,6 @@
 package com.grindrplus.manager.settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+@SuppressLint("StaticFieldLeak")
 class SettingsViewModel(
     private val context: Context,
 ) : ViewModel() {
@@ -35,7 +37,6 @@ class SettingsViewModel(
             _isLoading.value = true
 
             try {
-                // Get hooks from Config
                 val hooks = Config.getHooksSettings()
                 val hookSettings = hooks.filter {
                     it.key != "Mod settings" &&
@@ -56,7 +57,6 @@ class SettingsViewModel(
                     )
                 }
 
-                // Create other settings
                 val otherSettings = listOf(
                     TextSetting(
                         id = "command_prefix",
@@ -79,6 +79,27 @@ class SettingsViewModel(
                         }
                     ),
                     TextSetting(
+                        id = "date_format",
+                        title = "Date Format",
+                        description = "Format for displaying dates in the app (default: MM/dd/yyyy)",
+                        value = Config.get("date_format", "MM/dd/yyyy") as String,
+                        onValueChange = {
+                            viewModelScope.launch {
+                                Config.put("date_format", it)
+                                loadSettings()
+                            }
+                        },
+                        validator = { input ->
+                            when {
+                                input.isBlank() -> "Date format cannot be empty"
+                                !input.contains("MM") && !input.contains("M") -> "Format must include month (M or MM)"
+                                !input.contains("dd") && !input.contains("d") -> "Format must include day (d or dd)"
+                                !input.contains("yyyy") && !input.contains("yy") -> "Format must include year (yy or yyyy)"
+                                else -> null
+                            }
+                        }
+                    ),
+                    TextSetting(
                         id = "online_indicator",
                         title = "Online indicator duration (mins)",
                         description = "Control when the green dot disappears after inactivity",
@@ -96,9 +117,18 @@ class SettingsViewModel(
                             if (value == null || value <= 0) "Duration must be a positive number" else null
                         }
                     ),
-                    // More text settings...
-
-                    // Toggle settings
+                    SwitchSetting(
+                        id = "enable_interest_section",
+                        title = "Enable Interest Section",
+                        description = "Show interests section on profiles",
+                        isChecked = Config.get("enable_interest_section", true) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("enable_interest_section", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
                     SwitchSetting(
                         id = "force_old_anti_block_behavior",
                         title = "Force old AntiBlock behavior",
@@ -123,6 +153,18 @@ class SettingsViewModel(
                             }
                         }
                     ),
+                    SwitchSetting(
+                        id = "reset_database",
+                        title = "Reset local database on next start",
+                        description = "Will delete all local data on next app start",
+                        isChecked = Config.get("reset_database", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("reset_database", it)
+                                loadSettings()
+                            }
+                        }
+                    )
                 )
 
                 val managerSettings = mutableListOf<Setting>(
@@ -176,8 +218,6 @@ class SettingsViewModel(
                     )
                 }
 
-
-                // Create setting groups
                 _settingGroups.value = listOf(
                     SettingGroup(
                         id = "hooks",
