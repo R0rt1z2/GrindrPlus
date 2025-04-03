@@ -1,5 +1,6 @@
 package com.grindrplus.manager.ui
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,11 +13,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.ImageLoader
+import coil3.compose.AsyncImage
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
 import com.grindrplus.core.Config
 
 @Composable
@@ -31,6 +39,12 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
     val topInset = windowInsets.asPaddingValues().calculateTopPadding()
     val bottomInset = windowInsets.asPaddingValues().calculateBottomPadding()
 
+    var selectedEasterEgg by remember { mutableIntStateOf(0) }
+    var showEasterEgg by remember { mutableStateOf(false) }
+    val easterEggs = mapOf(
+        666 to "https://i.imgur.com/399VOm7.jpeg"
+    )
+
     LaunchedEffect(Unit) {
         showPasswordDialog = Config.get("calculator_first_launch", true) as Boolean
     }
@@ -39,6 +53,13 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
+        if (showEasterEgg) {
+            EasterEggDialog(
+                onDismiss = { showEasterEgg = false },
+                videoUrl = "${easterEggs[selectedEasterEgg]}",
+            )
+        }
+
         if (showPasswordDialog) {
             CalculatorPasswordDialog {
                 Config.put("calculator_first_launch", false)
@@ -196,6 +217,12 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                             return@CalculatorButton
                         }
 
+                        if (easterEggs.containsKey(firstNumber?.toInt())) {
+                            selectedEasterEgg = firstNumber!!.toInt()
+                            showEasterEgg = true
+                            return@CalculatorButton
+                        }
+
                         if (operation != null && firstNumber != null) {
                             val secondNumber = display.toDoubleOrNull() ?: 0.0
                             val result = when (operation) {
@@ -212,6 +239,47 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                             newNumber = true
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EasterEggDialog(onDismiss: () -> Unit, videoUrl: String) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            val context = LocalContext.current
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                AsyncImage(
+                    model = videoUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                        .size(200.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text("Close")
                 }
             }
         }

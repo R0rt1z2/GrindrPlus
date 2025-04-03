@@ -15,7 +15,6 @@ class SignatureSpoofer {
         "com.google.firebase.remoteconfig.internal.ConfigRealtimeHttpClient"
     private val configFetchHttpClient =
         "com.google.firebase.remoteconfig.internal.ConfigFetchHttpClient"
-    private val imgAndroidG = "ly.img.android.g"
 
     @OptIn(ExperimentalStdlibApi::class)
     fun init(lpparam: XC_LoadPackage.LoadPackageParam) {
