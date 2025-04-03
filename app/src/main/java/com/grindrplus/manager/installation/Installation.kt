@@ -121,6 +121,21 @@ class Installation(
         print = print,
     )
 
+    suspend fun installCustom(
+        bundleFile: File,
+        modFile: File,
+        print: Print
+    ) = performOperation(
+        steps = listOf(
+            CheckStorageSpaceStep(folder),
+            ExtractBundleStep(bundleFile, unzipFolder),
+            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore),
+            InstallApkStep(outputDir)
+        ),
+        operationName = "custom_install",
+        print = print
+    )
+
     private fun cleanupOnFailure() {
         try {
             unzipFolder.listFiles()?.forEach { it.delete() }
