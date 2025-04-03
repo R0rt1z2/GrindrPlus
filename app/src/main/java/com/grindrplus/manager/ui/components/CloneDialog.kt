@@ -8,13 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -27,16 +26,31 @@ fun CloneDialog(
     onDismiss: () -> Unit,
     onStartCloning: (packageName: String, appName: String, debuggable: Boolean) -> Unit,
 ) {
+    // Check if max clones reached
+    val hasReachedMaxClones = remember { AppCloneUtils.hasReachedMaxClones(context) }
     val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
+
+    // If max clones reached, show error dialog
+    if (hasReachedMaxClones) {
+        MaxClonesReachedDialog(
+            onDismiss = onDismiss
+        )
+        return
+    }
+
     var appName by remember { mutableStateOf("Grindr $nextCloneNumber") }
     var debuggable by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
 
-    val packagePrefix = "com.grindrapp.android."
+    // Fixed package name prefix
+    val packagePrefix = AppCloneUtils.GRINDR_PACKAGE_PREFIX
     var packageSuffix by remember { mutableStateOf(numberToWords(nextCloneNumber).lowercase()) }
+
+    // Compute the full package name
     val fullPackageName = "$packagePrefix$packageSuffix"
 
+    // Transformation to show the prefix in the TextField but not make it editable
     val prefixVisualTransformation = VisualTransformation { text ->
         val prefixedText = buildAnnotatedString {
             withStyle(SpanStyle(color = Color.Gray)) {
@@ -76,6 +90,12 @@ fun CloneDialog(
                     text = "Clone Grindr",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = "${AppCloneUtils.getExistingClones(context).size}/${AppCloneUtils.MAX_CLONES} clones used",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -167,4 +187,24 @@ fun CloneDialog(
             }
         }
     }
+}
+
+@Composable
+fun MaxClonesReachedDialog(
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Maximum Clones Reached") },
+        text = {
+            Text("GrindrPlus only supports up to 5 clones. Please uninstall an existing clone before creating a new one.")
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text("OK")
+            }
+        }
+    )
 }
