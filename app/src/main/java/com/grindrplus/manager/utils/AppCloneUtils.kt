@@ -10,6 +10,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
+import com.grindrplus.manager.installation.steps.numberToWords
 import java.io.FileOutputStream
 import java.io.IOException
 
@@ -44,7 +45,8 @@ object AppCloneUtils {
         val clones = getExistingClones(context)
         var nextNum = 1
 
-        while (clones.contains("$GRINDR_PACKAGE_NAME.$nextNum")) {
+        while (clones.contains("$GRINDR_PACKAGE_NAME.$nextNum") ||
+            clones.any { it.endsWith(".${numberToWords(nextNum).lowercase()}") }) {
             nextNum++
         }
 
