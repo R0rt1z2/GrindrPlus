@@ -26,11 +26,9 @@ fun CloneDialog(
     onDismiss: () -> Unit,
     onStartCloning: (packageName: String, appName: String, debuggable: Boolean) -> Unit,
 ) {
-    // Check if max clones reached
     val hasReachedMaxClones = remember { AppCloneUtils.hasReachedMaxClones(context) }
     val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
 
-    // If max clones reached, show error dialog
     if (hasReachedMaxClones) {
         MaxClonesReachedDialog(
             onDismiss = onDismiss
@@ -43,14 +41,11 @@ fun CloneDialog(
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
 
-    // Fixed package name prefix
     val packagePrefix = AppCloneUtils.GRINDR_PACKAGE_PREFIX
     var packageSuffix by remember { mutableStateOf(numberToWords(nextCloneNumber).lowercase()) }
 
-    // Compute the full package name
     val fullPackageName = "$packagePrefix$packageSuffix"
 
-    // Transformation to show the prefix in the TextField but not make it editable
     val prefixVisualTransformation = VisualTransformation { text ->
         val prefixedText = buildAnnotatedString {
             withStyle(SpanStyle(color = Color.Gray)) {

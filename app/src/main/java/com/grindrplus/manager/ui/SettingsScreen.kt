@@ -69,6 +69,7 @@ import com.grindrplus.manager.settings.SettingsViewModel
 import com.grindrplus.manager.settings.SwitchSetting
 import com.grindrplus.manager.settings.TextSetting
 import com.grindrplus.manager.settings.rememberViewModel
+import com.grindrplus.manager.ui.components.PackageSelector
 import com.grindrplus.manager.utils.FileOperationHandler
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -187,7 +188,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(
                     top = 16.dp,
                     start = 16.dp,
@@ -195,6 +196,14 @@ fun SettingsScreen(
                     bottom = 100.dp
                 )
             ) {
+                item {
+                    PackageSelector(
+                        onPackageSelected = { packageName ->
+                            viewModel.loadSettings()
+                        }
+                    )
+                }
+
                 settingGroups.forEach { group ->
                     item {
                         SettingGroupSection(

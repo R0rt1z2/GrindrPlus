@@ -109,12 +109,17 @@ object GrindrPlus {
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
 
     fun init(modulePath: String, application: Application, logger: Logger) {
-        Log.d(
-            TAG,
-            "Initializing GrindrPlus with module path: $modulePath, application: $application"
-        )
-
         this.context = application // do not use .applicationContext as it's null at this point
+
+        val startupInfo = buildString {
+            appendLine("Initializing GrindrPlus:")
+            appendLine("  Package: ${context.packageName}")
+            appendLine("  Module path: $modulePath")
+            appendLine("  Version: ${BuildConfig.VERSION_NAME}")
+            appendLine("  Grindr version: ${application.packageManager
+                .getPackageInfo(context.packageName, 0).versionName}")
+        }
+        logger.log(startupInfo)
 
         val newModule = File(context.filesDir, "grindrplus.dex")
         File(modulePath).copyTo(newModule, true)
@@ -190,7 +195,7 @@ object GrindrPlus {
 
         bridgeClient = BridgeClient(context).apply {
             connect {
-                Config.initialize(context)
+                Config.initialize(context, context.packageName)
 
                 /**
                  * Emergency reset of the database if the flag is set.
