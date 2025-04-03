@@ -6,6 +6,7 @@ import timber.log.Timber
 import com.grindrplus.manager.installation.steps.numberToWords
 
 object AppCloneUtils {
+    const val MAX_CLONES = 5
     const val GRINDR_PACKAGE_PREFIX = "com.grindrapp.android."
     const val GRINDR_PACKAGE_NAME = "com.grindr"
 
@@ -34,9 +35,16 @@ object AppCloneUtils {
 
     /**
      * Get next available clone number
+     * Returns -1 if maximum number of clones is reached
      */
     fun getNextCloneNumber(context: Context): Int {
         val clones = getExistingClones(context)
+
+        if (clones.size >= MAX_CLONES) {
+            Timber.e("Maximum number of clones ($MAX_CLONES) reached")
+            return -1
+        }
+
         var nextNum = 1
 
         while (clones.any { it == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
@@ -44,5 +52,12 @@ object AppCloneUtils {
         }
 
         return nextNum
+    }
+
+    /**
+     * Check if maximum number of clones is reached
+     */
+    fun hasReachedMaxClones(context: Context): Boolean {
+        return getExistingClones(context).size >= MAX_CLONES
     }
 }
