@@ -159,6 +159,29 @@ fun SettingsScreen(
                             )
 
                             DropdownMenuItem(
+                                text = { Text("Export logs") },
+                                onClick = {
+                                    expanded = false
+                                    scope.launch {
+                                        try {
+                                            val zipFile = FileOperationHandler.createLogsZip(context)
+                                            if (zipFile != null) {
+                                                FileOperationHandler.exportZipFile(
+                                                    "grindrplus_logs.zip",
+                                                    zipFile
+                                                )
+                                                snackbarHostState.showSnackbar("Logs packaged, choose a location to save")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Failed to create logs package")
+                                            }
+                                        } catch (e: Exception) {
+                                            snackbarHostState.showSnackbar("Error exporting logs: ${e.message}")
+                                        }
+                                    }
+                                }
+                            )
+
+                            DropdownMenuItem(
                                 text = { Text("About") },
                                 onClick = {
                                     expanded = false
