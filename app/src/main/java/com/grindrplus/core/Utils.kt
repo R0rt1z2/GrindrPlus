@@ -189,8 +189,6 @@ object Utils {
                 isAccessible = true
             }.get(obj)
         } catch (e: Exception) {
-            GrindrPlus.logger.log("Failed to get field $fieldName from object $obj")
-            e.printStackTrace()
             null
         }
     }
@@ -391,7 +389,7 @@ object Utils {
                                     startFavoritesImport(activity, favorites, favoritesFile, threshold)
                                 },
                                 onCancel = {
-                                    GrindrPlus.logger.log("Favorites import canceled by the user.")
+                                    Logger.i("Favorites import canceled by the user.")
                                 }
                             )
                         } else {
@@ -399,7 +397,7 @@ object Utils {
                         }
                     },
                     onCancel = {
-                        GrindrPlus.logger.log("Imports canceled by the user.")
+                        Logger.i("Imports canceled by the user.")
                     }
                 )
             } else if (favoritesFile.exists()) {
@@ -416,7 +414,7 @@ object Utils {
                         },
                         onCancel = {
                             isImportingSomething = false
-                            GrindrPlus.logger.log("Favorites import canceled by the user.")
+                            Logger.i("Favorites import canceled by the user.")
                         }
                     )
                 } else {
@@ -436,7 +434,7 @@ object Utils {
                         },
                         onCancel = {
                             isImportingSomething = false
-                            GrindrPlus.logger.log("Block import canceled by the user.")
+                            Logger.i("Block import canceled by the user.")
                         }
                     )
                 } else {
@@ -461,7 +459,7 @@ object Utils {
                 failureMessage = "Favorites import failed.",
                 onCancel = {
                     isImportingSomething = false
-                    GrindrPlus.logger.log("Favorites import canceled by the user.")
+                    Logger.i("Favorites import canceled by the user.")
                 },
                 onRunInBackground = { updateProgress, onComplete ->
                     CoroutineScope(Dispatchers.IO).launch {
@@ -497,10 +495,10 @@ object Utils {
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
                                 val message = "An error occurred while importing favorites: ${e.message ?: "Unknown error"}"
-                                GrindrPlus.apply {
-                                    showToast(Toast.LENGTH_LONG, message)
-                                    logger.log(message)
-                                    logger.writeRaw(e.stackTraceToString())
+                                GrindrPlus.showToast(Toast.LENGTH_LONG, message)
+                                Logger.apply {
+                                    e(message)
+                                    writeRaw(e.stackTraceToString())
                                 }
                                 onComplete(false)
                             }
@@ -511,10 +509,11 @@ object Utils {
                 }
             )
         } catch (e: Exception) {
-            GrindrPlus.apply {
-                showToast(Toast.LENGTH_LONG, "An error occurred while importing favorites: ${e.message ?: "Unknown error"}")
-                logger.log("An error occurred while importing favorites: ${e.message ?: "Unknown error"}")
-                logger.writeRaw(e.stackTraceToString())
+            val message = "An error occurred while importing favorites: ${e.message ?: "Unknown error"}"
+            GrindrPlus.showToast(Toast.LENGTH_LONG, message)
+            Logger.apply {
+                e(message)
+                writeRaw(e.stackTraceToString())
             }
         }
     }
@@ -535,7 +534,7 @@ object Utils {
                 failureMessage = "Block import failed.",
                 onCancel = {
                     isImportingSomething = false
-                    GrindrPlus.logger.log("Block import canceled by the user.")
+                    Logger.i("Block import canceled by the user.")
                 },
                 onRunInBackground = { updateProgress, onComplete ->
                     CoroutineScope(Dispatchers.IO).launch {
@@ -559,10 +558,10 @@ object Utils {
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
                                 val message = "An error occurred while importing blocks: ${e.message ?: "Unknown error"}"
-                                GrindrPlus.apply {
-                                    showToast(Toast.LENGTH_LONG, message)
-                                    logger.log(message)
-                                    logger.writeRaw(e.stackTraceToString())
+                                GrindrPlus.showToast(Toast.LENGTH_LONG, message)
+                                Logger.apply {
+                                    e(message)
+                                    writeRaw(e.stackTraceToString())
                                 }
                                 onComplete(false)
                             }
@@ -574,11 +573,14 @@ object Utils {
                 }
             )
         } catch (e: Exception) {
+            val message = "An error occurred while importing blocks: ${e.message ?: "Unknown error"}"
             GrindrPlus.apply {
                 shouldTriggerAntiblock = true
-                showToast(Toast.LENGTH_LONG, "An error occurred while importing blocks: ${e.message ?: "Unknown error"}")
-                logger.log("An error occurred while importing blocks: ${e.message ?: "Unknown error"}")
-                logger.writeRaw(e.stackTraceToString())
+                showToast(Toast.LENGTH_LONG, message)
+            }
+            Logger.apply {
+                e(message)
+                writeRaw(e.stackTraceToString())
             }
         }
     }

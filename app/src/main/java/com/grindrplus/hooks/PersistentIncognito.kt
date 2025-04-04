@@ -65,7 +65,6 @@ class PersistentIncognito : Hook(
             val incognito = Config.get("incognito_mode", false) as Boolean
 
             if (incognito && !settings.incognito && !hasRequestBeenSent) {
-                GrindrPlus.logger.log("API incognito is disabled but local incognito is enabled?")
                 GrindrPlus.httpClient.enableIncognito()
                 hasRequestBeenSent = true
             }

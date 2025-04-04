@@ -24,10 +24,6 @@ class ProfileViews : Hook(
             findPOSTMethod(profileRestServiceClass, it)?.name
         }
 
-        if (methodBlacklist.size != blacklistedPaths.size) {
-            GrindrPlus.logger.log("ProfileViews: not all blacklisted paths were found! Open an issue on GitHub.")
-        }
-
         findClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
                 val service = param.getResult()

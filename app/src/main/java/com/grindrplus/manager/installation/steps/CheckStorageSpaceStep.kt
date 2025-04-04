@@ -2,10 +2,10 @@ package com.grindrplus.manager.installation.steps
 
 import android.app.ActivityManager
 import android.content.Context
+import com.grindrplus.core.Logger
 import com.grindrplus.manager.installation.BaseStep
 import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.StorageUtils
-import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
@@ -17,8 +17,7 @@ class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
         context: Context,
         print: Print,
     ) {
-        // Check storage space
-        val required = 200 * 1024 * 1024 // 200MB as a safe minimum
+        val required = 200 * 1024 * 1024
         val availableStorage = StorageUtils.getAvailableSpace(installFolder)
 
         print("Available storage space: ${availableStorage / 1024 / 1024}MB")
@@ -27,7 +26,6 @@ class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
             throw IOException("Not enough storage space. Need ${required / 1024 / 1024}MB, but only ${availableStorage / 1024 / 1024}MB available.")
         }
 
-        // Check RAM
         val availableRam = try {
             val activityManager =
                 context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -35,7 +33,7 @@ class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
             activityManager.getMemoryInfo(memoryInfo)
             memoryInfo.availMem
         } catch (e: Exception) {
-            Timber.tag("RamCheck").e(e, "Error checking available RAM")
+            Logger.e("Error getting available RAM: ${e.message}")
             0L
         }
 

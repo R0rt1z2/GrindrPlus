@@ -23,10 +23,6 @@ class ChatIndicators : Hook(
             RetrofitUtils.findPOSTMethod(chatRestServiceClass, it)?.name
         }
 
-        if (methodBlacklist.size != blacklistedPaths.size) {
-            GrindrPlus.logger.log("ChatIndicators: not all blacklisted paths were found! Open an issue on GitHub.")
-        }
-
         findClass("retrofit2.Retrofit")
             .hook("create", HookStage.AFTER) { param ->
                 val service = param.getResult()

@@ -13,14 +13,14 @@ object DatabaseHelper {
         val grindrUserDb = databases.firstOrNull {
             it.contains("grindr_user") && it.endsWith(".db") }
             ?: throw IllegalStateException("No Grindr user database found!").also {
-                GrindrPlus.logger.apply {
-                    log(it.message!!)
+                Logger.apply {
+                    e(it.message!!)
                     writeRaw("Available databases:\n" +
                             "${databases.joinToString("\n") { "  $it" }}\n")
                 }
             }
         return context.openOrCreateDatabase(grindrUserDb.also {
-            GrindrPlus.logger.debug("Using database: $it") }, Context.MODE_PRIVATE, null)
+            Logger.d("Using database: $it") }, Context.MODE_PRIVATE, null)
     }
 
     fun query(query: String, args: Array<String>? = null): List<Map<String, Any>> {

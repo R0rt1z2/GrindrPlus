@@ -49,8 +49,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
@@ -77,6 +75,7 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 import androidx.core.net.toUri
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.grindrplus.core.Logger
 import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.utils.FileOperationHandler
 
@@ -147,6 +146,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
                 GrindrPlus.bridgeClient.connect {
+                    Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
                     Config.initialize(null)
                     HookManager().registerHooks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
@@ -437,7 +437,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        activityScope.cancel() // I always forget about this
+        activityScope.cancel()
         super.onDestroy()
     }
 }
