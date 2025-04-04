@@ -5,6 +5,7 @@ import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.showToast
 import com.grindrplus.core.DatabaseHelper
+import com.grindrplus.core.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -95,7 +96,10 @@ class Client(interceptor: Interceptor) {
                         )
                     }
                 } catch (e: Exception) {
-                    GrindrPlus.logger.log("Error removing user from block list: ${e.message}")
+                    Logger.apply {
+                        e("Error removing user from blocks list: ${e.message}")
+                        writeRaw(e.stackTraceToString())
+                    }
                 }
             } else {
                 if (!silent) {
@@ -164,7 +168,10 @@ class Client(interceptor: Interceptor) {
                         )
                     }
                 } catch (e: Exception) {
-                    GrindrPlus.logger.log("Error removing user from favorites list: ${e.message}")
+                    Logger.apply {
+                        e("Error removing user from favorites list: ${e.message}")
+                        writeRaw(e.stackTraceToString())
+                    }
                 }
             } else {
                 if (!silent) {
@@ -266,11 +273,9 @@ class Client(interceptor: Interceptor) {
                                     arrayOf(profileId)
                                 ).firstOrNull()?.get("note") as? String ?: ""
                             } catch (e: Exception) {
-                                GrindrPlus.apply {
-                                    val message = "Failed to fetch note for profileId $profileId: ${e.message}"
-                                    showToast(Toast.LENGTH_LONG, message)
-                                    logger.log(message)
-                                    logger.writeRaw(e.stackTraceToString())
+                                Logger.apply {
+                                    log("Failed to fetch note for profileId $profileId: ${e.message}")
+                                    writeRaw(e.stackTraceToString())
                                 }
                                 ""
                             }
@@ -281,11 +286,9 @@ class Client(interceptor: Interceptor) {
                                     arrayOf(profileId)
                                 ).firstOrNull()?.get("phone_number") as? String ?: ""
                             } catch (e: Exception) {
-                                GrindrPlus.apply {
-                                    val message = "Failed to fetch phone number for profileId $profileId: ${e.message}"
-                                    showToast(Toast.LENGTH_LONG, message)
-                                    logger.log(message)
-                                    logger.writeRaw(e.stackTraceToString())
+                                Logger.apply {
+                                    log("Failed to fetch phone number for profileId $profileId: ${e.message}")
+                                    writeRaw(e.stackTraceToString())
                                 }
                                 ""
                             }
@@ -299,10 +302,9 @@ class Client(interceptor: Interceptor) {
             emptyList()
         } catch (e: Exception) {
             val message = "Failed to get favorites: ${e.message}"
-            GrindrPlus.apply {
-                showToast(Toast.LENGTH_LONG, message)
-                logger.log(message)
-                logger.writeRaw(e.stackTraceToString())
+            Logger.apply {
+                log(message)
+                writeRaw(e.stackTraceToString())
             }
             emptyList()
         }
@@ -355,10 +357,9 @@ class Client(interceptor: Interceptor) {
                         )
                     }
                 } catch (e: Exception) {
-                    GrindrPlus.logger.apply {
-                        val message = "Error adding note to database: ${e.message ?: "N/A"}"
-                        log(message)
-                        writeRaw(e.stackTrace.toString())
+                    Logger.apply {
+                        log("Failed to update profile note: ${e.message}")
+                        writeRaw(e.stackTraceToString())
                     }
                 }
                 if (!silent) showToast(Toast.LENGTH_LONG, "Note added successfully")

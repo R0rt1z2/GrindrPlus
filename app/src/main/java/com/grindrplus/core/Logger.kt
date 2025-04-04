@@ -1,85 +1,125 @@
 package com.grindrplus.core
 
-import android.util.Log
-import com.grindrplus.BuildConfig
-import de.robv.android.xposed.XposedBridge
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
-import java.io.File
+import android.annotation.SuppressLint
+import android.content.Context
+import com.grindrplus.bridge.BridgeClient
+import com.grindrplus.utils.Hook
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
-class Logger(logFile: String) {
-    private val LOG_FILE = File(logFile)
-    private val LOG_TAG = "GrindrPlus"
-    private val MAX_LOG_SIZE = 1024 * 1024 * 5 // 5 MB
+enum class LogLevel { DEBUG, INFO, WARNING, ERROR, SUCCESS }
+enum class LogSource { MODULE, MANAGER, HOOK, BRIDGE, UNKNOWN }
 
-    private val logFlow = MutableSharedFlow<String>(
-        extraBufferCapacity = Int.MAX_VALUE
-    )
+@SuppressLint("StaticFieldLeak", "ConstantLocale")
+object Logger {
+    private const val TAG = "GrindrPlus"
+    private var isModuleContext = false
+    private var bridgeClient: BridgeClient? = null
+    private val hookPrefixes = ConcurrentHashMap<String, String>()
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
-    init {
-        CoroutineScope(Dispatchers.IO).launch {
+    fun initialize(context: Context, bridge: BridgeClient, isModule: Boolean) {
+        bridgeClient = bridge
+        isModuleContext = isModule
+
+        if (Timber.forest().isEmpty()) {
+            Timber.plant(Timber.DebugTree())
+        }
+    }
+
+    fun registerHookPrefix(hookName: String, prefix: String = hookName) {
+        hookPrefixes[hookName] = prefix
+    }
+
+    fun unregisterHookPrefix(hookName: String) {
+        hookPrefixes.remove(hookName)
+    }
+
+    fun d(message: String, source: LogSource? = null, hookName: String? = null) =
+        log(message, LogLevel.DEBUG, source ?: getDefaultSource(), hookName)
+
+    fun i(message: String, source: LogSource? = null, hookName: String? = null) =
+        log(message, LogLevel.INFO, source ?: getDefaultSource(), hookName)
+
+    fun w(message: String, source: LogSource? = null, hookName: String? = null) =
+        log(message, LogLevel.WARNING, source ?: getDefaultSource(), hookName)
+
+    fun e(message: String, source: LogSource? = null, hookName: String? = null) =
+        log(message, LogLevel.ERROR, source ?: getDefaultSource(), hookName)
+
+    fun s(message: String, source: LogSource? = null, hookName: String? = null) =
+        log(message, LogLevel.SUCCESS, source ?: getDefaultSource(), hookName)
+
+    fun log(
+        message: String,
+        level: LogLevel = LogLevel.INFO,
+        source: LogSource = LogSource.UNKNOWN,
+        hookName: String? = null
+    ) {
+        val priorityChar = when(level) {
+            LogLevel.DEBUG -> "V"
+            LogLevel.INFO -> "I"
+            LogLevel.WARNING -> "W"
+            LogLevel.ERROR -> "E"
+            LogLevel.SUCCESS -> "S"
+        }
+
+        val timestamp = dateFormat.format(Date())
+        val sourceName = source.toString().lowercase()
+        val conciseMessage = if (hookName != null) {
+            "$priorityChar/$timestamp/$sourceName/$hookName: $message"
+        } else {
+            "$priorityChar/$timestamp/$sourceName: $message"
+        }
+
+        val logcatMessage = buildLogcatMessage(source, hookName, message, level == LogLevel.SUCCESS)
+        when (level) {
+            LogLevel.DEBUG -> Timber.tag(TAG).v(logcatMessage)
+            LogLevel.INFO -> Timber.tag(TAG).i(logcatMessage)
+            LogLevel.WARNING -> Timber.tag(TAG).w(logcatMessage)
+            LogLevel.ERROR -> Timber.tag(TAG).e(logcatMessage)
+            LogLevel.SUCCESS -> Timber.tag(TAG).i(logcatMessage)
+        }
+
+        bridgeClient?.let { bridge ->
             try {
-                LOG_FILE.createNewFile()
-                logFlow.collect { msg ->
-                    try {
-                        if (checkAndManageSize()) {
-                            appendToFile("[${getTime()}] $msg\n")
-                        }
-                    } catch (e: Exception) {
-                        Log.wtf(LOG_TAG, "Failed to log message: ${e.message}")
-                    }
-                }
+                bridge.getService()?.writeRawLog(conciseMessage)
             } catch (e: Exception) {
-                Log.wtf(LOG_TAG, "Failed to create log file ($logFile): ${e.message}")
+                Timber.tag(TAG).e("Failed to send log to bridge service: ${e.message}")
             }
         }
     }
 
-    private fun getTime(): String =
-        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+    private fun buildLogcatMessage(source: LogSource, hookName: String?, message: String, isSuccess: Boolean): String {
+        val sourceStr = source.toString().lowercase().replaceFirstChar { it.uppercase() }
 
-    fun log(msg: String) {
-        XposedBridge.log("$LOG_TAG: $msg")
-        logFlow.tryEmit(msg)
-    }
-
-    fun debug(msg: String) {
-        if (BuildConfig.DEBUG) {
-            log(msg)
+        val prefix = when {
+            hookName != null -> "$sourceStr:${hookPrefixes[hookName] ?: hookName}"
+            else -> sourceStr
         }
+
+        return "$prefix: $message"
     }
 
-    fun writeRaw(msg: String) {
-        try {
-            if (checkAndManageSize()) {
-                appendToFile(msg + "\n")
+    fun writeRaw(content: String) {
+        bridgeClient?.let { bridge ->
+            try {
+                bridge.getService()?.writeRawLog(content)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("Failed to write raw log to bridge service: ${e.message}")
             }
-        } catch (e: Exception) {
-            Log.wtf(LOG_TAG, "Failed to write raw log message: ${e.message}")
         }
     }
 
-    private fun checkAndManageSize(): Boolean {
-        if (LOG_FILE.length() > MAX_LOG_SIZE) {
-            manageLogOverflow()
-            return false
-        }
-        return true
-    }
-
-    private fun manageLogOverflow() {
-        LOG_FILE.delete()
-        LOG_FILE.createNewFile()
-        XposedBridge.log("$LOG_TAG: Log file was reset due to size limit.")
-    }
-
-    @Synchronized
-    private fun appendToFile(content: String) {
-        LOG_FILE.appendText(content)
-    }
+    private fun getDefaultSource(): LogSource =
+        if (isModuleContext) LogSource.MODULE else LogSource.MANAGER
 }
+
+fun Hook.logd(message: String) = Logger.d(message, LogSource.HOOK, this.hookName)
+fun Hook.logi(message: String) = Logger.i(message, LogSource.HOOK, this.hookName)
+fun Hook.logw(message: String) = Logger.w(message, LogSource.HOOK, this.hookName)
+fun Hook.loge(message: String) = Logger.e(message, LogSource.HOOK, this.hookName)
+fun Hook.logs(message: String) = Logger.s(message, LogSource.HOOK, this.hookName)

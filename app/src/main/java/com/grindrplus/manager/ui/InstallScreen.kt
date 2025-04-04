@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
+import com.grindrplus.core.Logger
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
@@ -56,7 +57,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
-import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -85,7 +85,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var customModUri by remember { mutableStateOf<Uri?>(null) }
 
     val print: Print = { output ->
-        Timber.tag(TAG).d(output)
         val logType = ConsoleLogger.parseLogType(output)
         context.runOnUiThread {
             addLog(output, logType)
@@ -188,7 +187,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                         )
                         true
                     } catch (e: Exception) {
-                        Timber.tag(TAG).e(e, "Cloning failed")
+                        Logger.i("Cloning failed: ${e.localizedMessage}")
                         addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
                         false
                     }
@@ -513,7 +512,7 @@ private fun loadVersionData(
                 }
             }
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Error loading version data")
+            Logger.e("Error loading version data: ${e.localizedMessage}")
             withContext(Dispatchers.Main) {
                 onError(e.localizedMessage ?: "Unknown error")
             }
@@ -544,7 +543,7 @@ private fun parseVersionData(jsonData: String): List<Data> {
 
         return result.sortedByDescending { it.modVer }
     } catch (e: JSONException) {
-        Timber.tag(TAG).e(e, "Error parsing JSON")
+        Logger.e("Error parsing version data: ${e.localizedMessage}")
         throw IOException("Invalid data format: ${e.localizedMessage}")
     }
 }
@@ -598,7 +597,6 @@ private suspend fun createTempFileFromUri(context: Context, uri: Uri, filename: 
 }
 
 private fun handleInstallationError(e: Exception, context: Context) {
-    Timber.tag(TAG).e(e, "Installation failed")
     val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
     addLog(errorMessage, LogType.ERROR)
 

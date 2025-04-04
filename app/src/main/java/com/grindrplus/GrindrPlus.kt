@@ -14,6 +14,7 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.CoroutineHelper
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
+import com.grindrplus.core.LogSource
 import com.grindrplus.core.Utils.handleImports
 import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
@@ -42,8 +43,6 @@ object GrindrPlus {
     lateinit var context: Context
         private set
     lateinit var classLoader: ClassLoader
-        private set
-    lateinit var logger: Logger
         private set
     lateinit var newDatabase: NewDatabase
         private set
@@ -101,24 +100,18 @@ object GrindrPlus {
     private val splineDataEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
 
-    fun init(modulePath: String, application: Application, logger: Logger) {
+    fun init(modulePath: String, application: Application) {
         this.context = application // do not use .applicationContext as it's null at this point
-        logger.log(buildString {
-            appendLine("Initializing GrindrPlus:")
-            appendLine("  Package: ${context.packageName}")
-            appendLine("  Module path: $modulePath")
-            appendLine("  Version: ${BuildConfig.VERSION_NAME}")
-            appendLine("  Grindr version: ${application.packageManager
-                .getPackageInfo(context.packageName, 0).versionName}")
-        })
-
         this.bridgeClient = BridgeClient(context)
+
+        Logger.initialize(context, bridgeClient, true)
+        Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
+
         val serviceConnected = bridgeClient.connectBlocking(10000)
         if (!serviceConnected) {
-            logger.log("WARNING: Failed to connect to bridge service within timeout")
+            Logger.w("Failed to connect to bridge service within timeout", LogSource.MODULE)
             showToast(Toast.LENGTH_LONG, "Bridge service connection timed out")
         } else {
-            logger.log("Successfully connected to bridge service")
             Config.initialize(context, context.packageName)
         }
 
@@ -128,7 +121,6 @@ object GrindrPlus {
 
         this.classLoader =
             DexClassLoader(newModule.absolutePath, null, null, context.classLoader)
-        this.logger = logger
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
@@ -143,12 +135,12 @@ object GrindrPlus {
             override fun onActivityStarted(activity: Activity) {}
 
             override fun onActivityResumed(activity: Activity) {
-                logger.debug("Resuming activity: ${activity.javaClass.name}")
+                Logger.d("Resuming activity: ${activity.javaClass.name}", LogSource.MODULE)
                 currentActivity = activity
             }
 
             override fun onActivityPaused(activity: Activity) {
-                logger.log("Pausing activity: ${activity.javaClass.name}")
+                Logger.d("Pausing activity: ${activity.javaClass.name}", LogSource.MODULE)
                 if (currentActivity == activity) {
                     currentActivity = null
                 }
@@ -179,23 +171,24 @@ object GrindrPlus {
 
         fetchRemoteData(splineDataEndpoint) { points ->
             spline = PCHIP(points)
-            logger.log("Updated spline with remote data")
+            Logger.i("Updated spline with remote data", LogSource.MODULE)
         }
 
         try {
             val initTime = measureTimeMillis { init() }
-            logger.log("Initialization completed in $initTime ms.")
+            Logger.i("Initialization completed in $initTime ms", LogSource.MODULE)
         } catch (e: Exception) {
-            logger.log("Failed to initialize: ${e.message}")
+            Logger.e("Failed to initialize: ${e.message}", LogSource.MODULE)
+            Logger.writeRaw(e.stackTraceToString())
             showToast(Toast.LENGTH_LONG, "Failed to initialize: ${e.message}")
         }
     }
 
     private fun init() {
-        logger.log("Initializing GrindrPlus...")
+        Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
 
         if ((Config.get("reset_database", false) as Boolean)) {
-            logger.log("Resetting database...")
+            Logger.i("Resetting database...", LogSource.MODULE)
             database.deleteDatabase()
             Config.put("reset_database", false)
         }
@@ -223,7 +216,8 @@ object GrindrPlus {
             try {
                 block()
             } catch (e: Exception) {
-                logger.log("Async operation failed: ${e.message}")
+                Logger.e("Async operation failed: ${e.message}", LogSource.MODULE)
+                Logger.writeRaw(e.stackTraceToString())
             }
         }
     }
@@ -245,10 +239,8 @@ object GrindrPlus {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                GrindrPlus.logger.apply {
-                    log("Failed to fetch remote data: ${e.message}")
-                    writeRaw(e.stackTraceToString())
-                }
+                Logger.e("Failed to fetch remote data: ${e.message}", LogSource.MODULE)
+                Logger.writeRaw(e.stackTraceToString())
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -266,10 +258,8 @@ object GrindrPlus {
 
                         callback(parsedPoints)
                     } catch (e: Exception) {
-                        logger.apply {
-                            log("Failed to parse remote data: ${e.message}")
-                            writeRaw(e.stackTraceToString())
-                        }
+                        Logger.e("Failed to parse remote data: ${e.message}", LogSource.MODULE)
+                        Logger.writeRaw(e.stackTraceToString())
                     }
                 }
             }

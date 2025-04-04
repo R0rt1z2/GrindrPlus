@@ -1,7 +1,7 @@
 package com.grindrplus.utils
 
-import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Logger
 import com.grindrplus.hooks.AllowScreenshots
 import com.grindrplus.hooks.AntiBlock
 import com.grindrplus.hooks.AntiDetection
@@ -24,7 +24,6 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
-import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedProfiles
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +33,7 @@ import kotlin.reflect.KClass
 class HookManager {
     private var hooks = mutableMapOf<KClass<out Hook>, Hook>()
 
-    public fun registerHooks(init: Boolean = true) {
+    fun registerHooks(init: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
                 FeatureGranting(),
@@ -79,9 +78,9 @@ class HookManager {
             hooks.values.forEach { hook ->
                 if (Config.isHookEnabled(hook.hookName)) {
                     hook.init()
-                    GrindrPlus.logger.log("Initialized hook: ${hook.hookName}")
+                    Logger.s("Initialized hook: ${hook.hookName}")
                 } else {
-                    GrindrPlus.logger.log("Hook disabled: ${hook.hookName}")
+                    Logger.i("Hook ${hook.hookName} is disabled.")
                 }
             }
         }
@@ -92,7 +91,7 @@ class HookManager {
             hooks.values.forEach { hook -> hook.cleanup() }
             hooks.clear()
             registerHooks()
-            GrindrPlus.logger.log("Hooks reloaded successfully.")
+            Logger.s("Reloaded hooks")
         }
     }
 

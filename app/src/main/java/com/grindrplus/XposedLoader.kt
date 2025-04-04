@@ -3,7 +3,6 @@ package com.grindrplus
 import android.app.Application
 import android.widget.Toast
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
-import com.grindrplus.core.Logger
 import com.grindrplus.hooks.SignatureSpoofer
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -107,7 +106,6 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
         Application::class.java.hook("attach", HookStage.AFTER) {
             val application = it.thisObject()
             val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
-            val logger = Logger(application.filesDir.absolutePath + "/grindrplus.log")
 
             if (pkgInfo.versionName !in BuildConfig.TARGET_GRINDR_VERSIONS) {
                 Toast.makeText(
@@ -119,17 +117,10 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
                     }). Mod disabled.",
                     Toast.LENGTH_LONG
                 ).show()
-                logger.log(
-                    "Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${
-                        BuildConfig.TARGET_GRINDR_VERSIONS.joinToString(
-                            "_"
-                        )
-                    }). Mod disabled."
-                )
                 return@hook
             }
 
-            GrindrPlus.init(modulePath, application, logger)
+            GrindrPlus.init(modulePath, application)
         }
     }
 }

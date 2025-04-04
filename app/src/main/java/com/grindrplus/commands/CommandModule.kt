@@ -2,6 +2,7 @@ package com.grindrplus.commands
 
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Logger
 
 abstract class CommandModule(
     protected val name: String,
@@ -20,10 +21,10 @@ abstract class CommandModule(
             true
         } catch (e: Exception) {
             val message = "Unable to execute command. Check logs for more information."
-            GrindrPlus.apply {
-                showToast(Toast.LENGTH_LONG, message)
-                logger.log("An error occurred while executing the command: ${e.message ?: "Unknown error"}")
-                logger.writeRaw(e.stackTraceToString())
+            GrindrPlus.showToast(Toast.LENGTH_LONG, message)
+            Logger.apply {
+                e("An error occurred while executing the command: ${e.message ?: "Unknown error"}")
+                writeRaw(e.stackTraceToString())
             }
             false
         }

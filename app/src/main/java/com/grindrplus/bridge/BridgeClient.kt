@@ -1,3 +1,4 @@
+
 package com.grindrplus.bridge
 
 import android.content.ComponentName
@@ -7,12 +8,13 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
 import com.grindrplus.BuildConfig
+import com.grindrplus.core.Logger
+import com.grindrplus.core.LogSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import timber.log.Timber
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -26,13 +28,11 @@ class BridgeClient(private val context: Context) {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private val connectionLatch = CountDownLatch(1)
 
-    private fun safeLog(message: String) {
-        try {
-            Timber.tag(TAG).d(message)
-        } catch (e: Exception) {
-            println("BridgeClient: $message")
-        }
+    init {
+        Logger.initialize(context, this, false)
     }
+
+    fun getService(): IBridgeService? = bridgeService
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -40,13 +40,13 @@ class BridgeClient(private val context: Context) {
             isBound.set(true)
             isConnecting.set(false)
             connectionLatch.countDown()
-            safeLog("Connected to bridge service")
+            Logger.i("Connected to bridge service", LogSource.BRIDGE)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             bridgeService = null
             isBound.set(false)
-            safeLog("Disconnected from bridge service")
+            Logger.i("Disconnected from bridge service", LogSource.BRIDGE)
         }
     }
 
@@ -57,7 +57,7 @@ class BridgeClient(private val context: Context) {
         }
 
         if (isConnecting.getAndSet(true)) {
-            safeLog("Connection already in progress")
+            Logger.d("Connection already in progress", LogSource.BRIDGE)
             return
         }
 
@@ -73,7 +73,7 @@ class BridgeClient(private val context: Context) {
         try {
             bindServiceProperly(intent)
         } catch (e: Exception) {
-            safeLog("Error binding service: ${e.message}")
+            Logger.e("Error binding service: ${e.message}", LogSource.BRIDGE)
             isConnecting.set(false)
             return
         }
@@ -86,7 +86,7 @@ class BridgeClient(private val context: Context) {
                     onConnected?.invoke()
                 }
             } else {
-                safeLog("Connection timeout in async mode")
+                Logger.w("Connection timeout in async mode", LogSource.BRIDGE)
                 isConnecting.set(false)
             }
         }
@@ -97,10 +97,10 @@ class BridgeClient(private val context: Context) {
             return true
         }
 
-        safeLog("Attempting to connect to bridge service (blocking)")
+        Logger.d("Attempting to connect to bridge service (blocking)", LogSource.BRIDGE)
 
         if (isConnecting.getAndSet(true)) {
-            safeLog("Connection already in progress, waiting...")
+            Logger.d("Connection already in progress, waiting...", LogSource.BRIDGE)
             return connectionLatch.await(timeoutMs, TimeUnit.MILLISECONDS)
         }
 
@@ -116,7 +116,7 @@ class BridgeClient(private val context: Context) {
         try {
             bindServiceProperly(intent)
         } catch (e: Exception) {
-            safeLog("Error binding service: ${e.message}")
+            Logger.e("Error binding service: ${e.message}", LogSource.BRIDGE)
             isConnecting.set(false)
             return false
         }
@@ -124,7 +124,7 @@ class BridgeClient(private val context: Context) {
         val result = connectionLatch.await(timeoutMs, TimeUnit.MILLISECONDS)
 
         if (!result) {
-            safeLog("Connection timeout in blocking mode")
+            Logger.w("Connection timeout in blocking mode", LogSource.BRIDGE)
             isConnecting.set(false)
         }
 
@@ -141,7 +141,7 @@ class BridgeClient(private val context: Context) {
             }
             context.startService(serviceIntent)
         } catch (e: Exception) {
-            safeLog("Failed to start service directly: ${e.message}")
+            Logger.w("Failed to start service directly: ${e.message}", LogSource.BRIDGE)
         }
 
         try {
@@ -154,7 +154,7 @@ class BridgeClient(private val context: Context) {
             }
             context.startActivity(forceStartIntent)
         } catch (e: Exception) {
-            safeLog("Failed to start ForceStartActivity: ${e.message}")
+            Logger.w("Failed to start ForceStartActivity: ${e.message}", LogSource.BRIDGE)
         }
 
         try {
@@ -163,7 +163,7 @@ class BridgeClient(private val context: Context) {
             }
             context.sendBroadcast(broadcastIntent)
         } catch (e: Exception) {
-            safeLog("Failed to broadcast service start intent: ${e.message}")
+            Logger.w("Failed to broadcast service start intent: ${e.message}", LogSource.BRIDGE)
         }
     }
 
@@ -186,35 +186,35 @@ class BridgeClient(private val context: Context) {
                 context.unbindService(connection)
                 bridgeService = null
             } catch (e: Exception) {
-                safeLog("Error unbinding service: ${e.message}")
+                Logger.e("Error unbinding service: ${e.message}", LogSource.BRIDGE)
             }
         }
     }
 
     fun getConfig(): JSONObject {
         if (!isBound.get()) {
-            safeLog("Cannot get config, service not bound")
+            Logger.w("Cannot get config, service not bound", LogSource.BRIDGE)
             return JSONObject()
         }
 
         return try {
             bridgeService?.config?.let { JSONObject(it) } ?: JSONObject()
         } catch (e: Exception) {
-            safeLog("Error getting config: ${e.message}")
+            Logger.e("Error getting config: ${e.message}", LogSource.BRIDGE)
             JSONObject()
         }
     }
 
     fun setConfig(config: JSONObject) {
         if (!isBound.get()) {
-            safeLog("Cannot set config, service not bound")
+            Logger.w("Cannot set config, service not bound", LogSource.BRIDGE)
             return
         }
 
         try {
             bridgeService?.setConfig(config.toString(4))
         } catch (e: Exception) {
-            safeLog("Error setting config: ${e.message}")
+            Logger.e("Error setting config: ${e.message}", LogSource.BRIDGE)
         }
     }
 }
