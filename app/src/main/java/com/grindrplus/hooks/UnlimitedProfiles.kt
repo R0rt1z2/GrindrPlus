@@ -3,10 +3,10 @@ package com.grindrplus.hooks
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Utils.openProfile
+import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
-import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.callStaticMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
@@ -87,7 +87,7 @@ class UnlimitedProfiles : Hook(
                             openProfile(profileId)
                             param.setResult(null)
                         }
-                        .onFailure { GrindrPlus.logger.log("Profile ID not found in cached profile") }
+                        .onFailure { Logger.e("Profile ID not found in cached profile") }
                 }
             }
         }

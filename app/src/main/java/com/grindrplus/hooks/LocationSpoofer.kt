@@ -23,6 +23,7 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
@@ -91,6 +92,23 @@ class LocationSpoofer : Hook(
             val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
+            val locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
+                if (view is ImageButton) {
+                    view.tag == "custom_location_button" ||
+                            view.contentDescription == "Teleport" ||
+                            (view.drawable != null && view.drawable.constantState ==
+                                    ResourcesCompat.getDrawable(
+                                        chatBottomToolbarLinearLayout.context.resources,
+                                        Utils.getId("ic_my_location", "drawable", chatBottomToolbarLinearLayout.context),
+                                        null
+                                    )?.constantState)
+                } else false
+            }
+
+            if (locationButtonExists) {
+                return@hookConstructor
+            }
+
             val customLocationButton = ImageButton(chatBottomToolbarLinearLayout.context).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.MATCH_PARENT
@@ -98,6 +116,8 @@ class LocationSpoofer : Hook(
                 focusable = ImageButton.FOCUSABLE
                 scaleType = ImageView.ScaleType.CENTER
                 isClickable = true
+                tag = "custom_location_button"
+                contentDescription = "Teleport"
                 setBackgroundResource(
                     Utils.getId(
                         "image_button_ripple",

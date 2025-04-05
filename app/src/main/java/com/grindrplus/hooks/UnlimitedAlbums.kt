@@ -2,6 +2,7 @@ package com.grindrplus.hooks
 
 import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Logger
 import com.grindrplus.persistence.asAlbumBriefToAlbumEntity
 import com.grindrplus.persistence.asAlbumToAlbumEntity
 import com.grindrplus.persistence.model.AlbumContentEntity
@@ -72,7 +73,7 @@ class UnlimitedAlbums : Hook(
                             dao.deleteAlbum(albumId)
                             createSuccess(albumId)
                         } else {
-                            GrindrPlus.logger.log("UnlimitedAlbums: Album $albumId not found in database")
+                            Logger.e("Album with ID $albumId not found in the database")
                             result
                         }
                     }
@@ -115,7 +116,7 @@ class UnlimitedAlbums : Hook(
                     val albumObject = getObjectField(result, "a")
                     setObjectField(albumObject, "content", grindrAlbumContentList)
                 } else {
-                    GrindrPlus.logger.log("No content found in album response")
+                    Logger.e("Failed to parse content array from response")
                 }
             }
 

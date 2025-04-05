@@ -5,6 +5,7 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.sendNotification
+import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -39,7 +40,7 @@ class AntiBlock : Hook(
                 .hook("d", HookStage.AFTER) { param ->
                     val numberOfChatsToDelete = (param.args().firstOrNull() as? List<*>)?.size ?: 0
                     if (numberOfChatsToDelete == 0) return@hook
-                    GrindrPlus.logger.debug("Request to delete $numberOfChatsToDelete chats")
+                    // GrindrPlus.logger.debug("Request to delete $numberOfChatsToDelete chats")
                     Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
                     GrindrPlus.shouldTriggerAntiblock = true
                     GrindrPlus.blockCaller = ""
@@ -78,9 +79,9 @@ class AntiBlock : Hook(
                         }
                     } catch(e: Exception) {
                         val message = "Error checking if user is blocked: ${e.message}"
-                        GrindrPlus.apply {
-                            logger.log(message)
-                            logger.writeRaw(e.stackTraceToString())
+                        Logger.apply {
+                            e(message)
+                            writeRaw(e.stackTraceToString())
                         }
                     }
 
@@ -90,9 +91,9 @@ class AntiBlock : Hook(
                         param.setResult(null)
                     } catch (e: Exception) {
                         val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
-                        GrindrPlus.apply {
-                            logger.log(message)
-                            logger.writeRaw(e.stackTraceToString())
+                        Logger.apply {
+                            e(message)
+                            writeRaw(e.stackTraceToString())
                         }
                     }
                 }
@@ -127,7 +128,10 @@ class AntiBlock : Hook(
                     ).firstOrNull()?.get("name") as? String)?.takeIf {
                             name -> name.isNotEmpty() } ?: profileId.toString()
                 } catch (e: Exception) {
-                    GrindrPlus.logger.log("Error getting chat name: ${e.message}")
+                    Logger.apply {
+                        e("Error fetching display name: ${e.message}")
+                        writeRaw(e.stackTraceToString())
+                    }
                     displayName = profileId.toString()
                 }
                 displayName = if (displayName == profileId.toString() || displayName == "null")
@@ -164,10 +168,9 @@ class AntiBlock : Hook(
             }
         } catch (e: Exception) {
             val message = "Error handling profile response: ${e.message ?: "Unknown error"}"
-            GrindrPlus.apply {
-                showToast(Toast.LENGTH_LONG, message)
-                logger.log(message)
-                logger.writeRaw(e.stackTraceToString())
+            Logger.apply {
+                e(message)
+                writeRaw(e.stackTraceToString())
             }
             return false
         }

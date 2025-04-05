@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -16,8 +17,8 @@ class EmptyCalls : Hook(
     override fun init() {
         findClass(individualChatNavViewModel) // isTalkBefore()
             .hook("M",  HookStage.BEFORE) { param ->
-            param.setResult(true)
-        }
+                param.setResult(true)
+            }
 
         findClass(createVideoCallResponse)
             .hook("getRemainingSeconds", HookStage.BEFORE) { param ->

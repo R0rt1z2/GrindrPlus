@@ -1,3 +1,4 @@
+
 package com.grindrplus.bridge
 
 import android.content.ComponentName
@@ -5,99 +6,215 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
 import android.os.IBinder
 import com.grindrplus.BuildConfig
-import com.grindrplus.GrindrPlus
-import de.robv.android.xposed.XposedHelpers
+import com.grindrplus.core.Logger
+import com.grindrplus.core.LogSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
-class BridgeClient(private val context: Context) : ServiceConnection {
-    private var isBound = false
+class BridgeClient(private val context: Context) {
+    private val TAG = "BridgeClient"
     private var bridgeService: IBridgeService? = null
-    private var onConnectedCallback: (() -> Unit)? = null
+    private val isConnecting = AtomicBoolean(false)
+    private val isBound = AtomicBoolean(false)
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val connectionLatch = CountDownLatch(1)
 
-    override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-        this.bridgeService = IBridgeService.Stub.asInterface(binder)
-        isBound = true
-        GrindrPlus.logger.log("Successfully connected to the bridge service!")
-        this.onConnectedCallback?.invoke()
+    init {
+        Logger.initialize(context, this, false)
     }
 
-    override fun onServiceDisconnected(name: ComponentName?) {
-        bridgeService = null
-        isBound = false
-        GrindrPlus.logger.log("Disconnected from the bridge service!")
+    fun getService(): IBridgeService? = bridgeService
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+            bridgeService = IBridgeService.Stub.asInterface(binder)
+            isBound.set(true)
+            isConnecting.set(false)
+            connectionLatch.countDown()
+            Logger.i("Connected to bridge service", LogSource.BRIDGE)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            bridgeService = null
+            isBound.set(false)
+            Logger.i("Disconnected from bridge service", LogSource.BRIDGE)
+        }
     }
 
-    fun connect(onConnected: () -> Unit) {
-        runCatching {
-            val intent = Intent().setClassName(
+    fun connect(onConnected: (() -> Unit)? = null) {
+        if (isBound.get()) {
+            onConnected?.invoke()
+            return
+        }
+
+        if (isConnecting.getAndSet(true)) {
+            Logger.d("Connection already in progress", LogSource.BRIDGE)
+            return
+        }
+
+        startServiceMultipleWays()
+
+        val intent = Intent().apply {
+            setClassName(
                 BuildConfig.APPLICATION_ID,
-                BuildConfig.APPLICATION_ID + ".bridge.BridgeService"
+                "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
             )
+        }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                context.bindService(
-                    intent,
-                    Context.BIND_AUTO_CREATE,
-                    Executors.newSingleThreadExecutor(),
-                    this
-                )
+        try {
+            bindServiceProperly(intent)
+        } catch (e: Exception) {
+            Logger.e("Error binding service: ${e.message}", LogSource.BRIDGE)
+            isConnecting.set(false)
+            return
+        }
+
+        coroutineScope.launch {
+            val connected = connectionLatch.await(5000, TimeUnit.MILLISECONDS)
+
+            if (connected) {
+                withContext(Dispatchers.Main) {
+                    onConnected?.invoke()
+                }
             } else {
-                XposedHelpers.callMethod(
-                    context,
-                    "bindServiceAsUser",
-                    intent,
-                    this,
-                    Context.BIND_AUTO_CREATE,
-                    Handler(HandlerThread("BridgeClient").apply { start() }.looper),
-                    android.os.Process.myUserHandle()
+                Logger.w("Connection timeout in async mode", LogSource.BRIDGE)
+                isConnecting.set(false)
+            }
+        }
+    }
+
+    fun connectBlocking(timeoutMs: Long = 10000): Boolean {
+        if (isBound.get()) {
+            return true
+        }
+
+        Logger.d("Attempting to connect to bridge service (blocking)", LogSource.BRIDGE)
+
+        if (isConnecting.getAndSet(true)) {
+            Logger.d("Connection already in progress, waiting...", LogSource.BRIDGE)
+            return connectionLatch.await(timeoutMs, TimeUnit.MILLISECONDS)
+        }
+
+        startServiceMultipleWays()
+
+        val intent = Intent().apply {
+            setClassName(
+                BuildConfig.APPLICATION_ID,
+                "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
+            )
+        }
+
+        try {
+            bindServiceProperly(intent)
+        } catch (e: Exception) {
+            Logger.e("Error binding service: ${e.message}", LogSource.BRIDGE)
+            isConnecting.set(false)
+            return false
+        }
+
+        val result = connectionLatch.await(timeoutMs, TimeUnit.MILLISECONDS)
+
+        if (!result) {
+            Logger.w("Connection timeout in blocking mode", LogSource.BRIDGE)
+            isConnecting.set(false)
+        }
+
+        return result
+    }
+
+    private fun startServiceMultipleWays() {
+        try {
+            val serviceIntent = Intent().apply {
+                setClassName(
+                    BuildConfig.APPLICATION_ID,
+                    "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
                 )
             }
-        }.onFailure {
-            GrindrPlus.logger.log("Failed to bind to the bridge service: ${it.message}")
-        }.onSuccess {
-            onConnectedCallback = onConnected
+            context.startService(serviceIntent)
+        } catch (e: Exception) {
+            Logger.w("Failed to start service directly: ${e.message}", LogSource.BRIDGE)
+        }
+
+        try {
+            val forceStartIntent = Intent().apply {
+                setClassName(
+                    BuildConfig.APPLICATION_ID,
+                    "${BuildConfig.APPLICATION_ID}.bridge.ForceStartActivity"
+                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(forceStartIntent)
+        } catch (e: Exception) {
+            Logger.w("Failed to start ForceStartActivity: ${e.message}", LogSource.BRIDGE)
+        }
+
+        try {
+            val broadcastIntent = Intent("com.grindrplus.START_BRIDGE_SERVICE").apply {
+                setPackage(BuildConfig.APPLICATION_ID)
+            }
+            context.sendBroadcast(broadcastIntent)
+        } catch (e: Exception) {
+            Logger.w("Failed to broadcast service start intent: ${e.message}", LogSource.BRIDGE)
         }
     }
 
-    fun unbindService() {
-        if (isBound) {
-            context.unbindService(this)
-            isBound = false
-            GrindrPlus.logger.log("Unbound from the bridge service!")
+    private fun bindServiceProperly(intent: Intent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context.bindService(
+                intent,
+                Context.BIND_AUTO_CREATE,
+                Executors.newSingleThreadExecutor(),
+                connection
+            )
+        } else {
+            context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
     }
 
-    /**
-     * Get translations for the specified locale.
-     * @param locale The locale to get translations for.
-     * @return The translations for the specified locale (or null if not found).
-     */
-    fun getTranslation(locale: String): JSONObject? {
-        if (!isBound) {
-            GrindrPlus.logger.log("Cannot get translation, service is not bound!")
-            return null
-        }
-
-        return bridgeService?.getTranslation(locale)?.let {
-            JSONObject(it)
+    fun unbind() {
+        if (isBound.getAndSet(false)) {
+            try {
+                context.unbindService(connection)
+                bridgeService = null
+            } catch (e: Exception) {
+                Logger.e("Error unbinding service: ${e.message}", LogSource.BRIDGE)
+            }
         }
     }
 
-    /**
-     * Get list of available translations ("en_US", "es_ES", etc).
-     * @return List of available translations.
-     */
-    fun getAvailableTranslations(): List<String> {
-        if (!isBound) {
-            GrindrPlus.logger.log("Cannot get available translations, service is not bound!")
-            return emptyList()
+    fun getConfig(): JSONObject {
+        if (!isBound.get()) {
+            Logger.w("Cannot get config, service not bound", LogSource.BRIDGE)
+            return JSONObject()
         }
 
-        return bridgeService?.getAvailableTranslations() ?: emptyList()
+        return try {
+            bridgeService?.config?.let { JSONObject(it) } ?: JSONObject()
+        } catch (e: Exception) {
+            Logger.e("Error getting config: ${e.message}", LogSource.BRIDGE)
+            JSONObject()
+        }
+    }
+
+    fun setConfig(config: JSONObject) {
+        if (!isBound.get()) {
+            Logger.w("Cannot set config, service not bound", LogSource.BRIDGE)
+            return
+        }
+
+        try {
+            bridgeService?.setConfig(config.toString(4))
+        } catch (e: Exception) {
+            Logger.e("Error setting config: ${e.message}", LogSource.BRIDGE)
+        }
     }
 }

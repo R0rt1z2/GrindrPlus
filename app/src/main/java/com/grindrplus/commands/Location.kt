@@ -4,6 +4,7 @@ import android.net.Uri
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Logger
 import okhttp3.OkHttpClient
 import org.json.JSONArray
 
@@ -168,10 +169,10 @@ class Location(
             }
         } catch (e: Exception) {
             val message = "An error occurred while getting the location: ${e.message ?: "Unknown error"}"
-            GrindrPlus.apply {
-                showToast(Toast.LENGTH_LONG, message)
-                logger.log(message)
-                logger.writeRaw(e.stackTraceToString())
+            GrindrPlus.showToast(Toast.LENGTH_LONG, message)
+            Logger.apply {
+                e(message)
+                writeRaw(e.stackTraceToString())
             }
             null
         }

@@ -78,7 +78,6 @@ class HookAdapter<Clazz>(
         invokeOriginalSafe(args(), errorCallback)
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     fun invokeOriginalSafe(args: Array<Any?>, errorCallback: Consumer<Throwable>) {
         runCatching {
             setResult(XposedBridge.invokeOriginalMethod(method(), thisObject(), args))
@@ -117,7 +116,7 @@ class HookAdapter<Clazz>(
                 Boolean::class.java -> invokeMethodSafe(arg, "toBoolean") as T
                 else -> null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
