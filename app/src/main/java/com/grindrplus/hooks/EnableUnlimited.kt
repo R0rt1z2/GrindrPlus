@@ -1,5 +1,8 @@
 package com.grindrplus.hooks
 
+import android.annotation.SuppressLint
+import android.view.View
+import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -8,33 +11,39 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
-    private val userSession = "sa.T" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val userSession = "gb.Z" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
-        "u5.E\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
+        "D5.c0\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
     )
+    private val viewsToHide = mapOf(
+        "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$d" to listOf("upsell_bottom_bar"),
+        "com.grindrapp.android.ui.browse.CascadeFragment\$b" to listOf("upsell_bottom_bar"),
+        "com.grindrapp.android.ui.drawer.DrawerProfileFragment\$d" to listOf("sideDrawerBoostContainer")
+    )
+
     override fun init() {
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "m", HookStage.BEFORE // search for '()) ? false : true;' in userSession
+            "k", HookStage.BEFORE // search for '()) ? false : true;' in userSession
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
-            "G", HookStage.BEFORE // search for 'Role.PLUS, Role.FREE_PLUS' in userSession
+            "F", HookStage.BEFORE // search for 'Role.PLUS, Role.FREE_PLUS' in userSession
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isFree()
-            "y", HookStage.BEFORE // search for '.isEmpty();' in userSession
+            "x", HookStage.BEFORE // search for '.isEmpty();' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "v", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
+            "t", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
         ) { param ->
             param.setResult(false)
         }
@@ -57,9 +66,39 @@ class EnableUnlimited : Hook(
                 }
         }
 
-        // search for '(str, "treatment_exact_count") ?'
-        findClass("S1.a").hook("b", HookStage.BEFORE) { param ->
+        viewsToHide.forEach { (className, viewIds) ->
+            findClass(className).hook(
+                "invoke", HookStage.AFTER
+            ) { param ->
+                val rootView = param.arg<View>(0)
+                hideViews(rootView, viewIds)
+            }
+        }
+
+        // search for 'variantName, "treatment_exact_count") ?'
+        findClass("W1.a").hook("b", HookStage.BEFORE) { param ->
            param.setResult(false)
+        }
+    }
+
+    @SuppressLint("DiscouragedApi")
+    private fun hideViews(rootView: View, viewIds: List<String>) {
+        viewIds.forEach { viewId ->
+            try {
+                val id = rootView.resources.getIdentifier(
+                    viewId, "id", "com.grindrapp.android")
+                if (id > 0) {
+                    val view = rootView.findViewById<View>(id)
+                    if (view != null) {
+                        val params = view.layoutParams
+                        params.height = 0
+                        view.layoutParams = params
+                        view.visibility = View.GONE
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("Error hiding view with ID: $viewId: ${e.message}")
+            }
         }
     }
 }

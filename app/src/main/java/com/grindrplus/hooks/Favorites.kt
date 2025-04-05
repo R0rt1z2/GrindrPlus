@@ -17,6 +17,7 @@ import com.grindrplus.utils.hook
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlin.math.roundToInt
+import androidx.core.view.isGone
 
 class Favorites : Hook(
     "Favorites",
@@ -91,7 +92,7 @@ class Favorites : Hook(
 
                         val lastSeenLayoutParams = profileLastSeen
                             .layoutParams as LinearLayout.LayoutParams
-                        if (profileOnlineNowIcon.visibility == View.GONE) {
+                        if (profileOnlineNowIcon.isGone) {
                             lastSeenLayoutParams.topMargin = 0
                         } else {
                             lastSeenLayoutParams.topMargin = TypedValue.applyDimension(

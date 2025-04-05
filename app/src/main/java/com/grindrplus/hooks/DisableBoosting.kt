@@ -11,9 +11,12 @@ class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
 ) {
-    private val drawerProfileUiState = "oc.e\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
-    private val radarUiModel = "E9.a\$a" // search for 'RadarUiModel(boostButton='
-    private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUIModel"
+    private val drawerProfileUiState = "ed.e\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
+    private val radarUiModel = "oa.a\$a" // search for 'RadarUiModel(boostButton='
+    private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUiModel"
+    private val rightNowMicrosFabUiModel =
+        "com.grindrapp.android.rightnow.presentation.model.RightNowMicrosFabUiModel"
+
     private val boostStateClass =
         "com.grindrapp.android.ui.drawer.model.MicrosDrawerItemState\$Unavailable"
 
@@ -50,6 +53,12 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "isVisible", false) // isVisible
         }
 
+        findClass(rightNowMicrosFabUiModel).hookConstructor(HookStage.AFTER) { param ->
+            setObjectField(param.thisObject(), "isBoostFabVisible", false) // isBoostFabVisible
+            setObjectField(param.thisObject(), "isClickEnabled", false) // isClickEnabled
+            setObjectField(param.thisObject(), "isFabVisible", false) // isFabVisible
+        }
+
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
         // search for:
@@ -57,7 +66,7 @@ class DisableBoosting : Hook(
         //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
         //   'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
         //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
-        listOf("yc.d0", "yc.f0", "yc.g0", "yc.e0").forEach {
+        listOf("od.e0", "od.g0", "od.i0", "od.f0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
