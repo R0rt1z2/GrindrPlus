@@ -37,7 +37,8 @@ class HookManager {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
                 FeatureGranting(),
-                TimberLogging(),
+                EnableUnlimited(),
+                // TimberLogging(),
                 // PersistentIncognito(),
                 AntiDetection(),
                 AntiBlock(),
@@ -45,7 +46,6 @@ class HookManager {
                 DisableUpdates(),
                 DisableBoosting(),
                 DisableShuffle(),
-                EnableUnlimited(),
                 AllowScreenshots(),
                 ChatIndicators(),
                 ChatTerminal(),

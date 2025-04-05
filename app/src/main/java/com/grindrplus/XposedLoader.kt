@@ -1,5 +1,6 @@
 package com.grindrplus
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.widget.Toast
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
@@ -22,6 +23,7 @@ import javax.net.ssl.SSLSession
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@SuppressLint("TrustAllX509TrustManager", "BadHostnameVerifier")
 class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
     private lateinit var modulePath: String
 

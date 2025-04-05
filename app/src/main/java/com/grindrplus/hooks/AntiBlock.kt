@@ -18,8 +18,8 @@ class AntiBlock : Hook(
     "Notifies you when someone blocks or unblocks you"
 ) {
     private var myProfileId: Long = 0
-    private val chatDeleteConversationPlugin = "i5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "T6.b" // search for '("chat_read_receipt", conversationId, null);'
+    private val chatDeleteConversationPlugin = "q5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
+    private val inboxFragmentV2DeleteConversations = "t7.i" // search for '("chat_read_receipt", conversationId, null);'
 
     override fun init() {
         if (Config.get("force_old_anti_block_behavior", false) as Boolean) {

@@ -17,10 +17,10 @@ class Interceptor(
     private fun modifyRequest(originalRequest: Request): Request {
         try {
             // search for 'return value != null && value.length() > 0' in userSession
-            val isLoggedIn = invokeMethodSafe(userSession, "q") as Boolean
+            val isLoggedIn = invokeMethodSafe(userSession, "n") as Boolean
 
             // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
-            val authTokenFlow = invokeMethodSafe(userSession, "u")
+            val authTokenFlow = invokeMethodSafe(userSession, "s")
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
 
             // search for one line method returning an string in userSession
@@ -30,7 +30,7 @@ class Interceptor(
             val userAgent = invokeMethodSafe(userAgent, "a") as String
 
             // search for 'public final kotlin.Lazy' in deviceInfo
-            val deviceInfoLazy = getFieldSafe(deviceInfo, "c") as Any
+            val deviceInfoLazy = getFieldSafe(deviceInfo, "d") as Any
             val lDeviceInfo = invokeMethodSafe(deviceInfoLazy, "getValue") as String
 
             val builder: Builder = originalRequest.newBuilder()
