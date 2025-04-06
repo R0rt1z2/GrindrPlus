@@ -27,22 +27,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.draw.clip
 import androidx.core.content.ContextCompat.getSystemService
 import com.grindrplus.manager.utils.uploadAndShare
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.Socket
-import java.net.URL
 
-data class LogEntry(
-    val timestamp: Long? = null,
-    var message: String,
-    val type: LogType = LogType.INFO,
-)
-
-enum class LogType {
-    INFO, SUCCESS, WARNING, ERROR, DEBUG, VERBOSE
-}
 
 @Composable
 fun ConsoleOutput(
@@ -231,7 +218,7 @@ private fun LogEntryItem(entry: LogEntry) {
 object ConsoleLogger {
     fun log(message: String, type: LogType = LogType.INFO): LogEntry {
         return LogEntry(
-            timestamp = System.currentTimeMillis(),
+            timestamp = System.currentTimeMillis().toString(),
             message = message,
             type = type
         )
