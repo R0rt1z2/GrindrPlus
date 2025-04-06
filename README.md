@@ -107,27 +107,18 @@ Each installation method is completely different and comes with its own challeng
 <details closed>
   <summary>LSPatch</summary>
 
-  #### Video instructions (click on the image to open YouTube)
-  [![YouTube Video (LSPatch instructions)](http://img.youtube.com/vi/pSskUSxH2bE/0.jpg)](http://www.youtube.com/watch?v=pSskUSxH2bE "How to install GrindrPlus (no root required)")
-
-  <details closed>
-    <summary>Written instructions</summary>
-    
-  > This is a simplified version of [willysmith's XDA guide](https://xdaforums.com/t/mod-xposed-grindr-plus.4461857/page-107#post-89708211). Visit the link to read the complete (and more detailed) guide!
-
-  **Requirements:**
-  - `Shizuku` [**installed**](https://shizuku.rikka.app/guide/setup) and fully functional
+  **Prerequisites:**
+  - No Grindr installed on device
 
   **Process:**
-  1. Download [JingMatrix's LSPatch fork](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPatch-v0.7-430-9703dc4-release.apk) and install it (as of September 2024, official LSPatch doesn't work anymore with latest Android versions)
-  2. Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`)
-  3. Download the latest Grindr app [from Play Store](https://play.google.com/store/apps/details?id=com.grindrapp.android&hl=en) or use [SAI](https://github.com/Aefyr/SAI/releases) to install [bundles from APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/)
-  4. Open `LSPatch` to make sure everything is set up correctly up to this point. In the **home tab**, confirm you see _Shizuku service available_ at the very top
-  5. From `LSPatch`, go to "Manage > Apps" and press **+**. Create new patch, select an installed app and search for the Grindr app (`com.grindrapp.android`)
-  6. Enable (select) the options **LOCAL** and **ENABLE DEBUGGING**, start the patch and wait for it to finish
-  7. Once it's done, click on install. It'll ask to uninstall the original Grindr app, just do it and wait for it to install the patched APK
-  8. Go back to "Manage > Apps", click on "Grindr > Module scope" and select Grindr Plus (`com.grindrplus`), confirm by pressing the checkmark (bottom right)
-  9. Open Grindr and check if Mod Settings are at the top of Grindr settings
+  1. Download & Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`).
+  2. Open the new "Grindr Plus" app and click on the "Install" button (bottom left).
+  3. Wait for the versions to load (if loading seems stuck, force close app & retry).
+  4. Select your preferred version (We recomment using latest).
+  5. Click on the "Install" button.
+  6. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
+  7. When prompted, install the newly generated Grindr app.
+  8. If the installation fails, <b>retry it</b> multiple times before asking for support.
 
   </details>
  </details>
@@ -200,6 +191,8 @@ Each installation method is completely different and comes with its own challeng
 
 ## Acknowledgments
 This project relies on several third-party libraries, and we extend our gratitude to their authors for their valuable contributions. For a complete list of these dependencies, please refer to the [dependencies](https://github.com/R0rt1z2/GrindrPlus/blob/master/app/build.gradle.kts#L67-L79) section of the `build.gradle.kts` file.
+
+Parts of the manager were coded with the help of [Vendetta's Manager](https://github.com/vendetta-mod/VendettaManager).
 
 I would also like to give special recognition to [@rhunk](https://github.com/rhunk) and the other developers of [SE](https://github.com/rhunk/SnapEnhance). Their work has been very useful for this mod, and some portions of their code have been used here.
 
