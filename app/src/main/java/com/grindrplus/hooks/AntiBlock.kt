@@ -143,7 +143,7 @@ class AntiBlock : Hook(
                     GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Blocked by User",
                         "You have been blocked by user $displayName",
-                        profileId.toInt(),
+                        10000000 + (profileId % 10000000).toInt(),
                         listOf("Copy ID"),
                         listOf("COPY"),
                         listOf(profileId.toString(), profileId.toString()),
@@ -164,7 +164,7 @@ class AntiBlock : Hook(
                     GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Unblocked by $displayName",
                         "$displayName has unblocked you.",
-                        profileId.toInt(),
+                        20000000 + (profileId % 10000000).toInt(),
                         listOf("Copy ID"),
                         listOf("COPY"),
                         listOf(profileId.toString()),
