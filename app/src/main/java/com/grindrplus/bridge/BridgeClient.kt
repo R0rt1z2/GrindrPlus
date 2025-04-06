@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -21,7 +22,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class BridgeClient(private val context: Context) {
-    private val TAG = "BridgeClient"
     private var bridgeService: IBridgeService? = null
     private val isConnecting = AtomicBoolean(false)
     private val isBound = AtomicBoolean(false)
@@ -133,18 +133,6 @@ class BridgeClient(private val context: Context) {
 
     private fun startServiceMultipleWays() {
         try {
-            val serviceIntent = Intent().apply {
-                setClassName(
-                    BuildConfig.APPLICATION_ID,
-                    "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
-                )
-            }
-            context.startService(serviceIntent)
-        } catch (e: Exception) {
-            Logger.w("Failed to start service directly: ${e.message}", LogSource.BRIDGE)
-        }
-
-        try {
             val forceStartIntent = Intent().apply {
                 setClassName(
                     BuildConfig.APPLICATION_ID,
@@ -215,6 +203,46 @@ class BridgeClient(private val context: Context) {
             bridgeService?.setConfig(config.toString(4))
         } catch (e: Exception) {
             Logger.e("Error setting config: ${e.message}", LogSource.BRIDGE)
+        }
+    }
+
+    fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean) {
+        if (!isBound.get()) {
+            Logger.w("Cannot log block event, service not bound", LogSource.BRIDGE)
+            return
+        }
+
+        try {
+            bridgeService?.logBlockEvent(profileId, displayName, isBlock)
+        } catch (e: Exception) {
+            Logger.e("Error logging block event: ${e.message}", LogSource.BRIDGE)
+        }
+    }
+
+    fun getBlockEvents(): JSONArray {
+        if (!isBound.get()) {
+            Logger.w("Cannot get block events, service not bound", LogSource.BRIDGE)
+            return JSONArray()
+        }
+
+        return try {
+            bridgeService?.blockEvents?.let { JSONArray(it) } ?: JSONArray()
+        } catch (e: Exception) {
+            Logger.e("Error getting block events: ${e.message}", LogSource.BRIDGE)
+            JSONArray()
+        }
+    }
+
+    fun clearBlockEvents() {
+        if (!isBound.get()) {
+            Logger.w("Cannot clear block events, service not bound", LogSource.BRIDGE)
+            return
+        }
+
+        try {
+            bridgeService?.clearBlockEvents()
+        } catch (e: Exception) {
+            Logger.e("Error clearing block events: ${e.message}", LogSource.BRIDGE)
         }
     }
 

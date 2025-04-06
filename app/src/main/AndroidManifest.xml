@@ -50,16 +50,6 @@
             android:exported="true">
         </activity>
 
-        <receiver
-            android:name=".bridge.ServiceAutoStarter"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="com.grindrplus.START_BRIDGE_SERVICE" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
-
         <activity
                 android:name=".manager.MainActivity"
                 android:theme="@style/Theme.Material3.DayNight.NoActionBar"

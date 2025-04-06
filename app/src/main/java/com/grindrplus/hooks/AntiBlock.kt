@@ -137,6 +137,7 @@ class AntiBlock : Hook(
                 }
                 displayName = if (displayName == profileId.toString() || displayName == "null")
                 { profileId.toString() } else { "$displayName ($profileId)" }
+                GrindrPlus.bridgeClient.logBlockEvent(profileId.toString(), displayName, true)
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $displayName")
                 } else {
@@ -158,6 +159,7 @@ class AntiBlock : Hook(
                 var displayName = profile.optString("displayName", profileId.toString())
                     .takeIf { it.isNotEmpty() && it != "null" } ?: profileId.toString()
                 displayName = if (displayName != profileId.toString()) "$displayName ($profileId)" else displayName
+                GrindrPlus.bridgeClient.logBlockEvent(profileId.toString(), displayName, false)
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
                 } else {
