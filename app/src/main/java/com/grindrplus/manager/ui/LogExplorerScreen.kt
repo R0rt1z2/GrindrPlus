@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,6 +45,8 @@ fun DebugLogsScreen(
 ) {
     var logs by remember { mutableStateOf(emptyList<LogEntry>()) }
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     BackHandler(onBack = onBack)
     LaunchedEffect(Unit) {
@@ -90,6 +96,7 @@ fun DebugLogsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Debug Logs") },
@@ -101,6 +108,33 @@ fun DebugLogsScreen(
                             modifier = Modifier.rotate(180f)
                         )
                     }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val zipFile = FileOperationHandler.createLogsZip(context)
+                                    if (zipFile != null) {
+                                        FileOperationHandler.exportZipFile(
+                                            "grindrplus_logs.zip",
+                                            zipFile
+                                        )
+                                        snackbarHostState.showSnackbar("Logs exported successfully")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Failed to create logs package")
+                                    }
+                                } catch (e: Exception) {
+                                    snackbarHostState.showSnackbar("Error exporting logs: ${e.message}")
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Export Logs"
+                        )
+                    }
                 }
             )
         }
@@ -109,6 +143,8 @@ fun DebugLogsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
         ) {
             ConsoleOutput(
                 logEntries = logs,
@@ -122,8 +158,6 @@ fun DebugLogsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val scope = rememberCoroutineScope()
-
             Button(
                 onClick = {
                     scope.launch {
@@ -134,23 +168,31 @@ fun DebugLogsScreen(
                                     "grindrplus_logs.zip",
                                     zipFile
                                 )
-                                // snackbarHostState.showSnackbar("Logs packaged, choose a location to save")
+                                snackbarHostState.showSnackbar("Logs exported successfully")
                             } else {
-                                // snackbarHostState.showSnackbar("Failed to create logs package")
+                                snackbarHostState.showSnackbar("Failed to create logs package")
                             }
                         } catch (e: Exception) {
-                            // snackbarHostState.showSnackbar("Error exporting logs: ${e.message}")
+                            snackbarHostState.showSnackbar("Error exporting logs: ${e.message}")
                         }
                     }
                 },
                 modifier = Modifier
-                    .fillMaxWidth().weight(1f),
+                    .fillMaxWidth()
+                    .height(56.dp)
             ) {
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = "Export Logs"
-                )
+                Text("Export Logs")
             }
         }
     }
 }
+
+enum class LogType {
+    INFO, WARNING, ERROR, DEBUG, VERBOSE, SUCCESS
+}
+
+data class LogEntry(
+    val timestamp: String?,
+    val message: String,
+    val type: LogType
+)

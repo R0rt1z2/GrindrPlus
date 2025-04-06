@@ -36,7 +36,7 @@ fun CloneDialog(
         return
     }
 
-    var appName by remember { mutableStateOf("Grindr $nextCloneNumber") }
+    var appName by remember { mutableStateOf("Grindr ${numberToWords(nextCloneNumber)}") }
     var debuggable by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
