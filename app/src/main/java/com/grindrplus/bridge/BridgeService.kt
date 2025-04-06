@@ -1,5 +1,6 @@
 package com.grindrplus.bridge
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -13,6 +14,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
 import okhttp3.internal.notify
+import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
@@ -22,16 +25,19 @@ import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+@SuppressLint("MissingPermission")
 class BridgeService : Service() {
     private val configFile by lazy { File(getExternalFilesDir(null), "grindrplus.json") }
     private val logFile by lazy { File(getExternalFilesDir(null), "grindrplus.log") }
+    private val blockEventsFile by lazy { File(getExternalFilesDir(null), "block_events.json") }
+    private val blockEventsLock = ReentrantLock()
     private val ioExecutor = Executors.newSingleThreadExecutor()
     private val logLock = ReentrantLock()
     private val MAX_LOG_SIZE = 5 * 1024 * 1024
 
     override fun onCreate() {
         super.onCreate()
-        Timber.tag(TAG).d("BridgeService created")
+        Logger.i("BridgeService created", LogSource.BRIDGE)
 
         ioExecutor.execute {
             if (!configFile.exists()) {
@@ -39,7 +45,8 @@ class BridgeService : Service() {
                     configFile.createNewFile()
                     configFile.writeText("{}")
                 } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Failed to create config file")
+                    Logger.e("Failed to create config file", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
 
@@ -47,26 +54,27 @@ class BridgeService : Service() {
                 try {
                     logFile.createNewFile()
                 } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Failed to create log file")
+                    Logger.e("Failed to create log file", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
         }
     }
 
     override fun onBind(intent: Intent?): IBinder {
-        Timber.tag(TAG).d("Client binding to BridgeService")
+        Logger.i("BridgeService bound", LogSource.BRIDGE)
         return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Timber.tag(TAG).d("onStartCommand")
+        Logger.i("BridgeService started", LogSource.BRIDGE)
         Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND)
         return START_STICKY
     }
 
     private val binder = object : IBridgeService.Stub() {
         override fun getConfig(): String {
-            Timber.tag(TAG).d("getConfig() called")
+            Logger.d("getConfig() called")
             return try {
                 if (!configFile.exists()) {
                     configFile.createNewFile()
@@ -75,13 +83,14 @@ class BridgeService : Service() {
                     configFile.readText().ifBlank { "{}" }
                 }
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "Error reading config file")
+                Logger.e("Error reading config file", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
                 "{}"
             }
         }
 
         override fun setConfig(config: String?) {
-            Timber.tag(TAG).d("setConfig() called")
+            Logger.d("setConfig() called")
             try {
                 if (!configFile.exists()) {
                     configFile.createNewFile()
@@ -89,7 +98,8 @@ class BridgeService : Service() {
 
                 configFile.writeText(config ?: "{}")
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "Error writing config file")
+                Logger.e("Error writing to config file", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
             }
         }
 
@@ -100,7 +110,8 @@ class BridgeService : Service() {
                     val formattedLog = formatLogEntry(level, source, message, hookName)
                     appendToLog(formattedLog)
                 } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Error writing to log file")
+                    Logger.e("Error writing log entry", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
         }
@@ -111,7 +122,8 @@ class BridgeService : Service() {
                     checkAndManageLogSize()
                     appendToLog(content + (if (!content.endsWith("\n")) "\n" else ""))
                 } catch (e: Exception) {
-                    Timber.tag(TAG).e(e, "Error writing raw content to log file")
+                    Logger.e("Error writing raw log entry", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
         }
@@ -124,7 +136,7 @@ class BridgeService : Service() {
             channelName: String,
             channelDescription: String
         ) {
-            Timber.tag(TAG).d("sendNotification() called")
+            Logger.d("sendNotification() called")
             try {
                 createNotificationChannel(channelId, channelName, channelDescription)
 
@@ -139,7 +151,8 @@ class BridgeService : Service() {
                     notify(notificationId, notificationBuilder.build())
                 }
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "Error sending notification")
+                Logger.e("Error sending notification", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
             }
         }
 
@@ -154,7 +167,7 @@ class BridgeService : Service() {
             actionIntents: Array<String>,
             actionData: Array<String>
         ) {
-            Timber.tag(TAG).d("sendNotificationWithActions() called")
+            Logger.d("sendNotificationWithActions() called")
             try {
                 createNotificationChannel(channelId, channelName, channelDescription)
 
@@ -187,11 +200,68 @@ class BridgeService : Service() {
                     notify(notificationId, notificationBuilder.build())
                 }
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "Error sending notification with actions")
+                Logger.e("Error sending notification with actions", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
+            }
+        }
+
+        override fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean) {
+            ioExecutor.execute {
+                try {
+                    blockEventsLock.withLock {
+                        if (!blockEventsFile.exists()) {
+                            blockEventsFile.createNewFile()
+                            blockEventsFile.writeText("[]")
+                        }
+
+                        val eventsArray = JSONArray(blockEventsFile.readText().ifBlank { "[]" })
+                        val event = JSONObject().apply {
+                            put("profileId", profileId)
+                            put("displayName", displayName)
+                            put("eventType", if (isBlock) "block" else "unblock")
+                            put("timestamp", System.currentTimeMillis())
+                        }
+                        eventsArray.put(event)
+                        blockEventsFile.writeText(eventsArray.toString(4))
+                        Logger.d("Logged ${if (isBlock) "block" else "unblock"} event " +
+                                "for profile ${profileId.take(profileId.length - 4) + "****"}", LogSource.BRIDGE)
+                    }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error logging block event")
+                }
+            }
+        }
+
+        override fun getBlockEvents(): String {
+            return try {
+                if (!blockEventsFile.exists()) {
+                    blockEventsFile.createNewFile()
+                    "[]"
+                } else {
+                    blockEventsFile.readText().ifBlank { "[]" }
+                }
+            } catch (e: Exception) {
+                Logger.e("Error reading block events file", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
+                "[]"
+            }
+        }
+
+        override fun clearBlockEvents() {
+            blockEventsLock.withLock {
+                try {
+                    if (blockEventsFile.exists()) {
+                        blockEventsFile.delete()
+                        blockEventsFile.createNewFile()
+                        blockEventsFile.writeText("[]")
+                    }
+                } catch (e: Exception) {
+                    Logger.e("Error clearing block events file", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
+                }
             }
         }
     }
-
 
     private fun createNotificationChannel(channelId: String, channelName: String, channelDescription: String) {
         val notificationManager: NotificationManager =
@@ -235,7 +305,7 @@ class BridgeService : Service() {
             }
         }
 
-        Logger.i("Creating action intent: $actionType with data: $actionData", LogSource.BRIDGE)
+        Logger.d("Action intent created: $actionType with data: $actionData", LogSource.BRIDGE)
         return intent
     }
 
@@ -277,7 +347,7 @@ class BridgeService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Timber.tag(TAG).d("BridgeService destroyed")
+        Logger.i("BridgeService destroyed", LogSource.BRIDGE)
         ioExecutor.shutdown()
     }
 

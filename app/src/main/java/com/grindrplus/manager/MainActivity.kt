@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Home
@@ -82,6 +83,7 @@ import androidx.core.net.toUri
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.grindrplus.bridge.NotificationActionReceiver
 import com.grindrplus.core.Logger
+import com.grindrplus.manager.ui.BlockLogScreen
 import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.utils.FileOperationHandler
 
@@ -102,11 +104,14 @@ sealed class MainNavItem(
         MainNavItem(Icons.Rounded.Download, "Install", { InstallPage(it, this) })
 
     data object Home : MainNavItem(Icons.Rounded.Home, "Home", { HomeScreen(this) })
+
+    data object BlockLog : MainNavItem(Icons.Filled.History, "Block Log", { BlockLogScreen(this) })
+
     // data object Albums : MainNavItem(Icons.Rounded.PhotoAlbum, "Albums", { ComingSoon() })
     // data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
-        val VALUES by lazy { listOf(InstallPage, Home, Settings) }
+        val VALUES by lazy { listOf(InstallPage, Home, BlockLog, Settings) }
     }
 }
 
