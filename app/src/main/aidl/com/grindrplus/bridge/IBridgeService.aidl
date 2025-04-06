@@ -5,7 +5,7 @@ interface IBridgeService {
     void setConfig(String config);
     void log(String level, String source, String message, String hookName);
     void writeRawLog(String content);
-    void logBlockEvent(String profileId, String displayName, boolean isBlock);
+    void logBlockEvent(String profileId, String displayName, boolean isBlock, String packageName);
     String getBlockEvents();
     void clearBlockEvents();
     void sendNotification(String title, String message, int notificationId, String channelId, String channelName, String channelDescription);

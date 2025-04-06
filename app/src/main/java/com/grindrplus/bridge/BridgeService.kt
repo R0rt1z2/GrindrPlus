@@ -205,7 +205,7 @@ class BridgeService : Service() {
             }
         }
 
-        override fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean) {
+        override fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean, packageName: String) {
             ioExecutor.execute {
                 try {
                     blockEventsLock.withLock {
@@ -220,7 +220,7 @@ class BridgeService : Service() {
                             put("displayName", displayName)
                             put("eventType", if (isBlock) "block" else "unblock")
                             put("timestamp", System.currentTimeMillis())
-                            put("packageName", applicationContext.packageName)
+                            put("packageName", packageName)
                         }
                         eventsArray.put(event)
                         blockEventsFile.writeText(eventsArray.toString(4))
