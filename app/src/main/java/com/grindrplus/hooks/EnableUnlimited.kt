@@ -72,14 +72,18 @@ class EnableUnlimited : Hook(
             findClass(className).hook(
                 "invoke", HookStage.AFTER
             ) { param ->
-                val rootView = param.arg<View>(0)
-                hideViews(rootView, viewIds)
+                if (param.args().isNotEmpty()) {
+                    val rootView = param.arg<View>(0)
+                    hideViews(rootView, viewIds)
+                }
             }
         }
 
         findClass(persistentAdBannerContainer).hook("a", HookStage.BEFORE) { param ->
-            val rootView = param.arg<View>(0)
-            hideViews(rootView, listOf("persistent_banner_ad_container"))
+            if (param.args().isNotEmpty()) {
+                val rootView = param.arg<View>(0)
+                hideViews(rootView, listOf("persistent_banner_ad_container"))
+            }
         }
 
         // search for 'variantName, "treatment_exact_count") ?'

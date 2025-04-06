@@ -60,8 +60,8 @@ class ProfileDetails : Hook(
                 val displayName = callMethod(param.arg(0), "getDisplayName") ?: profileId
                 setObjectField(param.arg(0), "displayName", displayName)
 
-                val viewBinding = getObjectField(param.thisObject(), "d")
-                val displayNameTextView = getObjectField(viewBinding, "d") as TextView
+                val viewBinding = getObjectField(param.thisObject(), "c")
+                val displayNameTextView = getObjectField(viewBinding, "c") as TextView
 
                 displayNameTextView.setOnLongClickListener {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
