@@ -118,7 +118,8 @@ Each installation method is completely different and comes with its own challeng
   5. Click on the "Install" button.
   6. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
   7. When prompted, install the newly generated Grindr app.
-  8. If the installation fails, <b>retry it</b> multiple times before asking for support.
+  8. The app WILL CRASH the first time you open it.
+  9. If the installation fails, <b>retry it</b> multiple times before asking for support.
 
   </details>
  </details>
