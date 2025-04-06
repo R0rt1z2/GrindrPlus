@@ -11,6 +11,7 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
+    private val persistentAdBannerContainer = "f6.s3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
     private val userSession = "gb.Z" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
         "D5.c0\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
@@ -18,6 +19,7 @@ class EnableUnlimited : Hook(
     private val viewsToHide = mapOf(
         "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$d" to listOf("upsell_bottom_bar"),
         "com.grindrapp.android.ui.browse.CascadeFragment\$b" to listOf("upsell_bottom_bar"),
+        "com.grindrapp.android.ui.home.HomeActivity\$n" to listOf("persistentAdBannerContainer"),
         "com.grindrapp.android.ui.drawer.DrawerProfileFragment\$d" to listOf("sideDrawerBoostContainer")
     )
 
@@ -75,6 +77,11 @@ class EnableUnlimited : Hook(
             }
         }
 
+        findClass(persistentAdBannerContainer).hook("a", HookStage.BEFORE) { param ->
+            val rootView = param.arg<View>(0)
+            hideViews(rootView, listOf("persistent_banner_ad_container"))
+        }
+
         // search for 'variantName, "treatment_exact_count") ?'
         findClass("W1.a").hook("b", HookStage.BEFORE) { param ->
            param.setResult(false)
@@ -90,11 +97,14 @@ class EnableUnlimited : Hook(
                 if (id > 0) {
                     val view = rootView.findViewById<View>(id)
                     if (view != null) {
+                        Logger.d("View with ID: $viewId found and will be hidden")
                         val params = view.layoutParams
                         params.height = 0
                         view.layoutParams = params
                         view.visibility = View.GONE
                     }
+                } else {
+                    Logger.d("View with ID: $viewId not found")
                 }
             } catch (e: Exception) {
                 Logger.e("Error hiding view with ID: $viewId: ${e.message}")
