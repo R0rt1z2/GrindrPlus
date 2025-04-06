@@ -220,6 +220,7 @@ class BridgeService : Service() {
                             put("displayName", displayName)
                             put("eventType", if (isBlock) "block" else "unblock")
                             put("timestamp", System.currentTimeMillis())
+                            put("packageName", applicationContext.packageName)
                         }
                         eventsArray.put(event)
                         blockEventsFile.writeText(eventsArray.toString(4))

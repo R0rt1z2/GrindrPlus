@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import com.grindrplus.manager.ui.components.BlockLogFilters
 import com.grindrplus.manager.ui.components.FilterPanel
+import com.grindrplus.manager.utils.AppCloneUtils
 
 @SuppressLint("ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -42,6 +43,7 @@ fun BlockLogScreen(innerPadding: PaddingValues) {
     val filters by viewModel.filters.collectAsState()
     val filteredEvents by viewModel.filteredEvents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val availablePackages by viewModel.availablePackages.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
@@ -119,6 +121,7 @@ fun BlockLogScreen(innerPadding: PaddingValues) {
         ) {
             FilterPanel(
                 filters = filters,
+                availablePackages = availablePackages,
                 onFiltersChanged = { newFilters ->
                     viewModel.updateFilters(newFilters)
                 },
@@ -234,6 +237,19 @@ fun BlockEventItem(
     val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
     val time = timeFormat.format(Date(event.timestamp))
 
+    val formattedPackage = remember(event.packageName) {
+        when (val pkg = event.packageName) {
+            null, "com.grindrapp.android" -> null
+            else -> when {
+                pkg.startsWith(AppCloneUtils.GRINDR_PACKAGE_PREFIX) -> {
+                    val cloneName = pkg.removePrefix(AppCloneUtils.GRINDR_PACKAGE_PREFIX)
+                    "Clone ${cloneName.replaceFirstChar { it.uppercase() }}"
+                }
+                else -> pkg.substringAfterLast('.')
+            }
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -276,6 +292,16 @@ fun BlockEventItem(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    if (formattedPackage != null) {
+                        Text(
+                            text = formattedPackage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Text(

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.Android
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RestoreFromTrash
@@ -21,7 +22,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.grindrplus.manager.blocks.BlockEvent
-import java.util.*
 
 enum class FilterTimeRange {
     ALL_TIME,
@@ -35,12 +35,14 @@ data class BlockLogFilters(
     val showUnblocks: Boolean = true,
     val timeRange: FilterTimeRange = FilterTimeRange.ALL_TIME,
     val nameFilter: String = "",
+    val packageNameFilter: Set<String> = emptySet(),
     val isActive: Boolean = false
 )
 
 @Composable
 fun FilterPanel(
     filters: BlockLogFilters,
+    availablePackages: List<String>,
     onFiltersChanged: (BlockLogFilters) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,6 +56,7 @@ fun FilterPanel(
         if (!filters.showBlocks || !filters.showUnblocks) count++
         if (filters.timeRange != FilterTimeRange.ALL_TIME) count++
         if (filters.nameFilter.isNotEmpty()) count++
+        if (filters.packageNameFilter.isNotEmpty()) count++
         count
     }
 
@@ -167,6 +170,29 @@ fun FilterPanel(
                         )
                     }
 
+                    if (availablePackages.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "App Instance",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        PackageFilterSelector(
+                            availablePackages = availablePackages,
+                            selectedPackages = filters.packageNameFilter,
+                            onPackageFilterChanged = { selectedPackages ->
+                                onFiltersChanged(filters.copy(
+                                    packageNameFilter = selectedPackages,
+                                    isActive = true
+                                ))
+                            }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
@@ -230,6 +256,64 @@ fun FilterPanel(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun PackageFilterSelector(
+    availablePackages: List<String>,
+    selectedPackages: Set<String>,
+    onPackageFilterChanged: (Set<String>) -> Unit
+) {
+    val displayNames = remember(availablePackages) {
+        availablePackages.associateWith { packageName ->
+            when {
+                packageName == "com.grindrapp.android" -> "Original Grindr"
+                packageName.startsWith("com.grindrapp.android.") -> {
+                    val cloneName = packageName.removePrefix("com.grindrapp.android.")
+                    "Clone ${cloneName.replaceFirstChar { it.uppercase() }}"
+                }
+                else -> packageName.substringAfterLast('.')
+            }
+        }
+    }
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        availablePackages.forEach { packageName ->
+            FilterChip(
+                selected = selectedPackages.contains(packageName),
+                onClick = {
+                    val newSelectedPackages = selectedPackages.toMutableSet()
+                    if (selectedPackages.contains(packageName)) {
+                        newSelectedPackages.remove(packageName)
+                    } else {
+                        newSelectedPackages.add(packageName)
+                    }
+                    onPackageFilterChanged(newSelectedPackages)
+                },
+                label = { Text(displayNames[packageName] ?: packageName) },
+                leadingIcon = {
+                    if (selectedPackages.contains(packageName)) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Android,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            )
         }
     }
 }

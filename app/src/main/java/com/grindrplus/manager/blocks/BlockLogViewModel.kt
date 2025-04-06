@@ -7,7 +7,9 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
 import com.grindrplus.manager.ui.components.BlockLogFilters
+import com.grindrplus.manager.ui.components.FilterTimeRange
 import com.grindrplus.manager.ui.components.applyTimeFilter
+import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.FileOperationHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +35,9 @@ class BlockLogViewModel : ViewModel() {
     private val _filteredEvents = MutableStateFlow<List<BlockEvent>>(emptyList())
     val filteredEvents: StateFlow<List<BlockEvent>> = _filteredEvents.asStateFlow()
 
+    private val _availablePackages = MutableStateFlow<List<String>>(emptyList())
+    val availablePackages: StateFlow<List<String>> = _availablePackages.asStateFlow()
+
     init {
         viewModelScope.launch {
             events.collect { applyFilters() }
@@ -47,7 +52,7 @@ class BlockLogViewModel : ViewModel() {
         val currentFilters = _filters.value
         val allEvents = _events.value
 
-        val filtered = allEvents
+        _filteredEvents.value = allEvents
             .filter { event ->
                 when (event.eventType) {
                     "block" -> currentFilters.showBlocks
@@ -65,8 +70,16 @@ class BlockLogViewModel : ViewModel() {
                     events
                 }
             }
-
-        _filteredEvents.value = filtered
+            .let { events ->
+                if (currentFilters.packageNameFilter.isNotEmpty()) {
+                    events.filter { event ->
+                        val eventPackage = event.packageName ?: AppCloneUtils.GRINDR_PACKAGE_NAME
+                        currentFilters.packageNameFilter.contains(eventPackage)
+                    }
+                } else {
+                    events
+                }
+            }
     }
 
     fun updateFilters(newFilters: BlockLogFilters) {
@@ -79,21 +92,33 @@ class BlockLogViewModel : ViewModel() {
             try {
                 val eventsArray = GrindrPlus.bridgeClient.getBlockEvents()
                 val eventsList = mutableListOf<BlockEvent>()
+                val packageSet = mutableSetOf<String>()
+
+                packageSet.add("com.grindrapp.android")
 
                 for (i in 0 until eventsArray.length()) {
                     val event = eventsArray.getJSONObject(i)
+                    val packageName = event.optString("packageName", "com.grindrapp.android")
+
+                    if (packageName.isNotEmpty()) {
+                        packageSet.add(packageName)
+                    }
+
                     eventsList.add(
                         BlockEvent(
                             profileId = event.getString("profileId"),
                             displayName = event.getString("displayName"),
                             eventType = event.getString("eventType"),
-                            timestamp = event.getLong("timestamp")
+                            timestamp = event.getLong("timestamp"),
+                            packageName = packageName
                         )
                     )
                 }
 
                 eventsList.sortByDescending { it.timestamp }
                 _events.value = eventsList
+
+                _availablePackages.value = packageSet.toList()
             } catch (e: Exception) {
                 Logger.e("Failed to load block events: ${e.message}", LogSource.MANAGER)
                 Logger.writeRaw(e.stackTraceToString())
@@ -125,6 +150,9 @@ class BlockLogViewModel : ViewModel() {
             jsonObject.put("displayName", event.displayName)
             jsonObject.put("eventType", event.eventType)
             jsonObject.put("timestamp", event.timestamp)
+            event.packageName?.let {
+                jsonObject.put("packageName", it)
+            }
             jsonArray.put(jsonObject)
         }
 
