@@ -2,6 +2,7 @@ package com.grindrplus.hooks
 
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
+import com.grindrplus.bridge.BridgeService
 import com.grindrplus.core.Config
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Utils.sendNotification
@@ -139,12 +140,16 @@ class AntiBlock : Hook(
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $displayName")
                 } else {
-                    sendNotification(
-                        GrindrPlus.context,
+                    GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Blocked by User",
                         "You have been blocked by user $displayName",
                         profileId.toInt(),
-                        channelId = "block_${profileId}"
+                        listOf("Copy ID"),
+                        listOf("COPY"),
+                        listOf(profileId.toString(), profileId.toString()),
+                        BridgeService.CHANNEL_BLOCKS,
+                        "Block Notifications",
+                        "Notifications when users block you"
                     )
                 }
                 return true
@@ -156,12 +161,16 @@ class AntiBlock : Hook(
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
                 } else {
-                    sendNotification(
-                        GrindrPlus.context,
+                    GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Unblocked by $displayName",
                         "$displayName has unblocked you.",
                         profileId.toInt(),
-                        channelId = "unblock_${profileId}"
+                        listOf("Copy ID"),
+                        listOf("COPY"),
+                        listOf(profileId.toString()),
+                        BridgeService.CHANNEL_UNBLOCKS,
+                        "Unblock Notifications",
+                        "Notifications when users unblock you"
                     )
                 }
                 return false

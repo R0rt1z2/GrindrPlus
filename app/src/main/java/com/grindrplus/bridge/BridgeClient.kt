@@ -217,4 +217,64 @@ class BridgeClient(private val context: Context) {
             Logger.e("Error setting config: ${e.message}", LogSource.BRIDGE)
         }
     }
+
+    fun sendNotification(
+        title: String,
+        message: String,
+        notificationId: Int,
+        channelId: String = "default_channel_id",
+        channelName: String = "Default Channel",
+        channelDescription: String = "Default notifications"
+    ) {
+        if (!isBound.get()) {
+            Logger.w("Cannot send notification, service not bound", LogSource.BRIDGE)
+            return
+        }
+
+        try {
+            bridgeService?.sendNotification(
+                title,
+                message,
+                notificationId,
+                channelId,
+                channelName,
+                channelDescription
+            )
+        } catch (e: Exception) {
+            Logger.e("Error sending notification: ${e.message}", LogSource.BRIDGE)
+        }
+    }
+
+    fun sendNotificationWithMultipleActions(
+        title: String,
+        message: String,
+        notificationId: Int,
+        actionLabels: List<String>,
+        actionTypes: List<String>,
+        actionData: List<String>,
+        channelId: String = "default_channel_id",
+        channelName: String = "Default Channel",
+        channelDescription: String = "Default notifications"
+    ) {
+        if (!isBound.get()) {
+            Logger.w("Cannot send notification, service not bound", LogSource.BRIDGE)
+            return
+        }
+
+        try {
+            bridgeService?.sendNotificationWithActions(
+                title,
+                message,
+                notificationId,
+                channelId,
+                channelName,
+                channelDescription,
+                actionLabels.toTypedArray(),
+                actionTypes.toTypedArray(),
+                actionData.toTypedArray()
+            )
+        } catch (e: Exception) {
+            Logger.e("Error sending notification with multiple actions: ${e.message}", LogSource.BRIDGE)
+        }
+    }
 }

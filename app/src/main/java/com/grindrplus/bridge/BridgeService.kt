@@ -1,9 +1,18 @@
 package com.grindrplus.bridge
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.os.Process
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.grindrplus.core.LogSource
+import com.grindrplus.core.Logger
+import okhttp3.internal.notify
 import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
@@ -106,6 +115,128 @@ class BridgeService : Service() {
                 }
             }
         }
+
+        override fun sendNotification(
+            title: String,
+            message: String,
+            notificationId: Int,
+            channelId: String,
+            channelName: String,
+            channelDescription: String
+        ) {
+            Timber.tag(TAG).d("sendNotification() called")
+            try {
+                createNotificationChannel(channelId, channelName, channelDescription)
+
+                val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true)
+
+                with(NotificationManagerCompat.from(applicationContext)) {
+                    notify(notificationId, notificationBuilder.build())
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Error sending notification")
+            }
+        }
+
+        override fun sendNotificationWithActions(
+            title: String,
+            message: String,
+            notificationId: Int,
+            channelId: String,
+            channelName: String,
+            channelDescription: String,
+            actionLabels: Array<String>,
+            actionIntents: Array<String>,
+            actionData: Array<String>
+        ) {
+            Timber.tag(TAG).d("sendNotificationWithActions() called")
+            try {
+                createNotificationChannel(channelId, channelName, channelDescription)
+
+                val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true)
+
+                for (i in actionLabels.indices) {
+                    if (i >= actionIntents.size || i >= actionData.size) break
+
+                    val intent = createActionIntent(actionIntents[i], actionData[i])
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        applicationContext,
+                        notificationId + i,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    notificationBuilder.addAction(
+                        android.R.drawable.ic_menu_send,
+                        actionLabels[i],
+                        pendingIntent
+                    )
+                }
+
+                with(NotificationManagerCompat.from(applicationContext)) {
+                    notify(notificationId, notificationBuilder.build())
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Error sending notification with actions")
+            }
+        }
+    }
+
+
+    private fun createNotificationChannel(channelId: String, channelName: String, channelDescription: String) {
+        val notificationManager: NotificationManager =
+            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (notificationManager.getNotificationChannel(channelId) == null) {
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelDescription
+            }
+            notificationManager.createNotificationChannel(channel)
+            Logger.d("Notification channel created: $channelId", LogSource.BRIDGE)
+        }
+    }
+
+    private fun createActionIntent(actionType: String, actionData: String): Intent {
+        val intent = when (actionType) {
+            "COPY" -> Intent("com.grindrplus.COPY_ACTION").apply {
+                putExtra("data", actionData)
+                setPackage(applicationContext.packageName)
+                setClassName(applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+            }
+            "VIEW_PROFILE" -> Intent("com.grindrplus.VIEW_PROFILE_ACTION").apply {
+                putExtra("profileId", actionData)
+                setPackage(applicationContext.packageName)
+                setClassName(applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+            }
+            "CUSTOM" -> Intent("com.grindrplus.CUSTOM_ACTION").apply {
+                putExtra("data", actionData)
+                setPackage(applicationContext.packageName)
+                setClassName(applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+            }
+            else -> Intent("com.grindrplus.DEFAULT_ACTION").apply {
+                putExtra("data", actionData)
+                setPackage(applicationContext.packageName)
+                setClassName(applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+            }
+        }
+
+        Logger.i("Creating action intent: $actionType with data: $actionData", LogSource.BRIDGE)
+        return intent
     }
 
     private fun formatLogEntry(level: String, source: String, message: String, hookName: String?): String {
@@ -152,5 +283,8 @@ class BridgeService : Service() {
 
     companion object {
         private const val TAG = "BridgeService"
+        const val CHANNEL_BLOCKS = "grindr_plus_blocks"
+        const val CHANNEL_UNBLOCKS = "grindr_plus_unblocks"
+        const val CHANNEL_GENERAL = "grindr_plus_general"
     }
 }
