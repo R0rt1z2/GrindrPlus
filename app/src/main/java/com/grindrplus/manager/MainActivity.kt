@@ -1,7 +1,10 @@
 package com.grindrplus.manager
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Color.TRANSPARENT
 import android.os.Build
 import android.os.Bundle
@@ -10,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Column
@@ -51,6 +55,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -75,6 +80,7 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 import androidx.core.net.toUri
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.grindrplus.bridge.NotificationActionReceiver
 import com.grindrplus.core.Logger
 import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.utils.FileOperationHandler
@@ -110,10 +116,69 @@ class MainActivity : ComponentActivity() {
         val showUninstallDialog = mutableStateOf(false)
     }
 
+    private var showPermissionDialog = false
+    private lateinit var receiver: NotificationActionReceiver
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Logger.i("Notification permission granted")
+        } else {
+            Logger.w("Notification permission denied")
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Permission already granted
+                    Logger.d("Notification permission already granted")
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    showNotificationPermissionExplanation()
+                }
+                else -> {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+    }
+
+    private fun showNotificationPermissionExplanation() {
+        showPermissionDialog = true
+    }
+
+    private fun registerNotificationReceiver() {
+        try {
+            receiver = NotificationActionReceiver()
+            val intentFilter = IntentFilter().apply {
+                addAction("com.grindrplus.COPY_ACTION")
+                addAction("com.grindrplus.VIEW_PROFILE_ACTION")
+                addAction("com.grindrplus.CUSTOM_ACTION")
+                addAction("com.grindrplus.DEFAULT_ACTION")
+            }
+            ContextCompat.registerReceiver(
+                applicationContext,
+                receiver,
+                intentFilter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            Logger.i("Registered notification action receiver")
+        } catch (e: Exception) {
+            Logger.e("Failed to register receiver: ${e.message}")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(DebugTree())
         FileOperationHandler.init(this)
+        registerNotificationReceiver()
 
         val isSystemInDarkTheme = resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
@@ -151,6 +216,8 @@ class MainActivity : ComponentActivity() {
                     HookManager().registerHooks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
                     serviceBound = true
+
+                    checkNotificationPermission()
 
                     if (Config.get("analytics", true) as Boolean) {
                         val config = AndroidResourcePlausibleConfig(this@MainActivity).also {
@@ -191,6 +258,60 @@ class MainActivity : ComponentActivity() {
                 if (calculatorScreen.value) {
                     CalculatorScreen(calculatorScreen)
                     return@GrindrPlusTheme
+                }
+
+                if (showPermissionDialog) {
+                    Dialog(
+                        onDismissRequest = { showPermissionDialog = false }
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                verticalArrangement = Center
+                            ) {
+                                Text(
+                                    text = "Notification Permission",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "GrindrPlus needs notification permission to alert you when someone blocks or unblocks you.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { showPermissionDialog = false },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Not now")
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            showPermissionDialog = false
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Grant Access")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (firstLaunchDialog) {
@@ -438,6 +559,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         activityScope.cancel()
+        try {
+            if (::receiver.isInitialized) {
+                applicationContext.unregisterReceiver(receiver)
+                Logger.i("Unregistered notification action receiver")
+            }
+        } catch (e: Exception) {
+            Logger.e("Error unregistering receiver: ${e.message}")
+        }
         super.onDestroy()
     }
 }
