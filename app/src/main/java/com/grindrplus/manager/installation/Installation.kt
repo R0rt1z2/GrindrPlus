@@ -46,6 +46,46 @@ class Installation(
         ExtractBundleStep(bundleFile, unzipFolder),
     )
 
+    suspend fun install(print: Print) = performOperation(
+        steps = commonSteps + listOf(patchApkStep, installStep),
+        operationName = "install",
+        print = print,
+    )
+
+    suspend fun cloneGrindr(
+        packageName: String,
+        appName: String,
+        debuggable: Boolean,
+        print: Print,
+    ) = performOperation(
+        steps = commonSteps + listOf(
+            CloneGrindrStep(
+                folder = unzipFolder,
+                packageName = packageName,
+                appName = appName,
+                debuggable = debuggable
+            ), SignClonedGrindrApk(keyStoreUtils, unzipFolder),
+            patchApkStep, installStep
+        ),
+        operationName = "clone",
+        print = print,
+    )
+
+    suspend fun installCustom(
+        bundleFile: File,
+        modFile: File,
+        print: Print
+    ) = performOperation(
+        steps = listOf(
+            CheckStorageSpaceStep(folder),
+            ExtractBundleStep(bundleFile, unzipFolder),
+            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore),
+            InstallApkStep(outputDir)
+        ),
+        operationName = "custom_install",
+        print = print
+    )
+
     suspend fun performOperation(
         steps: List<Step>,
         operationName: String,
@@ -95,46 +135,6 @@ class Installation(
         cleanupOnFailure()
         throw e
     }
-
-    suspend fun install(print: Print) = performOperation(
-        steps = commonSteps + listOf(patchApkStep, installStep),
-        operationName = "install",
-        print = print,
-    )
-
-    suspend fun cloneGrindr(
-        packageName: String,
-        appName: String,
-        debuggable: Boolean,
-        print: Print,
-    ) = performOperation(
-        steps = commonSteps + listOf(
-            CloneGrindrStep(
-                folder = unzipFolder,
-                packageName = packageName,
-                appName = appName,
-                debuggable = debuggable
-            ), SignClonedGrindrApk(keyStoreUtils, unzipFolder),
-            patchApkStep, installStep
-        ),
-        operationName = "clone",
-        print = print,
-    )
-
-    suspend fun installCustom(
-        bundleFile: File,
-        modFile: File,
-        print: Print
-    ) = performOperation(
-        steps = listOf(
-            CheckStorageSpaceStep(folder),
-            ExtractBundleStep(bundleFile, unzipFolder),
-            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore),
-            InstallApkStep(outputDir)
-        ),
-        operationName = "custom_install",
-        print = print
-    )
 
     private fun cleanupOnFailure() {
         try {

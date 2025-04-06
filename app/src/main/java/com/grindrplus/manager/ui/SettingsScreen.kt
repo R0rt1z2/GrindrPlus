@@ -85,6 +85,14 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var debugLogsScreen by remember { mutableStateOf(false) }
+
+    if (debugLogsScreen) {
+        DebugLogsScreen(
+            onBack = { debugLogsScreen = false },
+        )
+        return
+    }
 
     if (showAboutDialog) {
         AboutDialog(
@@ -119,6 +127,14 @@ fun SettingsScreen(
                             onDismissRequest = { expanded = false }
                         ) {
                             DropdownMenuItem(
+                                text = { Text("Debug logs") },
+                                onClick = {
+                                    expanded = false
+                                    debugLogsScreen = true
+                                }
+                            )
+
+                            DropdownMenuItem(
                                 text = { Text("Export settings") },
                                 onClick = {
                                     expanded = false
@@ -138,7 +154,6 @@ fun SettingsScreen(
                             DropdownMenuItem(
                                 text = { Text("Import settings") },
                                 onClick = {
-                                    expanded = false
                                     try {
                                         FileOperationHandler.importFile(
                                             arrayOf("application/json")
@@ -164,7 +179,8 @@ fun SettingsScreen(
                                     expanded = false
                                     scope.launch {
                                         try {
-                                            val zipFile = FileOperationHandler.createLogsZip(context)
+                                            val zipFile =
+                                                FileOperationHandler.createLogsZip(context)
                                             if (zipFile != null) {
                                                 FileOperationHandler.exportZipFile(
                                                     "grindrplus_logs.zip",

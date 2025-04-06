@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.widget.Toast
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
-import com.grindrplus.hooks.SignatureSpoofer
+import com.grindrplus.hooks.spoofSignatures
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.IXposedHookLoadPackage
@@ -38,7 +38,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
         }
 
         println("Spoofing signatures..")
-        SignatureSpoofer().init(lpparam)
+        spoofSignatures(lpparam)
 
         if (BuildConfig.DEBUG) {
             // disable SSL pinning if running in debug mode
