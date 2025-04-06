@@ -56,6 +56,8 @@ object GrindrPlus {
         private set
     lateinit var httpClient: Client
         private set
+    lateinit var packageName: String
+        private set
 
     lateinit var hookManager: HookManager
 
@@ -126,6 +128,7 @@ object GrindrPlus {
         this.hookManager = HookManager()
         this.coroutineHelper = CoroutineHelper(classLoader)
         this.instanceManager = InstanceManager(classLoader)
+        this.packageName = context.packageName
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {

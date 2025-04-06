@@ -206,14 +206,14 @@ class BridgeClient(private val context: Context) {
         }
     }
 
-    fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean) {
+    fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean, packageName: String) {
         if (!isBound.get()) {
             Logger.w("Cannot log block event, service not bound", LogSource.BRIDGE)
             return
         }
 
         try {
-            bridgeService?.logBlockEvent(profileId, displayName, isBlock)
+            bridgeService?.logBlockEvent(profileId, displayName, isBlock, packageName)
         } catch (e: Exception) {
             Logger.e("Error logging block event: ${e.message}", LogSource.BRIDGE)
         }
