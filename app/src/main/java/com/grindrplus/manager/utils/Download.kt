@@ -65,7 +65,7 @@ suspend fun download(
         var lastBytesDownloaded = 0L
         var averageSpeed = 0.0
 
-        if (_fetch == null) {
+        if (_fetch == null || _fetch?.isClosed == true) {
             _fetch = Fetch.Impl.getInstance(
                 FetchConfiguration.Builder(context)
                     .setDownloadConcurrentLimit(10)

@@ -107,7 +107,6 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.10.0")
-    compileOnly("org.bouncycastle:bcprov-jdk18on:1.80")
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("io.coil-kt.coil3:coil-compose:3.1.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
@@ -120,6 +119,7 @@ dependencies {
     implementation("io.github.diamondminer88:zip-android:2.2.0@aar")
     implementation("com.github.iyxan23:zipalign-java:1.2.1")
     implementation("io.coil-kt.coil3:coil-gif:3.1.0")
+    compileOnly("org.bouncycastle:bcprov-jdk18on:1.80")
 }
 
 tasks.register("setupLSPatch") {
