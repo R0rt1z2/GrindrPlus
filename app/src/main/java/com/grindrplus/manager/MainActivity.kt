@@ -57,18 +57,25 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.grindrplus.GrindrPlus
 import com.grindrplus.bridge.BridgeClient
+import com.grindrplus.bridge.NotificationActionReceiver
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
+import com.grindrplus.core.Logger
+import com.grindrplus.manager.ui.BlockLogScreen
+import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.ui.HomeScreen
 import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
+import com.grindrplus.manager.utils.FileOperationHandler
 import com.grindrplus.utils.HookManager
 import com.onebusaway.plausible.android.AndroidResourcePlausibleConfig
 import com.onebusaway.plausible.android.NetworkFirstPlausibleClient
@@ -79,13 +86,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import timber.log.Timber
 import timber.log.Timber.DebugTree
-import androidx.core.net.toUri
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.grindrplus.bridge.NotificationActionReceiver
-import com.grindrplus.core.Logger
-import com.grindrplus.manager.ui.BlockLogScreen
-import com.grindrplus.manager.ui.CalculatorScreen
-import com.grindrplus.manager.utils.FileOperationHandler
 
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
@@ -144,9 +144,11 @@ class MainActivity : ComponentActivity() {
                     // Permission already granted
                     Logger.d("Notification permission already granted")
                 }
+
                 shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
                     showNotificationPermissionExplanation()
                 }
+
                 else -> {
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
@@ -528,11 +530,11 @@ class MainActivity : ComponentActivity() {
                                     navController.currentBackStackEntryAsState().value?.destination?.route
                                         ?: MainNavItem.Home.toString()
 
-                                MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
-                                    if (navigationItem.toString() == currentRoute) {
-                                        selectedItem = index
+                                    MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
+                                        if (navigationItem.toString() == currentRoute) {
+                                            selectedItem = index
+                                        }
                                     }
-                                }
 
                                 NavigationBar {
                                     MainNavItem.VALUES.forEachIndexed { index, item ->

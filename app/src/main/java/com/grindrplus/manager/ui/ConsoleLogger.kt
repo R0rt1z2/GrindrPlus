@@ -35,13 +35,13 @@ import java.net.Socket
 import java.net.URL
 
 data class LogEntry(
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long? = null,
     var message: String,
     val type: LogType = LogType.INFO,
 )
 
 enum class LogType {
-    INFO, SUCCESS, WARNING, ERROR, DEBUG
+    INFO, SUCCESS, WARNING, ERROR, DEBUG, VERBOSE
 }
 
 @Composable
@@ -189,6 +189,7 @@ private fun LogEntryItem(entry: LogEntry) {
         LogType.WARNING -> Color(0xFFFFC107)
         LogType.ERROR -> Color(0xFFE91E63)
         LogType.DEBUG -> Color(0xFF9C27B0)
+        LogType.VERBOSE -> Color(0xFF757575)
         LogType.INFO -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
