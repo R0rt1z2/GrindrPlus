@@ -2,6 +2,7 @@ package com.grindrplus.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.grindrplus.BuildConfig
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.utils.Hook
 import timber.log.Timber
@@ -38,8 +39,10 @@ object Logger {
         hookPrefixes.remove(hookName)
     }
 
-    fun d(message: String, source: LogSource? = null, hookName: String? = null) =
+    fun d(message: String, source: LogSource? = null, hookName: String? = null) {
+        if (!debugEnabled) return
         log(message, LogLevel.DEBUG, source ?: getDefaultSource(), hookName)
+    }
 
     fun i(message: String, source: LogSource? = null, hookName: String? = null) =
         log(message, LogLevel.INFO, source ?: getDefaultSource(), hookName)
@@ -116,6 +119,13 @@ object Logger {
 
     private fun getDefaultSource(): LogSource =
         if (isModuleContext) LogSource.MODULE else LogSource.MANAGER
+
+    private val debugEnabled: Boolean
+        get() = when (val value = Config.get("debug_mode", false)) {
+            is Boolean -> value // We account for both strings and booleans
+            is String -> value.equals("true", ignoreCase = true)
+            else -> false
+        } || BuildConfig.DEBUG // Always true in debug builds
 }
 
 fun Hook.logd(message: String) = Logger.d(message, LogSource.HOOK, this.hookName)
