@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.grindrplus.BuildConfig
 import com.grindrplus.core.Config
 import com.grindrplus.manager.utils.AppIconManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +58,7 @@ class SettingsViewModel(
                     )
                 }
 
-                val otherSettings = listOf(
+                val otherSettings = mutableListOf(
                     TextSetting(
                         id = "command_prefix",
                         title = "Command Prefix",
@@ -166,6 +167,21 @@ class SettingsViewModel(
                         }
                     )
                 )
+
+                if (BuildConfig.DEBUG) {
+                    otherSettings += SwitchSetting(
+                        id = "debug_mode",
+                        title = "Enable debug mode",
+                        description = "Enable verbose logging for debugging purposes",
+                        isChecked = Config.get("debug_mode", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("debug_mode", it)
+                                loadSettings()
+                            }
+                        }
+                    )
+                }
 
                 val managerSettings = mutableListOf<Setting>(
                     SwitchSetting(
