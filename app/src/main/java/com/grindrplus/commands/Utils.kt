@@ -7,8 +7,6 @@ import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Utils.getSystemInfo
-import com.grindrplus.ui.Utils.copyToClipboard
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -82,50 +80,6 @@ class Utils(
                 .show()
         }
     }
-
-    @Command("sysinfo", help = "Display system information")
-    fun sysinfo(args: List<String>) {
-        GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-            val dialogView = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(60, 40, 60, 40)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            val systemInfo = getSystemInfo(GrindrPlus.context, false)
-
-            val textView = AppCompatTextView(activity).apply {
-                text = systemInfo
-                textSize = 14f
-                setTextColor(Color.WHITE)
-                setPadding(20, 20, 20, 20)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 20, 0, 0)
-                }
-            }
-
-            dialogView.addView(textView)
-
-            AlertDialog.Builder(activity)
-                .setTitle("System Information")
-                .setView(dialogView)
-                .setPositiveButton("Close") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Copy") { _, _ ->
-                    copyToClipboard("System Information", systemInfo)
-                }
-                .create()
-                .show()
-        }
-    }
-
 
     @Command("prefix", help = "Change the command prefix (default: /)")
     fun prefix(args: List<String>) {

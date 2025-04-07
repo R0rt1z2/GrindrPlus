@@ -93,7 +93,7 @@ object Utils {
 
         val intent = method?.invoke(
             null,
-            GrindrPlus.context,
+            context,
             chatArgsInstance
         ) as Intent?
 
@@ -107,7 +107,7 @@ object Utils {
             Intent::class.java
         )
 
-        startActivityMethod.invoke(null, GrindrPlus.context, intent)
+        startActivityMethod.invoke(null, context, intent)
     }
 
     fun openProfile(id: String) {
@@ -123,7 +123,7 @@ object Utils {
 
         val intent = method?.invoke(
             null,
-            GrindrPlus.context,
+            context,
             id,
             referrerType
         ) as Intent?
@@ -137,24 +137,7 @@ object Utils {
             Intent::class.java
         )
 
-        startActivityMethod.invoke(null, GrindrPlus.context, intent)
-    }
-
-    fun weightToNum(isMetric: Boolean, weight: String): Double {
-        return if (isMetric) {
-            weight.replace("kg", "").toDouble()
-        } else {
-            weight.replace("lbs", "").toDouble()
-        }
-    }
-
-    fun heightToNum(isMetric: Boolean, height: String): Double {
-        return if (isMetric) {
-            height.replace("cm", "").toDouble()
-        } else {
-            val heightTokens = height.split("\'", "\"")
-            heightTokens[0].toDouble() * 12 + heightTokens[1].toDouble()
-        }
+        startActivityMethod.invoke(null, context, intent)
     }
 
     fun calculateBMI(isMetric: Boolean, weight: Double, height: Double): Double {
@@ -190,73 +173,6 @@ object Utils {
             }.get(obj)
         } catch (e: Exception) {
             null
-        }
-    }
-
-    @SuppressLint("MissingPermission", "NotificationPermission")
-    fun sendNotification(
-        context: Context,
-        title: String,
-        message: String,
-        notificationId: Int,
-        channelId: String = "default_channel_id",
-        channelName: String = "Default Channel",
-        channelDescription: String = "Default notifications"
-    ) {
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val channel = NotificationChannel(channelId, channelName, importance).apply {
-            description = channelDescription
-        }
-        val notificationManager: NotificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
-
-        val notificationBuilder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(getId("applovin_ic_warning","drawable", context))
-            .setContentTitle(title)
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-
-        with(NotificationManagerCompat.from(context)) {
-            notify(notificationId, notificationBuilder.build())
-        }
-    }
-
-    fun getSystemInfo(context: Context, shouldAddSeparator: Boolean = true): String {
-        return buildString {
-            if (shouldAddSeparator) appendLine("========================================")
-            appendLine("Android version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-            appendLine("ABI(s): ${Build.SUPPORTED_ABIS.joinToString(", ")}")
-            appendLine(
-                "Security patch: ${Build.VERSION.SECURITY_PATCH}"
-            )
-            appendLine("Device model: ${Build.MODEL} (${Build.MANUFACTURER})")
-            appendLine(
-                try {
-                    val grindr = context.packageManager.getPackageInfo("com.grindrapp.android", 0)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        "Grindr: ${grindr.versionName} (${grindr.longVersionCode})"
-                    else
-                        "Grindr: ${grindr.versionName} (${grindr.versionCode})"
-                } catch (e: Exception) {
-                    "Grindr: N/A"
-                }
-            )
-            appendLine(
-                try {
-                    val lspatch = context.packageManager.getPackageInfo("org.lsposed.lspatch", 0)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        "LSPatch: ${lspatch.versionName} (${lspatch.longVersionCode})"
-                    else
-                        "LSPatch: ${lspatch.versionName} (${lspatch.versionCode})"
-                } catch (e: Exception) {
-                    "LSPatch: N/A"
-                }
-            )
-            appendLine("GrindrPlus: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-            appendLine("Xposed API: ${Config.get("xposed_version", "N/A") as Int}")
-            if (shouldAddSeparator) appendLine("========================================")
         }
     }
 

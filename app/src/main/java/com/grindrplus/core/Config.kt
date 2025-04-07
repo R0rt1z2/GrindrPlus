@@ -4,18 +4,16 @@ import android.content.Context
 import com.grindrplus.GrindrPlus
 import com.grindrplus.manager.utils.AppCloneUtils
 import org.json.JSONObject
-import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
 object Config {
     private lateinit var configFile: File
     private var localConfig = JSONObject()
-
     private var currentPackageName = Constants.GRINDR_PACKAGE_NAME
 
     fun initialize(context: Context?, packageName: String? = null) {
-        println("Called initialize for package: $packageName")
+        Logger.d("Called initialize for package: $packageName", LogSource.MANAGER)
         if (context != null) {
             configFile = File(context.filesDir, "grindrplus.json")
             if (configFile.exists()) {
@@ -37,10 +35,6 @@ object Config {
         migrateToMultiCloneFormat()
     }
 
-
-    /**
-     * Migrate existing config to multi-clone format if needed
-     */
     private fun migrateToMultiCloneFormat() {
         if (!localConfig.has("clones")) {
             val cloneSettings = JSONObject()
@@ -71,24 +65,15 @@ object Config {
         ensurePackageExists(currentPackageName)
     }
 
-    /**
-     * Set current package name for settings
-     */
     fun setCurrentPackage(packageName: String) {
         currentPackageName = packageName
         ensurePackageExists(packageName)
     }
 
-    /**
-     * Get current package name
-     */
     fun getCurrentPackage(): String {
         return currentPackageName
     }
 
-    /**
-     * Ensure the package exists in config
-     */
     private fun ensurePackageExists(packageName: String) {
         val clones = localConfig.optJSONObject("clones") ?: JSONObject().also {
             localConfig.put("clones", it)
@@ -100,9 +85,6 @@ object Config {
         }
     }
 
-    /**
-     * Get all available packages with settings
-     */
     fun getAvailablePackages(context: Context): List<String> {
         val installedClones = listOf(Constants.GRINDR_PACKAGE_NAME) + AppCloneUtils.getExistingClones(context)
         val clones = localConfig.optJSONObject("clones") ?: return listOf(Constants.GRINDR_PACKAGE_NAME)
@@ -114,21 +96,23 @@ object Config {
 
     fun readRemoteConfig(): JSONObject {
         return try {
-            val value = GrindrPlus.bridgeClient.getConfig()
-            println("Called readRemoteConfig, isNull: ${value == null}")
-            value ?: JSONObject().put("clones", JSONObject().put(Constants.GRINDR_PACKAGE_NAME, JSONObject().put("hooks", JSONObject())))
+            GrindrPlus.bridgeClient.getConfig()
         } catch (e: Exception) {
-            Timber.tag("GrindrPlus").e(e, "Error reading config file")
-            JSONObject().put("clones", JSONObject().put(Constants.GRINDR_PACKAGE_NAME, JSONObject().put("hooks", JSONObject())))
+            Logger.e("Failed to read config file: ${e.message}", LogSource.MANAGER)
+            Logger.writeRaw(e.stackTraceToString())
+            JSONObject().put("clones", JSONObject().put(
+                Constants.GRINDR_PACKAGE_NAME,
+                JSONObject().put("hooks", JSONObject()))
+            )
         }
     }
 
     fun writeRemoteConfig(json: JSONObject) {
         try {
-            println("Called writeRemoteConfig")
             GrindrPlus.bridgeClient.setConfig(json)
         } catch (e: IOException) {
-            Timber.tag("GrindrPlus").e(e, "Failed to write config file")
+            Logger.e("Failed to write config file: ${e.message}", LogSource.MANAGER)
+            Logger.writeRaw(e.stackTraceToString())
         }
     }
 
@@ -177,7 +161,7 @@ object Config {
         return hooks.optJSONObject(hookName)?.getBoolean("enabled") == true
     }
 
-    suspend fun initHookSettings(name: String, description: String, state: Boolean) {
+    fun initHookSettings(name: String, description: String, state: Boolean) {
         val packageConfig = getCurrentPackageConfig()
         val hooks = packageConfig.optJSONObject("hooks")
             ?: JSONObject().also { packageConfig.put("hooks", it) }

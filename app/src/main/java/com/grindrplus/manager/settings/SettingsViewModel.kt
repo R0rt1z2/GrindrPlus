@@ -40,9 +40,7 @@ class SettingsViewModel(
             try {
                 val hooks = Config.getHooksSettings()
                 val hookSettings = hooks.filter {
-                    it.key != "Mod settings" &&
-                            it.key != "Persistent incognito" &&
-                            it.key != "Unlimited albums"
+                    it.key != "Unlimited albums"
                 }.map { (hookName, pair) ->
                     SwitchSetting(
                         id = hookName,
@@ -168,7 +166,7 @@ class SettingsViewModel(
                     )
                 )
 
-                if (BuildConfig.DEBUG) {
+                if (!BuildConfig.DEBUG) {
                     otherSettings += SwitchSetting(
                         id = "debug_mode",
                         title = "Enable debug mode",

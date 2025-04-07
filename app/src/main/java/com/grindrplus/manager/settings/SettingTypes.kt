@@ -8,7 +8,6 @@ data class SwitchSetting(
     val onCheckedChange: (Boolean) -> Unit,
 ) : Setting(id, title)
 
-// Setting types
 sealed class Setting(open val id: String, open val title: String)
 
 data class TextSetting(
@@ -27,14 +26,12 @@ data class ButtonSetting(
     val onClick: () -> Unit,
 ) : Setting(id, title)
 
-// Represents a group of settings
 data class SettingGroup(
     val id: String,
     val title: String,
     val settings: List<Setting>,
 )
 
-// Keyboard type enum
 enum class KeyboardType {
     Text, Number, Email, Password, Phone
 }

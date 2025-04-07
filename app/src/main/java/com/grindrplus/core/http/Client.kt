@@ -373,14 +373,6 @@ class Client(interceptor: Interceptor) {
             }
         }
     }
-
-    fun enableIncognito() {
-        updateSettings("""{"settings":{"incognito":true}}""")
-    }
-
-    fun disableIncognito() {
-        updateSettings("""{"settings":{"incognito":false}}""")
-    }
 }
 
 fun RequestBody.Companion.createEmpty(): RequestBody {

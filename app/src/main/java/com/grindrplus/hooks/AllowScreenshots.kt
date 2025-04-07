@@ -27,7 +27,8 @@ class AllowScreenshots : Hook(
 
         ContentResolver::class.java.methods.first {
             it.name == "registerContentObserver" &&
-                    it.parameterTypes.contentEquals(arrayOf(Uri::class.java, Boolean::class.javaPrimitiveType, ContentObserver::class.java))
+                    it.parameterTypes.contentEquals(arrayOf(Uri::class.java,
+                        Boolean::class.javaPrimitiveType, ContentObserver::class.java))
             }.hook(HookStage.BEFORE) { param ->
                 val uri = param.arg<Uri>(0)
                 if (uri.host != "media") return@hook

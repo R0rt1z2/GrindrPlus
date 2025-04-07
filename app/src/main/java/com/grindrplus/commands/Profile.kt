@@ -93,7 +93,7 @@ class Profile(
     @Command("blocks", help = "Get a list of blocked users")
     fun blocks(args: List<String>) {
         GrindrPlus.executeAsync {
-            val blocks = GrindrPlus.httpClient.getBlocks() as List<String>
+            val blocks = GrindrPlus.httpClient.getBlocks()
             val blockList = blocks.joinToString("\n") { "• $it" }
             GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
                 val dialogView = LinearLayout(activity).apply {

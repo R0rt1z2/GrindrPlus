@@ -5,7 +5,6 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.bridge.BridgeService
 import com.grindrplus.core.Config
 import com.grindrplus.core.DatabaseHelper
-import com.grindrplus.core.Utils.sendNotification
 import com.grindrplus.core.Logger
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage

@@ -3,14 +3,11 @@ package com.grindrplus.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.widget.Toast
-import androidx.core.content.res.ResourcesCompat
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Logger
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -19,41 +16,6 @@ import java.time.format.DateTimeFormatter
 object Utils {
     fun getId(name: String, defType: String, context: Context): Int {
         return context.resources.getIdentifier(name, defType, context.packageName)
-    }
-
-    fun getFont(name: String, context: Context): Typeface? {
-        return ResourcesCompat.getFont(context, getId(name, "font", context))
-    }
-
-    fun getDrawable(name: String, context: Context): Drawable? {
-        return ResourcesCompat.getDrawable(
-            context.resources,
-            getId(name, "drawable", context), null
-        )
-    }
-
-    fun dpToPx(dp: Float, context: Context): Float {
-        val scale = context.resources.displayMetrics.density
-        return dp * scale
-    }
-
-    fun spToPx(sp: Float, context: Context): Float {
-        val scale = context.resources.displayMetrics.scaledDensity
-        return sp * scale
-    }
-
-    fun ptToPx(pt: Float, context: Context): Float {
-        return pt * (1.0f / 0.75f)
-    }
-
-    fun inToPx(inch: Float, context: Context): Float {
-        val dpi = context.resources.displayMetrics.densityDpi
-        return inch * dpi
-    }
-
-    fun mmToPx(mm: Float, context: Context): Float {
-        val inch = mm / 25.4f
-        return inToPx(inch, context)
     }
 
     fun createButtonDrawable(color: Int): GradientDrawable {
@@ -71,14 +33,16 @@ object Utils {
     }
 
     fun formatEpochSeconds(epochSec: Long): String {
+        val formatter = DateTimeFormatter.ofPattern(Config.get(
+            "date_format", "yyyy-MM-dd") as String)
         return try {
-            val formatter = DateTimeFormatter.ofPattern(Config.get(
-                "date_format", "yyyy-MM-dd") as String)
             val instant = Instant.ofEpochSecond(epochSec)
             val dt = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
             dt.format(formatter)
         } catch (e: Exception) {
-            "Invalid date format"
+            Logger.e("Error formatting date: $epochSec with format: $formatter")
+            Logger.writeRaw(e.stackTraceToString())
+            "Unknown"
         }
     }
 }

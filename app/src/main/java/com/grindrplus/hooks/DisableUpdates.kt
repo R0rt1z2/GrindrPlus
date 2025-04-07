@@ -64,7 +64,7 @@ class DisableUpdates : Hook(
                     val json = JSONObject(jsonData)
                     versionCode = json.getInt("versionCode")
                     versionName = json.getString("versionName")
-                    Logger.s("Successfully fetched version info: $versionName ($versionCode)")
+                    Logger.d("Successfully fetched version info: $versionName ($versionCode)")
                     updateVersionInfo()
                 }
             } else {

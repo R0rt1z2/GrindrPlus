@@ -25,11 +25,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.toColorInt
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.ui.Utils
-import com.grindrplus.ui.colors.Colors
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -139,13 +139,14 @@ class LocationSpoofer : Hook(
                     exampleButton.paddingBottom
                 )
 
+                val grindrGray = "#9e9ea8".toColorInt()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     drawable.colorFilter =
-                        BlendModeColorFilter(Colors.grindr_middle_gray, BlendMode.SRC_IN)
+                        BlendModeColorFilter(grindrGray, BlendMode.SRC_IN)
                 } else {
                     @Suppress("DEPRECATION")
                     drawable.colorFilter =
-                        PorterDuffColorFilter(Colors.grindr_middle_gray, PorterDuff.Mode.SRC_IN)
+                        PorterDuffColorFilter(grindrGray, PorterDuff.Mode.SRC_IN)
                 }
             }
 

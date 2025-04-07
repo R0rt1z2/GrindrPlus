@@ -18,13 +18,11 @@ import com.grindrplus.hooks.Favorites
 import com.grindrplus.hooks.FeatureGranting
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
-import com.grindrplus.hooks.ModSettings
 import com.grindrplus.hooks.NotificationAlerts
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
-import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedProfiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -38,8 +36,6 @@ class HookManager {
             val hookList = listOf(
                 FeatureGranting(),
                 EnableUnlimited(),
-                // TimberLogging(),
-                // PersistentIncognito(),
                 AntiDetection(),
                 AntiBlock(),
                 NotificationAlerts(),
@@ -54,15 +50,12 @@ class HookManager {
                 Favorites(),
                 LocalSavedPhrases(),
                 LocationSpoofer(),
-                ModSettings(),
                 OnlineIndicator(),
                 UnlimitedProfiles(),
                 ProfileDetails(),
                 ProfileViews(),
-                // UnlimitedAlbums(),
                 QuickBlock(),
                 EmptyCalls(),
-                // ReverseRadarTabs()
             )
 
             hookList.forEach { hook ->
