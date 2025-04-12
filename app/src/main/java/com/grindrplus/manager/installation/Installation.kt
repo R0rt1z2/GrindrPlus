@@ -27,6 +27,7 @@ class Installation(
     val version: String,
     modUrl: String,
     grindrUrl: String,
+    private val mapsApiKey: String?
 ) {
     private val keyStoreUtils = KeyStoreUtils(context)
     private val folder = context.getExternalFilesDir(null)
@@ -37,7 +38,7 @@ class Installation(
     private val bundleFile = File(folder, "grindr-$version.zip")
 
     private val installStep = InstallApkStep(outputDir)
-    private val patchApkStep = PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore)
+    private val patchApkStep = PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey)
     private val commonSteps = listOf(
         // Order matters
         CheckStorageSpaceStep(folder),
@@ -79,7 +80,7 @@ class Installation(
         steps = listOf(
             CheckStorageSpaceStep(folder),
             ExtractBundleStep(bundleFile, unzipFolder),
-            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore),
+            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey),
             InstallApkStep(outputDir)
         ),
         operationName = "custom_install",

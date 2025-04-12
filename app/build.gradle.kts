@@ -119,6 +119,7 @@ dependencies {
     implementation("io.github.diamondminer88:zip-android:2.2.0@aar")
     implementation("com.github.iyxan23:zipalign-java:1.2.1")
     implementation("io.coil-kt.coil3:coil-gif:3.1.0")
+    implementation("io.github.reandroid:ARSCLib:1.3.5")
     compileOnly("org.bouncycastle:bcprov-jdk18on:1.80")
 }
 
