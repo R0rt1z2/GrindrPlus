@@ -44,8 +44,7 @@ class PatchApkStep(
                 element.name == "meta-data" && element.searchAttributeByName("name").valueString == MAPS_API_KEY_NAME
             }.next()
             val valueAttribute = mapsApiKeyElement.searchAttributeByName("value")
-            print("Found existing API Key: ${valueAttribute.valueString}")
-            print("Overwriting with: $customMapsApiKey")
+            print("Overwriting default Maps API key with custom key...")
             valueAttribute.setValueAsString(StyleDocument.parseStyledString(customMapsApiKey))
             apkModule.writeApk(baseApk)
         }
