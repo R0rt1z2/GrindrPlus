@@ -9,6 +9,7 @@ import java.io.IOException
 object Config {
     private var localConfig = JSONObject()
     private var currentPackageName = Constants.GRINDR_PACKAGE_NAME
+    private val GLOBAL_SETTINGS = listOf("analytics", "discreet_icon", "material_you", "debug_mode")
 
     fun initialize(packageName: String? = null) {
         Logger.d("Called initialize for package: $packageName", LogSource.MANAGER)
@@ -20,6 +21,10 @@ object Config {
         }
 
         migrateToMultiCloneFormat()
+    }
+
+    private fun isGlobalSetting(name: String): Boolean {
+        return name in GLOBAL_SETTINGS
     }
 
     private fun migrateToMultiCloneFormat() {
@@ -35,7 +40,7 @@ object Config {
                 val keys = localConfig.keys()
                 while (keys.hasNext()) {
                     val key = keys.next()
-                    if (key != "hooks" && key != "analytics" && key != "discreet_icon" && key != "material_you" && key != "debug_mode") {
+                    if (key != "hooks" && !isGlobalSetting(key)) {
                         defaultPackageConfig.put(key, localConfig.get(key))
                         keysToMove.add(key)
                     }
@@ -112,7 +117,7 @@ object Config {
     }
 
     fun put(name: String, value: Any) {
-        if (name in listOf("analytics", "discreet_icon", "material_you", "debug_mode")) {
+        if (isGlobalSetting(name)) {
             localConfig.put(name, value)
         } else {
             val packageConfig = getCurrentPackageConfig()
@@ -122,15 +127,19 @@ object Config {
         writeRemoteConfig(localConfig)
     }
 
-    fun get(name: String, default: Any): Any {
-        if (name in listOf("analytics", "discreet_icon", "material_you", "debug_mode")) {
+    fun get(name: String, default: Any, autoPut: Boolean = false): Any {
+        if (isGlobalSetting(name)) {
             val get = localConfig.opt(name)
-            return get ?: default.also { put(name, default) }
+            return get ?: default.also {
+                if (autoPut) put(name, default)
+            }
         }
 
         val packageConfig = getCurrentPackageConfig()
         val get = packageConfig.opt(name)
-        return get ?: default.also { put(name, default) }
+        return get ?: default.also {
+            if (autoPut) put(name, default)
+        }
     }
 
     fun setHookEnabled(hookName: String, enabled: Boolean) {

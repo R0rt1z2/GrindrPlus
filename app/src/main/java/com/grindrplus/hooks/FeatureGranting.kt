@@ -105,6 +105,6 @@ class FeatureGranting : Hook(
         featureManager.add(Feature("TakenOnGrindrWatermarkFlag", false))
         featureManager.add(Feature("gender-filter", true))
         featureManager.add(Feature("enable-chat-summaries", true))
-        featureManager.add(Feature("enable-mutual-taps-no-paywall", !(Config.get("enable_interest_section", true) as Boolean)))
+        featureManager.add(Feature("enable-mutual-taps-no-paywall", !(Config.get("enable_interest_section", true, true) as Boolean)))
     }
 }
