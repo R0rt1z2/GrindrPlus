@@ -129,6 +129,18 @@ class SettingsViewModel(
                         }
                     ),
                     SwitchSetting(
+                        id = "disable_profile_swipe",
+                        title = "Disable profile swipe",
+                        description = "Disable profile swipe and open profile on click",
+                        isChecked = Config.get("disable_profile_swipe", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("disable_profile_swipe", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
+                    SwitchSetting(
                         id = "force_old_anti_block_behavior",
                         title = "Force old AntiBlock behavior",
                         description = "Use the old AntiBlock behavior (don't use this, required for testing)",
