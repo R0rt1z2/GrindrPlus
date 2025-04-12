@@ -35,7 +35,7 @@ object Config {
                 val keys = localConfig.keys()
                 while (keys.hasNext()) {
                     val key = keys.next()
-                    if (key != "hooks" && key != "analytics" && key != "discreet_icon" && key != "material_you") {
+                    if (key != "hooks" && key != "analytics" && key != "discreet_icon" && key != "material_you" && key != "debug_mode") {
                         defaultPackageConfig.put(key, localConfig.get(key))
                         keysToMove.add(key)
                     }
@@ -112,7 +112,7 @@ object Config {
     }
 
     fun put(name: String, value: Any) {
-        if (name in listOf("analytics", "discreet_icon", "material_you")) {
+        if (name in listOf("analytics", "discreet_icon", "material_you", "debug_mode")) {
             localConfig.put(name, value)
         } else {
             val packageConfig = getCurrentPackageConfig()
@@ -123,7 +123,7 @@ object Config {
     }
 
     fun get(name: String, default: Any): Any {
-        if (name in listOf("analytics", "discreet_icon", "material_you")) {
+        if (name in listOf("analytics", "discreet_icon", "material_you", "debug_mode")) {
             val get = localConfig.opt(name)
             return get ?: default.also { put(name, default) }
         }
