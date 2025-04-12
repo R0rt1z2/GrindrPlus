@@ -4,27 +4,14 @@ import android.content.Context
 import com.grindrplus.GrindrPlus
 import com.grindrplus.manager.utils.AppCloneUtils
 import org.json.JSONObject
-import java.io.File
 import java.io.IOException
 
 object Config {
-    private lateinit var configFile: File
     private var localConfig = JSONObject()
     private var currentPackageName = Constants.GRINDR_PACKAGE_NAME
 
-    fun initialize(context: Context?, packageName: String? = null) {
+    fun initialize(packageName: String? = null) {
         Logger.d("Called initialize for package: $packageName", LogSource.MANAGER)
-        if (context != null) {
-            configFile = File(context.filesDir, "grindrplus.json")
-            if (configFile.exists()) {
-                File(
-                    context.filesDir,
-                    "pre-migration-config-backup-should-be-empty.json"
-                ).writeText(readRemoteConfig().toString())
-                writeRemoteConfig(JSONObject(configFile.readText()))
-                configFile.delete()
-            }
-        }
 
         localConfig = readRemoteConfig()
 

@@ -238,7 +238,7 @@ class MainActivity : ComponentActivity() {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
                 GrindrPlus.bridgeClient.connect {
                     Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
-                    Config.initialize(null)
+                    Config.initialize()
                     HookManager().registerHooks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
                     serviceBound = true

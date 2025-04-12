@@ -114,7 +114,7 @@ object GrindrPlus {
             Logger.w("Failed to connect to bridge service within timeout", LogSource.MODULE)
             showToast(Toast.LENGTH_LONG, "Bridge service connection timed out")
         } else {
-            Config.initialize(context, context.packageName)
+            Config.initialize(context.packageName)
         }
 
         val newModule = File(context.filesDir, "grindrplus.dex")
