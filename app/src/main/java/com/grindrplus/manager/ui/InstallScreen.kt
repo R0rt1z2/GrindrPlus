@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
 import com.grindrplus.manager.DATA_URL
@@ -94,11 +95,16 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
 
     LaunchedEffect(selectedVersion) {
         if (selectedVersion == null) return@LaunchedEffect
+
+        val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+
+
         installation = Installation(
             context,
             selectedVersion!!.modVer,
             selectedVersion!!.modUrl,
-            selectedVersion!!.grindrUrl
+            selectedVersion!!.grindrUrl,
+            mapsApiKey
         )
     }
 
@@ -143,11 +149,14 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 val bundleFile = createTempFileFromUri(context, customBundleUri!!, "grindr-$customVersionName.zip")
                 val modFile = createTempFileFromUri(context, customModUri!!, "mod-$customVersionName.zip")
 
+                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+
                 val customInstallation = Installation(
                     context,
                     customVersionName,
                     modFile.absolutePath,
-                    bundleFile.absolutePath
+                    bundleFile.absolutePath,
+                    mapsApiKey
                 )
 
                 withContext(Dispatchers.IO) {
@@ -572,11 +581,14 @@ private fun startInstallation(
 
     activityScope.launch {
         try {
+            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+
             val installation = Installation(
                 context,
                 version.modVer,
                 version.modUrl,
-                version.grindrUrl
+                version.grindrUrl,
+                mapsApiKey
             )
 
             withContext(Dispatchers.IO) {
