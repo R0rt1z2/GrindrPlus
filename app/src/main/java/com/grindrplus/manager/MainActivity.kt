@@ -6,8 +6,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color.TRANSPARENT
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -156,6 +158,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun checkUnknownSourcesPermission() {
+        var allow = false
+        allow = packageManager.canRequestPackageInstalls()
+
+        if (!allow) {
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = "package:$packageName".toUri()
+            }
+            Toast.makeText(
+                this,
+                "Please allow unknown sources for GrindrPlus",
+                Toast.LENGTH_LONG
+            ).show()
+            startActivity(intent)
+        }
+    }
+
     private fun showNotificationPermissionExplanation() {
         showPermissionDialog = true
     }
@@ -225,6 +244,7 @@ class MainActivity : ComponentActivity() {
                     serviceBound = true
 
                     checkNotificationPermission()
+                    checkUnknownSourcesPermission()
 
                     if (Config.get("analytics", true) as Boolean) {
                         val config = AndroidResourcePlausibleConfig(this@MainActivity).also {
