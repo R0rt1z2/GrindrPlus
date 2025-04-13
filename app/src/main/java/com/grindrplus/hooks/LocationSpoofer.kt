@@ -64,12 +64,6 @@ class LocationSpoofer : Hook(
             }
         }
 
-        appConfigurationClass
-            .hookConstructor(HookStage.AFTER) { param ->
-                // isMockLocationAllowed
-                setObjectField(param.thisObject(), "j", true)
-            }
-
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
             (Config.get("current_location", "") as String).takeIf {
                 it.isNotEmpty()
