@@ -13,7 +13,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
-import okhttp3.internal.notify
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -34,10 +33,13 @@ class BridgeService : Service() {
     private val ioExecutor = Executors.newSingleThreadExecutor()
     private val logLock = ReentrantLock()
     private val MAX_LOG_SIZE = 5 * 1024 * 1024
+    private val periodicTasksExecutor = Executors.newSingleThreadScheduledExecutor()
 
     override fun onCreate() {
         super.onCreate()
         Logger.i("BridgeService created", LogSource.BRIDGE)
+
+        Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND)
 
         ioExecutor.execute {
             if (!configFile.exists()) {
@@ -58,6 +60,16 @@ class BridgeService : Service() {
                     Logger.writeRaw(e.stackTraceToString())
                 }
             }
+
+            if (!blockEventsFile.exists()) {
+                try {
+                    blockEventsFile.createNewFile()
+                    blockEventsFile.writeText("[]")
+                } catch (e: Exception) {
+                    Logger.e("Failed to create block events file", LogSource.BRIDGE)
+                    Logger.writeRaw(e.stackTraceToString())
+                }
+            }
         }
     }
 
@@ -68,7 +80,6 @@ class BridgeService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Logger.i("BridgeService started", LogSource.BRIDGE)
-        Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND)
         return START_STICKY
     }
 
@@ -205,7 +216,12 @@ class BridgeService : Service() {
             }
         }
 
-        override fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean, packageName: String) {
+        override fun logBlockEvent(
+            profileId: String,
+            displayName: String,
+            isBlock: Boolean,
+            packageName: String
+        ) {
             ioExecutor.execute {
                 try {
                     blockEventsLock.withLock {
@@ -224,8 +240,11 @@ class BridgeService : Service() {
                         }
                         eventsArray.put(event)
                         blockEventsFile.writeText(eventsArray.toString(4))
-                        Logger.d("Logged ${if (isBlock) "block" else "unblock"} event " +
-                                "for profile ${profileId.take(profileId.length - 4) + "****"}", LogSource.BRIDGE)
+                        Logger.d(
+                            "Logged ${if (isBlock) "block" else "unblock"} event " +
+                                    "for profile ${profileId.take(profileId.length - 4) + "****"}",
+                            LogSource.BRIDGE
+                        )
                     }
                 } catch (e: Exception) {
                     Timber.tag(TAG).e(e, "Error logging block event")
@@ -264,7 +283,11 @@ class BridgeService : Service() {
         }
     }
 
-    private fun createNotificationChannel(channelId: String, channelName: String, channelDescription: String) {
+    private fun createNotificationChannel(
+        channelId: String,
+        channelName: String,
+        channelDescription: String
+    ) {
         val notificationManager: NotificationManager =
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -283,26 +306,37 @@ class BridgeService : Service() {
             "COPY" -> Intent("com.grindrplus.COPY_ACTION").apply {
                 putExtra("data", actionData)
                 setPackage(applicationContext.packageName)
-                setClassName(applicationContext.packageName,
-                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+                setClassName(
+                    applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver"
+                )
             }
+
             "VIEW_PROFILE" -> Intent("com.grindrplus.VIEW_PROFILE_ACTION").apply {
                 putExtra("profileId", actionData)
                 setPackage(applicationContext.packageName)
-                setClassName(applicationContext.packageName,
-                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+                setClassName(
+                    applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver"
+                )
             }
+
             "CUSTOM" -> Intent("com.grindrplus.CUSTOM_ACTION").apply {
                 putExtra("data", actionData)
                 setPackage(applicationContext.packageName)
-                setClassName(applicationContext.packageName,
-                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+                setClassName(
+                    applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver"
+                )
             }
+
             else -> Intent("com.grindrplus.DEFAULT_ACTION").apply {
                 putExtra("data", actionData)
                 setPackage(applicationContext.packageName)
-                setClassName(applicationContext.packageName,
-                    "${applicationContext.packageName}.bridge.NotificationActionReceiver")
+                setClassName(
+                    applicationContext.packageName,
+                    "${applicationContext.packageName}.bridge.NotificationActionReceiver"
+                )
             }
         }
 
@@ -310,7 +344,12 @@ class BridgeService : Service() {
         return intent
     }
 
-    private fun formatLogEntry(level: String, source: String, message: String, hookName: String?): String {
+    private fun formatLogEntry(
+        level: String,
+        source: String,
+        message: String,
+        hookName: String?
+    ): String {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
             .format(Date())
 
@@ -330,8 +369,10 @@ class BridgeService : Service() {
                 logFile.renameTo(backupFile)
                 logFile.createNewFile()
 
-                val rotationMessage = "I/${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                    .format(Date())}/system: Log file rotated due to size limit\n"
+                val rotationMessage = "I/${
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                        .format(Date())
+                }/system: Log file rotated due to size limit\n"
                 logFile.appendText(rotationMessage)
             }
         }
@@ -350,6 +391,7 @@ class BridgeService : Service() {
         super.onDestroy()
         Logger.i("BridgeService destroyed", LogSource.BRIDGE)
         ioExecutor.shutdown()
+        periodicTasksExecutor.shutdown()
     }
 
     companion object {

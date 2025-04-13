@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.widget.Toast
@@ -109,12 +110,12 @@ object GrindrPlus {
         Logger.initialize(context, bridgeClient, true)
         Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
 
-        val serviceConnected = bridgeClient.connectBlocking(10000)
-        if (!serviceConnected) {
-            Logger.w("Failed to connect to bridge service within timeout", LogSource.MODULE)
-            showToast(Toast.LENGTH_LONG, "Bridge service connection timed out")
-        } else {
-            Config.initialize(context.packageName)
+        val connected = connectBridgeWithRetry(5)
+
+        if (!connected) {
+            Logger.e("Critical error: Failed to connect to bridge service", LogSource.MODULE)
+            showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
+            return
         }
 
         val newModule = File(context.filesDir, "grindrplus.dex")
@@ -234,6 +235,64 @@ object GrindrPlus {
 
     fun loadClass(name: String): Class<*> {
         return classLoader.loadClass(name)
+    }
+
+    private fun connectBridgeWithRetry(maxAttempts: Int): Boolean {
+        var attemptCount = 0
+        var connected = false
+        var timeoutMs = 2000L
+
+        while (!connected && attemptCount < maxAttempts) {
+            attemptCount++
+            Logger.i("Bridge connection attempt $attemptCount/$maxAttempts with ${timeoutMs}ms timeout", LogSource.MODULE)
+
+            try {
+                connected = bridgeClient.connectBlocking(timeoutMs)
+
+                if (connected) {
+                    Logger.i("Successfully connected to bridge service on attempt $attemptCount", LogSource.MODULE)
+                    bridgeClient.startWatchdog()
+                    break
+                } else {
+                    Logger.w("Connection attempt $attemptCount failed", LogSource.MODULE)
+                    timeoutMs = (timeoutMs * 1.5).toLong() + (50..200).random()
+                    if (attemptCount > 1) {
+                        forceStartBridgeService()
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("Error during connection attempt $attemptCount: ${e.message}", LogSource.MODULE)
+            }
+
+            Thread.sleep(300)
+        }
+
+        return connected
+    }
+
+    private fun forceStartBridgeService() {
+        try {
+            val serviceIntent = Intent().apply {
+                setClassName(
+                    BuildConfig.APPLICATION_ID,
+                    "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
+                )
+            }
+            context.startService(serviceIntent)
+            Logger.d("Force-started bridge service", LogSource.MODULE)
+
+            val forceStartIntent = Intent().apply {
+                setClassName(
+                    BuildConfig.APPLICATION_ID,
+                    "${BuildConfig.APPLICATION_ID}.bridge.ForceStartActivity"
+                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(forceStartIntent)
+            Logger.d("Started ForceStartActivity", LogSource.MODULE)
+        } catch (e: Exception) {
+            Logger.e("Failed force-start attempts: ${e.message}", LogSource.MODULE)
+        }
     }
 
     private fun fetchRemoteData(url: String, callback: (List<Pair<Long, Int>>) -> Unit) {
