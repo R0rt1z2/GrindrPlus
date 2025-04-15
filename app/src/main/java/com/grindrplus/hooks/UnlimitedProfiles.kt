@@ -35,8 +35,8 @@ class UnlimitedProfiles : Hook(
                 param.setResult(items)
             }
 
-        findClass(profileTagCascadeFragment)
-            .hook("R", HookStage.BEFORE) { param ->
+        findClass(profileTagCascadeFragment) // search for 'new StringBuilder("cascadeClickEvent/position=");'
+            .hook("M", HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
 
