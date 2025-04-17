@@ -434,6 +434,15 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
 
+                                if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) {
+                                    Text(
+                                        text = "If you have Grindr installed in the Secure Folder, PLEASE UNINSTALL IT from there as well.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(bottom = 16.dp)
+                                    )
+                                }
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
