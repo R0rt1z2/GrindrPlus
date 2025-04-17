@@ -29,6 +29,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.Logger
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
@@ -86,20 +87,24 @@ class LocationSpoofer : Hook(
             val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
-            val locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
-                if (view is ImageButton) {
-                    view.tag == "custom_location_button" ||
-                            view.contentDescription == "Teleport" ||
-                            (view.drawable != null && view.drawable.constantState ==
-                                    ResourcesCompat.getDrawable(
-                                        chatBottomToolbarLinearLayout.context.resources,
-                                        Utils.getId("ic_my_location", "drawable", chatBottomToolbarLinearLayout.context),
-                                        null
-                                    )?.constantState)
-                } else false
+            var locationButtonExists = false
+            if (Config.get("do_gui_safety_checks", true) as Boolean) {
+                locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
+                    if (view is ImageButton) {
+                        view.tag == "custom_location_button" ||
+                                view.contentDescription == "Teleport" ||
+                                (view.drawable != null && view.drawable.constantState ==
+                                        ResourcesCompat.getDrawable(
+                                            chatBottomToolbarLinearLayout.context.resources,
+                                            Utils.getId("ic_my_location", "drawable", chatBottomToolbarLinearLayout.context),
+                                            null
+                                        )?.constantState)
+                    } else false
+                }
             }
 
             if (locationButtonExists) {
+                Logger.w("Location button already exists?")
                 return@hookConstructor
             }
 

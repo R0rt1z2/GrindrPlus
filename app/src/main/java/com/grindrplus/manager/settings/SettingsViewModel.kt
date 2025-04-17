@@ -188,6 +188,18 @@ class SettingsViewModel(
                                 loadSettings()
                             }
                         }
+                    ),
+                    SwitchSetting(
+                        id = "do_gui_safety_checks",
+                        title = "Do GUI safety checks",
+                        description = "Prevent graphic glitches when applying GUI based hooks",
+                        isChecked = Config.get("do_gui_safety_checks", true) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("do_gui_safety_checks", it)
+                                loadSettings()
+                            }
+                        }
                     )
                 )
 

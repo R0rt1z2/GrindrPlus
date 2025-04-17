@@ -5,6 +5,8 @@ import android.app.AlertDialog
 import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
+import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.h2n
@@ -137,7 +139,12 @@ class ProfileDetails : Hook(
                         w2n("kg" in weight.toString(), weight.toString()),
                         h2n("kg" in weight.toString(), height.toString())
                     )
-                    if (weight.toString().contains("(")) return@hook
+                    if (Config.get("do_gui_safety_checks", true) as Boolean) {
+                        if (weight.toString().contains("(")) {
+                            Logger.w("BMI details are already present?")
+                            return@hook
+                        }
+                    }
                     param.setResult("$weight - ${String.format("%.1f", BMI)} (${
                         mapOf(
                             "Underweight" to 18.5,
