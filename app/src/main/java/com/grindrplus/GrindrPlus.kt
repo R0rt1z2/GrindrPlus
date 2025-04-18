@@ -36,6 +36,7 @@ import okhttp3.Response
 import org.json.JSONArray
 import java.io.File
 import java.io.IOException
+import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
 
 private const val TAG = "GrindrPlus"
@@ -94,15 +95,17 @@ object GrindrPlus {
         )
     )
 
-    var currentActivity: Activity? = null
-        private set
+    val currentActivity: Activity?
+        get() = currentActivityRef?.get()
 
     private val userAgent = "u6.f" // search for 'grindr3/'
     private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
         "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
+
     private val ioScope = CoroutineScope(Dispatchers.IO)
+    private var currentActivityRef: WeakReference<Activity>? = null
 
     private val splineDataEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
@@ -151,13 +154,13 @@ object GrindrPlus {
 
             override fun onActivityResumed(activity: Activity) {
                 Logger.d("Resuming activity: ${activity.javaClass.name}", LogSource.MODULE)
-                currentActivity = activity
+                currentActivityRef = WeakReference(activity)
             }
 
             override fun onActivityPaused(activity: Activity) {
                 Logger.d("Pausing activity: ${activity.javaClass.name}", LogSource.MODULE)
                 if (currentActivity == activity) {
-                    currentActivity = null
+                    currentActivityRef = null
                 }
             }
 
@@ -235,7 +238,7 @@ object GrindrPlus {
         runOnMainThread {
             currentActivity?.let { activity ->
                 block(activity)
-            }
+            } ?: Logger.e("Cannot execute action - no active activity", LogSource.MODULE)
         }
     }
 
