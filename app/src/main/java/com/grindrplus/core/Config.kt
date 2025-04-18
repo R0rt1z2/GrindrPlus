@@ -12,7 +12,9 @@ object Config {
     private val GLOBAL_SETTINGS = listOf("analytics", "discreet_icon", "material_you", "debug_mode", "enable_watchdog_service")
 
     fun initialize(packageName: String? = null) {
-        Logger.d("Called initialize for package: $packageName", LogSource.MANAGER)
+        if (packageName != null) {
+            Logger.d("Initializing config for package: $packageName", LogSource.MANAGER)
+        }
 
         localConfig = readRemoteConfig()
 
@@ -29,6 +31,7 @@ object Config {
 
     private fun migrateToMultiCloneFormat() {
         if (!localConfig.has("clones")) {
+            Logger.d("Migrating to multi-clone format", LogSource.MANAGER)
             val cloneSettings = JSONObject()
 
             if (localConfig.has("hooks")) {
@@ -58,6 +61,7 @@ object Config {
     }
 
     fun setCurrentPackage(packageName: String) {
+        Logger.d("Setting current package to $packageName", LogSource.MANAGER)
         currentPackageName = packageName
         ensurePackageExists(packageName)
     }
@@ -67,6 +71,7 @@ object Config {
     }
 
     private fun ensurePackageExists(packageName: String) {
+        Logger.d("Ensuring package $packageName exists in config", LogSource.MANAGER)
         val clones = localConfig.optJSONObject("clones") ?: JSONObject().also {
             localConfig.put("clones", it)
         }
@@ -78,6 +83,7 @@ object Config {
     }
 
     fun getAvailablePackages(context: Context): List<String> {
+        Logger.d("Getting available packages", LogSource.MANAGER)
         val installedClones = listOf(Constants.GRINDR_PACKAGE_NAME) + AppCloneUtils.getExistingClones(context)
         val clones = localConfig.optJSONObject("clones") ?: return listOf(Constants.GRINDR_PACKAGE_NAME)
 
@@ -117,6 +123,7 @@ object Config {
     }
 
     fun put(name: String, value: Any) {
+        Logger.d("Setting $name to $value", LogSource.MANAGER)
         if (isGlobalSetting(name)) {
             localConfig.put(name, value)
         } else {
@@ -143,6 +150,7 @@ object Config {
     }
 
     fun setHookEnabled(hookName: String, enabled: Boolean) {
+        Logger.d("Setting hook $hookName to $enabled", LogSource.MANAGER)
         val packageConfig = getCurrentPackageConfig()
         val hooks = packageConfig.optJSONObject("hooks")
             ?: JSONObject().also { packageConfig.put("hooks", it) }
@@ -152,12 +160,14 @@ object Config {
     }
 
     fun isHookEnabled(hookName: String): Boolean {
+        Logger.d("Checking if hook $hookName is enabled", LogSource.MANAGER)
         val packageConfig = getCurrentPackageConfig()
         val hooks = packageConfig.optJSONObject("hooks") ?: return false
         return hooks.optJSONObject(hookName)?.getBoolean("enabled") == true
     }
 
     fun initHookSettings(name: String, description: String, state: Boolean) {
+        Logger.d("Initializing hook settings for $name", LogSource.MANAGER)
         val packageConfig = getCurrentPackageConfig()
         val hooks = packageConfig.optJSONObject("hooks")
             ?: JSONObject().also { packageConfig.put("hooks", it) }
@@ -173,6 +183,7 @@ object Config {
     }
 
     fun getHooksSettings(): Map<String, Pair<String, Boolean>> {
+        Logger.d("Getting hooks settings", LogSource.MANAGER)
         val packageConfig = getCurrentPackageConfig()
         val hooks = packageConfig.optJSONObject("hooks") ?: return emptyMap()
         val map = mutableMapOf<String, Pair<String, Boolean>>()

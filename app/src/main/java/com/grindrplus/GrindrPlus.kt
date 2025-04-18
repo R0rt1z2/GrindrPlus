@@ -127,6 +127,7 @@ object GrindrPlus {
             return
         }
 
+        Config.initialize(application.packageName)
         val newModule = File(context.filesDir, "grindrplus.dex")
         File(modulePath).copyTo(newModule, true)
         newModule.setReadOnly()
