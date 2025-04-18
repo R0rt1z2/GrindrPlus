@@ -65,10 +65,9 @@ class Client(interceptor: Interceptor) {
                 }
             } else {
                 if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to block user: ${response.body?.string()}"
-                    )
+                    response.useBody { errorBody ->
+                        showToast(Toast.LENGTH_LONG, "Failed to block user: $errorBody")
+                    }
                 }
             }
         }
@@ -103,10 +102,9 @@ class Client(interceptor: Interceptor) {
                 }
             } else {
                 if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to unblock user: ${response.body?.string()}"
-                    )
+                    response.useBody { errorBody ->
+                        showToast(Toast.LENGTH_LONG, "Failed to unblock user: $errorBody")
+                    }
                 }
             }
         }
@@ -138,10 +136,9 @@ class Client(interceptor: Interceptor) {
                 }
             } else {
                 if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to favorite user: ${response.body?.string()}"
-                    )
+                    response.useBody { errorBody ->
+                        showToast(Toast.LENGTH_LONG, "Failed to favorite user: $errorBody")
+                    }
                 }
             }
         }
@@ -175,10 +172,9 @@ class Client(interceptor: Interceptor) {
                 }
             } else {
                 if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to unfavorite user: ${response.body?.string()}"
-                    )
+                    response.useBody { errorBody ->
+                        showToast(Toast.LENGTH_LONG, "Failed to unfavorite user: $errorBody")
+                    }
                 }
             }
         }
@@ -209,21 +205,10 @@ class Client(interceptor: Interceptor) {
             if (response.isSuccessful) {
                 showToast(Toast.LENGTH_LONG, "User reported successfully")
             } else {
-                showToast(
-                    Toast.LENGTH_LONG,
-                    "Failed to report user: ${response.body?.string()}"
-                )
+                response.useBody { errorBody ->
+                    showToast(Toast.LENGTH_LONG, "Failed to report user: $errorBody")
+                }
             }
-        }
-    }
-
-    fun updateSettings(settings: String) {
-        GrindrPlus.executeAsync {
-            sendRequest(
-                "https://grindr.mobi/v3/me/prefs/settings",
-                "PUT",
-                body = settings.toRequestBody()
-            )
         }
     }
 
@@ -231,24 +216,28 @@ class Client(interceptor: Interceptor) {
         try {
             val response = sendRequest("https://grindr.mobi/v3.1/me/blocks", "GET")
             if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (!responseBody.isNullOrEmpty()) {
-                    val jsonResponse = JSONObject(responseBody)
-                    val blockingArray = jsonResponse.optJSONArray("blocking")
-                    if (blockingArray != null) {
-                        val blockedProfileIds = mutableListOf<String>()
-                        for (i in 0 until blockingArray.length()) {
-                            val blockingJson = blockingArray.getJSONObject(i)
-                            val profileId = blockingJson.optLong("profileId")
-                            blockedProfileIds.add(profileId.toString())
+                response.useBody { responseBody ->
+                    if (!responseBody.isNullOrEmpty()) {
+                        val jsonResponse = JSONObject(responseBody)
+                        val blockingArray = jsonResponse.optJSONArray("blocking")
+                        if (blockingArray != null) {
+                            val blockedProfileIds = mutableListOf<String>()
+                            for (i in 0 until blockingArray.length()) {
+                                val blockingJson = blockingArray.getJSONObject(i)
+                                val profileId = blockingJson.optLong("profileId")
+                                blockedProfileIds.add(profileId.toString())
+                            }
+                            return@useBody blockedProfileIds
                         }
-                        return@withContext blockedProfileIds
                     }
+                    emptyList()
                 }
+            } else {
+                emptyList()
             }
-            emptyList()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("Failed to get blocks: ${e.message}")
+            Logger.writeRaw(e.stackTraceToString())
             emptyList()
         }
     }
@@ -257,55 +246,55 @@ class Client(interceptor: Interceptor) {
         try {
             val response = sendRequest("https://grindr.mobi/v6/favorites", "GET")
             if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (!responseBody.isNullOrEmpty()) {
-                    val jsonResponse = JSONObject(responseBody)
-                    val favoritesArray = jsonResponse.optJSONArray("favorites")
-                    if (favoritesArray != null) {
-                        val favoriteProfileIds = mutableListOf<Triple<String, String, String>>()
-                        for (i in 0 until favoritesArray.length()) {
-                            val favoriteJson = favoritesArray.getJSONObject(i)
-                            val profileId = favoriteJson.optString("profileId")
+                response.useBody { responseBody ->
+                    if (!responseBody.isNullOrEmpty()) {
+                        val jsonResponse = JSONObject(responseBody)
+                        val favoritesArray = jsonResponse.optJSONArray("favorites")
+                        if (favoritesArray != null) {
+                            val favoriteProfileIds = mutableListOf<Triple<String, String, String>>()
+                            for (i in 0 until favoritesArray.length()) {
+                                val favoriteJson = favoritesArray.getJSONObject(i)
+                                val profileId = favoriteJson.optString("profileId")
 
-                            val note = try {
-                                DatabaseHelper.query(
-                                    "SELECT note FROM profile_note WHERE profile_id = ?",
-                                    arrayOf(profileId)
-                                ).firstOrNull()?.get("note") as? String ?: ""
-                            } catch (e: Exception) {
-                                Logger.apply {
-                                    log("Failed to fetch note for profileId $profileId: ${e.message}")
-                                    writeRaw(e.stackTraceToString())
+                                val note = try {
+                                    DatabaseHelper.query(
+                                        "SELECT note FROM profile_note WHERE profile_id = ?",
+                                        arrayOf(profileId)
+                                    ).firstOrNull()?.get("note") as? String ?: ""
+                                } catch (e: Exception) {
+                                    Logger.apply {
+                                        log("Failed to fetch note for profileId $profileId: ${e.message}")
+                                        writeRaw(e.stackTraceToString())
+                                    }
+                                    ""
                                 }
-                                ""
-                            }
 
-                            val phoneNumber = try {
-                                DatabaseHelper.query(
-                                    "SELECT phone_number FROM profile_note WHERE profile_id = ?",
-                                    arrayOf(profileId)
-                                ).firstOrNull()?.get("phone_number") as? String ?: ""
-                            } catch (e: Exception) {
-                                Logger.apply {
-                                    log("Failed to fetch phone number for profileId $profileId: ${e.message}")
-                                    writeRaw(e.stackTraceToString())
+                                val phoneNumber = try {
+                                    DatabaseHelper.query(
+                                        "SELECT phone_number FROM profile_note WHERE profile_id = ?",
+                                        arrayOf(profileId)
+                                    ).firstOrNull()?.get("phone_number") as? String ?: ""
+                                } catch (e: Exception) {
+                                    Logger.apply {
+                                        log("Failed to fetch phone number for profileId $profileId: ${e.message}")
+                                        writeRaw(e.stackTraceToString())
+                                    }
+                                    ""
                                 }
-                                ""
-                            }
 
-                            favoriteProfileIds.add(Triple(profileId, note, phoneNumber))
+                                favoriteProfileIds.add(Triple(profileId, note, phoneNumber))
+                            }
+                            return@useBody favoriteProfileIds
                         }
-                        return@withContext favoriteProfileIds
                     }
+                    emptyList()
                 }
+            } else {
+                emptyList()
             }
-            emptyList()
         } catch (e: Exception) {
-            val message = "Failed to get favorites: ${e.message}"
-            Logger.apply {
-                log(message)
-                writeRaw(e.stackTraceToString())
-            }
+            Logger.e("Failed to get favorites: ${e.message}")
+            Logger.writeRaw(e.stackTraceToString())
             emptyList()
         }
     }
@@ -357,18 +346,15 @@ class Client(interceptor: Interceptor) {
                         )
                     }
                 } catch (e: Exception) {
-                    Logger.apply {
-                        log("Failed to update profile note: ${e.message}")
-                        writeRaw(e.stackTraceToString())
-                    }
+                    Logger.e("Failed to update profile note: ${e.message}")
+                    Logger.writeRaw(e.stackTraceToString())
                 }
                 if (!silent) showToast(Toast.LENGTH_LONG, "Note added successfully")
             } else {
                 if (!silent) {
-                    showToast(
-                        Toast.LENGTH_LONG,
-                        "Failed to add note: ${response.body?.string()}"
-                    )
+                    response.useBody { errorBody ->
+                        showToast(Toast.LENGTH_LONG, "Failed to add note: $errorBody")
+                    }
                 }
             }
         }
@@ -377,4 +363,12 @@ class Client(interceptor: Interceptor) {
 
 fun RequestBody.Companion.createEmpty(): RequestBody {
     return "".toRequestBody()
+}
+
+private inline fun <T> Response.useBody(block: (String?) -> T): T {
+    return try {
+        block(body?.string())
+    } finally {
+        body?.close()
+    }
 }
