@@ -9,7 +9,7 @@ import java.io.IOException
 object Config {
     private var localConfig = JSONObject()
     private var currentPackageName = Constants.GRINDR_PACKAGE_NAME
-    private val GLOBAL_SETTINGS = listOf("analytics", "discreet_icon", "material_you", "debug_mode")
+    private val GLOBAL_SETTINGS = listOf("analytics", "discreet_icon", "material_you", "debug_mode", "enable_watchdog_service")
 
     fun initialize(packageName: String? = null) {
         Logger.d("Called initialize for package: $packageName", LogSource.MANAGER)

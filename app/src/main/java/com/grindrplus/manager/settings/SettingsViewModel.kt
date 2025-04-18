@@ -236,7 +236,19 @@ class SettingsViewModel(
                                 ).show()
                             }
                         }
-                    )
+                    ),
+                    SwitchSetting(
+                        id = "enable_watchdog_service",
+                        title = "Keep Grindr Plus alive",
+                        description = "Keep Grindr Plus alive in the background (may drain battery)",
+                        isChecked = Config.get("watchdog_service", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("enable_watchdog_service", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
                 )
 
                 if (!BuildConfig.DEBUG) {

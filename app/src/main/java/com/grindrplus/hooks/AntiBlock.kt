@@ -18,8 +18,8 @@ class AntiBlock : Hook(
     "Notifies you when someone blocks or unblocks you"
 ) {
     private var myProfileId: Long = 0
-    private val chatDeleteConversationPlugin = "q5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "t7.i" // search for '("chat_read_receipt", conversationId, null);'
+    private val chatDeleteConversationPlugin = "y5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
+    private val inboxFragmentV2DeleteConversations = "G7.i" // search for '("chat_read_receipt", conversationId, null);'
 
     override fun init() {
         if (Config.get("force_old_anti_block_behavior", false) as Boolean) {
@@ -40,7 +40,7 @@ class AntiBlock : Hook(
                 .hook("d", HookStage.AFTER) { param ->
                     val numberOfChatsToDelete = (param.args().firstOrNull() as? List<*>)?.size ?: 0
                     if (numberOfChatsToDelete == 0) return@hook
-                    // GrindrPlus.logger.debug("Request to delete $numberOfChatsToDelete chats")
+                    Logger.d("Request to delete $numberOfChatsToDelete chats")
                     Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
                     GrindrPlus.shouldTriggerAntiblock = true
                     GrindrPlus.blockCaller = ""

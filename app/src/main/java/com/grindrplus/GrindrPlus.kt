@@ -7,6 +7,7 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.widget.Toast
@@ -66,6 +67,9 @@ object GrindrPlus {
     var blockCaller: String = ""
     var isImportingSomething = false
     var myProfileId: String = ""
+    var versionMismatch = false
+    var hasCheckedVersions = false
+    var shouldShowVersionMismatchDialog = false
 
     var spline = PCHIP(
         listOf(
@@ -93,23 +97,25 @@ object GrindrPlus {
     var currentActivity: Activity? = null
         private set
 
-    private val userAgent = "n6.h" // search for 'grindr3/'
-    private val userSession = "gb.Z" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val userAgent = "u6.f" // search for 'grindr3/'
+    private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
-        "Z3.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+        "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     private val splineDataEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
 
-    fun init(modulePath: String, application: Application) {
-        this.context = application // do not use .applicationContext as it's null at this point
+    fun init(modulePath: String, application: Application,
+             versionCodes: IntArray, versionNames: Array<String>) {
+        this.context = application
         this.bridgeClient = BridgeClient(context)
 
         Logger.initialize(context, bridgeClient, true)
         Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
 
+        checkVersionCodes(versionCodes, versionNames)
         val connected = connectBridgeWithRetry(5)
 
         if (!connected) {
@@ -133,6 +139,11 @@ object GrindrPlus {
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                if (shouldShowVersionMismatchDialog) {
+                    showVersionMismatchDialog(activity)
+                    shouldShowVersionMismatchDialog = false
+                }
+
                 handleImports(activity)
             }
 
@@ -157,20 +168,32 @@ object GrindrPlus {
             override fun onActivityDestroyed(activity: Activity) {}
         })
 
-        instanceManager.hookClassConstructors(
-            userAgent,
-            userSession,
-            deviceInfo,
-            profileRepo
-        )
+        if (versionMismatch) {
+            Logger.i("Version mismatch detected, stopping initialization", LogSource.MODULE)
+            return
+        }
 
-        instanceManager.setCallback(userSession) { uSession ->
-            myProfileId = getObjectField(uSession, "r") as String
-            instanceManager.setCallback(userAgent) { uAgent ->
-                instanceManager.setCallback(deviceInfo) { dInfo ->
-                    httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+        try {
+            instanceManager.hookClassConstructors(
+                userAgent,
+                userSession,
+                deviceInfo,
+                profileRepo
+            )
+
+            instanceManager.setCallback(userSession) { uSession ->
+                myProfileId = getObjectField(uSession, "r") as String
+                instanceManager.setCallback(userAgent) { uAgent ->
+                    instanceManager.setCallback(deviceInfo) { dInfo ->
+                        httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+                    }
                 }
             }
+        } catch (t: Throwable) {
+            Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)
+            Logger.writeRaw(t.stackTraceToString())
+            showToast(Toast.LENGTH_LONG, "Failed to hook critical classes: ${t.message}")
+            return
         }
 
         fetchRemoteData(splineDataEndpoint) { points ->
@@ -181,10 +204,11 @@ object GrindrPlus {
         try {
             val initTime = measureTimeMillis { init() }
             Logger.i("Initialization completed in $initTime ms", LogSource.MODULE)
-        } catch (e: Exception) {
-            Logger.e("Failed to initialize: ${e.message}", LogSource.MODULE)
-            Logger.writeRaw(e.stackTraceToString())
-            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${e.message}")
+        } catch (t: Throwable) {
+            Logger.e("Failed to initialize: ${t.message}", LogSource.MODULE)
+            Logger.writeRaw(t.stackTraceToString())
+            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${t.message}")
+            return
         }
     }
 
@@ -237,6 +261,63 @@ object GrindrPlus {
         return classLoader.loadClass(name)
     }
 
+    private fun checkVersionCodes(versionCodes: IntArray, versionNames: Array<String>) {
+        val pkgInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        val versionCode: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            pkgInfo.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            pkgInfo.versionCode.toLong()
+        }
+
+        val isVersionNameSupported = pkgInfo.versionName in versionNames
+        val isVersionCodeSupported = versionCodes.any { it.toLong() == versionCode }
+
+        if (!isVersionNameSupported || !isVersionCodeSupported) {
+            val installedInfo = "${pkgInfo.versionName} (code: $versionCode)"
+            val expectedInfo = "${versionNames.joinToString(", ")} " +
+                    "(code: ${BuildConfig.TARGET_GRINDR_VERSION_CODES.joinToString(", ")})"
+            versionMismatch = true
+            shouldShowVersionMismatchDialog = true
+
+            Logger.w("Version mismatch detected. Installed: $installedInfo, Required: $expectedInfo", LogSource.MODULE)
+        }
+
+        hasCheckedVersions = true
+    }
+
+    private fun showVersionMismatchDialog(activity: Activity) {
+        try {
+            val pkgInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionCode: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pkgInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                pkgInfo.versionCode.toLong()
+            }
+
+            val installedInfo = "${pkgInfo.versionName} (code: $versionCode)"
+            val expectedInfo = "${BuildConfig.TARGET_GRINDR_VERSION_NAMES.joinToString(", ")} " +
+                    "(code: ${BuildConfig.TARGET_GRINDR_VERSION_CODES.joinToString(", ")})"
+
+            val dialog = android.app.AlertDialog.Builder(activity)
+                .setTitle("GrindrPlus: Version Mismatch")
+                .setMessage("Incompatible Grindr version detected.\n\n" +
+                        "• Installed: $installedInfo\n" +
+                        "• Required: $expectedInfo\n\n" +
+                        "GrindrPlus has been disabled. Please install a compatible Grindr version.")
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setCancelable(false)
+                .create()
+            dialog.show()
+            Logger.i("Version mismatch dialog shown", LogSource.MODULE)
+        } catch (e: Exception) {
+            Logger.e("Failed to show version mismatch dialog: ${e.message}", LogSource.MODULE)
+            showToast(Toast.LENGTH_LONG, "Version mismatch detected. Please install a compatible Grindr version.")
+        }
+    }
+
     private fun connectBridgeWithRetry(maxAttempts: Int): Boolean {
         var attemptCount = 0
         var connected = false
@@ -251,7 +332,9 @@ object GrindrPlus {
 
                 if (connected) {
                     Logger.i("Successfully connected to bridge service on attempt $attemptCount", LogSource.MODULE)
-                    bridgeClient.startWatchdog()
+                    if (Config.get("enable_watchdog_service", false) as Boolean) {
+                        bridgeClient.startWatchdog()
+                    }
                     break
                 } else {
                     Logger.w("Connection attempt $attemptCount failed", LogSource.MODULE)

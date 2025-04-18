@@ -2,7 +2,8 @@ package com.grindrplus
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.widget.Toast
+import android.os.Build
+import android.os.Handler
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.hooks.spoofSignatures
 import com.grindrplus.utils.HookStage
@@ -15,6 +16,7 @@ import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.findAndHookConstructor
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+import timber.log.Timber
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import javax.net.ssl.HostnameVerifier
@@ -107,22 +109,9 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
 
         Application::class.java.hook("attach", HookStage.AFTER) {
             val application = it.thisObject()
-            val pkgInfo = application.packageManager.getPackageInfo(application.packageName, 0)
-
-            if (pkgInfo.versionName !in BuildConfig.TARGET_GRINDR_VERSIONS) {
-                Toast.makeText(
-                    application,
-                    "GrindrPlus: Grindr version mismatch (installed: ${pkgInfo.versionName}, expected one of: ${
-                        BuildConfig.TARGET_GRINDR_VERSIONS.joinToString(
-                            "_"
-                        )
-                    }). Mod disabled.",
-                    Toast.LENGTH_LONG
-                ).show()
-                return@hook
-            }
-
-            GrindrPlus.init(modulePath, application)
+            GrindrPlus.init(modulePath, application,
+                BuildConfig.TARGET_GRINDR_VERSION_CODES,
+                BuildConfig.TARGET_GRINDR_VERSION_NAMES)
         }
     }
 }

@@ -10,7 +10,8 @@ plugins {
 }
 
 android {
-    val grindrVersions = listOf("25.5.0")
+    val grindrVersionName = listOf("25.6.0")
+    val grindrVersionCode = listOf(137100)
 
     namespace = "com.grindrplus"
     compileSdk = 35
@@ -21,7 +22,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 14
-        versionName = "4.0.0-${grindrVersions.joinToString("_")}_$gitCommitHash"
+        versionName = "4.1.0-${grindrVersionName.joinToString("_")}_$gitCommitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -31,8 +32,14 @@ android {
 
         buildConfigField(
             "String[]",
-            "TARGET_GRINDR_VERSIONS",
-            grindrVersions.joinToString(prefix = "{", separator = ", ", postfix = "}") { "\"$it\"" }
+            "TARGET_GRINDR_VERSION_NAMES",
+            grindrVersionName.joinToString(prefix = "{", separator = ", ", postfix = "}") { "\"$it\"" }
+        )
+
+        buildConfigField(
+            "int[]",
+            "TARGET_GRINDR_VERSION_CODES",
+            grindrVersionCode.joinToString(prefix = "{", separator = ", ", postfix = "}") { "$it" }
         )
 
         buildFeatures {

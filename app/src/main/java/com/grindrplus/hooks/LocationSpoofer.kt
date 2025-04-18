@@ -35,7 +35,6 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
-import de.robv.android.xposed.XposedHelpers.setObjectField
 
 class LocationSpoofer : Hook(
     "Location spoofer",
