@@ -23,6 +23,7 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
+import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -56,6 +57,7 @@ class HookManager {
                 ProfileViews(),
                 QuickBlock(),
                 EmptyCalls(),
+                UnlimitedAlbums()
             )
 
             hookList.forEach { hook ->
