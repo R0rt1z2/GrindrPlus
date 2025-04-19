@@ -201,8 +201,10 @@ class BridgeClient(private val context: Context) {
             }
 
             val timeoutHandler = Handler(Looper.getMainLooper())
+            val timeoutOccurred = AtomicBoolean(false)
+
             val timeoutRunnable = Runnable {
-                if (continuation.isActive) {
+                if (continuation.isActive && !timeoutOccurred.getAndSet(true)) {
                     Logger.w("Connection timeout", LogSource.BRIDGE)
                     try {
                         context.unbindService(connection)
@@ -235,14 +237,14 @@ class BridgeClient(private val context: Context) {
                     withTimeout(CONNECTION_TIMEOUT_MS) {
                         deferred.await()
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     false
                 }
 
                 connectionDeferreds.remove(connectionKey)
                 timeoutHandler.removeCallbacks(timeoutRunnable)
 
-                if (continuation.isActive) {
+                if (continuation.isActive && !timeoutOccurred.get()) {
                     continuation.resume(result)
                 }
             }
