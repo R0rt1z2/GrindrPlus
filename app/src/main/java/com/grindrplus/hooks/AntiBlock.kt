@@ -20,8 +20,18 @@ class AntiBlock : Hook(
     private var myProfileId: Long = 0
     private val chatDeleteConversationPlugin = "y5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
     private val inboxFragmentV2DeleteConversations = "G7.i" // search for '("chat_read_receipt", conversationId, null);'
+    private val individualUnblockActivityViewModel = "ed.q" // search for '@DebugMetadata(c = "com.grindrapp.android.ui.block.IndividualUnblockActivityViewModel$unblockAllProfile$1", f = "IndividualUnblockActivityViewModel.kt",'
 
     override fun init() {
+        findClass(individualUnblockActivityViewModel).hook("v", HookStage.BEFORE) { param ->
+            GrindrPlus.shouldTriggerAntiblock = false
+        }
+
+        findClass(individualUnblockActivityViewModel).hook("v", HookStage.AFTER) { param ->
+            Thread.sleep(700) // Wait for WS to unblock
+            GrindrPlus.shouldTriggerAntiblock = true
+        }
+
         if (Config.get("force_old_anti_block_behavior", false) as Boolean) {
             findClass("com.grindrapp.android.chat.model.ConversationDeleteNotification")
                 .hookConstructor(HookStage.BEFORE) { param ->
