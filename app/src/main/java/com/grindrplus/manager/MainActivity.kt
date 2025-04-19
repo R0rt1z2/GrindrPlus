@@ -236,7 +236,7 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
-                GrindrPlus.bridgeClient.connect {
+                GrindrPlus.bridgeClient.connectAsync { connected ->
                     Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
                     Config.initialize()
                     HookManager().registerHooks(false)

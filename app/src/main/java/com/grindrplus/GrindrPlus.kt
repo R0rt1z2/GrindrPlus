@@ -28,6 +28,8 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -68,9 +70,9 @@ object GrindrPlus {
     var blockCaller: String = ""
     var isImportingSomething = false
     var myProfileId: String = ""
-    var versionMismatch = false
     var hasCheckedVersions = false
     var shouldShowVersionMismatchDialog = false
+    var shouldShowBridgeConnectionError = false
 
     var spline = PCHIP(
         listOf(
@@ -119,12 +121,20 @@ object GrindrPlus {
         Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
 
         checkVersionCodes(versionCodes, versionNames)
-        val connected = connectBridgeWithRetry(5)
+        val connected = runBlocking {
+            try {
+                withTimeout(10000) {
+                    bridgeClient.connectWithRetry(5, 1000)
+                }
+            } catch (e: Exception) {
+                Logger.e("Connection timeout: ${e.message}", LogSource.MODULE)
+                false
+            }
+        }
 
         if (!connected) {
-            Logger.e("Critical error: Failed to connect to bridge service", LogSource.MODULE)
-            showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
-            return
+            Logger.e("Failed to connect to the bridge service", LogSource.MODULE)
+            shouldShowBridgeConnectionError = true
         }
 
         Config.initialize(application.packageName)
@@ -143,6 +153,11 @@ object GrindrPlus {
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                if (shouldShowBridgeConnectionError) {
+                    showBridgeConnectionError(activity)
+                    shouldShowBridgeConnectionError = false
+                }
+
                 if (shouldShowVersionMismatchDialog) {
                     showVersionMismatchDialog(activity)
                     shouldShowVersionMismatchDialog = false
@@ -172,7 +187,7 @@ object GrindrPlus {
             override fun onActivityDestroyed(activity: Activity) {}
         })
 
-        if (versionMismatch) {
+        if (shouldShowVersionMismatchDialog) {
             Logger.i("Version mismatch detected, stopping initialization", LogSource.MODULE)
             return
         }
@@ -281,9 +296,7 @@ object GrindrPlus {
             val installedInfo = "${pkgInfo.versionName} (code: $versionCode)"
             val expectedInfo = "${versionNames.joinToString(", ")} " +
                     "(code: ${BuildConfig.TARGET_GRINDR_VERSION_CODES.joinToString(", ")})"
-            versionMismatch = true
             shouldShowVersionMismatchDialog = true
-
             Logger.w("Version mismatch detected. Installed: $installedInfo, Required: $expectedInfo", LogSource.MODULE)
         }
 
@@ -322,63 +335,35 @@ object GrindrPlus {
         }
     }
 
-    private fun connectBridgeWithRetry(maxAttempts: Int): Boolean {
-        var attemptCount = 0
-        var connected = false
-        var timeoutMs = 2000L
-
-        while (!connected && attemptCount < maxAttempts) {
-            attemptCount++
-            Logger.i("Bridge connection attempt $attemptCount/$maxAttempts with ${timeoutMs}ms timeout", LogSource.MODULE)
-
-            try {
-                connected = bridgeClient.connectBlocking(timeoutMs)
-
-                if (connected) {
-                    Logger.i("Successfully connected to bridge service on attempt $attemptCount", LogSource.MODULE)
-                    if (Config.get("enable_watchdog_service", false) as Boolean) {
-                        bridgeClient.startWatchdog()
-                    }
-                    break
-                } else {
-                    Logger.w("Connection attempt $attemptCount failed", LogSource.MODULE)
-                    timeoutMs = (timeoutMs * 1.5).toLong() + (50..200).random()
-                    if (attemptCount > 1) {
-                        forceStartBridgeService()
-                    }
-                }
-            } catch (e: Exception) {
-                Logger.e("Error during connection attempt $attemptCount: ${e.message}", LogSource.MODULE)
-            }
-
-            Thread.sleep(300)
-        }
-
-        return connected
-    }
-
-    private fun forceStartBridgeService() {
+    private fun showBridgeConnectionError(activity: Activity? = null) {
         try {
-            val serviceIntent = Intent().apply {
-                setClassName(
-                    BuildConfig.APPLICATION_ID,
-                    "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
-                )
-            }
-            context.startService(serviceIntent)
-            Logger.d("Force-started bridge service", LogSource.MODULE)
+            val targetActivity = activity ?: currentActivity
 
-            val forceStartIntent = Intent().apply {
-                setClassName(
-                    BuildConfig.APPLICATION_ID,
-                    "${BuildConfig.APPLICATION_ID}.bridge.ForceStartActivity"
-                )
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (targetActivity != null) {
+                val dialog = android.app.AlertDialog.Builder(targetActivity)
+                    .setTitle("Bridge Connection Failed")
+                    .setMessage("Failed to connect to the bridge service. The module will not work properly.\n\n" +
+                            "This may be caused by:\n" +
+                            "• Battery optimization settings\n" +
+                            "• System killing background processes\n" +
+                            "• App being force stopped\n\n" +
+                            "Try restarting the app or reinstalling the module.")
+                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setCancelable(false)
+                    .create()
+
+                targetActivity.runOnUiThread {
+                    dialog.show()
+                }
+
+                Logger.i("Bridge connection error dialog shown", LogSource.MODULE)
+            } else {
+                showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
             }
-            context.startActivity(forceStartIntent)
-            Logger.d("Started ForceStartActivity", LogSource.MODULE)
         } catch (e: Exception) {
-            Logger.e("Failed force-start attempts: ${e.message}", LogSource.MODULE)
+            Logger.e("Failed to show bridge error dialog: ${e.message}", LogSource.MODULE)
+            showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
         }
     }
 
