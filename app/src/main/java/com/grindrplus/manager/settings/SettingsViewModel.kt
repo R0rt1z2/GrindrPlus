@@ -39,9 +39,7 @@ class SettingsViewModel(
 
             try {
                 val hooks = Config.getHooksSettings()
-                val hookSettings = hooks.filter {
-                    it.key != "Unlimited albums"
-                }.map { (hookName, pair) ->
+                val hookSettings = hooks.map { (hookName, pair) ->
                     SwitchSetting(
                         id = hookName,
                         title = hookName,
@@ -249,6 +247,18 @@ class SettingsViewModel(
                             }
                         }
                     ),
+                    SwitchSetting(
+                        id = "disable_permission_checks",
+                        title = "Disable permission checks",
+                        description = "Disable permission checks on startup (not recommended)",
+                        isChecked = Config.get("disable_permission_checks", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("disable_permission_checks", it)
+                                loadSettings()
+                            }
+                        }
+                    )
                 )
 
                 if (!BuildConfig.DEBUG) {

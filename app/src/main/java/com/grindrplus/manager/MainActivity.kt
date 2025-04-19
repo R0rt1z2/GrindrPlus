@@ -243,8 +243,10 @@ class MainActivity : ComponentActivity() {
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
                     serviceBound = true
 
-                    checkNotificationPermission()
-                    checkUnknownSourcesPermission()
+                    if (!(Config.get("disable_permission_checks", false) as Boolean)) {
+                        checkNotificationPermission()
+                        checkUnknownSourcesPermission()
+                    }
 
                     if (Config.get("analytics", true) as Boolean) {
                         val config = AndroidResourcePlausibleConfig(this@MainActivity).also {
