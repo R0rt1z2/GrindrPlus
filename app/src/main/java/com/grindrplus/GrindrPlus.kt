@@ -104,7 +104,6 @@ object GrindrPlus {
     private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
         "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
-    private val profileRepo = "com.grindrapp.android.persistence.repository.ProfileRepo"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private var currentActivityRef: WeakReference<Activity>? = null
@@ -197,7 +196,6 @@ object GrindrPlus {
                 userAgent,
                 userSession,
                 deviceInfo,
-                profileRepo
             )
 
             instanceManager.setCallback(userSession) { uSession ->
