@@ -85,6 +85,7 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var debugLogsScreen by remember { mutableStateOf(false) }
 
@@ -102,6 +103,22 @@ fun SettingsScreen(
                 val intent =
                     Intent(Intent.ACTION_VIEW, "https://github.com/R0rt1z2/GrindrPlus".toUri())
                 context.startActivity(intent)
+            }
+        )
+    }
+
+    if (showResetDialog) {
+        ResetSettingsDialog(
+            onDismiss = { showResetDialog = false },
+            onConfirm = {
+                scope.launch {
+                    Config.writeRemoteConfig(JSONObject())
+                    val packageManager = context.packageManager
+                    val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    context.startActivity(intent)
+                    android.os.Process.killProcess(android.os.Process.myPid())
+                }
             }
         )
     }
@@ -155,6 +172,7 @@ fun SettingsScreen(
                             DropdownMenuItem(
                                 text = { Text("Import settings") },
                                 onClick = {
+                                    expanded = false
                                     try {
                                         FileOperationHandler.importFile(
                                             arrayOf("application/json")
@@ -171,6 +189,14 @@ fun SettingsScreen(
                                             snackbarHostState.showSnackbar("Failed to import settings: ${e.message}")
                                         }
                                     }
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Reset settings") },
+                                onClick = {
+                                    expanded = false
+                                    showResetDialog = true
                                 }
                             )
 
@@ -230,6 +256,72 @@ fun SettingsScreen(
                                 }
                             }
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ResetSettingsDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Reset Settings",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "This action will reset all settings to their default values. This action cannot be undone and the app will restart.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text("Reset")
                     }
                 }
             }
