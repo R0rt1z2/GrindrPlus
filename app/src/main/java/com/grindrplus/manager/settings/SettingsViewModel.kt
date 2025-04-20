@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.grindrplus.BuildConfig
 import com.grindrplus.core.Config
+import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.utils.AppIconManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -202,6 +203,19 @@ class SettingsViewModel(
                 )
 
                 val managerSettings = mutableListOf<Setting>(
+                    TextSetting(
+                        id = "custom_manifest",
+                        title = "Custom Manifest URL",
+                        description = "Use a custom manifest URL when using Grindr Plus with LSPatch",
+                        value = Config.get("custom_manifest", DATA_URL) as String,
+                        onValueChange = {
+                            viewModelScope.launch {
+                                Config.put("custom_manifest", it)
+                                loadSettings()
+                            }
+                        },
+                        validator = { null }
+                    ),
                     SwitchSetting(
                         id = "analytics",
                         title = "Opt-in analytics",

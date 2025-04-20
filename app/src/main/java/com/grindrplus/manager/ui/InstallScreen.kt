@@ -85,6 +85,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var customVersionName by remember { mutableStateOf("custom") }
     var customBundleUri by remember { mutableStateOf<Uri?>(null) }
     var customModUri by remember { mutableStateOf<Uri?>(null) }
+    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
 
     val print: Print = { output ->
         val logType = ConsoleLogger.parseLogType(output)
@@ -97,7 +98,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         if (selectedVersion == null) return@LaunchedEffect
 
         val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
 
         installation = Installation(
             context,
@@ -117,6 +117,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         addLog("Loading available versions...", LogType.INFO)
 
         loadVersionData(
+            manifestUrl = manifestUrl.toString(),
             onSuccess = { data ->
                 versionData.clear()
                 versionData.addAll(data)
@@ -245,6 +246,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
                 activityScope.launch {
                     addLog("Retrying version data load...", LogType.INFO)
                     loadVersionData(
+                        manifestUrl = manifestUrl.toString(),
                         onSuccess = { data ->
                             versionData.clear()
                             versionData.addAll(data)
@@ -504,6 +506,7 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
 }
 
 private fun loadVersionData(
+    manifestUrl: String = DATA_URL,
     onSuccess: (List<Data>) -> Unit,
     onError: (String) -> Unit,
 ) {
@@ -514,8 +517,10 @@ private fun loadVersionData(
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build()
 
+            Logger.d("Loading version data from $manifestUrl")
+
             val request = Request.Builder()
-                .url(DATA_URL)
+                .url(manifestUrl)
                 .build()
 
             client.newCall(request).execute().use { response ->
