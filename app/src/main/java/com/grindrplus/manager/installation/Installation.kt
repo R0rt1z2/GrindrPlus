@@ -49,7 +49,7 @@ class Installation(
 
     suspend fun install(print: Print) = performOperation(
         steps = commonSteps + listOf(patchApkStep, installStep),
-        operationName = "install",
+        operationName = "install-$version",
         print = print,
     )
 
