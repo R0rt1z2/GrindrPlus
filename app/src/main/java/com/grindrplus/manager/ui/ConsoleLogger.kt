@@ -169,7 +169,7 @@ fun ConsoleOutput(
 }
 
 @Composable
-private fun LogEntryItem(entry: LogEntry) {
+internal fun LogEntryItem(entry: LogEntry) {
     val logColor = when (entry.type) {
         // TODO: Move to Theme.kt
         LogType.SUCCESS -> Color(0xFF4CAF50)

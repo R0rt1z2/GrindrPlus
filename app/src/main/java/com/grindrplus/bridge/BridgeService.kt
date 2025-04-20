@@ -139,6 +139,21 @@ class BridgeService : Service() {
             }
         }
 
+        override fun clearLogs() {
+            Logger.d("clearLogs() called")
+            try {
+                logLock.withLock {
+                    if (logFile.exists()) {
+                        logFile.delete()
+                        logFile.createNewFile()
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("Error clearing log file", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
+            }
+        }
+
         override fun sendNotification(
             title: String,
             message: String,

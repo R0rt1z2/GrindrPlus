@@ -117,6 +117,16 @@ object Logger {
         }
     }
 
+    fun clearLogs() {
+        bridgeClient?.let { bridge ->
+            try {
+                bridge.getService()?.clearLogs()
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("Failed to clear logs in bridge service: ${e.message}")
+            }
+        }
+    }
+
     private fun getDefaultSource(): LogSource =
         if (isModuleContext) LogSource.MODULE else LogSource.MANAGER
 
