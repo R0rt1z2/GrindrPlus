@@ -13,7 +13,6 @@ import android.os.Handler
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
-import com.grindrplus.core.CoroutineHelper
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
 import com.grindrplus.core.LogSource
@@ -41,8 +40,6 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
 
-private const val TAG = "GrindrPlus"
-
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
     lateinit var context: Context
@@ -55,8 +52,6 @@ object GrindrPlus {
         private set
     lateinit var bridgeClient: BridgeClient
         internal set
-    lateinit var coroutineHelper: CoroutineHelper
-        private set
     lateinit var instanceManager: InstanceManager
         private set
     lateinit var httpClient: Client
@@ -146,7 +141,6 @@ object GrindrPlus {
         this.newDatabase = NewDatabase.create(context)
         this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
         this.hookManager = HookManager()
-        this.coroutineHelper = CoroutineHelper(classLoader)
         this.instanceManager = InstanceManager(classLoader)
         this.packageName = context.packageName
 

@@ -2,6 +2,7 @@ package com.grindrplus.persistence.model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -12,7 +13,8 @@ import androidx.room.PrimaryKey
             childColumns = ["albumId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index("albumId")]
 )
 data class AlbumContentEntity(
     @PrimaryKey val id: Long,
