@@ -17,10 +17,12 @@ import androidx.core.net.toUri
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,6 +52,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.grindrplus.BuildConfig
+import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.manager.utils.FileOperationHandler
 import com.grindrplus.manager.utils.uploadAndShare
@@ -68,7 +72,6 @@ data class LogEntry(
     val message: String,
     val type: LogType
 )
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugLogsScreen(
@@ -80,6 +83,12 @@ fun DebugLogsScreen(
     val scope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
     var showReportDialog by remember { mutableStateOf(false) }
+
+    var debugModeEnabled by remember {
+        mutableStateOf(Config.get("debug_mode", false) as Boolean)
+    }
+
+    val isDebugBuild = BuildConfig.DEBUG
 
     BackHandler(onBack = onBack)
 
@@ -193,7 +202,7 @@ fun DebugLogsScreen(
         },
         topBar = {
             TopAppBar(
-                title = { Text("Debug Logs") },
+                title = { Text("Logs") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -201,6 +210,42 @@ fun DebugLogsScreen(
                             contentDescription = "Back",
                             modifier = Modifier.rotate(180f)
                         )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (!isDebugBuild) {
+                                val newState = !debugModeEnabled
+                                debugModeEnabled = newState
+                                Config.put("debug_mode", newState)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (newState) "Verbose logging enabled" else "Verbose logging disabled"
+                                    )
+                                }
+                            }
+                        },
+                        enabled = !isDebugBuild
+                    ) {
+                        Box {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = "Toggle Verbose Logging",
+                                tint = if (isDebugBuild || debugModeEnabled)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            if (isDebugBuild) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                        .align(Alignment.TopEnd)
+                                )
+                            }
+                        }
                     }
                 }
             )
@@ -262,7 +307,7 @@ fun DebugLogsScreen(
                 Text("Report an Issue")
             }
 
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }

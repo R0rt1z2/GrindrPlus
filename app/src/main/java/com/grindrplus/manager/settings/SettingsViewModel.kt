@@ -275,21 +275,6 @@ class SettingsViewModel(
                     )
                 )
 
-                if (!BuildConfig.DEBUG) {
-                    managerSettings += SwitchSetting(
-                        id = "debug_mode",
-                        title = "Enable debug mode",
-                        description = "Enable verbose logging for debugging purposes",
-                        isChecked = Config.get("debug_mode", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("debug_mode", it)
-                                loadSettings()
-                            }
-                        }
-                    )
-                }
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     managerSettings += SwitchSetting(
                         id = "material_you",
