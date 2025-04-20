@@ -111,7 +111,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     @Suppress("UNCHECKED_CAST")
     private suspend fun saveAlbum(grindrAlbum: Any) {
         try {
-            val dao = GrindrPlus.newDatabase.albumDao()
+            val dao = GrindrPlus.database.albumDao()
 
             val dbAlbum = grindrAlbum.asAlbumToAlbumEntity()
             dao.upsertAlbum(dbAlbum)
@@ -132,7 +132,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
     private suspend fun saveAlbumContent(albumId: Long, contentEntities: List<AlbumContentEntity>) {
         try {
-            val dao = GrindrPlus.newDatabase.albumDao()
+            val dao = GrindrPlus.database.albumDao()
 
             val albumExists = dao.albumExists(albumId)
 
@@ -166,8 +166,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             if (result.isFail()) {
                 try {
                     runBlocking {
-                        GrindrPlus.newDatabase.withTransaction {
-                            val dao = GrindrPlus.newDatabase.albumDao()
+                        GrindrPlus.database.withTransaction {
+                            val dao = GrindrPlus.database.albumDao()
                             val albumToDelete = dao.getAlbum(albumId)
 
                             if (albumToDelete != null) {
@@ -196,7 +196,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             if (!result.isSuccess()) {
                 Logger.w("Album $albumId is not viewable, checking database")
                 runBlocking {
-                    val dao = GrindrPlus.newDatabase.albumDao()
+                    val dao = GrindrPlus.database.albumDao()
                     val album = dao.getAlbum(albumId)
                     if (album != null) {
                         Logger.d("Album $albumId is viewable, returning success")
@@ -244,7 +244,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         try {
             Logger.d("Fetching album with ID: $albumId from database")
             return runBlocking {
-                val dao = GrindrPlus.newDatabase.albumDao()
+                val dao = GrindrPlus.database.albumDao()
                 val album = dao.getAlbum(albumId)
                 if (album != null) {
                     val content = dao.getAlbumContent(albumId)
@@ -356,7 +356,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                     val albums = getObjectField(result.getSuccessValue(), "albums") as? List<Any>
                     if (albums != null) {
                         runBlocking {
-                            GrindrPlus.newDatabase.withTransaction {
+                            GrindrPlus.database.withTransaction {
                                 albums.forEach { album ->
                                     try {
                                         saveAlbum(album)
@@ -374,8 +374,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
             try {
                 val albums = runBlocking {
-                    GrindrPlus.newDatabase.withTransaction {
-                        val dao = GrindrPlus.newDatabase.albumDao()
+                    GrindrPlus.database.withTransaction {
+                        val dao = GrindrPlus.database.albumDao()
                         val dbAlbums = dao.getAlbums()
                         dbAlbums.mapNotNull {
                             try {
@@ -408,8 +408,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             if (result.isSuccess()) {
                 try {
                     runBlocking {
-                        GrindrPlus.newDatabase.withTransaction {
-                            val dao = GrindrPlus.newDatabase.albumDao()
+                        GrindrPlus.database.withTransaction {
+                            val dao = GrindrPlus.database.albumDao()
                             val albumBriefs =
                                 getObjectField(result.getSuccessValue(), "albums") as? List<Any>
                             albumBriefs?.forEach { albumBrief ->
@@ -436,8 +436,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
             try {
                 val albumBriefs = runBlocking {
-                    GrindrPlus.newDatabase.withTransaction {
-                        val dao = GrindrPlus.newDatabase.albumDao()
+                    GrindrPlus.database.withTransaction {
+                        val dao = GrindrPlus.database.albumDao()
                         val dbAlbums = dao.getAlbums()
                         dbAlbums.mapNotNull {
                             try {
@@ -477,8 +477,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             if (result.isSuccess()) {
                 try {
                     runBlocking {
-                        GrindrPlus.newDatabase.withTransaction {
-                            val dao = GrindrPlus.newDatabase.albumDao()
+                        GrindrPlus.database.withTransaction {
+                            val dao = GrindrPlus.database.albumDao()
                             val albumBriefs =
                                 getObjectField(result.getSuccessValue(), "albums") as? List<Any>
                             albumBriefs?.forEach { albumBrief ->
@@ -505,8 +505,8 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
             try {
                 val albumBriefs = runBlocking {
-                    GrindrPlus.newDatabase.withTransaction {
-                        val dao = GrindrPlus.newDatabase.albumDao()
+                    GrindrPlus.database.withTransaction {
+                        val dao = GrindrPlus.database.albumDao()
                         val dbAlbums = dao.getAlbums(profileId)
                         dbAlbums.mapNotNull {
                             try {

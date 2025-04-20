@@ -1,12 +1,10 @@
 package com.grindrplus
 
-import Database
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -19,7 +17,7 @@ import com.grindrplus.core.LogSource
 import com.grindrplus.core.Utils.handleImports
 import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
-import com.grindrplus.persistence.NewDatabase
+import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import dalvik.system.DexClassLoader
@@ -46,9 +44,7 @@ object GrindrPlus {
         private set
     lateinit var classLoader: ClassLoader
         private set
-    lateinit var newDatabase: NewDatabase
-        private set
-    lateinit var database: Database
+    lateinit var database: GPDatabase
         private set
     lateinit var bridgeClient: BridgeClient
         internal set
@@ -138,8 +134,7 @@ object GrindrPlus {
 
         this.classLoader =
             DexClassLoader(newModule.absolutePath, null, null, context.classLoader)
-        this.newDatabase = NewDatabase.create(context)
-        this.database = Database(context, context.filesDir.absolutePath + "/grindrplus.db")
+        this.database = GPDatabase.create(context)
         this.hookManager = HookManager()
         this.instanceManager = InstanceManager(classLoader)
         this.packageName = context.packageName
@@ -228,7 +223,7 @@ object GrindrPlus {
 
         if ((Config.get("reset_database", false) as Boolean)) {
             Logger.i("Resetting database...", LogSource.MODULE)
-            database.deleteDatabase()
+            database.clearAllTables()
             Config.put("reset_database", false)
         }
 
