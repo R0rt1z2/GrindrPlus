@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 class ProfileDetails : Hook("Profile details", "Add extra fields and details to profiles") {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesAdapter = "ed.A" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "ed.o" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
     private val profileViewHolder = "ed.A\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -34,7 +34,6 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
     private val serverDrivenCascadeCachedProfile =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCachedProfile"
-    private var hasModifiedProfiles = false
 
     @SuppressLint("DefaultLocale")
     override fun init() {
@@ -48,18 +47,16 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
                 }
         }
 
-        findClass(blockedProfilesAdapter).hook("onBindViewHolder", HookStage.BEFORE) { param ->
-            if (!hasModifiedProfiles) {
-                val profileList = getObjectField(param.thisObject(), "F") as ArrayList<*>
-                for (profile in profileList) {
-                    val profileId = callMethod(profile, "getProfileId") as String
-                    val displayName =
-                        (callMethod(profile, "getDisplayName") as? String)
-                            ?.takeIf { it.isNotEmpty() }
-                            ?.let { "$it ($profileId)" } ?: profileId
-                    setObjectField(profile, "displayName", displayName)
-                    hasModifiedProfiles = true
-                }
+        findClass(blockedProfilesObserver).hook("onChanged", HookStage.AFTER) { param ->
+            val profileList = getObjectField(
+                getObjectField(param.thisObject(), "a"), "F") as ArrayList<*>
+            for (profile in profileList) {
+                val profileId = callMethod(profile, "getProfileId") as String
+                val displayName =
+                    (callMethod(profile, "getDisplayName") as? String)
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { "$it ($profileId)" } ?: profileId
+                setObjectField(profile, "displayName", displayName)
             }
         }
 
