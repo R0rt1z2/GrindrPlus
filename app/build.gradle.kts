@@ -123,7 +123,11 @@ dependencies {
     implementation(libs.fetch2)
     implementation(libs.fetch2okhttp)
     implementation(libs.rootbeer.lib)
-    implementation(libs.zip.android)
+    implementation(libs.zip.android) {
+        artifact {
+            type = "aar"
+        }
+    }
     implementation(libs.zipalign.java)
     implementation(libs.coil.gif)
     implementation(libs.arsclib)
