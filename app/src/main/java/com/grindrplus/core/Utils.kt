@@ -3,56 +3,27 @@ package com.grindrplus.core
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.context
 import com.grindrplus.GrindrPlus.httpClient
 import com.grindrplus.GrindrPlus.isImportingSomething
 import com.grindrplus.GrindrPlus.shouldTriggerAntiblock
 import com.grindrplus.core.Constants.NEWLINE
-import com.grindrplus.ui.Utils.getId
-import com.grindrplus.utils.RetrofitUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.lang.reflect.Proxy
 import kotlin.math.pow
 
 object Utils {
-    fun createServiceProxy(
-        originalService: Any,
-        serviceClass: Class<*>,
-        blacklist: Array<String> = emptyArray()
-    ): Any {
-        val invocationHandler = Proxy.getInvocationHandler(originalService)
-        val successConstructor =
-            GrindrPlus.loadClass(RetrofitUtils.SUCCESS_CLASS_NAME).constructors.firstOrNull()
-        return Proxy.newProxyInstance(
-            originalService.javaClass.classLoader,
-            arrayOf(serviceClass)
-        ) { proxy, method, args ->
-            if (successConstructor != null && (blacklist.isEmpty() || method.name in blacklist)) {
-                successConstructor.newInstance(Unit)
-            } else {
-                invocationHandler.invoke(proxy, method, args)
-            }
-        }
-    }
-
     fun openChat(id: String) {
         val chatActivityInnerClass =
             GrindrPlus.loadClass("com.grindrapp.android.chat.presentation.ui.ChatActivityV2\$a")

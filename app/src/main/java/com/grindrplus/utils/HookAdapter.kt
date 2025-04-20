@@ -1,7 +1,5 @@
 package com.grindrplus.utils
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import java.lang.reflect.Member
@@ -73,7 +71,6 @@ class HookAdapter<Clazz>(
         return XposedBridge.invokeOriginalMethod(method(), thisObject(), args)
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     fun invokeOriginalSafe(errorCallback: Consumer<Throwable>) {
         invokeOriginalSafe(args(), errorCallback)
     }

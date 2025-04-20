@@ -11,6 +11,7 @@ object RetrofitUtils {
     const val FAIL_CLASS_NAME = "d9.a\$a"
     const val SUCCESS_CLASS_NAME = "d9.a\$b"
     const val SUCCESS_VALUE_NAME = "a"
+    const val RETROFIT_NAME = "retrofit2.Retrofit"
 
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {
         return clazz.declaredMethods.find { method ->
@@ -70,11 +71,31 @@ object RetrofitUtils {
         return successClass.constructors.first().newInstance(value)
     }
 
+    fun createServiceProxy(
+        originalService: Any,
+        serviceClass: Class<*>,
+        blacklist: Array<String> = emptyArray()
+    ): Any {
+        val invocationHandler = Proxy.getInvocationHandler(originalService)
+        val successConstructor =
+            GrindrPlus.loadClass(SUCCESS_CLASS_NAME).constructors.firstOrNull()
+        return Proxy.newProxyInstance(
+            originalService.javaClass.classLoader,
+            arrayOf(serviceClass)
+        ) { proxy, method, args ->
+            if (successConstructor != null && (blacklist.isEmpty() || method.name in blacklist)) {
+                successConstructor.newInstance(Unit)
+            } else {
+                invocationHandler.invoke(proxy, method, args)
+            }
+        }
+    }
+
     fun hookService(
         serviceClass: Class<*>,
         invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
     ) {
-        GrindrPlus.loadClass("retrofit2.Retrofit")
+        GrindrPlus.loadClass(RETROFIT_NAME)
             .hook("create", HookStage.AFTER) { param ->
                 val serviceInstance = param.getResult()
                 if (serviceInstance != null && serviceClass.isAssignableFrom(serviceInstance.javaClass)) {

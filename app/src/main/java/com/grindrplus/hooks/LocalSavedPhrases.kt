@@ -3,6 +3,7 @@ package com.grindrplus.hooks
 import com.grindrplus.GrindrPlus
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
 import com.grindrplus.utils.RetrofitUtils.isDELETE
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPOST
@@ -17,7 +18,6 @@ class LocalSavedPhrases : Hook(
 ) {
     private val phrasesRestService = "v4.k" // search for 'v3/me/prefs'
     private val createSuccessResult = "d9.a\$b" // search for 'Success(successValue='
-    private val retrofit = "retrofit2.Retrofit"
     private val chatRestService = "com.grindrapp.android.chat.data.datasource.api.service.ChatRestService"
     private val addSavedPhraseResponse =
         "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
@@ -29,7 +29,7 @@ class LocalSavedPhrases : Hook(
         val createSuccess = findClass(createSuccessResult).constructors.firstOrNull() ?: return
         val phrasesRestServiceClass = findClass(phrasesRestService)
 
-        findClass(retrofit).hook("create", HookStage.AFTER) { param ->
+        findClass(RETROFIT_NAME).hook("create", HookStage.AFTER) { param ->
             val service = param.getResult()
             if (service != null) {
                 param.setResult(when {
