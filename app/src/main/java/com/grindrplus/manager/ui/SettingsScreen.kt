@@ -410,7 +410,7 @@ fun AboutDialog(
                                 modifier = Modifier.clickable {
                                     val intent = Intent(
                                         Intent.ACTION_VIEW,
-                                        "https://github.com/Rattly".toUri()
+                                        "https://github.com/Rattlyy".toUri()
                                     )
                                     context.startActivity(intent)
                                 }
