@@ -33,11 +33,6 @@ class DisableBoosting : Hook(
                 "f",
                 newInstance(findClass(boostStateClass))
             ) // roamButtonState
-            setObjectField(
-                param.thisObject(),
-                "g",
-                newInstance(findClass(boostStateClass))
-            ) // storeInDrawerProfileState
             setObjectField(param.thisObject(), "c", false) // showRNBoostCard
             setObjectField(param.thisObject(), "j", null) // showDayPassItem
             setObjectField(param.thisObject(), "k", null) // unlimitedWeeklySubscriptionItem
