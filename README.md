@@ -54,6 +54,8 @@ This mod does not collect any personal data nor does it display ads of any kind.
 <details closed>
   <summary>Global</summary>
    
+  - `Ability to see ban details`
+  - `Ability to spoof Android ID`
   - `Removed most analytics`
   - `Unlock developer special features`
   - `Built-in mod settings to manage hooks`
@@ -95,7 +97,7 @@ This mod does not collect any personal data nor does it display ads of any kind.
 
 ## Bugs
 * Incognito mode is kinda buggy (it turns off after a little while).
-* GMS-related features (e.g. Google Login, "Explore" mode map) are broken with LSPatch.
+* On non LSPosed installs (no root), Google Login and Maps inside Grindr require a workaround (see the FAQ section).
 
 ## Installation
 > <small>[!WARNING]
@@ -106,29 +108,30 @@ GrindrPlus supports both **LSPosed** and **LSPatch**, though the latter comes wi
 Each installation method is completely different and comes with its own challenges, so make sure to read the guide carefully and thoroughly. Open the dropdown for the method you plan to use to continue with the installation.
 
 <details closed>
-  <summary>LSPatch</summary>
+  <summary>No root</summary>
 
   **Prerequisites:**
   - No Grindr installed on device
 
   **Process:**
   1. Download & Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`).
-  2. Open the new "Grindr Plus" app and click on the "Install" button (bottom left).
-  3. Wait for the versions to load (if loading seems stuck, force close app & retry).
-  4. Select your preferred version (We recomment using latest).
-  5. Click on the "Install" button.
-  6. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
-  7. When prompted, install the newly generated Grindr app.
-  8. The app WILL CRASH the first time you open it.
-  9. If the installation fails, <b>retry it</b> multiple times before asking for support.
+  2. If the Grindr app is installed, uninstall it. **Make sure it's also gone from Secure Folder, Second Space or Private Space**.
+  3. Open the new "Grindr Plus" app and click on the "Install" button (bottom left).
+  4. Wait for the versions to load (if loading seems stuck, force close app & retry).
+  5. Select your preferred version (we recommend using latest).
+  6. Click on the "Install" button.
+  7. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
+  8. When prompted, install the newly generated Grindr app.
+  9. The app might crash multiple times during the first launches. This is normal, just keep relaunching it.
+  10. If the installation fails, <b>retry it</b> multiple times before asking for support.
 
   </details>
  </details>
 
 <details closed>
-  <summary>LSPosed</summary>
+  <summary>Root (LSPosed)</summary>
 
-  > If you're using the official LSPosed, the mod might not work. **It is highly recommended to switch to [JingMatrix's fork of LSPosed](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPosed-v1.10.1-7167-zygisk-release.zip)!**
+  > **Make sure you're using [JingMatrix's fork of LSPosed](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPosed-v1.10.1-7167-zygisk-release.zip)!**
   
   **Requirements:**
   - Rooted using `Magisk` or `KernelSU`
@@ -142,6 +145,36 @@ Each installation method is completely different and comes with its own challeng
 </details>
 
 ## FAQ & Troubleshooting
+<details>
+  <summary>How do I login with Google?</summary>
+
+- If you're not using LSPosed you might have noticed that the Google Login button doesn't work. This is because the original signature of the application is invalidated when using LSPatch, which causes all functions related to Google Services (GMS) to not work properly.
+- In order to fix that, you have to:
+    1. Uninstall the patched Grindr app.
+    2. Reinstall the original Grindr app (either from the Play Store or the official APK).
+    3. Reboot your device (this is optional, but **HIGHLY RECOMMENDED**).
+    4. Log in using your Google account.
+    5. Uninstall the original Grindr app.
+    6. Install the app again with GrindrPlus.
+    7. Open the patched app and log in with Google **within 10 minutes**. If you wait too long, **the login will fail**.
+    8. You should now be able to log in successfully using Google.
+- NOTE: **You'll need to repeat this process every time you want to log in with Google**.
+</details>
+<details>
+  <summary>Maps not loading on LSPatch version?</summary>
+
+- For LSPatch users, the Maps functionality in Grindr won't work properly due to signature validation issues. To fix this, you'll need to set up a custom Google Maps API key.
+- Here's how to set up a Google Maps API Key:
+    1. Go to the Google Cloud Console at https://console.cloud.google.com/. You may need to log in with your Google account if you're not already.
+    2. Select or create a new Google Cloud project to associate your API key with. If creating a new project, give it a name and ID. What you call the project is not important. Wait a few seconds for the project to be created.
+    3. Make sure your new project is selected in the top dropdown menu, then open the navigation sidebar and go to "APIs & Services" > "Credentials".
+    4. On the Credentials page, click "+ Create Credentials" and choose "API key" from the dropdown.
+    5. Your new API key will be displayed. Click "Close" to return to the Credentials list. You should see your key listed under "API Keys".
+    6. Click "Edit API key" to set up restrictions. You can give it a name, choose which websites or IP addresses can use it, and set an expiration date. For use with GrindrPlus, you should not set restrictions.
+    7. Copy your API key and add it into the Grindr Plus settings for the Maps API Key.
+    8. Use the install button in Grindr Plus to setup Grindr and the Maps API key.
+- NOTE: **You may be prompted for credit card details by Google, even though use of the Maps API is part of their 'free tier'.**
+</details>
 <details>
   <summary>My Grindr app suddenly stops / crashes when the module is installed!</summary> 
 
