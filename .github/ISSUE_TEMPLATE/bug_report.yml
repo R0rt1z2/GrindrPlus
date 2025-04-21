@@ -74,57 +74,29 @@ body:
       required: true
 
   - type: dropdown
-    id: install-method
+    id: using-lsposed
     attributes:
-      label: Installation Method
-      description: Please select how you installed the mod.
+      label: Are you using LSPosed?
+      description: |
+        ⚠️ **WARNING: The original LSPosed is no longer maintained and therefore not fully functional.**
+        
+        Users should use JingMatrix's maintained fork instead: https://github.com/JingMatrix/LSPosed/releases
+        
+        **__IF YOU ARE NOT ROOTED, YOU ARE NOT USING LSPOSSED. ANSWER "NO" TO THIS QUESTION AND SKIP THE NEXT FIELD.__**
       options:
-        - LSPatch
-        - LSPosed
+        - "No"
+        - "Yes"
     validations:
-      required: true
-
-  - type: input
-    id: lspatch-version
-    attributes:
-      label: LSPatch version
-      description: |
-        If you installed the mod using LSPatch, enter the version of LSPatch (e.g. `0.6 (402)`).
-        *If you did not use LSPatch, leave this field blank.*
-      placeholder: Enter the LSPatch version
-    validations:
-      required: false
-
-  - type: input
-    id: lspatch-variant
-    attributes:
-      label: LSPatch variant
-      description: |
-        If you installed the mod using LSPatch, enter the variant used (e.g. `Official`, `JingMatrix's`, `LSPosed_mod`).
-        *If you did not use LSPatch, leave this field blank.*
-      placeholder: Enter the LSPatch variant
-    validations:
-      required: false
+     required: true
 
   - type: input
     id: lsposed-version
     attributes:
       label: LSPosed version
       description: |
-        If you installed the mod using LSPosed, enter the version of LSPosed (e.g. `1.9.2 (7024)`).
-        *If you did not use LSPosed, leave this field blank.*
+        If you are using LSPosed, enter the version (e.g. `1.9.2 (7024)`).
+        *If you are not using LSPosed, leave this field blank.*
       placeholder: Enter the LSPosed version
-    validations:
-      required: false
-
-  - type: input
-    id: lsposed-variant
-    attributes:
-      label: LSPosed variant
-      description: |
-        If you installed the mod using LSPosed, enter the variant used (e.g. `Official`, `JingMatrix's`, `LSPosed_mod`).
-        *If you did not use LSPosed, leave this field blank.*
-      placeholder: Enter the LSPosed variant
     validations:
       required: false
 
@@ -143,17 +115,6 @@ body:
       label: Android Version
       description: Android Version (e.g. `13`, `12`, `8.1`, `14`)
       placeholder: Enter the Android version
-    validations:
-      required: false
-
-  - type: input
-    id: google-play-update
-    attributes:
-      label: Google Play system update date
-      description: |
-        Google Play system update date (e.g. `May 1, 2024`). 
-        **Note**: This is different from Google Play Services, and custom ROMs usually don’t have it. Learn more about it [here](https://support.google.com/product-documentation/answer/14343500?hl=en).
-      placeholder: Enter the Google Play system update date
     validations:
       required: false
 
@@ -189,10 +150,36 @@ body:
     validations:
       required: true
 
+  - type: markdown
+    attributes:
+      value: |
+        ### GrindrPlus Debug Logs
+        
+        Please attach the debug logs ZIP file which can be generated from within the app.
+        
+        1. Go to GrindrPlus Settings
+        2. Tap the three dot menu (top bar)
+        3. Select "Debug Logs"
+        4. Tap "Export Logs"
+        5. Generate ZIP and save it
+        6. Upload the saved ZIP file below
+
+  - type: textarea
+    id: debug-logs-zip
+    attributes:
+      label: GrindrPlus Debug Logs ZIP
+      description: Please attach the generated debug logs ZIP file to this issue. You can drag and drop the file into this text area or attach it using the file attachment feature when submitting the issue.
+      placeholder: Attach your ZIP file to this issue (you can drag and drop it here after submitting the form or use the file attachment button)
+    validations:
+      required: false
+
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
+      label: Android Logs (Optional)
       description: |
-        Logs are very useful if they contain necessary straces to debug what's going on. Take logs and grep for `Grindr`, `LSPosed`, `LSPatch` if possible. For more information about how to take logs, check the LineageOS website [here](https://wiki.lineageos.org/how-to/logcat/).
+        Sometimes the module logs alone aren't enough to determine the root cause of an issue. Android system logs can provide additional context about what's happening at the system level.
+        
+        If you're comfortable with it, take logs and grep for `Grindr`, `LSPosed`, `LSPatch` if possible. For information about how to capture these logs, check the LineageOS website [here](https://wiki.lineageos.org/how-to/logcat/).
       render: shell
+      placeholder: Paste your Android logs here if available
