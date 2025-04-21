@@ -56,19 +56,6 @@ class SettingsViewModel(
 
                 val otherSettings = mutableListOf(
                     TextSetting(
-                        id = "maps_api_key",
-                        title = "Maps API Key",
-                        description = "Use a custom Maps API Key when using Grindr Plus with LSPatch",
-                        value = Config.get("maps_api_key", "") as String,
-                        onValueChange = {
-                            viewModelScope.launch {
-                                Config.put("maps_api_key", it)
-                                loadSettings()
-                            }
-                        },
-                        validator = { null }
-                    ),
-                    TextSetting(
                         id = "command_prefix",
                         title = "Command Prefix",
                         description = "Change the command prefix (default: /)",
@@ -232,6 +219,19 @@ class SettingsViewModel(
                 )
 
                 val managerSettings = mutableListOf<Setting>(
+                    TextSetting(
+                        id = "maps_api_key",
+                        title = "Maps API Key",
+                        description = "Use a custom Maps API Key when using Grindr Plus with LSPatch",
+                        value = Config.get("maps_api_key", "") as String,
+                        onValueChange = {
+                            viewModelScope.launch {
+                                Config.put("maps_api_key", it)
+                                loadSettings()
+                            }
+                        },
+                        validator = { null }
+                    ),
                     TextSetting(
                         id = "custom_manifest",
                         title = "Custom Manifest URL",
