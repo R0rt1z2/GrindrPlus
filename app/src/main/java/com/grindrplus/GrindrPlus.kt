@@ -5,9 +5,11 @@ import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
@@ -265,6 +267,28 @@ object GrindrPlus {
 
     fun loadClass(name: String): Class<*> {
         return classLoader.loadClass(name)
+    }
+
+    fun restartGrindr(timeout: Long = 0, toast: String? = null) {
+        toast?.let { showToast(Toast.LENGTH_LONG, it) }
+
+        if (timeout > 0) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                val intent = context.packageManager
+                    .getLaunchIntentForPackage(context.packageName)?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+                context.startActivity(intent)
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }, timeout)
+        } else {
+            val intent = context.packageManager
+                .getLaunchIntentForPackage(context.packageName)?.apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            context.startActivity(intent)
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
     }
 
     private fun checkVersionCodes(versionCodes: IntArray, versionNames: Array<String>) {
