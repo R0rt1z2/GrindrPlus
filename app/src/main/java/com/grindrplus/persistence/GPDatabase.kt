@@ -24,7 +24,7 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
         TeleportLocationEntity::class,
         SavedPhraseEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
