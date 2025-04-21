@@ -25,9 +25,9 @@ import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import org.json.JSONObject
 
-class BanDetails : Hook(
-    "Ban details",
-    "Show ban details when you are banned"
+class BanManagement : Hook(
+    "Ban management",
+    "Provides comprehensive ban management tools (detailed ban info, etc.)"
 ) {
     private val authServiceClass = "v4.h" // search for 'v3/users/password-validation'
     private val materialButton = "com.google.android.material.button.MaterialButton"

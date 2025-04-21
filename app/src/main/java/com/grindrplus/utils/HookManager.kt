@@ -5,7 +5,7 @@ import com.grindrplus.core.Logger
 import com.grindrplus.hooks.AllowScreenshots
 import com.grindrplus.hooks.AntiBlock
 import com.grindrplus.hooks.AntiDetection
-import com.grindrplus.hooks.BanDetails
+import com.grindrplus.hooks.BanManagement
 import com.grindrplus.hooks.ChatIndicators
 import com.grindrplus.hooks.ChatTerminal
 import com.grindrplus.hooks.DisableAnalytics
@@ -36,7 +36,7 @@ class HookManager {
     fun registerHooks(init: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
-                BanDetails(),
+                BanManagement(),
                 FeatureGranting(),
                 EnableUnlimited(),
                 AntiDetection(),
