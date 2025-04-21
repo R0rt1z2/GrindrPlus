@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.grindrplus.BuildConfig
 import com.grindrplus.core.Config
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.utils.AppIconManager
@@ -127,6 +126,36 @@ class SettingsViewModel(
                             val value = input.toIntOrNull()
                             if (value == null || value <= 0) "Duration must be a positive number" else null
                         }
+                    ),
+                    TextSettingWithButtons(
+                        id = "android_device_id",
+                        title = "Android Device ID",
+                        description = "Change the Android Device ID",
+                        value = Config.get("android_device_id", "") as String,
+                        onValueChange = {
+                            viewModelScope.launch {
+                                Config.put("android_device_id", it)
+                                loadSettings()
+                            }
+                        },
+                        validator = { input ->
+                            when {
+                                input.isBlank() -> null
+                                input.length != 16 -> "Android Device ID must be 16 characters long"
+                                !input.matches(Regex("[0-9a-fA-F]+")) -> "Android Device ID must be a hexadecimal string"
+                                else -> null
+                            }
+                        },
+                        buttons = listOf(
+                            ButtonAction("Generate") {
+                                val uuid = java.util.UUID.randomUUID()
+                                val newDeviceId = uuid.toString().replace("-", "").substring(0, 16)
+                                Config.put("android_device_id", newDeviceId)
+                                loadSettings()
+                                Toast.makeText(context, "New device ID generated", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+
                     ),
                     SwitchSetting(
                         id = "enable_interest_section",

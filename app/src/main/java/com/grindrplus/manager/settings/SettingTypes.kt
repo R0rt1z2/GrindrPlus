@@ -20,6 +20,22 @@ data class TextSetting(
     val validator: ((String) -> String?)? = null,
 ) : Setting(id, title)
 
+data class ButtonAction(
+    val name: String,
+    val action: () -> Unit
+)
+
+data class TextSettingWithButtons(
+    override val id: String,
+    override val title: String,
+    val description: String? = null,
+    val value: String,
+    val onValueChange: (String) -> Unit,
+    val keyboardType: KeyboardType = KeyboardType.Text,
+    val validator: ((String) -> String?)? = null,
+    val buttons: List<ButtonAction> = emptyList()
+) : Setting(id, title)
+
 data class ButtonSetting(
     override val id: String,
     override val title: String,
