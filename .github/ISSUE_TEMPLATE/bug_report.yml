@@ -55,6 +55,25 @@ body:
       required: true
 
   - type: dropdown
+    id: dns-adblock
+    attributes:
+      label: Are you using a custom DNS server or ad blocker?
+      description: |
+        DNS services like AdGuard or system-wide ad blockers can interfere with how Grindr loads certain elements (e.g. cookie prompts, albums, etc.). 
+        These may cause bugs that aren't related to GrindrPlus itself.
+
+        ⚠️ Some DNS resolvers may set long TTL (time-to-live) values, meaning their effects can persist even after disabling them. 
+        A **device reboot** may be required to fully clear the DNS cache.
+
+        Please try disabling your custom DNS or ad blocker, **reboot your device**, and test again before submitting this report.
+      options:
+        - No, I'm not using any custom DNS or ad blocker
+        - Yes, but I have tested with it disabled and rebooted; the bug still occurs
+        - Yes, but I have not tested with it disabled and rebooted
+    validations:
+      required: true
+
+  - type: dropdown
     id: install-method
     attributes:
       label: Installation Method
