@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.grindrplus.core.Config
 import com.grindrplus.manager.DATA_URL
+import com.grindrplus.manager.settings.SettingsUtils.testMapsApiKey
 import com.grindrplus.manager.utils.AppIconManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,38 @@ class SettingsViewModel(
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _showApiKeyTestDialog = MutableStateFlow(false)
+    val showApiKeyTestDialog: StateFlow<Boolean> = _showApiKeyTestDialog
+
+    private val _apiKeyTestTitle = MutableStateFlow("")
+    val apiKeyTestTitle: StateFlow<String> = _apiKeyTestTitle
+
+    private val _apiKeyTestMessage = MutableStateFlow("")
+    val apiKeyTestMessage: StateFlow<String> = _apiKeyTestMessage
+
+    private val _apiKeyTestRawResponse = MutableStateFlow("")
+    val apiKeyTestRawResponse: StateFlow<String> = _apiKeyTestRawResponse
+
+    private val _apiKeyTestLoading = MutableStateFlow(false)
+    val apiKeyTestLoading: StateFlow<Boolean> = _apiKeyTestLoading
+
+    fun dismissApiKeyTestDialog() {
+        _showApiKeyTestDialog.value = false
+    }
+
+    private fun showApiKeyTestDialog(
+        isLoading: Boolean,
+        title: String,
+        message: String,
+        rawResponse: String
+    ) {
+        _apiKeyTestLoading.value = isLoading
+        _apiKeyTestTitle.value = title
+        _apiKeyTestMessage.value = message
+        _apiKeyTestRawResponse.value = rawResponse
+        _showApiKeyTestDialog.value = true
+    }
 
     init {
         loadSettings()
@@ -219,7 +252,7 @@ class SettingsViewModel(
                 )
 
                 val managerSettings = mutableListOf<Setting>(
-                    TextSetting(
+                    TextSettingWithButtons(
                         id = "maps_api_key",
                         title = "Maps API Key",
                         description = "Use a custom Maps API Key when using Grindr Plus with LSPatch",
@@ -230,7 +263,22 @@ class SettingsViewModel(
                                 loadSettings()
                             }
                         },
-                        validator = { null }
+                        validator = { null },
+                        buttons = listOf(
+                            ButtonAction("Test") {
+                                val apiKey = Config.get("maps_api_key", "") as String
+                                if (apiKey.isBlank()) {
+                                    Toast.makeText(context, "Please enter an API key first", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    testMapsApiKey(
+                                        context,
+                                        viewModelScope,
+                                        apiKey,
+                                        ::showApiKeyTestDialog
+                                    )
+                                }
+                            }
+                        )
                     ),
                     TextSetting(
                         id = "custom_manifest",

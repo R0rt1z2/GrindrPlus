@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import com.grindrplus.core.Config
+import com.grindrplus.manager.settings.ApiKeyTestDialog
 import com.grindrplus.manager.settings.ButtonSetting
 import com.grindrplus.manager.settings.KeyboardType
 import com.grindrplus.manager.settings.Setting
@@ -89,6 +90,12 @@ fun SettingsScreen(
     var showResetDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var debugLogsScreen by remember { mutableStateOf(false) }
+
+    val showApiKeyTestDialog by viewModel.showApiKeyTestDialog.collectAsState()
+    val apiKeyTestTitle by viewModel.apiKeyTestTitle.collectAsState()
+    val apiKeyTestMessage by viewModel.apiKeyTestMessage.collectAsState()
+    val apiKeyTestRawResponse by viewModel.apiKeyTestRawResponse.collectAsState()
+    val apiKeyTestLoading by viewModel.apiKeyTestLoading.collectAsState()
 
     if (debugLogsScreen) {
         DebugLogsScreen(
@@ -121,6 +128,16 @@ fun SettingsScreen(
                     android.os.Process.killProcess(android.os.Process.myPid())
                 }
             }
+        )
+    }
+
+    if (showApiKeyTestDialog) {
+        ApiKeyTestDialog(
+            isLoading = apiKeyTestLoading,
+            title = apiKeyTestTitle,
+            message = apiKeyTestMessage,
+            rawResponse = apiKeyTestRawResponse,
+            onDismiss = viewModel::dismissApiKeyTestDialog
         )
     }
 
