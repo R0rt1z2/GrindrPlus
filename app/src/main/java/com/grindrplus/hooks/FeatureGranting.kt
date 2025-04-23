@@ -24,6 +24,8 @@ class FeatureGranting : Hook(
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
     private val featureModel = "com.grindrapp.android.usersession.model.Feature"
+    private val tapModel = "com.grindrapp.android.taps.model.Tap"
+    private val tapInboxModel = "com.grindrapp.android.taps.data.model.TapsInboxEntity"
     private val featureManager = FeatureManager()
 
     override fun init() {
@@ -70,6 +72,12 @@ class FeatureGranting : Hook(
                     param.setResult(false)
                 }
             }
+
+        listOf(tapModel, tapInboxModel).forEach { model ->
+            findClass(model).hook("isViewable", HookStage.BEFORE) { param ->
+                param.setResult(true)
+            }
+        }
 
         findClass(featureFlagManager)
             .hook("b", HookStage.AFTER) { param ->
