@@ -147,6 +147,24 @@ class SettingsViewModel(
                             if (value == null || value <= 0) "Duration must be a positive number" else null
                         }
                     ),
+                    TextSetting(
+                        id = "favorites_grid_columns",
+                        title = "Favorites grid columns",
+                        description = "Number of columns in the favorites grid (default: 3)",
+                        value = (Config.get("favorites_grid_columns", 3) as Number).toString(),
+                        onValueChange = {
+                            val value = it.toIntOrNull() ?: 3
+                            viewModelScope.launch {
+                                Config.put("favorites_grid_columns", value)
+                                loadSettings()
+                            }
+                        },
+                        keyboardType = KeyboardType.Number,
+                        validator = { input ->
+                            val value = input.toIntOrNull()
+                            if (value == null || value <= 0) "Number of columns must be a positive number" else null
+                        }
+                    ),
                     TextSettingWithButtons(
                         id = "android_device_id",
                         title = "Android Device ID",
