@@ -183,7 +183,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         CloneDialog(
             context = context,
             onDismiss = { showCloneDialog = false },
-            onStartCloning = { packageName, appName, debuggable ->
+            onStartCloning = { packageName, appName, debuggable, embedLSPatch ->
                 showCloneDialog = false
                 isCloning = true
                 activityScope.launch {
@@ -193,7 +193,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
 
                     val success = try {
                         installation!!.cloneGrindr(
-                            packageName, appName, debuggable,
+                            packageName, appName, debuggable, embedLSPatch,
                             print
                         )
                         true

@@ -120,14 +120,14 @@ class LocationSpoofer : Hook(
                     Utils.getId(
                         "image_button_ripple",
                         "drawable",
-                        chatBottomToolbarLinearLayout.context
+                        GrindrPlus.context
                     )
                 )
                 setImageResource(
                     Utils.getId(
                         "ic_my_location",
                         "drawable",
-                        chatBottomToolbarLinearLayout.context
+                        GrindrPlus.context
                     )
                 )
                 setPadding(

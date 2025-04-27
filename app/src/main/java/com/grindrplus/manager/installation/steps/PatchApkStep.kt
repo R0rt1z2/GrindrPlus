@@ -18,7 +18,8 @@ class PatchApkStep(
     private val outputDir: File,
     private val modFile: File,
     private val keyStore: File,
-    private val customMapsApiKey: String?
+    private val customMapsApiKey: String?,
+    private val embedLSPatch: Boolean = true
 ) : BaseStep() {
     override val name = "Patching Grindr APK"
 
@@ -36,18 +37,68 @@ class PatchApkStep(
             throw IOException("No valid APK files found to patch")
         }
 
-        if (customMapsApiKey != null) {
-            val baseApk = apkFiles.find {
-                it.name == "base.apk" || it.name.startsWith("base.apk-")
-            } ?: apkFiles.first()
-            val apkModule = ApkModule.loadApkFile(baseApk)
-            val mapsApiKeyElement = apkModule.androidManifest.applicationElement.getElements { element ->
-                element.name == "meta-data" && element.searchAttributeByName("name").valueString == MAPS_API_KEY_NAME
-            }.next()
-            val valueAttribute = mapsApiKeyElement.searchAttributeByName("value")
-            print("Overwriting default Maps API key with custom key...")
-            valueAttribute.setValueAsString(StyleDocument.parseStyledString(customMapsApiKey))
-            apkModule.writeApk(baseApk)
+        try {
+            if (customMapsApiKey != null) {
+                print("Attempting to apply custom Maps API key...")
+                val baseApk = apkFiles.find {
+                    it.name == "base.apk" || it.name.startsWith("base.apk-")
+                } ?: apkFiles.first()
+
+                print("Using ${baseApk.name} for Maps API key modification")
+                val apkModule = ApkModule.loadApkFile(baseApk)
+
+                val metaElements = apkModule.androidManifest.applicationElement.getElements { element ->
+                    element.name == "meta-data"
+                }
+
+                var found = false
+                while (metaElements.hasNext() && !found) {
+                    val element = metaElements.next()
+                    val nameAttr = element.searchAttributeByName("name")
+
+                    if (nameAttr != null && nameAttr.valueString == MAPS_API_KEY_NAME) {
+                        val valueAttr = element.searchAttributeByName("value")
+                        if (valueAttr != null) {
+                            print("Found Maps API key element, replacing with custom key")
+                            valueAttr.setValueAsString(StyleDocument.parseStyledString(customMapsApiKey))
+                            found = true
+                        }
+                    }
+                }
+
+                if (found) {
+                    print("Successfully replaced Maps API key, saving APK")
+                    apkModule.writeApk(baseApk)
+                } else {
+                    print("Maps API key element not found in manifest, skipping replacement")
+                }
+            }
+        } catch (e: Exception) {
+            print("Error applying Maps API key: ${e.message}")
+        }
+
+        if (!embedLSPatch) {
+            print("Skipping LSPatch as embedLSPatch is disabled")
+
+            apkFiles.forEach { apkFile ->
+                val outputFile = File(outputDir, apkFile.name)
+                apkFile.copyTo(outputFile, overwrite = true)
+                print("Copied ${apkFile.name} to output directory")
+            }
+
+            val copiedFiles = outputDir.listFiles()
+            if (copiedFiles.isNullOrEmpty()) {
+                throw IOException("Copying APKs failed - no output files generated")
+            }
+
+            print("Copying completed successfully")
+            print("Copied ${copiedFiles.size} files")
+
+            copiedFiles.forEachIndexed { index, file ->
+                print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")
+            }
+
+            return
         }
 
         print("Starting LSPatch process with ${apkFiles.size} APK files")

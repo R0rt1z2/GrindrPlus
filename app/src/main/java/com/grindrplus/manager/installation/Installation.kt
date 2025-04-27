@@ -57,6 +57,7 @@ class Installation(
         packageName: String,
         appName: String,
         debuggable: Boolean,
+        embedLSpatch: Boolean,
         print: Print,
     ) = performOperation(
         steps = commonSteps + listOf(
@@ -64,9 +65,12 @@ class Installation(
                 folder = unzipFolder,
                 packageName = packageName,
                 appName = appName,
-                debuggable = debuggable
-            ), SignClonedGrindrApk(keyStoreUtils, unzipFolder),
-            patchApkStep, installStep
+                debuggable = debuggable,
+            ),
+            SignClonedGrindrApk(keyStoreUtils, unzipFolder),
+            PatchApkStep(unzipFolder, outputDir, modFile,
+                keyStoreUtils.keyStore, mapsApiKey, embedLSpatch),
+            installStep
         ),
         operationName = "clone",
         print = print,

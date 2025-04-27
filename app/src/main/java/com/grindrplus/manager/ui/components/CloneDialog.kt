@@ -24,7 +24,7 @@ import com.grindrplus.manager.utils.AppCloneUtils
 fun CloneDialog(
     context: Context,
     onDismiss: () -> Unit,
-    onStartCloning: (packageName: String, appName: String, debuggable: Boolean) -> Unit,
+    onStartCloning: (packageName: String, appName: String, debuggable: Boolean, embedLSPatch: Boolean) -> Unit
 ) {
     val hasReachedMaxClones = remember { AppCloneUtils.hasReachedMaxClones(context) }
     val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
@@ -38,6 +38,7 @@ fun CloneDialog(
 
     var appName by remember { mutableStateOf("Grindr ${numberToWords(nextCloneNumber)}") }
     var debuggable by remember { mutableStateOf(false) }
+    var embedLSPatch by remember { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
 
@@ -143,6 +144,18 @@ fun CloneDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Embed LSPatch")
+                    Switch(
+                        checked = embedLSPatch,
+                        onCheckedChange = { embedLSPatch = it }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
@@ -173,7 +186,7 @@ fun CloneDialog(
                                 return@Button
                             }
 
-                            onStartCloning(fullPackageName, appName, debuggable)
+                            onStartCloning(fullPackageName, appName, debuggable, embedLSPatch)
                         }
                     ) {
                         Text("Clone")
