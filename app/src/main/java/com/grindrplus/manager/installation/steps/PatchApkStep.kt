@@ -37,8 +37,9 @@ class PatchApkStep(
         }
 
         if (customMapsApiKey != null) {
-            print("Overwriting Maps API Key")
-            val baseApk = if (apkFiles.size == 1) apkFiles.first() else apkFiles.first { it.name == "base.apk" }
+            val baseApk = apkFiles.find {
+                it.name == "base.apk" || it.name.startsWith("base.apk-")
+            } ?: apkFiles.first()
             val apkModule = ApkModule.loadApkFile(baseApk)
             val mapsApiKeyElement = apkModule.androidManifest.applicationElement.getElements { element ->
                 element.name == "meta-data" && element.searchAttributeByName("name").valueString == MAPS_API_KEY_NAME
