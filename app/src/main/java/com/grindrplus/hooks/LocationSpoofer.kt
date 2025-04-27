@@ -97,13 +97,7 @@ class LocationSpoofer : Hook(
                 locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
                     if (view is ImageButton) {
                         view.tag == "custom_location_button" ||
-                                view.contentDescription == "Teleport" ||
-                                (view.drawable != null && view.drawable.constantState ==
-                                        ResourcesCompat.getDrawable(
-                                            chatBottomToolbarLinearLayout.context.resources,
-                                            Utils.getId("ic_my_location", "drawable", chatBottomToolbarLinearLayout.context),
-                                            null
-                                        )?.constantState)
+                                view.contentDescription == "Teleport"
                     } else false
                 }
             }
