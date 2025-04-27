@@ -39,6 +39,12 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     private val albumsRepositoryImpl =
         "I3.w" // search for '@DebugMetadata(c =
     private val albumModel = "com.grindrapp.android.model.Album"
+    private val filteredSpankBankAlbumContent =
+        "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"
+    private val spankBankAlbumModel =
+        "com.grindrapp.android.albums.spankbank.domain.model.SpankBankAlbum"
+    private val spankBankAlbumContentModel =
+        "com.grindrapp.android.albums.spankbank.domain.model.SpankBankAlbumContent"
     private val httpExceptionResponse = "com.grindrapp.android.network.http.HttpExceptionResponse"
     private val sharedAlbumsBrief = "com.grindrapp.android.model.albums.SharedAlbumsBrief"
     private val albumsList = "com.grindrapp.android.model.AlbumsList"
@@ -76,6 +82,25 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                 setObjectField(param.thisObject(), "viewableUntil", Long.MAX_VALUE)
             } catch (e: Exception) {
                 Logger.e("Error making album viewable: ${e.message}")
+            }
+        }
+
+        findClass(spankBankAlbumModel).hookConstructor(HookStage.AFTER) { param ->
+            try {
+                setObjectField(param.thisObject(), "albumViewable", true)
+                setObjectField(param.thisObject(), "expiresAt", Long.MAX_VALUE)
+            } catch (e: Exception) {
+                Logger.e("Error making album viewable: ${e.message}")
+            }
+        }
+
+        listOf(spankBankAlbumContentModel, filteredSpankBankAlbumContent).forEach { clazz ->
+            findClass(clazz).hookConstructor(HookStage.AFTER) { param ->
+                try {
+                    setObjectField(param.thisObject(), "albumViewable", true)
+                } catch (e: Exception) {
+                    Logger.e("Error making album viewable: ${e.message}")
+                }
             }
         }
 
