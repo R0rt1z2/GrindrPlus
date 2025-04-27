@@ -178,6 +178,18 @@ class SettingsViewModel(
 
                     ),
                     SwitchSetting(
+                        id = "enable_albums_spank_bank",
+                        title = "Enable Albums Spank Bank",
+                        description = "Enable the new Albums section",
+                        isChecked = Config.get("enable_albums_spank_bank", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("enable_albums_spank_bank", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
+                    SwitchSetting(
                         id = "enable_interest_section",
                         title = "Enable Interest Section",
                         description = "Show interests section on profiles",

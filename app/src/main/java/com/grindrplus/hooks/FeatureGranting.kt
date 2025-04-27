@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
@@ -21,6 +20,7 @@ class FeatureGranting : Hook(
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val expiringAlbumsExperiment = "O3.a" // search for '("SeeAlbumOptions", 1, "see-album-options")'
     private val favoritesExperiment = "com.grindrapp.android.favoritesv2.domain.experiment.FavoritesV2Experiment" // search for 'public final class FavoritesV2Experiment'
+    private val albumSpankBankExperiment = "c4.b" // search for 'spankBankExperiment'
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
     private val featureModel = "com.grindrapp.android.usersession.model.Feature"
@@ -36,6 +36,13 @@ class FeatureGranting : Hook(
             if (featureManager.isManaged(flagKey)) {
                 param.setResult(featureManager.isEnabled(flagKey))
             }
+        }
+
+        findClass(albumSpankBankExperiment).hook("f", HookStage.BEFORE) { param ->
+            // This controls the newly added Albums 'Spank Bank' experiment, which
+            // adds blur to the last album(s) of your collection. Returning false
+            // disables this feature.
+            param.setResult(Config.get("enable_albums_spank_bank", false) as Boolean)
         }
 
         findClass(featureModel).hook("isGranted", HookStage.BEFORE) { param ->
