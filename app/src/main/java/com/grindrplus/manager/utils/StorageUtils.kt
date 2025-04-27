@@ -3,6 +3,7 @@ package com.grindrplus.manager.utils
 import android.content.Context
 import android.os.StatFs
 import android.util.Log
+import timber.log.Timber
 import java.io.File
 
 object StorageUtils {
@@ -19,7 +20,7 @@ object StorageUtils {
             val availableBlocks = stat.availableBlocksLong
             blockSize * availableBlocks
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking available space", e)
+            Timber.tag(TAG).e(e, "Error checking available space")
             0L
         }
     }
@@ -69,7 +70,7 @@ object StorageUtils {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error during cleanup", e)
+            Timber.tag(TAG).e(e, "Error during cleanup")
         }
     }
 }
