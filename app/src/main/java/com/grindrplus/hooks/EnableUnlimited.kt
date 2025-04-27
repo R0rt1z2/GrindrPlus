@@ -18,9 +18,10 @@ class EnableUnlimited : Hook(
     )
     private val viewsToHide = mapOf(
         "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$c" to listOf("upsell_bottom_bar"), // search for 'bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/ProfileTagCascadeFragmentBinding;'
-        "com.grindrapp.android.ui.browse.CascadeFragment\$b" to listOf("upsell_bottom_bar"), // search for '"bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/FragmentBrowseCascadeBinding;"'
+        "com.grindrapp.android.ui.browse.CascadeFragment\$b" to listOf("upsell_bottom_bar", "micros_fab"), // search for '"bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/FragmentBrowseCascadeBinding;"'
         "com.grindrapp.android.ui.home.HomeActivity\$l" to listOf("persistentAdBannerContainer"), // search for 'ViewBindings.findChildViewById(inflate, R.id.activity_home_content)) != null) {'
-        "com.grindrapp.android.ui.drawer.DrawerProfileFragment\$e" to listOf("sideDrawerBoostContainer") // search for '"bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/DrawerProfileBinding;"'
+        "com.grindrapp.android.ui.drawer.DrawerProfileFragment\$e" to listOf("drawer_profile_offer_card", "sideDrawerBoostContainer"), // search for '"bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/DrawerProfileBinding;"'
+        "com.grindrapp.android.radar.presentation.ui.RadarFragment\$c" to listOf("micros_fab") // search for 'bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/FragmentRadarBinding;'
     )
 
     override fun init() {
