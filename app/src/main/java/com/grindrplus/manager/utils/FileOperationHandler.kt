@@ -1,6 +1,7 @@
 package com.grindrplus.manager.utils
 
 import android.content.Context
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -127,26 +128,43 @@ object FileOperationHandler {
             val mainJson = JSONObject()
 
             val deviceSection = JSONObject().apply {
-                put("manufacturer", android.os.Build.MANUFACTURER)
-                put("model", android.os.Build.MODEL)
-                put("device", android.os.Build.DEVICE)
-                put("brand", android.os.Build.BRAND)
-                put("hardware", android.os.Build.HARDWARE)
-                put("fingerprint", android.os.Build.FINGERPRINT)
+                put("manufacturer", Build.MANUFACTURER)
+                put("model", Build.MODEL)
+                put("device", Build.DEVICE)
+                put("brand", Build.BRAND)
+                put("hardware", Build.HARDWARE)
+                put("fingerprint", Build.FINGERPRINT)
             }
             mainJson.put("device", deviceSection)
 
             val androidSection = JSONObject().apply {
-                put("version", android.os.Build.VERSION.RELEASE)
-                put("sdk_level", android.os.Build.VERSION.SDK_INT)
-                put("security_patch", android.os.Build.VERSION.SECURITY_PATCH)
+                put("version", Build.VERSION.RELEASE)
+                put("sdk_level", Build.VERSION.SDK_INT)
+                put("security_patch", Build.VERSION.SECURITY_PATCH)
                 put("is_rooted", RootBeer(context).isRooted)
             }
             mainJson.put("android", androidSection)
 
             val appsSection = JSONObject().apply {
-                put("grindrplus_version", context.packageManager.getPackageInfo(context.packageName, 0).versionName)
-                put("grindr_version", context.packageManager.getPackageInfo(GRINDR_PACKAGE_NAME, 0).versionName)
+                val grindrPlusPackageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                val grindrPackageInfo = context.packageManager.getPackageInfo(GRINDR_PACKAGE_NAME, 0)
+
+                val grindrPlusVersionCode = if (Build.VERSION.SDK_INT >= 28) {
+                    grindrPlusPackageInfo.longVersionCode
+                } else {
+                    @Suppress("DEPRECATION")
+                    grindrPlusPackageInfo.versionCode.toLong()
+                }
+
+                val grindrVersionCode = if (Build.VERSION.SDK_INT >= 28) {
+                    grindrPackageInfo.longVersionCode
+                } else {
+                    @Suppress("DEPRECATION")
+                    grindrPackageInfo.versionCode.toLong()
+                }
+
+                put("grindrplus_version", "${grindrPlusPackageInfo.versionName} (${grindrPlusVersionCode})")
+                put("grindr_version", "${grindrPackageInfo.versionName} (${grindrVersionCode})")
                 put("clones", AppCloneUtils.getExistingClones(context).size)
             }
             mainJson.put("apps", appsSection)
