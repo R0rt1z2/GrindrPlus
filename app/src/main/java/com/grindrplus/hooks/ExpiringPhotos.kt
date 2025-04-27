@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Logger
 import com.grindrplus.persistence.model.ExpiringPhotoEntity
@@ -114,6 +115,7 @@ class ExpiringPhotos : Hook(
                                     scheduleDeletion(mediaId)
                                 }
                             } else {
+                                GrindrPlus.showToast(Toast.LENGTH_SHORT, "Picture not cached in database")
                                 Logger.w("Photo not found in database for mediaId: $mediaId")
                             }
                         }
