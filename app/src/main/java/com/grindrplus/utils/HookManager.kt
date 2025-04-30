@@ -14,7 +14,7 @@ import com.grindrplus.hooks.DisableShuffle
 import com.grindrplus.hooks.DisableUpdates
 import com.grindrplus.hooks.EmptyCalls
 import com.grindrplus.hooks.EnableUnlimited
-import com.grindrplus.hooks.ExpiringPhotos
+import com.grindrplus.hooks.ExpiringMedia
 import com.grindrplus.hooks.Favorites
 import com.grindrplus.hooks.FeatureGranting
 import com.grindrplus.hooks.LocalSavedPhrases
@@ -49,7 +49,7 @@ class HookManager {
                 ChatIndicators(),
                 ChatTerminal(),
                 DisableAnalytics(),
-                ExpiringPhotos(),
+                ExpiringMedia(),
                 Favorites(),
                 LocalSavedPhrases(),
                 LocationSpoofer(),

@@ -7,12 +7,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.grindrplus.persistence.converters.DateConverter
 import com.grindrplus.persistence.dao.AlbumDao
-import com.grindrplus.persistence.dao.ExpiringPhotoDao
 import com.grindrplus.persistence.dao.SavedPhraseDao
 import com.grindrplus.persistence.dao.TeleportLocationDao
 import com.grindrplus.persistence.model.AlbumContentEntity
 import com.grindrplus.persistence.model.AlbumEntity
-import com.grindrplus.persistence.model.ExpiringPhotoEntity
 import com.grindrplus.persistence.model.SavedPhraseEntity
 import com.grindrplus.persistence.model.TeleportLocationEntity
 
@@ -20,17 +18,15 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
     entities = [
         AlbumEntity::class,
         AlbumContentEntity::class,
-        ExpiringPhotoEntity::class,
         TeleportLocationEntity::class,
         SavedPhraseEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
 abstract class GPDatabase : RoomDatabase() {
     abstract fun albumDao(): AlbumDao
-    abstract fun expiringPhotoDao(): ExpiringPhotoDao
     abstract fun teleportLocationDao(): TeleportLocationDao
     abstract fun savedPhraseDao(): SavedPhraseDao
 
