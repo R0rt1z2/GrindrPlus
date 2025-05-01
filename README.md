@@ -16,7 +16,7 @@ Grindr Plus is an Xposed Module that unlocks and adds unique features to the Gri
 </p>
 
 ## Introduction
-This repository contains a completely rewritten version of ElJaviLuki's original mod, rebuilt from the ground up. It introduces new features, ensures compatibility with the latest Grindr versions, and offers improved performance and functionality.
+This repository contains a completely rewritten version of [ElJaviLuki's original mod](https://github.com/ElJaviLuki/GrindrPlus), rebuilt from the ground up. It introduces new features, ensures compatibility with the latest Grindr versions, and offers improved performance and functionality.
 
 As the title of the repo suggests, this mod is designed to enhance the user experience, but please note that it’s under active development, so stability is not always guaranteed.
 
@@ -225,6 +225,8 @@ Each installation method is completely different and comes with its own challeng
 </details>
 
 ## Acknowledgments
+Big part of the credit goes to [ElJaviLuki](https://github.com/ElJaviLuki/GrindrPlus), the creator of the original idea and mod — this project wouldn’t exist without his initial work.
+
 This project relies on several third-party libraries, and we extend our gratitude to their authors for their valuable contributions. For a complete list of these dependencies, please refer to the [dependencies](https://github.com/R0rt1z2/GrindrPlus/blob/master/app/build.gradle.kts#L67-L79) section of the `build.gradle.kts` file.
 
 Parts of the manager were coded with the help of [Vendetta's Manager](https://github.com/vendetta-mod/VendettaManager).
