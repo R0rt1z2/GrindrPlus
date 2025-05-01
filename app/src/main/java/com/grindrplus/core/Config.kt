@@ -135,17 +135,35 @@ object Config {
     }
 
     fun get(name: String, default: Any, autoPut: Boolean = false): Any {
-        if (isGlobalSetting(name)) {
-            val get = localConfig.opt(name)
-            return get ?: default.also {
-                if (autoPut) put(name, default)
-            }
+        val rawValue = if (isGlobalSetting(name)) {
+            localConfig.opt(name)
+        } else {
+            val packageConfig = getCurrentPackageConfig()
+            packageConfig.opt(name)
         }
 
-        val packageConfig = getCurrentPackageConfig()
-        val get = packageConfig.opt(name)
-        return get ?: default.also {
+        if (rawValue == null) {
             if (autoPut) put(name, default)
+            return default
+        }
+
+        return when (default) {
+            is Number -> {
+                if (rawValue is String) {
+                    try {
+                        rawValue.toInt()
+                    } catch (_: NumberFormatException) {
+                        try {
+                            rawValue.toDouble()
+                        } catch (_: NumberFormatException) {
+                            default
+                        }
+                    }
+                } else {
+                    rawValue as? Number ?: default
+                }
+            }
+            else -> rawValue
         }
     }
 

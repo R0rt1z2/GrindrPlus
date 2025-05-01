@@ -33,7 +33,7 @@ class Favorites : Hook(
 
         findClass(favoritesFragment)
             .hook("onViewCreated", HookStage.AFTER) { param ->
-                val columnsNumber = (Config.get("favorites_grid_columns", 3) as Int).toInt()
+                val columnsNumber = (Config.get("favorites_grid_columns", 3) as Number).toInt()
                 val view = param.arg<View>(0)
                 val recyclerView = view.findViewById<View>(
                     Utils.getId(

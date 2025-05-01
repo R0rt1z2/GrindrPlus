@@ -151,7 +151,7 @@ class SettingsViewModel(
                         id = "favorites_grid_columns",
                         title = "Favorites grid columns",
                         description = "Number of columns in the favorites grid (default: 3)",
-                        value = (Config.get("favorites_grid_columns", 3) as Number).toString(),
+                        value = Config.get("favorites_grid_columns", 3).toString(),
                         onValueChange = {
                             val value = it.toIntOrNull() ?: 3
                             viewModelScope.launch {
