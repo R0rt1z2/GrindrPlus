@@ -5,6 +5,7 @@ import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
+import com.grindrplus.core.Utils.coordsToGeoHash
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,13 +47,11 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             }
             args.size == 1 && args[0].contains(",") -> {
                 val (lat, lon) = args[0].split(",").map { it.toDouble() }
-                Config.put("current_location", "$lat,$lon")
-                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+                teleportToCoordinates(lat, lon)
             }
             args.size == 2 && args.all { arg -> arg.toDoubleOrNull() != null } -> {
                 val (lat, lon) = args.map { it.toDouble() }
-                Config.put("current_location", "$lat,$lon")
-                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+                teleportToCoordinates(lat, lon)
             }
             else -> {
                 /**
@@ -62,11 +61,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                 coroutineScope.launch {
                     val location = getLocation(args.joinToString(" "))
                     if (location != null) {
-                        Config.put("current_location", "${location.first},${location.second}")
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Teleported to ${location.first}" + ", ${location.second}"
-                        )
+                        teleportToCoordinates(location.first, location.second)
                     } else {
                         /**
                          * No valid saved location was found, try to get the actual location. This
@@ -74,14 +69,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                          */
                         val apiLocation = getLocationFromNominatimAsync(args.joinToString(" "))
                         if (apiLocation != null) {
-                            Config.put(
-                                "current_location",
-                                "${apiLocation.first},${apiLocation.second}"
-                            )
-                            GrindrPlus.showToast(
-                                Toast.LENGTH_LONG,
-                                "Teleported to ${apiLocation.first}" + ", ${apiLocation.second}"
-                            )
+                            teleportToCoordinates(apiLocation.first, apiLocation.second)
                         } else {
                             GrindrPlus.showToast(Toast.LENGTH_LONG, "Location not found")
                         }
@@ -234,6 +222,22 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                 null
             }
         }
+
+    private fun teleportToCoordinates(lat: Double, lon: Double, silent: Boolean = false) {
+        Config.put("current_location", "$lat,$lon")
+        val geohash = coordsToGeoHash(lat, lon)
+
+        GrindrPlus.executeAsync {
+            try {
+                GrindrPlus.httpClient.updateLocation(geohash)
+            } catch (e: Exception) {
+                Logger.e("Error sending geohash to API: ${e.message}")
+            }
+        }
+
+        if (!silent)
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+    }
 
     private fun getRandomGarbageUserAgent(): String {
         val randomPlatform =

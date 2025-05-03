@@ -180,6 +180,30 @@ class Client(interceptor: Interceptor) {
         }
     }
 
+    fun updateLocation(geohash: String) {
+        val body = """
+            {
+                "geohash": "$geohash"
+            }
+        """.trimIndent()
+
+        GrindrPlus.executeAsync {
+            val response = sendRequest(
+                "https://grindr.mobi/v4/location",
+                "PUT",
+                body = body.toRequestBody(),
+                headers = mapOf("Content-Type" to "application/json; charset=UTF-8")
+            )
+            if (response.isSuccessful) {
+                showToast(Toast.LENGTH_LONG, "Location updated successfully")
+            } else {
+                response.useBody { errorBody ->
+                    showToast(Toast.LENGTH_LONG, "Failed to update location: $errorBody")
+                }
+            }
+        }
+    }
+
     fun reportUser(
         profileId: String,
         reason: String = "SPAM",

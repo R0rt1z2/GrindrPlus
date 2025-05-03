@@ -147,6 +147,13 @@ object Utils {
         }
     }
 
+    fun coordsToGeoHash(lat: Double, lon: Double, precision: Int = 12): String {
+        return GrindrPlus.loadClass("ch.hsr.geohash.GeoHash")
+            .getMethod("geoHashStringWithCharacterPrecision",
+                Double::class.java, Double::class.java, Int::class.java)
+            .invoke(null, lat, lon, precision) as String
+    }
+
     @SuppressLint("SetTextI18n")
     fun showProgressDialog(
         context: Context,
