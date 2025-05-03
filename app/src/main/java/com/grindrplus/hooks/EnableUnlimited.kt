@@ -2,7 +2,10 @@ package com.grindrplus.hooks
 
 import android.annotation.SuppressLint
 import android.view.View
+import android.widget.Toast
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Logger
+import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -11,6 +14,7 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
+    private val paywallUtils = "Qb.d" // search for 'app_restart_required'
     private val persistentAdBannerContainer = "m6.s3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
     private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
@@ -85,6 +89,31 @@ class EnableUnlimited : Hook(
                 val rootView = param.arg<View>(0)
                 hideViews(rootView, listOf("persistent_banner_ad_container"))
             }
+        }
+
+        findClass(paywallUtils).hook("e", HookStage.BEFORE) { param ->
+            val stackTrace = Thread.currentThread().stackTrace.dropWhile {
+                !it.toString().contains("LSPHooker") }.drop(1).joinToString("\n")
+
+            android.app.AlertDialog.Builder(GrindrPlus.currentActivity)
+                .setTitle("Paywalled Feature Detected")
+                .setMessage(
+                    "This feature is server-enforced and cannot be bypassed in this version.\n\n" +
+                            "If you think this is a mistake, please report it to the developer. " +
+                            "You can copy the stack trace below to help with troubleshooting."
+                )
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setCancelable(false)
+                .setNegativeButton("Copy Stack Trace") { _, _ ->
+                    copyToClipboard(
+                        "Stack trace",
+                        stackTrace
+                    )
+                }
+                .setPositiveButton("Ok", null)
+                .show()
+
+            param.setResult(null)
         }
 
         // search for 'variantName, "treatment_exact_count") ?'
