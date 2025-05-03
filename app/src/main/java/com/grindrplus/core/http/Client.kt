@@ -223,7 +223,8 @@ class Client(interceptor: Interceptor) {
             val response = sendRequest(
                 "https://grindr.mobi/v3.1/flags/$profileId",
                 "POST",
-                body = body.toRequestBody()
+                body = body.toRequestBody(),
+                headers = mapOf("Content-Type" to "application/json; charset=UTF-8")
             )
 
             if (response.isSuccessful) {
