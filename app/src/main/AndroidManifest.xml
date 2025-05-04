@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
             android:allowBackup="true"
@@ -34,9 +35,10 @@
                 android:value="com.grindrapp.android" />
 
         <service
-                android:name=".bridge.BridgeService"
-                android:exported="true"
-                tools:ignore="ExportedService">
+            android:name=".bridge.BridgeService"
+            android:exported="true"
+            android:foregroundServiceType="dataSync"
+            tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
                 <category android:name="android.intent.category.OPENABLE" />

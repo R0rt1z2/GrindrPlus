@@ -37,6 +37,7 @@ class BridgeService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        startForeground()
         Logger.i("BridgeService created", LogSource.BRIDGE)
 
         Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND)
@@ -81,6 +82,37 @@ class BridgeService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Logger.i("BridgeService started", LogSource.BRIDGE)
         return START_STICKY
+    }
+
+    private fun startForeground() {
+        val channelId = "bridge_service_channel"
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        val channel = NotificationChannel(
+            channelId,
+            "GrindrPlus Background Service",
+            NotificationManager.IMPORTANCE_MIN
+        ).apply {
+            description = "Keeps GrindrPlus running in background. " +
+                    "You can disable this notification in Android settings."
+            setShowBadge(false)
+            setSound(null, null)
+            enableLights(false)
+            enableVibration(false)
+        }
+        notificationManager.createNotificationChannel(channel)
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("GrindrPlus")
+            .setContentText("Background service active")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setOngoing(true)
+            .setShowWhen(false)
+            .build()
+
+        startForeground(1001, notification)
     }
 
     private val binder = object : IBridgeService.Stub() {
