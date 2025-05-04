@@ -357,18 +357,6 @@ class SettingsViewModel(
                         }
                     ),
                     SwitchSetting(
-                        id = "enable_watchdog_service",
-                        title = "Keep Grindr Plus alive",
-                        description = "Keep Grindr Plus alive in the background (may drain battery)",
-                        isChecked = Config.get("watchdog_service", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("enable_watchdog_service", it)
-                                loadSettings()
-                            }
-                        }
-                    ),
-                    SwitchSetting(
                         id = "disable_permission_checks",
                         title = "Disable permission checks",
                         description = "Disable permission checks on startup (not recommended)",
