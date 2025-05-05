@@ -318,15 +318,10 @@ fun LogsViewer(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-    val shouldScrollToBottom by remember {
-        derivedStateOf {
-            logs.isNotEmpty()
-        }
-    }
 
-    LaunchedEffect(logs.size, shouldScrollToBottom) {
-        if (shouldScrollToBottom && logs.isNotEmpty()) {
-            listState.animateScrollToItem(logs.size - 1)
+    LaunchedEffect(logs.size) {
+        if (logs.isNotEmpty()) {
+            listState.scrollToItem(logs.size - 1)
         }
     }
 
