@@ -16,6 +16,9 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
 import com.grindrplus.core.LogSource
+import com.grindrplus.core.TaskScheduler
+import com.grindrplus.utils.TaskManager
+import com.grindrplus.core.Utils.coordsToGeoHash
 import com.grindrplus.core.Utils.handleImports
 import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
@@ -23,6 +26,7 @@ import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import dalvik.system.DexClassLoader
+import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,8 +101,11 @@ object GrindrPlus {
     private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
         "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    internal val grindrLocationProvider = "n8.d" // search for 'system settings insufficient for location request, attempting to resolve'
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val taskScheduer = TaskScheduler(ioScope)
+    internal val taskManager = TaskManager(taskScheduer)
     private var currentActivityRef: WeakReference<Activity>? = null
 
     private val splineDataEndpoint =
@@ -187,6 +194,7 @@ object GrindrPlus {
                 userAgent,
                 userSession,
                 deviceInfo,
+                grindrLocationProvider
             )
 
             instanceManager.setCallback(userSession) { uSession ->
@@ -194,6 +202,7 @@ object GrindrPlus {
                 instanceManager.setCallback(userAgent) { uAgent ->
                     instanceManager.setCallback(deviceInfo) { dInfo ->
                         httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+                        taskManager.registerTasks() // Tasks require httpClient
                     }
                 }
             }
@@ -231,6 +240,7 @@ object GrindrPlus {
 
         hookManager.init()
     }
+
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
         val useContext = appContext ?: context

@@ -237,6 +237,54 @@ class Client(interceptor: Interceptor) {
         }
     }
 
+    suspend fun fetchCascade(
+        nearbyGeoHash: String,
+        onlineOnly: Boolean = false,
+        photoOnly: Boolean = false,
+        faceOnly: Boolean = false,
+        notRecentlyChatted: Boolean = false,
+        fresh: Boolean = false,
+        pageNumber: Int = 1,
+        favorites: Boolean = false,
+        showSponsoredProfiles: Boolean = false,
+        shuffle: Boolean = false
+    ): JSONObject = withContext(Dispatchers.IO) {
+        try {
+            val url = buildString {
+                append("https://grindr.mobi/v3/cascade?nearbyGeoHash=$nearbyGeoHash")
+                append("&onlineOnly=$onlineOnly")
+                append("&photoOnly=$photoOnly")
+                append("&faceOnly=$faceOnly")
+                append("&notRecentlyChatted=$notRecentlyChatted")
+                append("&fresh=$fresh")
+                append("&pageNumber=$pageNumber")
+                append("&favorites=$favorites")
+                append("&showSponsoredProfiles=$showSponsoredProfiles")
+                append("&shuffle=$shuffle")
+            }
+
+            val response = sendRequest(url, "GET")
+            if (response.isSuccessful) {
+                response.useBody { responseBody ->
+                    if (!responseBody.isNullOrEmpty()) {
+                        return@withContext JSONObject(responseBody)
+                    }
+                    JSONObject()
+                }
+            } else {
+                Logger.e("Failed to get nearby profiles: ${response.code}")
+                response.useBody { errorBody ->
+                    Logger.e("Error body: $errorBody")
+                }
+                JSONObject()
+            }
+        } catch (e: Exception) {
+            Logger.e("Failed to get nearby profiles: ${e.message}")
+            Logger.writeRaw(e.stackTraceToString())
+            JSONObject()
+        }
+    }
+
     suspend fun getBlocks(): List<String> = withContext(Dispatchers.IO) {
         try {
             val response = sendRequest("https://grindr.mobi/v3.1/me/blocks", "GET")

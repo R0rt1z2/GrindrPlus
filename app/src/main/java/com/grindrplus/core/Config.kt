@@ -184,6 +184,55 @@ object Config {
         return hooks.optJSONObject(hookName)?.getBoolean("enabled") == true
     }
 
+    fun setTaskEnabled(taskId: String, enabled: Boolean) {
+        Logger.d("Setting task $taskId to $enabled", LogSource.MANAGER)
+        val packageConfig = getCurrentPackageConfig()
+        val tasks = packageConfig.optJSONObject("tasks")
+            ?: JSONObject().also { packageConfig.put("tasks", it) }
+
+        tasks.optJSONObject(taskId)?.put("enabled", enabled)
+        writeRemoteConfig(localConfig)
+    }
+
+    fun isTaskEnabled(taskId: String): Boolean {
+        Logger.d("Checking if task $taskId is enabled", LogSource.MANAGER)
+        val packageConfig = getCurrentPackageConfig()
+        val tasks = packageConfig.optJSONObject("tasks") ?: return false
+        return tasks.optJSONObject(taskId)?.getBoolean("enabled") == true
+    }
+
+    fun getTasksSettings(): Map<String, Pair<String, Boolean>> {
+        Logger.d("Getting tasks settings", LogSource.MANAGER)
+        val packageConfig = getCurrentPackageConfig()
+        val tasks = packageConfig.optJSONObject("tasks") ?: return emptyMap()
+        val map = mutableMapOf<String, Pair<String, Boolean>>()
+
+        val keys = tasks.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val obj = tasks.getJSONObject(key)
+            map[key] = Pair(obj.getString("description"), obj.getBoolean("enabled"))
+        }
+
+        return map
+    }
+
+    fun initTaskSettings(taskId: String, description: String, state: Boolean) {
+        Logger.d("Initializing task settings for $taskId", LogSource.MANAGER)
+        val packageConfig = getCurrentPackageConfig()
+        val tasks = packageConfig.optJSONObject("tasks")
+            ?: JSONObject().also { packageConfig.put("tasks", it) }
+
+        if (tasks.optJSONObject(taskId) == null) {
+            tasks.put(taskId, JSONObject().apply {
+                put("description", description)
+                put("enabled", state)
+            })
+
+            writeRemoteConfig(localConfig)
+        }
+    }
+
     fun initHookSettings(name: String, description: String, state: Boolean) {
         Logger.d("Initializing hook settings for $name", LogSource.MANAGER)
         val packageConfig = getCurrentPackageConfig()

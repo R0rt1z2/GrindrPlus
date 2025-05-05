@@ -87,6 +87,22 @@ class SettingsViewModel(
                     )
                 }
 
+                val tasks = Config.getTasksSettings()
+                val taskSettings = tasks.map { (taskId, pair) ->
+                    SwitchSetting(
+                        id = taskId,
+                        title = taskId,
+                        description = pair.first,
+                        isChecked = pair.second,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.setTaskEnabled(taskId, it)
+                                loadSettings()
+                            }
+                        }
+                    )
+                }
+
                 val otherSettings = mutableListOf(
                     TextSetting(
                         id = "command_prefix",
@@ -390,6 +406,11 @@ class SettingsViewModel(
                         id = "hooks",
                         title = "Manage Hooks",
                         settings = hookSettings
+                    ),
+                    SettingGroup(
+                        id = "tasks",
+                        title = "Manage Tasks",
+                        settings = taskSettings
                     ),
                     SettingGroup(
                         id = "other",
