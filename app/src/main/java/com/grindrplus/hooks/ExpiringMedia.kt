@@ -2,6 +2,9 @@ package com.grindrplus.hooks
 
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Logger
+import com.grindrplus.core.logd
+import com.grindrplus.core.loge
+import com.grindrplus.core.logi
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookAdapter
 import com.grindrplus.utils.HookStage
@@ -82,13 +85,13 @@ class ExpiringMedia : Hook(
         val mediaTypeStr = if (mediaType == MediaType.IMAGE) "photo" else "video"
 
         filePathCache[mediaId]?.let { cachedPath ->
-            Logger.d("Using cached $mediaTypeStr path: $cachedPath")
+            logd("Using cached $mediaTypeStr path: $cachedPath")
             param.setResult(cachedPath)
             return
         }
 
         MediaUtils.getMediaFileUrl(mediaId, mediaType)?.let { existingFilePath ->
-            Logger.d("Using existing saved $mediaTypeStr: $existingFilePath")
+            logd("Using existing saved $mediaTypeStr: $existingFilePath")
             filePathCache[mediaId] = existingFilePath
             param.setResult(existingFilePath)
             return
@@ -97,20 +100,20 @@ class ExpiringMedia : Hook(
         if (!originalUrl.isNullOrEmpty() && !originalUrl.startsWith("file://")) {
             coroutineScope.launch {
                 try {
-                    Logger.d("Downloading $mediaTypeStr from URL: ${originalUrl.take(50)}...")
+                    logd("Downloading $mediaTypeStr from URL: ${originalUrl.take(50)}...")
 
                     MediaUtils.downloadMedia(originalUrl).fold(
                         onSuccess = { mediaData ->
-                            Logger.i("$mediaTypeStr downloaded: ${mediaData.size} bytes")
+                            logi("$mediaTypeStr downloaded: ${mediaData.size} bytes")
                             saveMediaAndUpdateUrl(param, mediaId, mediaData, mediaType)
                         },
                         onFailure = { error ->
-                            Logger.e("Failed to download $mediaTypeStr: ${error.message}")
+                            loge("Failed to download $mediaTypeStr: ${error.message}")
                             param.setResult(originalUrl)
                         }
                     )
                 } catch (e: Exception) {
-                    Logger.e("Error processing expiring $mediaTypeStr: ${e.message}")
+                    loge("Error processing expiring $mediaTypeStr: ${e.message}")
                     Logger.writeRaw(e.stackTraceToString())
                     param.setResult(originalUrl)
                 }
@@ -129,7 +132,7 @@ class ExpiringMedia : Hook(
 
         MediaUtils.saveMedia(mediaId, mediaData, mediaType, fileExtension).fold(
             onSuccess = { filePath ->
-                Logger.i("Saved $mediaTypeStr permanently for mediaId: $mediaId")
+                logi("Saved $mediaTypeStr permanently for mediaId: $mediaId")
                 filePathCache[mediaId] = filePath
 
                 withContext(Dispatchers.Main) {
@@ -137,7 +140,7 @@ class ExpiringMedia : Hook(
                 }
             },
             onFailure = { error ->
-                Logger.e("Failed to save $mediaTypeStr: ${error.message}")
+                loge("Failed to save $mediaTypeStr: ${error.message}")
 
                 val originalUrl = getObjectField(param.thisObject(), "url")?.toString()
                 if (!originalUrl.isNullOrEmpty()) {

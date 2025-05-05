@@ -12,6 +12,10 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.core.constants.GrindrApiError
 import com.grindrplus.core.constants.GrindrApiError.Companion.getErrorDescription
+import com.grindrplus.core.logd
+import com.grindrplus.core.loge
+import com.grindrplus.core.logi
+import com.grindrplus.core.logw
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
@@ -66,7 +70,6 @@ class BanManagement : Hook(
         findClass(deviceUtility).hook("g", HookStage.AFTER) { param ->
             val androidId = Config.get("android_device_id", "") as String
             if (androidId.isNotEmpty()) {
-                Logger.d("Spoofing Android ID to $androidId...")
                 param.setResult(androidId)
             }
         }
@@ -88,7 +91,6 @@ class BanManagement : Hook(
             .hook("onViewCreated", HookStage.AFTER) { param ->
                 try {
                     val view = param.args()[0] as View
-                    Logger.i("BannedFragment: onViewCreated called")
                     val context = view.context
 
                     val manageSubscriptionId = context.resources.getIdentifier("manage_subscription", "id", context.packageName)
@@ -117,7 +119,7 @@ class BanManagement : Hook(
                             val verticalPadding = dpToPx(context, 14)
                             safeCallMethod(newButton, "setPadding", horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
                         } catch (e: Exception) {
-                            Logger.e("Error copying padding: ${e.message}")
+                            loge("Error copying padding: ${e.message}")
                         }
 
                         safeCallMethod(newButton, "setCornerRadius", safeCallMethod(manageSubscriptionButton, "getCornerRadius"))
@@ -142,7 +144,8 @@ class BanManagement : Hook(
                         buttonLayout.addView(newButton)
                     }
                 } catch (e: Exception) {
-                    Logger.e("BannedFragment: Error in hook: ${e.message}")
+                    loge("BannedFragment: Error in hook: ${e.message}")
+                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
     }
@@ -152,13 +155,13 @@ class BanManagement : Hook(
             val body = JSONObject(getObjectField(
                 result.getFailValue(), "b") as String)
             if (body.has("reason")) {
-                Logger.i("Intercepted a banned response!")
+                logi("Intercepted a banned response!")
                 bannedInfo = body
             } else {
-                Logger.w("User is not banned, but failed to login?")
+                logw("User is not banned, but failed to login?")
             }
         } else {
-            Logger.d("User is not banned, login should be successful")
+            logd("User is not banned, login should be successful")
         }
     }
 
@@ -248,7 +251,7 @@ class BanManagement : Hook(
         return try {
             XposedHelpers.callMethod(obj, methodName, *args)
         } catch (e: Exception) {
-            Logger.e("Failed to call method: $methodName: ${e.message}")
+            loge("Failed to call method: $methodName: ${e.message}")
             null
         }
     }

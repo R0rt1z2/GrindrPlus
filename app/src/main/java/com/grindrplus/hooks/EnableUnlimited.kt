@@ -2,9 +2,10 @@ package com.grindrplus.hooks
 
 import android.annotation.SuppressLint
 import android.view.View
-import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Logger
+import com.grindrplus.core.logd
+import com.grindrplus.core.loge
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
@@ -131,17 +132,18 @@ class EnableUnlimited : Hook(
                 if (id > 0) {
                     val view = rootView.findViewById<View>(id)
                     if (view != null) {
-                        Logger.d("View with ID: $viewId found and will be hidden")
+                        logd("View with ID: $viewId found and will be hidden")
                         val params = view.layoutParams
                         params.height = 0
                         view.layoutParams = params
                         view.visibility = View.GONE
                     }
                 } else {
-                    Logger.d("View with ID: $viewId not found")
+                    logd("View with ID: $viewId not found")
                 }
             } catch (e: Exception) {
-                Logger.e("Error hiding view with ID: $viewId: ${e.message}")
+                loge("Error hiding view with ID: $viewId: ${e.message}")
+                Logger.writeRaw(e.stackTraceToString())
             }
         }
     }

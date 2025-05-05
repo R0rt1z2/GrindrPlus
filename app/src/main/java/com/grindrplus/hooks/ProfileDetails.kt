@@ -11,6 +11,7 @@ import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.h2n
 import com.grindrplus.core.Utils.w2n
+import com.grindrplus.core.logw
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
 import com.grindrplus.utils.Hook
@@ -175,7 +176,7 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
                     )
                 if (Config.get("do_gui_safety_checks", true) as Boolean) {
                     if (weight.toString().contains("(")) {
-                        Logger.w("BMI details are already present?")
+                        logw("BMI details are already present?")
                         return@hook
                     }
                 }

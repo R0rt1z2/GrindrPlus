@@ -6,6 +6,8 @@ import com.grindrplus.bridge.BridgeService
 import com.grindrplus.core.Config
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Logger
+import com.grindrplus.core.logd
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -50,7 +52,7 @@ class AntiBlock : Hook(
                 .hook("d", HookStage.AFTER) { param ->
                     val numberOfChatsToDelete = (param.args().firstOrNull() as? List<*>)?.size ?: 0
                     if (numberOfChatsToDelete == 0) return@hook
-                    Logger.d("Request to delete $numberOfChatsToDelete chats")
+                    logd("Request to delete $numberOfChatsToDelete chats")
                     Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
                     GrindrPlus.shouldTriggerAntiblock = true
                     GrindrPlus.blockCaller = ""
@@ -88,11 +90,8 @@ class AntiBlock : Hook(
                             return@hook
                         }
                     } catch(e: Exception) {
-                        val message = "Error checking if user is blocked: ${e.message}"
-                        Logger.apply {
-                            e(message)
-                            writeRaw(e.stackTraceToString())
-                        }
+                        loge("Error checking if user is blocked: ${e.message}")
+                        Logger.writeRaw(e.stackTraceToString())
                     }
 
                     try {
@@ -100,11 +99,8 @@ class AntiBlock : Hook(
                         handleProfileResponse(otherProfileId, conversationId, response)
                         param.setResult(null)
                     } catch (e: Exception) {
-                        val message = "Error handling block/unblock request: ${e.message ?: "Unknown error"}"
-                        Logger.apply {
-                            e(message)
-                            writeRaw(e.stackTraceToString())
-                        }
+                        loge("Error handling block/unblock request: ${e.message ?: "Unknown error"}")
+                        Logger.writeRaw(e.stackTraceToString())
                     }
                 }
             }
@@ -138,10 +134,8 @@ class AntiBlock : Hook(
                     ).firstOrNull()?.get("name") as? String)?.takeIf {
                             name -> name.isNotEmpty() } ?: profileId.toString()
                 } catch (e: Exception) {
-                    Logger.apply {
-                        e("Error fetching display name: ${e.message}")
-                        writeRaw(e.stackTraceToString())
-                    }
+                    loge("Error fetching display name: ${e.message}")
+                    Logger.writeRaw(e.stackTraceToString())
                     displayName = profileId.toString()
                 }
                 displayName = if (displayName == profileId.toString() || displayName == "null")
@@ -189,11 +183,8 @@ class AntiBlock : Hook(
                 return false
             }
         } catch (e: Exception) {
-            val message = "Error handling profile response: ${e.message ?: "Unknown error"}"
-            Logger.apply {
-                e(message)
-                writeRaw(e.stackTraceToString())
-            }
+            loge("Error handling profile response: ${e.message ?: "Unknown error"}")
+            Logger.writeRaw(e.stackTraceToString())
             return false
         }
     }

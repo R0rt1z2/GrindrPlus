@@ -2,6 +2,8 @@ package com.grindrplus.hooks
 
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Logger
+import com.grindrplus.core.logd
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -64,17 +66,15 @@ class DisableUpdates : Hook(
                     val json = JSONObject(jsonData)
                     versionCode = json.getInt("versionCode")
                     versionName = json.getString("versionName")
-                    Logger.d("Successfully fetched version info: $versionName ($versionCode)")
+                    logd("Successfully fetched version info: $versionName ($versionCode)")
                     updateVersionInfo()
                 }
             } else {
                 Logger.e("Failed to fetch version info: ${response.message}")
             }
         } catch (e: Exception) {
-            Logger.apply {
-                e("Error fetching version info: ${e.message}")
-                writeRaw(e.stackTraceToString())
-            }
+            loge("Error fetching version info: ${e.message}")
+            Logger.writeRaw(e.stackTraceToString())
         }
     }
 

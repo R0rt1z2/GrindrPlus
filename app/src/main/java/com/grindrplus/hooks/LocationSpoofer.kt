@@ -30,6 +30,7 @@ import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
+import com.grindrplus.core.logw
 import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
@@ -103,7 +104,7 @@ class LocationSpoofer : Hook(
             }
 
             if (locationButtonExists) {
-                Logger.w("Location button already exists?")
+                logw("Location button already exists?")
                 return@hookConstructor
             }
 

@@ -4,6 +4,7 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.core.Logger
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -91,7 +92,6 @@ class UnlimitedProfiles : Hook(
                     }
 
                     if (missingProfiles.isNotEmpty()) {
-                        Logger.d("Found ${missingProfiles.size} missing profiles!")
                         val result = ArrayList<Any>(profilesWithPhoto.size + missingProfiles.size)
                         result.addAll(profilesWithPhoto)
                         result.addAll(missingProfiles)
@@ -116,7 +116,7 @@ class UnlimitedProfiles : Hook(
                             openProfile(profileId)
                             param.setResult(null)
                         }
-                        .onFailure { Logger.e("Profile ID not found in cached profile") }
+                        .onFailure { loge("Profile ID not found in cached profile") }
                 }
             }
         }

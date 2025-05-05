@@ -117,7 +117,7 @@ class Favorites : Hook(
 
                         val displayNameLayoutParams = profileDisplayName
                             .layoutParams as LinearLayout.LayoutParams
-                        if (profileNoteIcon.visibility == View.GONE) {
+                        if (profileNoteIcon.isGone) {
                             displayNameLayoutParams.topMargin = 0
                         } else {
                             displayNameLayoutParams.topMargin = TypedValue.applyDimension(
