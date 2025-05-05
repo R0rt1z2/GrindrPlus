@@ -24,6 +24,7 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
+import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,7 @@ class HookManager {
     fun registerHooks(init: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
+                TimberLogging(),
                 BanManagement(),
                 FeatureGranting(),
                 EnableUnlimited(),
