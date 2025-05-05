@@ -98,10 +98,11 @@ object GrindrPlus {
         get() = currentActivityRef?.get()
 
     private val userAgent = "u6.f" // search for 'grindr3/'
-    private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    internal val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
         "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     internal val grindrLocationProvider = "n8.d" // search for 'system settings insufficient for location request, attempting to resolve'
+    internal val refreshSessionUseCases = "s8.Y0" // search for 'JoinPreviousOrRun(name='
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val taskScheduer = TaskScheduler(ioScope)
@@ -194,7 +195,8 @@ object GrindrPlus {
                 userAgent,
                 userSession,
                 deviceInfo,
-                grindrLocationProvider
+                grindrLocationProvider,
+                refreshSessionUseCases
             )
 
             instanceManager.setCallback(userSession) { uSession ->

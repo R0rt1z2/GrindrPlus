@@ -16,6 +16,7 @@ import com.grindrplus.GrindrPlus.httpClient
 import com.grindrplus.GrindrPlus.isImportingSomething
 import com.grindrplus.GrindrPlus.shouldTriggerAntiblock
 import com.grindrplus.core.Constants.NEWLINE
+import de.robv.android.xposed.XposedHelpers.callMethod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -152,6 +153,21 @@ object Utils {
             .getMethod("geoHashStringWithCharacterPrecision",
                 Double::class.java, Double::class.java, Int::class.java)
             .invoke(null, lat, lon, precision) as String
+    }
+
+    fun updateLocalSession() {
+        val refreshSessionUseCases =
+            GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.refreshSessionUseCases)!!
+        val userSessionInstance = GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.userSession)!!
+
+        val sessionIdFlow = callMethod(userSessionInstance, "s") as Any
+        val sessionId = callMethod(sessionIdFlow, "getValue") as Any
+        val authToken = callMethod(userSessionInstance, "getAuthToken") as String
+
+        val sessionRefreshData =
+            GrindrPlus.loadClass("s8.a1").constructors.first().newInstance(sessionId, authToken)
+
+        callMethod(refreshSessionUseCases, "e", sessionRefreshData, authToken, sessionId)
     }
 
     @SuppressLint("SetTextI18n")
