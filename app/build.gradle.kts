@@ -22,7 +22,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 14
-        versionName = "4.1.3-${grindrVersionName.joinToString("_")}_$gitCommitHash"
+        versionName = "4.1.4-${grindrVersionName.joinToString("_")}_$gitCommitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
