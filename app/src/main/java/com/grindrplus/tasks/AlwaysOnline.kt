@@ -1,9 +1,9 @@
 package com.grindrplus.tasks
 
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.CoroutineHelper.callSuspendFunction
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils.coordsToGeoHash
-import com.grindrplus.core.Utils.updateLocalSession
 import com.grindrplus.core.loge
 import com.grindrplus.core.logi
 import com.grindrplus.utils.Task
@@ -14,10 +14,12 @@ class AlwaysOnline :
         id = "Always Online",
         description = "Keeps you online by periodically fetching cascade",
         initialDelayMillis = 30 * 1000,
-        intervalMillis = 10 * 60 * 1000
+        intervalMillis = 5 * 60 * 1000
     ) {
     override suspend fun execute() {
         try {
+            val serverDrivenCascadeRepoInstance =
+                GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.serverDrivenCascadeRepo)
             val grindrLocationProviderInstance =
                 GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.grindrLocationProvider)
 
@@ -26,26 +28,36 @@ class AlwaysOnline :
             val longitude = callMethod(location, "getLongitude") as Double
             val geoHash = coordsToGeoHash(latitude, longitude)
 
-            var result = GrindrPlus.httpClient.fetchCascade(geoHash)
+            val methodName = "fetchCascadePage"
+            val method =
+                serverDrivenCascadeRepoInstance!!.javaClass.methods.firstOrNull {
+                    it.name == methodName
+                } ?: throw IllegalStateException("Unable to find $methodName method")
 
-            if (result.length() == 0) {
-                logi("Empty result received, attempting to refresh session...")
+            val params = arrayOf<Any?>(
+                geoHash,
+                null,
+                false, false, false, false,
+                null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                false,
+                1,
+                null, null,
+                false, false, false,
+                null,
+                "v3"
+            )
 
-                updateLocalSession()
-                result = GrindrPlus.httpClient.fetchCascade(geoHash)
-
-                if (result.length() == 0) {
-                    loge("Failed to fetch cascade even after session update")
-                    return
-                }
+            val result = callSuspendFunction { continuation ->
+                method.invoke(serverDrivenCascadeRepoInstance, *params, continuation)
             }
 
-            if (result.has("items")) {
-                val profileCount = result.optJSONArray("items")?.length() ?: 0
-                logi("Fetched $profileCount profiles")
+            if (result.toString().contains("Success")) {
+                logi("AlwaysOnline task executed successfully")
             } else {
-                loge("Failed to fetch cascade: no items found")
-                Logger.writeRaw(result.toString())
+                loge("AlwaysOnline task failed: $result")
             }
         } catch (e: Exception) {
             loge("Error in AlwaysOnline task: ${e.message}")

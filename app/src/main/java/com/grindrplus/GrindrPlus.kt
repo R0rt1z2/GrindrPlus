@@ -18,7 +18,6 @@ import com.grindrplus.core.Logger
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.TaskScheduler
 import com.grindrplus.utils.TaskManager
-import com.grindrplus.core.Utils.coordsToGeoHash
 import com.grindrplus.core.Utils.handleImports
 import com.grindrplus.core.http.Client
 import com.grindrplus.core.http.Interceptor
@@ -26,7 +25,6 @@ import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import dalvik.system.DexClassLoader
-import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +101,7 @@ object GrindrPlus {
         "i4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     internal val grindrLocationProvider = "n8.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val refreshSessionUseCases = "s8.Y0" // search for 'JoinPreviousOrRun(name='
+    internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val taskScheduer = TaskScheduler(ioScope)
@@ -196,7 +195,8 @@ object GrindrPlus {
                 userSession,
                 deviceInfo,
                 grindrLocationProvider,
-                refreshSessionUseCases
+                refreshSessionUseCases,
+                serverDrivenCascadeRepo
             )
 
             instanceManager.setCallback(userSession) { uSession ->
