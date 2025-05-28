@@ -73,7 +73,7 @@ abstract class Task(
         Config.initTaskSettings(
             id,
             description,
-            false // disabled by default
+            true // disabled by default
         )
     }
 }

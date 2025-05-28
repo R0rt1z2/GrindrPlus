@@ -8,8 +8,8 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 object RetrofitUtils {
-    const val FAIL_CLASS_NAME = "d9.a\$a"
-    const val SUCCESS_CLASS_NAME = "d9.a\$b"
+    const val FAIL_CLASS_NAME = "A9.a\$a"
+    const val SUCCESS_CLASS_NAME = "A9.a\$b"
     const val SUCCESS_VALUE_NAME = "a"
     const val RETROFIT_NAME = "retrofit2.Retrofit"
 

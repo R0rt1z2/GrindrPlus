@@ -16,10 +16,10 @@ class EnableUnlimited : Hook(
     "Enable Grindr Unlimited features"
 ) {
     private val paywallUtils = "Qb.d" // search for 'app_restart_required'
-    private val persistentAdBannerContainer = "m6.s3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
-    private val userSession = "Bb.o0" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val persistentAdBannerContainer = "m6.o3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
+    private val userSession = "qc.V" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
-        "K5.O\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
+        "J5.E\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
     )
     private val viewsToHide = mapOf(
         "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$c" to listOf("upsell_bottom_bar"), // search for 'bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/ProfileTagCascadeFragmentBinding;'
@@ -33,31 +33,31 @@ class EnableUnlimited : Hook(
         val userSessionClass = findClass(userSession)
 
         userSessionClass.hook( // isNoXtraUpsell()
-            "l", HookStage.BEFORE // search for '()) ? false : true;' in userSession
+            "k", HookStage.BEFORE // search for '()) ? false : true;' in userSession
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isNoPlusUpsell()
-            "G", HookStage.BEFORE // search for 'Role.PLUS, Role.FREE_PLUS' in userSession
+            "H", HookStage.BEFORE // search for 'Role.PLUS, Role.FREE_PLUS' in userSession
         ) { param ->
             param.setResult(true)
         }
 
         userSessionClass.hook( // isFree()
-            "y", HookStage.BEFORE // search for '.isEmpty();' in userSession
+            "x", HookStage.BEFORE // search for '.isEmpty();' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "u", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
+            "t", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeUnlimited()
-            "E", HookStage.BEFORE // search for 'Role.UNLIMITED, Role.FREE_UNLIMITED' in userSession
+            "F", HookStage.BEFORE // search for 'Role.UNLIMITED, Role.FREE_UNLIMITED' in userSession
         ) { param ->
             param.setResult(true)
         }
@@ -118,7 +118,7 @@ class EnableUnlimited : Hook(
         }
 
         // search for 'variantName, "treatment_exact_count") ?'
-        findClass("a2.a").hook("b", HookStage.BEFORE) { param ->
+        findClass("W1.a").hook("b", HookStage.BEFORE) { param ->
            param.setResult(false)
         }
     }

@@ -8,7 +8,7 @@ class NotificationAlerts : Hook(
     "Notification Alerts",
     "Disable all Grindr warnings related to notifications"
 ) {
-    private val notificationManager = "J7.f" // search for '0L, "notification_reminder_time"'
+    private val notificationManager = "e8.c" // search for '0L, "notification_reminder_time"'
 
     override fun init() {
         findClass(notificationManager)

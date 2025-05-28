@@ -155,21 +155,6 @@ object Utils {
             .invoke(null, lat, lon, precision) as String
     }
 
-    fun updateLocalSession() {
-        val refreshSessionUseCases =
-            GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.refreshSessionUseCases)!!
-        val userSessionInstance = GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.userSession)!!
-
-        val sessionIdFlow = callMethod(userSessionInstance, "s") as Any
-        val sessionId = callMethod(sessionIdFlow, "getValue") as Any
-        val authToken = callMethod(userSessionInstance, "getAuthToken") as String
-
-        val sessionRefreshData =
-            GrindrPlus.loadClass("s8.a1").constructors.first().newInstance(sessionId, authToken)
-
-        callMethod(refreshSessionUseCases, "e", sessionRefreshData, authToken, sessionId)
-    }
-
     @SuppressLint("SetTextI18n")
     fun showProgressDialog(
         context: Context,

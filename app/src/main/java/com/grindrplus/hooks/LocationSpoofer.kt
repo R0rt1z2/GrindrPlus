@@ -53,7 +53,6 @@ class LocationSpoofer : Hook(
 
     override fun init() {
         val locationClass = findClass(location)
-        val appConfigurationClass = findClass(appConfiguration)
 
         if (Build.VERSION.SDK_INT >= 31) {
             locationClass.hook(

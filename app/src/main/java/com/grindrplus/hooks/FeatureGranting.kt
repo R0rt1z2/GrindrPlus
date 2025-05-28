@@ -14,13 +14,12 @@ class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val featureFlagManager = "u7.d" // search for 'experiments, @NotNull String featureFlagName,'
-    private val isFeatureFlagEnabled = "S9.b" // search for 'implements IsFeatureFlagEnabled {'
+    private val featureFlagManager = "J7.d" // search for 'experiments, @NotNull String featureFlagName,'
+    private val isFeatureFlagEnabled = "ya.b" // search for 'implements IsFeatureFlagEnabled {'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
-    private val expiringAlbumsExperiment = "O3.a" // search for '("SeeAlbumOptions", 1, "see-album-options")'
     private val favoritesExperiment = "com.grindrapp.android.favoritesv2.domain.experiment.FavoritesV2Experiment" // search for 'public final class FavoritesV2Experiment'
-    private val albumSpankBankExperiment = "c4.b" // search for 'spankBankExperiment'
+    private val albumSpankBankExperiment = "b4.b" // search for 'spankBankExperiment'
     private val settingDistanceVisibilityViewModel =
         "com.grindrapp.android.ui.settings.distance.a\$e" // search for 'UiState(distanceVisibility='
     private val featureModel = "com.grindrapp.android.usersession.model.Feature"
@@ -67,11 +66,6 @@ class FeatureGranting : Hook(
                     param.setResult(0)
                 }
         }
-
-        findClass(expiringAlbumsExperiment)
-            .hook("b", HookStage.BEFORE) { param ->
-                param.setResult(false)
-            }
 
         findClass(favoritesExperiment)
             .hook("e", HookStage.BEFORE) { param ->

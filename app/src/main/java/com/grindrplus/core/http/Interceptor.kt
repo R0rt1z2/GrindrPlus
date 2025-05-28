@@ -17,14 +17,14 @@ class Interceptor(
     private fun modifyRequest(originalRequest: Request): Request {
         try {
             // search for 'return value != null && value.length() > 0' in userSession
-            val isLoggedIn = invokeMethodSafe(userSession, "o") as Boolean
+            val isLoggedIn = invokeMethodSafe(userSession, "n") as Boolean
 
             // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
-            val authTokenFlow = invokeMethodSafe(userSession, "s")
+            val authTokenFlow = invokeMethodSafe(userSession, "r")
             val authToken = invokeMethodSafe(authTokenFlow, "getValue") as String
 
             // search for one line method returning an string in userSession
-            val roles = invokeMethodSafe(userSession, "A") as String
+            val roles = invokeMethodSafe(userSession, "z") as String
 
             // search for 'getValue().getNameTitleCase()' in userAgent
             val userAgent = invokeMethodSafe(userAgent, "a") as String

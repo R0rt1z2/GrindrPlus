@@ -39,9 +39,9 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
-    private val albumsService = "w4.a" // search for 'v1/albums/red-dot'
+    private val albumsService = "v4.a" // search for 'v1/albums/red-dot'
     private val albumsRepositoryImpl =
-        "I3.w" // search for '@DebugMetadata(c =
+        "M3.t" // search for '@DebugMetadata(c = "com.grindrapp.android.albums.AlbumsRepositoryImpl$refreshMyAlbums$1"'
     private val albumModel = "com.grindrapp.android.model.Album"
     private val filteredSpankBankAlbumContent =
         "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"

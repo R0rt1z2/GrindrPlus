@@ -10,7 +10,7 @@ class OnlineIndicator : Hook(
     "Online indicator",
     "Customize online indicator duration"
 ) {
-    val utils = "Ke.j0" // search for ' <= 600000;'
+    val utils = "Gf.k0" // search for ' <= 600000;'
 
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
