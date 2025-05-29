@@ -11,10 +11,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
 
-class TaskManager(private val scheduler: TaskScheduler) {
+class TaskManager(private val scheduler: TaskScheduler? = null) {
     private val tasks = mutableMapOf<KClass<out Task>, Task>()
 
-    fun registerTasks() {
+    fun registerTasks(startTasks: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val taskList = listOf(
                 AlwaysOnline(),
@@ -27,9 +27,12 @@ class TaskManager(private val scheduler: TaskScheduler) {
             tasks.clear()
             taskList.forEach { task ->
                 tasks[task::class] = task
-                if (Config.isTaskEnabled(task.id)) {
+
+                if (startTasks && task.isTaskEnabled()) {
                     task.start()
                     Logger.i("Started task: ${task.id}", LogSource.MODULE)
+                } else if (!startTasks) {
+                    Logger.i("Registered task: ${task.id}", LogSource.MODULE)
                 } else {
                     Logger.i("Task ${task.id} is disabled", LogSource.MODULE)
                 }
@@ -73,6 +76,8 @@ class TaskManager(private val scheduler: TaskScheduler) {
         intervalMillis: Long,
         action: suspend () -> Unit
     ): Job {
+        val scheduler = scheduler ?: error("TaskScheduler is not initialized")
+
         if (scheduler.isTaskRunning(taskId)) {
             scheduler.cancelTask(taskId)
         }
@@ -89,6 +94,7 @@ class TaskManager(private val scheduler: TaskScheduler) {
     }
 
     fun startOnceTask(taskId: String, action: suspend () -> Unit): Job {
+        val scheduler = scheduler ?: error("TaskScheduler is not initialized")
         return scheduler.once(taskId, action)
     }
 
@@ -98,14 +104,15 @@ class TaskManager(private val scheduler: TaskScheduler) {
         delayMs: Long = 1000,
         action: suspend () -> Unit
     ): Job {
+        val scheduler = scheduler ?: error("TaskScheduler is not initialized")
         return scheduler.withRetry(taskId, retries, delayMs, action)
     }
 
     fun isTaskRunning(taskId: String): Boolean {
-        return scheduler.isTaskRunning(taskId)
+        return scheduler?.isTaskRunning(taskId) ?: false
     }
 
     fun cancelTask(taskId: String) {
-        scheduler.cancelTask(taskId)
+        scheduler?.cancelTask(taskId)
     }
 }

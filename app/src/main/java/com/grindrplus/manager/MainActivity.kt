@@ -79,6 +79,7 @@ import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
 import com.grindrplus.manager.utils.FileOperationHandler
 import com.grindrplus.utils.HookManager
+import com.grindrplus.utils.TaskManager
 import com.onebusaway.plausible.android.AndroidResourcePlausibleConfig
 import com.onebusaway.plausible.android.NetworkFirstPlausibleClient
 import com.onebusaway.plausible.android.Plausible
@@ -240,6 +241,7 @@ class MainActivity : ComponentActivity() {
                     Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
                     Config.initialize()
                     HookManager().registerHooks(false)
+                    TaskManager().registerTasks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
                     serviceBound = true
 
