@@ -47,6 +47,7 @@ class Profile(
         unblock(listOf(profileId, "silent", "no-reflect"))
         Thread.sleep(200)
         openChat("$recipient:$profileId")
+        Thread.sleep(200)
         GrindrPlus.shouldTriggerAntiblock = true
     }
 
