@@ -8,6 +8,7 @@ import com.grindrplus.core.loge
 import com.grindrplus.core.logi
 import com.grindrplus.utils.Task
 import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.getObjectField
 
 class AlwaysOnline :
     Task(
@@ -23,7 +24,7 @@ class AlwaysOnline :
             val grindrLocationProviderInstance =
                 GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.grindrLocationProvider)
 
-            val location = callMethod(grindrLocationProviderInstance, "a")
+            val location = getObjectField(grindrLocationProviderInstance, "e")
             val latitude = callMethod(location, "getLatitude") as Double
             val longitude = callMethod(location, "getLongitude") as Double
             val geoHash = coordsToGeoHash(latitude, longitude)
@@ -47,6 +48,7 @@ class AlwaysOnline :
                 null, null,
                 false, false, false,
                 null,
+                false,
                 "v3"
             )
 
