@@ -7,10 +7,13 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.os.Process
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.ServiceCompat
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
 import org.json.JSONArray
@@ -35,84 +38,98 @@ class BridgeService : Service() {
     private val MAX_LOG_SIZE = 5 * 1024 * 1024
     private val periodicTasksExecutor = Executors.newSingleThreadScheduledExecutor()
 
+    private var isForegroundStarted = false
+
     override fun onCreate() {
         super.onCreate()
-        startForeground()
         Logger.i("BridgeService created", LogSource.BRIDGE)
 
         Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND)
-
-        ioExecutor.execute {
-            if (!configFile.exists()) {
-                try {
-                    configFile.createNewFile()
-                    configFile.writeText("{}")
-                } catch (e: Exception) {
-                    Logger.e("Failed to create config file", LogSource.BRIDGE)
-                    Logger.writeRaw(e.stackTraceToString())
-                }
-            }
-
-            if (!logFile.exists()) {
-                try {
-                    logFile.createNewFile()
-                } catch (e: Exception) {
-                    Logger.e("Failed to create log file", LogSource.BRIDGE)
-                    Logger.writeRaw(e.stackTraceToString())
-                }
-            }
-
-            if (!blockEventsFile.exists()) {
-                try {
-                    blockEventsFile.createNewFile()
-                    blockEventsFile.writeText("[]")
-                } catch (e: Exception) {
-                    Logger.e("Failed to create block events file", LogSource.BRIDGE)
-                    Logger.writeRaw(e.stackTraceToString())
-                }
-            }
-        }
+        initializeFiles()
     }
 
     override fun onBind(intent: Intent?): IBinder {
         Logger.i("BridgeService bound", LogSource.BRIDGE)
+        startForegroundSafely()
         return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Logger.i("BridgeService started", LogSource.BRIDGE)
+
+        startForegroundSafely()
+
         return START_STICKY
     }
 
-    private fun startForeground() {
-        val channelId = "bridge_service_channel"
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
-        val channel = NotificationChannel(
-            channelId,
-            "GrindrPlus Background Service",
-            NotificationManager.IMPORTANCE_MIN
-        ).apply {
-            description = "Keeps GrindrPlus running in background. " +
-                    "You can disable this notification in Android settings."
-            setShowBadge(false)
-            setSound(null, null)
-            enableLights(false)
-            enableVibration(false)
+    private fun startForegroundSafely() {
+        if (isForegroundStarted) {
+            return
         }
-        notificationManager.createNotificationChannel(channel)
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("GrindrPlus")
-            .setContentText("Background service active")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
-            .setOngoing(true)
-            .setShowWhen(false)
-            .build()
+        try {
+            val channelId = "bridge_service_channel"
+            createNotificationChannel(channelId, "GrindrPlus Background Service", "Keeps GrindrPlus running in background")
 
-        startForeground(1001, notification)
+            val notification = NotificationCompat.Builder(this, channelId)
+                .setContentTitle("GrindrPlus")
+                .setContentText("Background service active")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+                .setOngoing(true)
+                .setShowWhen(false)
+                .build()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceCompat.startForeground(
+                    this,
+                    1001,
+                    notification,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                    } else {
+                        0
+                    }
+                )
+            } else {
+                startForeground(1001, notification)
+            }
+
+            isForegroundStarted = true
+            Logger.i("Foreground service started successfully", LogSource.BRIDGE)
+
+        } catch (e: Exception) {
+            Logger.w("Failed to start foreground service: ${e.message}", LogSource.BRIDGE)
+            Logger.writeRaw(e.stackTraceToString())
+
+            // If we can't start as foreground, continue as normal service
+            // The service will still work, just won't be protected from being killed
+            isForegroundStarted = false
+        }
+    }
+
+    private fun initializeFiles() {
+        ioExecutor.execute {
+            try {
+                if (!configFile.exists()) {
+                    configFile.createNewFile()
+                    configFile.writeText("{}")
+                }
+
+                if (!logFile.exists()) {
+                    logFile.createNewFile()
+                }
+
+                if (!blockEventsFile.exists()) {
+                    blockEventsFile.createNewFile()
+                    blockEventsFile.writeText("[]")
+                }
+            } catch (e: Exception) {
+                Logger.e("Failed to initialize files: ${e.message}", LogSource.BRIDGE)
+                Logger.writeRaw(e.stackTraceToString())
+            }
+        }
     }
 
     private val binder = object : IBridgeService.Stub() {
@@ -339,9 +356,20 @@ class BridgeService : Service() {
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (notificationManager.getNotificationChannel(channelId) == null) {
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = if (channelId == "bridge_service_channel") {
+                NotificationManager.IMPORTANCE_MIN
+            } else {
+                NotificationManager.IMPORTANCE_DEFAULT
+            }
+
             val channel = NotificationChannel(channelId, channelName, importance).apply {
                 description = channelDescription
+                if (channelId == "bridge_service_channel") {
+                    setShowBadge(false)
+                    setSound(null, null)
+                    enableLights(false)
+                    enableVibration(false)
+                }
             }
             notificationManager.createNotificationChannel(channel)
             Logger.d("Notification channel created: $channelId", LogSource.BRIDGE)

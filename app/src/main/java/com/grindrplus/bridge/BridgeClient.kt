@@ -37,6 +37,7 @@ class BridgeClient(private val context: Context) {
     private val serviceWatchdog = Handler(Looper.getMainLooper())
     private var lastConnectionAttempt = 0L
     private var connectionDeferreds = mutableMapOf<String, CompletableDeferred<Boolean>>()
+    private val bindingExecutor = Executors.newSingleThreadExecutor()
 
     companion object {
         const val CONNECTION_TIMEOUT_MS = 5000L
@@ -277,7 +278,7 @@ class BridgeClient(private val context: Context) {
             context.bindService(
                 intent,
                 Context.BIND_AUTO_CREATE,
-                Executors.newSingleThreadExecutor(),
+                bindingExecutor,
                 connection
             )
         } else {
@@ -318,26 +319,36 @@ class BridgeClient(private val context: Context) {
 
     private fun startService() {
         try {
-            val forceStartIntent = ForceStartActivity.createIntent(context)
-            context.startActivity(forceStartIntent)
-            Logger.d("Service start attempt via ForceStartActivity", LogSource.BRIDGE)
-            Thread.sleep(50)
-        } catch (e: Exception) {
-            Logger.w("Failed to start via ForceStartActivity: ${e.message}", LogSource.BRIDGE)
+            val serviceIntent = Intent().apply {
+                setClassName(
+                    BuildConfig.APPLICATION_ID,
+                    "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
+                )
+            }
 
             try {
-                val serviceIntent = Intent().apply {
-                    setClassName(
-                        BuildConfig.APPLICATION_ID,
-                        "${BuildConfig.APPLICATION_ID}.bridge.BridgeService"
-                    )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(serviceIntent)
+                    Logger.d("Service start attempt via startForegroundService", LogSource.BRIDGE)
+                } else {
+                    context.startService(serviceIntent)
+                    Logger.d("Service start attempt via startService", LogSource.BRIDGE)
                 }
-                context.startService(serviceIntent)
-                Logger.d("Service start attempt via startService (fallback)", LogSource.BRIDGE)
+                Thread.sleep(100)
             } catch (e: Exception) {
-                Logger.e("Failed to start service using any method: ${e.message}", LogSource.BRIDGE)
-                throw e
+                Logger.w("Failed to start service directly: ${e.message}", LogSource.BRIDGE)
+
+                try {
+                    val forceStartIntent = ForceStartActivity.createIntent(context)
+                    context.startActivity(forceStartIntent)
+                    Logger.d("Service start attempt via ForceStartActivity (fallback)", LogSource.BRIDGE)
+                    Thread.sleep(50)
+                } catch (e2: Exception) {
+                    Logger.e("All service start methods failed: ${e2.message}", LogSource.BRIDGE)
+                }
             }
+        } catch (e: Exception) {
+            Logger.e("Failed to start service: ${e.message}", LogSource.BRIDGE)
         }
     }
 
