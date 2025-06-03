@@ -1,6 +1,7 @@
 package com.grindrplus.hooks
 
 import com.grindrplus.core.Config
+import com.grindrplus.core.logi
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
 import com.grindrplus.utils.Hook
@@ -81,7 +82,7 @@ class FeatureGranting : Hook(
         }
 
         findClass(featureFlagManager)
-            .hook("b", HookStage.AFTER) { param ->
+            .hook("a", HookStage.AFTER) { param ->
                 val featureFlagName = getObjectField(param.thisObject(), "b") as String
                 if (featureManager.isManaged(featureFlagName)) {
                     param.setResult(featureManager.isEnabled(featureFlagName))
