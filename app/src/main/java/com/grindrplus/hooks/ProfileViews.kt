@@ -9,7 +9,11 @@ import com.grindrplus.utils.hook
 
 class ProfileViews : Hook("Profile views", "Don't let others know you viewed their profile") {
     private val profileRestService = "com.grindrapp.android.api.ProfileRestService"
-    private val blacklistedPaths = setOf("v4/views/{profileId}", "v4/views")
+    private val blacklistedPaths = setOf(
+        "v4/views/{profileId}",
+        "v5/views/{profileId}",
+        "v4/views"
+    )
 
     override fun init() {
         val profileRestServiceClass = findClass(profileRestService)
