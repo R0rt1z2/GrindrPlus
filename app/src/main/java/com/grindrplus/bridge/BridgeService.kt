@@ -354,6 +354,15 @@ class BridgeService : Service() {
                 }
             }
         }
+
+        override fun getForcedLocation(packageName: String): String {
+            val coordinatesFile = File(getExternalFilesDir(null), "$packageName.location")
+            return if (coordinatesFile.exists()) {
+                coordinatesFile.readText().ifBlank { "0.0,0.0" }
+            } else {
+                "0.0,0.0"
+            }
+        }
     }
 
     private fun createNotificationChannel(

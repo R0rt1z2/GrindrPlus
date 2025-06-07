@@ -541,6 +541,24 @@ class BridgeClient(private val context: Context) {
             false
         }
     }
+
+    fun getForcedLocation(packageName: String): String {
+        if (!isBound.get()) {
+            if (connectBlocking(3000)) {
+                Logger.d("Connected to service on-demand for getForcedLocation", LogSource.BRIDGE)
+            } else {
+                Logger.w("Cannot get forced location, service not bound", LogSource.BRIDGE)
+                return ""
+            }
+        }
+
+        return try {
+            bridgeService?.getForcedLocation(packageName) ?: ""
+        } catch (e: Exception) {
+            Logger.e("Error getting forced location: ${e.message}", LogSource.BRIDGE)
+            ""
+        }
+    }
 }
 
 private fun <T> runBlocking(block: suspend () -> T): T {

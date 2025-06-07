@@ -154,6 +154,17 @@ object GrindrPlus {
             Config.put("android_device_id", androidId)
         }
 
+        val forcedCoordinates = bridgeClient.getForcedLocation(packageName)
+        if (forcedCoordinates.isNotEmpty()) {
+            val parts = forcedCoordinates.split(",").map { it.trim() }
+            if (parts.size != 2 || parts.any { it.toDoubleOrNull() == null }) {
+                Logger.w("Invalid forced coordinates format: $forcedCoordinates", LogSource.MODULE)
+            } else {
+                Logger.i("Using forced coordinates: $forcedCoordinates", LogSource.MODULE)
+                Config.put("forced_coordinates", forcedCoordinates)
+            }
+        }
+
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
                 if (shouldShowBridgeConnectionError) {

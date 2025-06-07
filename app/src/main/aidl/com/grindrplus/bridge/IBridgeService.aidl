@@ -7,6 +7,7 @@ interface IBridgeService {
     void writeRawLog(String content);
     void clearLogs();
     boolean shouldRegenAndroidId(String packageName);
+    String getForcedLocation(String packageName);
     void logBlockEvent(String profileId, String displayName, boolean isBlock, String packageName);
     String getBlockEvents();
     void clearBlockEvents();
