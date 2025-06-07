@@ -345,6 +345,15 @@ class BridgeService : Service() {
                 }
             }
         }
+
+        override fun shouldRegenAndroidId(packageName: String): Boolean {
+            val regenFile = File(getExternalFilesDir(null), "$packageName.android_id_regen")
+            return regenFile.exists().also { exists ->
+                if (exists) {
+                    regenFile.delete()
+                }
+            }
+        }
     }
 
     private fun createNotificationChannel(

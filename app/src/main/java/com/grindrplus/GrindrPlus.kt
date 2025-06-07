@@ -147,6 +147,13 @@ object GrindrPlus {
         this.instanceManager = InstanceManager(classLoader)
         this.packageName = context.packageName
 
+        if (bridgeClient.shouldRegenAndroidId(packageName)) {
+            Logger.i("Generating new Android device ID", LogSource.MODULE)
+            val androidId = java.util.UUID.randomUUID()
+                .toString().replace("-", "").lowercase().take(16)
+            Config.put("android_device_id", androidId)
+        }
+
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
                 if (shouldShowBridgeConnectionError) {

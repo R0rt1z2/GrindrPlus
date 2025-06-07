@@ -517,6 +517,30 @@ class BridgeClient(private val context: Context) {
             Logger.e("Error sending notification with multiple actions: ${e.message}", LogSource.BRIDGE)
         }
     }
+
+    fun shouldRegenAndroidId(packageName: String): Boolean {
+        if (!isBound.get()) {
+            if (connectBlocking(3000)) {
+                Logger.d(
+                    "Connected to service on-demand for shouldRegenAndroidId",
+                    LogSource.BRIDGE
+                )
+            } else {
+                Logger.w(
+                    "Cannot check Android ID regeneration, service not bound",
+                    LogSource.BRIDGE
+                )
+                return false
+            }
+        }
+
+        return try {
+            bridgeService?.shouldRegenAndroidId(packageName) ?: false
+        } catch (e: Exception) {
+            Logger.e("Error checking Android ID regeneration: ${e.message}", LogSource.BRIDGE)
+            false
+        }
+    }
 }
 
 private fun <T> runBlocking(block: suspend () -> T): T {
