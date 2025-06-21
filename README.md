@@ -217,10 +217,10 @@ Each installation method is completely different and comes with its own challeng
 <details>
   <summary>I'm having issues on GrapheneOS!</summary>
 
-- Uninstall Google Play "trio" (framework, services, store) in "apps" app and reinstall them again. They break all the time so it's a good idea to reload them. Don't worry, you won't have to login again to Google.
-- Make sure to turn **ON** the exploit protection compatibility mode in "App Info" of Grindr, GrindrPlus and Google Play "trio". Just tap and hold onto the app icon to go there. When it comes to Google services you can do so from "apps" app.
-- While doing the step above make sure to give Google Play services permissions to access location all the time and sensors.
-- In Settings -> Apps -> Sandboxed Google Play, turn off the option "Reroute location requests to OS".
+- Turn **ON** the **"Exploit Protection Compatibility"** mode on Grindr. To do so - tap and hold on the app icon, click "App info" and scroll down a little. In general - Grindr should work without a problem with that option turned off but if it gives you any issues then you can try to play around with those settings.
+- Do the same for Google services. In contrary to other apps - you have to access those options through "App store" app provided by GOS team.
+- Make sure to give Google Play services permissions to **All time location** and to **Sensors**.
+- In Settings -> Apps -> Sandboxed Google Play, turn **OFF** the option **"Reroute location requests to OS"**. This option sometimes breaks the location features on Grindr.
 
 </details>
 
