@@ -33,7 +33,7 @@ object Utils {
         val profileTypeClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.model.ProfileType")
         val referrerTypeClass =
-            GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
+            GrindrPlus.loadClass("com.grindrapp.android.profile.domain.ReferrerType")
         val conversationMetadataClass =
             GrindrPlus.loadClass("com.grindrapp.android.chat.model.DirectConversationMetaData")
 
@@ -55,7 +55,6 @@ object Utils {
             "0xDEADBEEF", // str3
             null,
             null, // chatMediaDrawerArgs
-            null,
             844
         )
 
@@ -84,7 +83,7 @@ object Utils {
 
     fun openProfile(id: String) {
         val referrerTypeClass =
-            GrindrPlus.loadClass("com.grindrapp.android.base.model.profile.ReferrerType")
+            GrindrPlus.loadClass("com.grindrapp.android.profile.domain.ReferrerType")
         val referrerType = referrerTypeClass.getField("NOTIFICATION").get(null)
         val profilesActivityInnerClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a")

@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.logi
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
@@ -10,7 +11,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "X5.a" // search for 'v1/telemetry'
+    private val analyticsRestService = "u6.a" // search for 'v1/telemetry'
 
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)
@@ -28,12 +29,6 @@ class DisableAnalytics : Hook(
         findClass("com.amplitude.android.Configuration")
             .hook("getOptOut", HookStage.AFTER) { param ->
                 param.setResult(true)
-            }
-
-        // AppLovin
-        findClass("com.applovin.impl.d4") // ConnectionManager
-            .hook("a", HookStage.BEFORE) {
-                    param -> param.setResult(null)
             }
 
         // Braze

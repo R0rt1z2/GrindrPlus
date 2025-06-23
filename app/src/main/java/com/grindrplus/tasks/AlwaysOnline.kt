@@ -48,8 +48,7 @@ class AlwaysOnline :
                 null, null,
                 false, false, false,
                 null,
-                false,
-                "v3"
+                false
             )
 
             val result = callSuspendFunction { continuation ->

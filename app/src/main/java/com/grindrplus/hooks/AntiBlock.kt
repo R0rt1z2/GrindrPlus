@@ -20,16 +20,16 @@ class AntiBlock : Hook(
     "Notifies you when someone blocks or unblocks you"
 ) {
     private var myProfileId: Long = 0
-    private val chatDeleteConversationPlugin = "x5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "b8.i" // search for '("chat_read_receipt", conversationId, null);'
-    private val individualUnblockActivityViewModel = "Wd.s" // search for '@DebugMetadata(c = "com.grindrapp.android.ui.block.IndividualUnblockActivityViewModel$unblockAllProfile$1", f = "IndividualUnblockActivityViewModel.kt",'
+    private val chatDeleteConversationPlugin = "O5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
+    private val inboxFragmentV2DeleteConversations = "N8.i" // search for '("chat_read_receipt", conversationId, null);'
+    private val individualUnblockActivityViewModel = "Ve.s" // search for '@DebugMetadata(c = "com.grindrapp.android.ui.block.IndividualUnblockActivityViewModel$unblockAllProfile$1", f = "IndividualUnblockActivityViewModel.kt",'
 
     override fun init() {
-        findClass(individualUnblockActivityViewModel).hook("F", HookStage.BEFORE) { param ->
+        findClass(individualUnblockActivityViewModel).hook("J", HookStage.BEFORE) { param ->
             GrindrPlus.shouldTriggerAntiblock = false
         }
 
-        findClass(individualUnblockActivityViewModel).hook("F", HookStage.AFTER) { param ->
+        findClass(individualUnblockActivityViewModel).hook("J", HookStage.AFTER) { param ->
             Thread.sleep(700) // Wait for WS to unblock
             GrindrPlus.shouldTriggerAntiblock = true
         }

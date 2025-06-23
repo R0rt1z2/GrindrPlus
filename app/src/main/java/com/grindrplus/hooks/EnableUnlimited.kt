@@ -15,11 +15,11 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
-    private val paywallUtils = "Qb.d" // search for 'app_restart_required'
-    private val persistentAdBannerContainer = "m6.o3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
-    private val userSession = "qc.V" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    private val paywallUtils = "Gd.d" // search for 'app_restart_required'
+    private val persistentAdBannerContainer = "O6.L3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
+    private val userSession = "pd.W" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val subscribeToInterstitialsList = listOf(
-        "J5.E\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
+        "Z5.G\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
     )
     private val viewsToHide = mapOf(
         "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$c" to listOf("upsell_bottom_bar"), // search for 'bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/ProfileTagCascadeFragmentBinding;'
@@ -45,13 +45,13 @@ class EnableUnlimited : Hook(
         }
 
         userSessionClass.hook( // isFree()
-            "x", HookStage.BEFORE // search for '.isEmpty();' in userSession
+            "y", HookStage.BEFORE // search for '.isEmpty();' in userSession
         ) { param ->
             param.setResult(false)
         }
 
         userSessionClass.hook( // isFreeXtra()
-            "t", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
+            "u", HookStage.BEFORE // search for 'Role.XTRA, Role.FREE_XTRA' in userSession
         ) { param ->
             param.setResult(false)
         }
@@ -118,7 +118,7 @@ class EnableUnlimited : Hook(
         }
 
         // search for 'variantName, "treatment_exact_count") ?'
-        findClass("W1.a").hook("b", HookStage.BEFORE) { param ->
+        findClass("Q1.a").hook("b", HookStage.BEFORE) { param ->
            param.setResult(false)
         }
     }
