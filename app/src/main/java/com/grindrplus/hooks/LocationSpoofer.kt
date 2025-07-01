@@ -71,7 +71,7 @@ class LocationSpoofer : Hook(
         }
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
-            (Config.get("current_location", "") as String).takeIf {
+            (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()
             }?.split(",")?.firstOrNull()
                 ?.toDoubleOrNull()?.let {
@@ -80,7 +80,7 @@ class LocationSpoofer : Hook(
         }
 
         locationClass.hook("getLongitude", HookStage.AFTER) { param ->
-            (Config.get("current_location", "") as String).takeIf {
+            (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()
             }?.split(",")?.lastOrNull()
                 ?.toDoubleOrNull()?.let {

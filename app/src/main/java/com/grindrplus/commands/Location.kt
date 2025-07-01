@@ -1,8 +1,10 @@
 package com.grindrplus.commands
 
+import android.app.AlertDialog
 import android.net.Uri
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
+import com.grindrplus.GrindrPlus.packageName
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils.coordsToGeoHash
@@ -18,6 +20,32 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
 
     @Command(name = "tp", aliases = ["tp"], help = "Teleport to a location")
     fun teleport(args: List<String>) {
+        /**
+         * If the user is currently used forced coordinates, don't allow teleportation.
+         */
+        if (Config.get("forced_coordinates", "") as String != "") {
+            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+                AlertDialog.Builder(activity)
+                    .setTitle("Teleportation disabled")
+                    .setMessage(
+                        "GrindrPlus is currently using forced coordinates. " +
+                                "Please disable it to use teleportation."
+                    )
+                    .setPositiveButton("OK", null)
+                    .setNegativeButton("Disable") { _, _ ->
+                        Config.put("forced_coordinates", "")
+                        GrindrPlus.bridgeClient.deleteForcedLocation(packageName)
+                        GrindrPlus.showToast(
+                            Toast.LENGTH_LONG,
+                            "Forced coordinates disabled"
+                        )
+                    }
+                    .show()
+            }
+
+            return;
+        }
+
         /**
          * This command is also used to toggle the teleportation feature. If the user hasn't
          * provided any arguments, just toggle teleport.

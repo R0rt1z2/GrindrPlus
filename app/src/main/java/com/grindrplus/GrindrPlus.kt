@@ -155,6 +155,7 @@ object GrindrPlus {
         }
 
         val forcedCoordinates = bridgeClient.getForcedLocation(packageName)
+
         if (forcedCoordinates.isNotEmpty()) {
             val parts = forcedCoordinates.split(",").map { it.trim() }
             if (parts.size != 2 || parts.any { it.toDoubleOrNull() == null }) {
@@ -167,6 +168,9 @@ object GrindrPlus {
                     Config.put("forced_coordinates", forcedCoordinates)
                 }
             }
+        } else if (Config.get("forced_coordinates", "") != "") {
+            Logger.i("Clearing previously set forced coordinates", LogSource.MODULE)
+            Config.put("forced_coordinates", "")
         }
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {

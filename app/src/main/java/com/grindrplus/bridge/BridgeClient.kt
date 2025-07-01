@@ -559,6 +559,23 @@ class BridgeClient(private val context: Context) {
             ""
         }
     }
+
+    fun deleteForcedLocation(packageName: String) {
+        if (!isBound.get()) {
+            if (connectBlocking(3000)) {
+                Logger.d("Connected to service on-demand for deleteForcedLocation", LogSource.BRIDGE)
+            } else {
+                Logger.w("Cannot delete forced location, service not bound", LogSource.BRIDGE)
+                return
+            }
+        }
+
+        try {
+            bridgeService?.deleteForcedLocation(packageName)
+        } catch (e: Exception) {
+            Logger.e("Error deleting forced location: ${e.message}", LogSource.BRIDGE)
+        }
+    }
 }
 
 private fun <T> runBlocking(block: suspend () -> T): T {
