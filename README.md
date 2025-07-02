@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/R0rt1z2/GrindrPlus/actions/workflows/build_apk.yml?query=branch%3Amaster+event%3Apush+is%3Acompleted"><img src="https://img.shields.io/github/actions/workflow/status/R0rt1z2/GrindrPlus/build_apk.yml?branch=master&logo=github&label=Build" alt="Build"></a>
   <img src="https://shields.io/github/downloads/R0rt1z2/GrindrPlus/total?logo=Bookmeter&label=Downloads&logoColor=Green&color=Green" alt="Total downloads">
-  <a href="https://discord.gg/SPb6Kc7S4C"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
+  <a href="https://discord.gg/5ZxHJVGR"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
   <a href="https://t.me/GrindrPlus"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white" alt="Telegram"></a>
 </p>
 <h1 align="center">Grindr Plus</h1>
@@ -96,8 +96,21 @@ This mod does not collect any personal data nor does it display ads of any kind.
 </details>
 
 ## Bugs
-* Incognito mode is kinda buggy (it turns off after a little while).
-* On non LSPosed installs (no root), Google Login and Maps inside Grindr require a workaround (see the FAQ section).
+
+> [!WARNING]
+> Please read this section carefully before reporting bugs. Many issues listed here are known limitations.
+
+- **Google Login (LSPatch only)**: Requires a workaround to function properly. See the [FAQ section](#faq--troubleshooting) for detailed instructions.
+- **Incognito Mode**: Does not work reliably and turns off automatically after a short period.
+- **"Viewed Me" List**: Will not work as this is a server-side feature that cannot be modified.
+- **Boosting & Roaming**: Disabled by default. To enable, turn off the "Disable Boosting" hook in settings and restart Grindr.
+- **Random Crashes/Album Editing Issues**: If you experience crashes or cannot edit your own albums, disable the "Unlimited Albums" hook.
+- **In-app Maps (LSPatch only)**: Maps functionality (explore, shared locations in chats) requires a custom Google Maps API key. See the [FAQ section](#faq--troubleshooting) for setup instructions.
+- **Saved Locations Button**: Does not appear on cloned/dual apps.
+- **LSPatch Limitations**: Users may experience additional stability issues compared to LSPosed installations.
+
+> [!TIP]
+> Before reporting a new bug, please check our [Discord](https://discord.gg/5ZxHJVGR) or [Telegram](https://t.me/GrindrPlus) channels to see if it's already known.
 
 ## Installation
 > <small>[!WARNING]
@@ -110,38 +123,49 @@ Each installation method is completely different and comes with its own challeng
 <details closed>
   <summary>No root</summary>
 
-  **Prerequisites:**
-  - No Grindr installed on device
+**Prerequisites:**
+- No Grindr installed on device
 
-  **Process:**
-  1. Download & Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`).
-  2. If the Grindr app is installed, uninstall it. **Make sure it's also gone from Secure Folder, Second Space or Private Space**.
-  3. Open the new "Grindr Plus" app and click on the "Install" button (bottom left).
-  4. Wait for the versions to load (if loading seems stuck, force close app & retry).
-  5. Select your preferred version (we recommend using latest).
-  6. Click on the "Install" button.
-  7. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
-  8. When prompted, install the newly generated Grindr app.
-  9. The app might crash multiple times during the first launches. This is normal, just keep relaunching it.
-  10. If the installation fails, <b>retry it</b> multiple times before asking for support.
+**Process:**
+1. Download & Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`).
+2. If the Grindr app is installed, uninstall it. **Make sure it's also gone from Secure Folder, Second Space or Private Space**.
+3. Open the new "Grindr Plus" app and click on the "Install" button (bottom left).
+4. Wait for the versions to load (if loading seems stuck, force close app & retry).
+5. Select your preferred version (we recommend using latest).
+6. Click on the "Install" button.
+7. Wait for the installation to complete. Duration will depend on connection speed and phone's specs.
+8. When prompted, install the newly generated Grindr app.
+9. The app might crash multiple times during the first launches. This is normal, just keep relaunching it.
+10. If the installation fails, <b>retry it</b> multiple times before asking for support.
+
+**Verification:**
+- Long press the "Browse" tab (first tab) in the bottom navigation bar
+- A popup should appear showing GrindrPlus status and information
+- You should see unlimited profiles and no third-party ads
+- If these features don't work, try restarting the app or reinstalling
 
   </details>
- </details>
 
 <details closed>
   <summary>Root (LSPosed)</summary>
 
-  > **Make sure you're using [JingMatrix's fork of LSPosed](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPosed-v1.10.1-7167-zygisk-release.zip)!**
-  
-  **Requirements:**
-  - Rooted using `Magisk` or `KernelSU`
-  - `LSPosed` installed and fully functional
+> **Make sure you're using [JingMatrix's fork of LSPosed](https://github.com/R0rt1z2/LSMirror/raw/refs/heads/main/LSPosed-v1.10.1-7167-zygisk-release.zip)!**
 
-  **Process:**
-  1. Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`)
-  2. Download the latest Grindr app [from Play Store](https://play.google.com/store/apps/details?id=com.grindrapp.android&hl=en) or use [SAI](https://github.com/Aefyr/SAI/releases) to install [bundles from APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/)
-  3. Turn on the module in `LSPosed` and make sure Grindr is in scope
-  4. Open Grindr and check if Mod Settings are at the top of Grindr settings
+**Requirements:**
+- Rooted using `Magisk` or `KernelSU`
+- `LSPosed` installed and fully functional
+
+**Process:**
+1. Install the GrindrPlus module APK (check the [downloads](https://github.com/R0rt1z2/GrindrPlus?tab=readme-ov-file#downloads) section of this `README`)
+2. Download the latest Grindr app [from Play Store](https://play.google.com/store/apps/details?id=com.grindrapp.android&hl=en) or use [SAI](https://github.com/Aefyr/SAI/releases) to install [bundles from APKMirror](https://www.apkmirror.com/apk/grindr-llc/grindr-gay-chat-meet-date/)
+3. Turn on the module in `LSPosed` and make sure Grindr is in scope
+4. Open Grindr and verify the installation is working
+
+**Verification:**
+- Long press the "Browse" tab (first tab) in the bottom navigation bar
+- A popup should appear showing GrindrPlus status and information
+- You should see unlimited profiles and no third-party ads
+- If these features don't work, check that the module is properly enabled in LSPosed
 </details>
 
 ## FAQ & Troubleshooting
