@@ -24,6 +24,7 @@ import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
 import com.grindrplus.hooks.ProfileViews
 import com.grindrplus.hooks.QuickBlock
+import com.grindrplus.hooks.StatusDialog
 import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
@@ -42,6 +43,7 @@ class HookManager {
                 FeatureGranting(),
                 EnableUnlimited(),
                 AntiDetection(),
+                StatusDialog(),
                 AntiBlock(),
                 NotificationAlerts(),
                 DisableUpdates(),

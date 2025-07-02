@@ -107,6 +107,10 @@ class BridgeClient(private val context: Context) {
         Logger.d("Stopped service watchdog", LogSource.BRIDGE)
     }
 
+    fun isConnected(): Boolean {
+        return isBound.get()
+    }
+
     fun getService(): IBridgeService? = bridgeService
 
     suspend fun connectWithRetry(maxRetries: Int = 3, retryDelay: Long = 1000): Boolean {

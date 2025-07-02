@@ -23,6 +23,9 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val context: Context,
 ) : ViewModel() {
+    private val hookHideList = setOf(
+        "Status Dialog",
+    )
 
     private val _settingGroups = MutableStateFlow<List<SettingGroup>>(emptyList())
     val settingGroups: StateFlow<List<SettingGroup>> = _settingGroups
@@ -72,20 +75,22 @@ class SettingsViewModel(
 
             try {
                 val hooks = Config.getHooksSettings()
-                val hookSettings = hooks.map { (hookName, pair) ->
-                    SwitchSetting(
-                        id = hookName,
-                        title = hookName,
-                        description = pair.first,
-                        isChecked = pair.second,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.setHookEnabled(hookName, it)
-                                loadSettings()
+                val hookSettings = hooks
+                    .filterNot { (hookName, _) -> hookName in hookHideList }
+                    .map { (hookName, pair) ->
+                        SwitchSetting(
+                            id = hookName,
+                            title = hookName,
+                            description = pair.first,
+                            isChecked = pair.second,
+                            onCheckedChange = {
+                                viewModelScope.launch {
+                                    Config.setHookEnabled(hookName, it)
+                                    loadSettings()
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
                 val tasks = Config.getTasksSettings()
                 val taskSettings = tasks.map { (taskId, pair) ->
