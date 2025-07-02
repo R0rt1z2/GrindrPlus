@@ -3,6 +3,7 @@ package com.grindrplus.hooks
 import android.content.ContextWrapper
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
@@ -43,6 +44,26 @@ fun spoofSignatures(param: XC_LoadPackage.LoadPackageParam) {
             }
         })
 
+    // The Facebook SDK tries to handle the login using the Facebook app in case it is installed.
+    // However, the Facebook app does signature checks with the app that is requesting the authentication,
+    // which ends up making the Facebook server reject with an invalid key hash for the app signature.
+    // Override the Facebook SDK to always handle the login using the web browser, which does not perform
+    // signature checks.
+    //
+    // Always return 0 (no Intent was launched) as the result of trying to authorize with the Facebook app to
+    // make the login fallback to a web browser window.
+    //
+    findAndHookMethod(
+        "com.facebook.login.KatanaProxyLoginMethodHandler",
+        param.classLoader,
+        "tryAuthorize",
+        XposedHelpers.findClass("com.facebook.login.LoginClient\$Request", param.classLoader),
+        object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam<*>) {
+                param.result = 0
+            }
+        }
+    )
 
     if (param.packageName != GRINDR_PACKAGE_NAME) {
         fun isFirebaseInstallationServiceClient() = Thread.currentThread().stackTrace.any {
