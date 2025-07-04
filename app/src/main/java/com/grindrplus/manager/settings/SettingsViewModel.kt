@@ -217,6 +217,30 @@ class SettingsViewModel(
 
                     ),
                     SwitchSetting(
+                        id = "enable_cookie_tap",
+                        title = "Enable Cookie Tap",
+                        description = "Enable the ability to send cookie taps to other users (they'll see them)",
+                        isChecked = Config.get("enable_cookie_tap", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("enable_cookie_tap", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
+                    SwitchSetting(
+                        id = "enable_vip_flag",
+                        title = "Enable Star Section",
+                        description = "Enables what looks like a recommendation section next to Browse",
+                        isChecked = Config.get("enable_vip_flag", false) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("enable_vip_flag", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
+                    SwitchSetting(
                         id = "enable_albums_spank_bank",
                         title = "Enable Albums Spank Bank",
                         description = "Enable the new Albums section",
