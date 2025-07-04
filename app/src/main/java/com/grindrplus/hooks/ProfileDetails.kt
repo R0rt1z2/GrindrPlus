@@ -109,33 +109,49 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
                         "Profile ID" to profileId,
                         "Approximate distance" to
                                 Utils.safeGetField(param.arg(0), "approximateDistance") as? Boolean,
-                        "Found via teleport" to
-                                Utils.safeGetField(param.arg(0), "foundViaTeleport") as? Boolean,
                         "Favorite" to
                                 Utils.safeGetField(param.arg(0), "isFavorite") as? Boolean,
                         "From viewed me" to
                                 Utils.safeGetField(param.arg(0), "isFromViewedMe") as? Boolean,
-                        "Inaccessible profile" to
-                                Utils.safeGetField(param.arg(0), "isInaccessibleProfile")
-                                        as? Boolean,
                         "JWT boosting" to
                                 Utils.safeGetField(param.arg(0), "isJwtBoosting") as? Boolean,
                         "New" to Utils.safeGetField(param.arg(0), "isNew") as? Boolean,
                         "Teleporting" to
                                 Utils.safeGetField(param.arg(0), "isTeleporting") as? Boolean,
                         "Online now" to
-                                Utils.safeGetField(param.arg(0), "onlineNow") as? Boolean
+                                Utils.safeGetField(param.arg(0), "onlineNow") as? Boolean,
+                        "Is roaming" to
+                                Utils.safeGetField(param.arg(0), "isRoaming") as? Boolean,
+                        "Found via roam" to
+                                Utils.safeGetField(param.arg(0), "foundViaRoam") as? Boolean,
+                        "Is top pick" to
+                                Utils.safeGetField(param.arg(0), "isTopPick") as? Boolean,
+                        "Is visiting" to
+                                Utils.safeGetField(param.arg(0), "isVisiting") as? Boolean,
+                        "Is distance approximate" to
+                                Utils.safeGetField(param.arg(0), "approximateDistance") as? Boolean,
                     )
                         .filterValues { it != null }
+
+                val detailsText = properties.map { (key, value) -> "• $key: $value" }.joinToString("\n")
 
                 val dialog =
                     AlertDialog.Builder(it.context)
                         .setTitle("Hidden profile details")
-                        .setMessage(
-                            properties.map { (key, value) -> "• $key: $value" }.joinToString("\n")
-                        )
+                        .setMessage(detailsText)
                         .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                        .setNeutralButton("Copy Details") { dialog, _ ->
+                            copyToClipboard("Profile Details", detailsText)
+                            GrindrPlus.showToast(Toast.LENGTH_SHORT, "Profile details copied to clipboard")
+                            dialog.dismiss()
+                        }
                         .create()
+
+                dialog.setOnShowListener {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(android.graphics.Color.WHITE)
+                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(android.graphics.Color.WHITE)
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(android.graphics.Color.WHITE)
+                }
 
                 dialog.show()
             }
