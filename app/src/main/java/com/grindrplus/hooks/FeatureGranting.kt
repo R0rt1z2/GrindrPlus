@@ -93,6 +93,7 @@ class FeatureGranting : Hook(
     private fun initFeatures() {
         featureManager.add(Feature("PasswordComplexity", false))
         featureManager.add(Feature("TimedBans", false))
+        featureManager.add(Feature("GenderFlag", true))
         featureManager.add(Feature("ChatInterstitialFeatureFlag", false))
         featureManager.add(Feature("SideDrawerDeeplinkKillSwitch", true))
         featureManager.add(Feature("SponsoredRoamKillSwitch", true))
