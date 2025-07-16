@@ -90,6 +90,7 @@ import kotlinx.coroutines.cancel
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 
+
 internal val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 internal const val TAG = "GrindrPlus"
 internal const val DATA_URL =
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
         val showUninstallDialog = mutableStateOf(false)
     }
 
-    private var showPermissionDialog = false
+    private var showPermissionDialog by mutableStateOf(false)
     private lateinit var receiver: NotificationActionReceiver
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -149,7 +150,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    showNotificationPermissionExplanation()
+                    showPermissionDialog = true
                 }
 
                 else -> {
@@ -174,10 +175,6 @@ class MainActivity : ComponentActivity() {
             ).show()
             startActivity(intent)
         }
-    }
-
-    private fun showNotificationPermissionExplanation() {
-        showPermissionDialog = true
     }
 
     private fun registerNotificationReceiver() {
