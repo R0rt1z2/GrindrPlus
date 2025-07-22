@@ -70,7 +70,7 @@ class DisableUpdates : Hook(
                     updateVersionInfo()
                 }
             } else {
-                Logger.e("Failed to fetch version info: ${response.message}")
+                loge("Failed to fetch version info: ${response.message}")
             }
         } catch (e: Exception) {
             loge("Error fetching version info: ${e.message}")
@@ -78,17 +78,44 @@ class DisableUpdates : Hook(
         }
     }
 
+    private fun compareVersions(v1: String, v2: String): Int {
+        val parts1 = v1.split(".").map { it.toInt() }
+        val parts2 = v2.split(".").map { it.toInt() }
+        val maxLength = maxOf(parts1.size, parts2.size)
+
+        for (i in 0 until maxLength) {
+            val part1 = if (i < parts1.size) parts1[i] else 0
+            val part2 = if (i < parts2.size) parts2[i] else 0
+            if (part1 != part2) return part1.compareTo(part2)
+        }
+        return 0
+    }
+
     private fun updateVersionInfo() {
-        if (versionName < GrindrPlus.context.packageManager.getPackageInfo(
-                GrindrPlus.context.packageName,
-                0
-            ).versionName.toString()
-        ) {
+        val currentVersion = GrindrPlus.context.packageManager.getPackageInfo(
+            GrindrPlus.context.packageName,
+            0
+        ).versionName.toString()
+
+        if (compareVersions(versionName, currentVersion) > 0) {
             findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
                 setObjectField(param.thisObject(), "b", versionName)
                 setObjectField(param.thisObject(), "c", versionCode)
                 setObjectField(param.thisObject(), "z", "$versionName.$versionCode")
             }
+
+            findClass(GrindrPlus.userAgent).hookConstructor(HookStage.AFTER) { param ->
+                param.thisObject().javaClass.declaredFields.forEach { field ->
+                    field.isAccessible = true
+                    val value = field.get(param.thisObject())
+                    if (value is String && value.startsWith("grindr3/")) {
+                        field.set(param.thisObject(), "grindr3/$versionName.$versionCode;$versionCode;")
+                        return@forEach
+                    }
+                }
+            }
+        } else {
+            logd("Current version is up-to-date: $versionName ($versionCode)")
         }
     }
 }

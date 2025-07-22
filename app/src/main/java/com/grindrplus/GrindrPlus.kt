@@ -95,7 +95,7 @@ object GrindrPlus {
     val currentActivity: Activity?
         get() = currentActivityRef?.get()
 
-    private val userAgent = "W6.h" // search for 'grindr3/'
+    internal val userAgent = "W6.h" // search for 'grindr3/'
     internal val userSession = "pd.W" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
         "y4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
