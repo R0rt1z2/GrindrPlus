@@ -44,7 +44,7 @@ class HookManager {
                 EnableUnlimited(),
                 AntiDetection(),
                 StatusDialog(),
-                AntiBlock(),
+                // AntiBlock(),
                 NotificationAlerts(),
                 DisableUpdates(),
                 DisableBoosting(),
@@ -61,7 +61,7 @@ class HookManager {
                 UnlimitedProfiles(),
                 ProfileDetails(),
                 ProfileViews(),
-                QuickBlock(),
+                // QuickBlock(),
                 EmptyCalls(),
                 UnlimitedAlbums()
             )
