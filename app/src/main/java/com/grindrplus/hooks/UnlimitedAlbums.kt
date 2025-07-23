@@ -39,9 +39,9 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
-    private val albumsService = "M4.a" // search for 'v1/albums/red-dot'
+    private val albumsService = "T4.a" // search for 'v1/albums/red-dot'
     private val albumsRepositoryImpl =
-        "f4.r" // search for '@DebugMetadata(c = "com.grindrapp.android.albums.AlbumsRepositoryImpl$refreshMyAlbums$1"'
+        "l4.q" // search for '@DebugMetadata(c = "com.grindrapp.android.albums.AlbumsRepositoryImpl$refreshMyAlbums$1"'
     private val albumModel = "com.grindrapp.android.model.Album"
     private val filteredSpankBankAlbumContent =
         "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"
@@ -113,7 +113,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
         findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
 
-        findClass(albumsRepositoryImpl).hook("l", HookStage.BEFORE) { param ->
+        findClass(albumsRepositoryImpl).hook("b", HookStage.BEFORE) { param ->
             val unhooks = mutableSetOf<XC_MethodHook.Unhook>()
             param
                 .method()
