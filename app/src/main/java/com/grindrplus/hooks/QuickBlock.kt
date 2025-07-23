@@ -19,7 +19,7 @@ class QuickBlock : Hook(
     private val profileModel = "com.grindrapp.android.persistence.model.Profile"
 
     override fun init() {
-        findClass(profileViewHolder).hook("x", HookStage.AFTER) { param ->
+        findClass(profileViewHolder).hook("y", HookStage.AFTER) { param ->
             val arg0 = param.arg(0) as Any
             val profileId = param.args().getOrNull(1) ?: return@hook
             val viewBinding = getObjectField(arg0, "b")

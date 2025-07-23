@@ -11,7 +11,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "u6.a" // search for 'v1/telemetry'
+    private val analyticsRestService = "E6.a" // search for 'v1/telemetry'
 
     override fun init() {
         val analyticsRestServiceClass = findClass(analyticsRestService)

@@ -39,9 +39,7 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
-    private val albumsService = "M4.a" // search for 'v1/albums/red-dot'
-    private val albumsRepositoryImpl =
-        "f4.r" // search for '@DebugMetadata(c = "com.grindrapp.android.albums.AlbumsRepositoryImpl$refreshMyAlbums$1"'
+    private val albumsService = "T4.a" // search for 'v1/albums/red-dot'
     private val albumModel = "com.grindrapp.android.model.Album"
     private val filteredSpankBankAlbumContent =
         "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"
@@ -113,32 +111,6 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
         findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
 
-        findClass(albumsRepositoryImpl).hook("l", HookStage.BEFORE) { param ->
-            val unhooks = mutableSetOf<XC_MethodHook.Unhook>()
-            param
-                .method()
-                .hook(HookStage.AFTER) { afterParam ->
-                    unhooks.forEach { it.unhook() }
-
-                    try {
-                        val result = afterParam.getResult()
-                        if (
-                            result != null &&
-                            result.javaClass.name == RetrofitUtils.SUCCESS_CLASS_NAME
-                        ) {
-                            val successValue = getObjectField(result, SUCCESS_VALUE_NAME)
-                            logd(
-                                "Returned a success value of type: " +
-                                        "${successValue?.javaClass?.name}"
-                            )
-                        }
-                    } catch (e: Exception) {
-                        loge("Error inspecting result: ${e.message}")
-                        Logger.writeRaw(e.stackTraceToString())
-                    }
-                }
-                .also { unhooks.add(it) }
-        }
     }
 
     @Suppress("UNCHECKED_CAST")

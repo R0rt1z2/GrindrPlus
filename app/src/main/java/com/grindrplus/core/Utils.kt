@@ -55,6 +55,7 @@ object Utils {
             "0xDEADBEEF", // str3
             null,
             null, // chatMediaDrawerArgs
+            false,
             844
         )
 
@@ -88,14 +89,22 @@ object Utils {
         val profilesActivityInnerClass =
             GrindrPlus.loadClass("com.grindrapp.android.ui.profileV2.ProfilesActivity\$a")
 
+        Logger.i("ProfilesActivity inner class: $profilesActivityInnerClass")
+
         val method = profilesActivityInnerClass.declaredMethods.find {
-            it.parameterTypes.size == 3 && it.parameterTypes[2] == referrerTypeClass
+            it.parameterTypes.size == 4 && it.parameterTypes[2] == referrerTypeClass
+        }
+
+        if (method == null) {
+            Logger.e("Method not found in ProfilesActivity inner class.")
+            return
         }
 
         val intent = method?.invoke(
             null,
             context,
             id,
+            referrerType,
             referrerType
         ) as Intent?
         intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

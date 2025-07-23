@@ -35,7 +35,7 @@ fun spoofSignatures(param: XC_LoadPackage.LoadPackageParam) {
     }
 
     findAndHookMethod(
-        "ly.img.android.e",
+        "ly.img.android.c",
         param.classLoader,
         "d", // getPackageName
         object : XC_MethodHook() {

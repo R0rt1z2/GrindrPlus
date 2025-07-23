@@ -95,11 +95,11 @@ object GrindrPlus {
     val currentActivity: Activity?
         get() = currentActivityRef?.get()
 
-    internal val userAgent = "W6.h" // search for 'grindr3/'
-    internal val userSession = "pd.W" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    internal val userAgent = "g7.g" // search for 'grindr3/'
+    internal val userSession = "Ng.f" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
-        "y4.B" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
-    internal val grindrLocationProvider = "u9.d" // search for 'system settings insufficient for location request, attempting to resolve'
+        "E4.E" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    internal val grindrLocationProvider = "F9.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -224,7 +224,7 @@ object GrindrPlus {
             )
 
             instanceManager.setCallback(userSession) { uSession ->
-                myProfileId = getObjectField(uSession, "t") as String
+                myProfileId = getObjectField(uSession, "z") as String
                 instanceManager.setCallback(userAgent) { uAgent ->
                     instanceManager.setCallback(deviceInfo) { dInfo ->
                         httpClient = Client(Interceptor(uSession, uAgent, dInfo))

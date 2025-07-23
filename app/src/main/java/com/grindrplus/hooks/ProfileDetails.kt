@@ -26,8 +26,8 @@ import kotlin.math.roundToInt
 
 class ProfileDetails : Hook("Profile details", "Add extra fields and details to profiles") {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesObserver = "Ve.p" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
-    private val profileViewHolder = "Ve.D\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "cf.p" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
+    private val profileViewHolder = "cf.F\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
 
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -158,7 +158,8 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
         }
 
         findClass(distanceUtils).hook("c", HookStage.AFTER) { param ->
-            val distance = param.arg<Double>(1)
+            val distance = param.arg<Double>(0)
+            // val isAbbreviated = param.arg<Boolean>(1)
             val isFeet = param.arg<Boolean>(2)
 
             param.setResult(
