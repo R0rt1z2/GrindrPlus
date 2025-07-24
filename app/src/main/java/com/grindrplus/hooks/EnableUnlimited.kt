@@ -15,6 +15,7 @@ class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
 ) {
+    private val profileModel = "com.grindrapp.android.persistence.model.Profile"
     private val paywallUtils = "Td.d" // search for 'app_restart_required'
     private val persistentAdBannerContainer = "Y6.J3" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_container);'
     private val subscribeToInterstitialsList = listOf(
@@ -88,6 +89,12 @@ class EnableUnlimited : Hook(
             if (param.args().isNotEmpty()) {
                 val rootView = param.arg<View>(0)
                 hideViews(rootView, listOf("persistent_banner_ad_container"))
+            }
+        }
+
+        setOf("isBlockable", "component60").forEach {
+            findClass(profileModel).hook(it, HookStage.BEFORE) { param ->
+                param.setResult(true)
             }
         }
 
