@@ -106,7 +106,6 @@ class FeatureGranting : Hook(
         featureManager.add(Feature("CookieTap", Config.get("enable_cookie_tap", false, true) as Boolean))
         featureManager.add(Feature("VipFlag", Config.get("enable_vip_flag", false, true) as Boolean))
         featureManager.add(Feature("PositionFilter", true))
-        featureManager.add(Feature("AgeVerification", true))
         featureManager.add(Feature("BanterFeatureGate", true))
         featureManager.add(Feature("TakenOnGrindrWatermarkFlag", false))
         featureManager.add(Feature("gender-filter", true))

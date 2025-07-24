@@ -101,6 +101,7 @@ object GrindrPlus {
         "E4.E" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     internal val grindrLocationProvider = "F9.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
+    internal val ageVerificationActivity = "com.grindrapp.android.ageverification.presentation.ui.AgeVerificationActivity"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val taskScheduer = TaskScheduler(ioScope)
@@ -175,6 +176,10 @@ object GrindrPlus {
 
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                if (activity.javaClass.name == ageVerificationActivity) {
+                    showAgeVerificationComplianceDialog(activity)
+                }
+
                 if (shouldShowBridgeConnectionError) {
                     showBridgeConnectionError(activity)
                     shouldShowBridgeConnectionError = false
@@ -411,6 +416,45 @@ object GrindrPlus {
         } catch (e: Exception) {
             Logger.e("Failed to show bridge error dialog: ${e.message}", LogSource.MODULE)
             showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
+        }
+    }
+
+    private fun showAgeVerificationComplianceDialog(activity: Activity) {
+        try {
+            val dialog = android.app.AlertDialog.Builder(activity)
+                .setTitle("Age Verification Required")
+                .setMessage("You are accessing Grindr from the UK where age verification is legally mandated.\n\n" +
+                        "LEGAL COMPLIANCE NOTICE:\n" +
+                        "GrindrPlus does NOT bypass, disable, or interfere with age verification systems. Any attempt to circumvent age verification requirements is illegal under UK law and is strictly prohibited.\n\n" +
+                        "MANDATORY REQUIREMENTS:\n" +
+                        "1. Complete age verification using the official Grindr application\n" +
+                        "2. Comply with all UK legal verification processes\n" +
+                        "3. Install GrindrPlus only after successful verification through official channels\n\n" +
+                        "WARNING:\n" +
+                        "Continued use of this module without proper age verification may result in legal consequences. The developers assume no responsibility for violations of age verification laws.\n\n" +
+                        "This module operates in full compliance with legal requirements and does not provide any means to bypass verification systems.")
+                .setPositiveButton("I Understand") { dialog, _ ->
+                    activity.finish()
+                    dialog.dismiss()
+                    showToast(Toast.LENGTH_LONG,
+                        "Please complete age verification in the official Grindr app first, then reinstall GrindrPlus")
+                }
+                .setNegativeButton("Exit App") { dialog, _ ->
+                    dialog.dismiss()
+                    android.os.Process.killProcess(android.os.Process.myPid())
+                }
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setCancelable(false)
+                .create()
+
+            dialog.show()
+            Logger.i("Age verification compliance dialog shown", LogSource.MODULE)
+
+        } catch (e: Exception) {
+            Logger.e("Failed to show age verification dialog: ${e.message}", LogSource.MODULE)
+            showToast(Toast.LENGTH_LONG,
+                "Age verification required. Please use official Grindr app to verify, then reinstall GrindrPlus.")
+            activity.finish()
         }
     }
 
