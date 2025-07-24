@@ -182,32 +182,34 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
         }
 
         findClass(profileViewState).hook("getWeight", HookStage.AFTER) { param ->
-            val weight = param.getResult()
-            val height = callMethod(param.thisObject(), "getHeight")
+            if (Config.get("show_bmi_in_profile", true) as Boolean) {
+                val weight = param.getResult()
+                val height = callMethod(param.thisObject(), "getHeight")
 
-            if (weight != null && height != null) {
-                val BMI =
-                    calculateBMI(
-                        "kg" in weight.toString(),
-                        w2n("kg" in weight.toString(), weight.toString()),
-                        h2n("kg" in weight.toString(), height.toString())
-                    )
-                if (Config.get("do_gui_safety_checks", true) as Boolean) {
-                    if (weight.toString().contains("(")) {
-                        logw("BMI details are already present?")
-                        return@hook
+                if (weight != null && height != null) {
+                    val BMI =
+                        calculateBMI(
+                            "kg" in weight.toString(),
+                            w2n("kg" in weight.toString(), weight.toString()),
+                            h2n("kg" in weight.toString(), height.toString())
+                        )
+                    if (Config.get("do_gui_safety_checks", true) as Boolean) {
+                        if (weight.toString().contains("(")) {
+                            logw("BMI details are already present?")
+                            return@hook
+                        }
                     }
+                    param.setResult(
+                        "$weight - ${String.format("%.1f", BMI)} (${
+                            mapOf(
+                                "Underweight" to 18.5,
+                                "Normal weight" to 24.9,
+                                "Overweight" to 29.9,
+                                "Obese" to Double.MAX_VALUE
+                            ).entries.first { it.value > BMI }.key
+                        })"
+                    )
                 }
-                param.setResult(
-                    "$weight - ${String.format("%.1f", BMI)} (${
-                        mapOf(
-                            "Underweight" to 18.5,
-                            "Normal weight" to 24.9,
-                            "Overweight" to 29.9,
-                            "Obese" to Double.MAX_VALUE
-                        ).entries.first { it.value > BMI }.key
-                    })"
-                )
             }
         }
     }

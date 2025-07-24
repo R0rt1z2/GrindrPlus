@@ -168,6 +168,18 @@ class SettingsViewModel(
                             if (value == null || value <= 0) "Duration must be a positive number" else null
                         }
                     ),
+                    SwitchSetting(
+                        id = "show_bmi_in_profile",
+                        title = "Show BMI in Profile",
+                        description = "Display BMI in the profile section",
+                        isChecked = Config.get("show_bmi_in_profile", true) as Boolean,
+                        onCheckedChange = {
+                            viewModelScope.launch {
+                                Config.put("show_bmi_in_profile", it)
+                                loadSettings()
+                            }
+                        }
+                    ),
                     TextSetting(
                         id = "favorites_grid_columns",
                         title = "Favorites grid columns",
