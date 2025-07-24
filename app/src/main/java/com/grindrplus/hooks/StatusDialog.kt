@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
+import com.grindrplus.core.Config
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
@@ -64,12 +65,16 @@ class StatusDialog : Hook(
                     "Disconnected"
                 }
 
+                val androidDeviceIdStatus = (Config.get("android_device_id", "") as String)
+                    .let { id -> if (id.isNotEmpty()) "Spoofing ($id)" else "Not Spoofing (stock)" }
+
                 val message = buildString {
                     appendLine("GrindrPlus is active and running")
                     appendLine()
                     appendLine("App Information:")
                     appendLine("• Version: $appVersionName ($appVersionCode)")
                     appendLine("• Package: $packageName")
+                    appendLine("• Android ID: $androidDeviceIdStatus")
                     appendLine()
                     appendLine("Module Information:")
                     appendLine("• GrindrPlus: $moduleVersion")
