@@ -3,6 +3,7 @@ package com.grindrplus.utils
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.hooks.AllowScreenshots
+import com.grindrplus.hooks.AntiBlock
 import com.grindrplus.hooks.AntiDetection
 import com.grindrplus.hooks.BanManagement
 import com.grindrplus.hooks.ChatIndicators
@@ -44,7 +45,7 @@ class HookManager {
                 EnableUnlimited(),
                 AntiDetection(),
                 StatusDialog(),
-                // AntiBlock(),
+                AntiBlock(),
                 NotificationAlerts(),
                 DisableUpdates(),
                 DisableBoosting(),

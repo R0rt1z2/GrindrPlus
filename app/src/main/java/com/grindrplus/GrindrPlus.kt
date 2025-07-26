@@ -307,10 +307,13 @@ object GrindrPlus {
         )
 
         instanceManager.setCallback(userSession) { uSession ->
-            myProfileId = getObjectField(uSession, "z") as String
             instanceManager.setCallback(userAgent) { uAgent ->
                 instanceManager.setCallback(deviceInfo) { dInfo ->
                     httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+                    executeAsync {
+                        kotlinx.coroutines.delay(1500)
+                        fetchOwnUserId()
+                    }
                     taskManager.registerTasks()
                 }
             }
@@ -553,5 +556,46 @@ object GrindrPlus {
                 }
             }
         })
+    }
+
+    private fun fetchOwnUserId() {
+        executeAsync {
+            try {
+                Logger.d("Fetching own user ID...", LogSource.MODULE)
+                val response = httpClient.sendRequest(
+                    url = "https://grindr.mobi/v5/me/profile",
+                    method = "GET"
+                )
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (!responseBody.isNullOrEmpty()) {
+                        val jsonResponse = JSONObject(responseBody)
+                        val profilesArray = jsonResponse.optJSONArray("profiles")
+
+                        if (profilesArray != null && profilesArray.length() > 0) {
+                            val profile = profilesArray.getJSONObject(0)
+                            val profileId = profile.optString("profileId")
+
+                            if (profileId.isNotEmpty()) {
+                                myProfileId = profileId
+                                Logger.i("Own user ID fetched and saved: $myProfileId", LogSource.MODULE)
+                            } else {
+                                Logger.w("Profile ID field is empty in response", LogSource.MODULE)
+                            }
+                        } else {
+                            Logger.w("No profiles array found in response", LogSource.MODULE)
+                        }
+                    } else {
+                        Logger.w("Empty response body from profile endpoint", LogSource.MODULE)
+                    }
+                } else {
+                    Logger.e("Failed to fetch own profile: HTTP ${response.code}", LogSource.MODULE)
+                }
+            } catch (e: Exception) {
+                Logger.e("Error fetching own user ID: ${e.message}", LogSource.MODULE)
+                Logger.writeRaw(e.stackTraceToString())
+            }
+        }
     }
 }
