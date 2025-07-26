@@ -69,6 +69,10 @@ object GrindrPlus {
     var shouldShowVersionMismatchDialog = false
     var shouldShowBridgeConnectionError = false
 
+    private var isInitialized = false
+    private var isMainInitialized = false
+    private var isInstanceManagerInitialized = false
+
     var spline = PCHIP(
         listOf(
             1238563200L to 0,          // 2009-04-01
@@ -113,6 +117,12 @@ object GrindrPlus {
 
     fun init(modulePath: String, application: Application,
              versionCodes: IntArray, versionNames: Array<String>) {
+
+        if (isInitialized) {
+            Logger.d("GrindrPlus already initialized, skipping", LogSource.MODULE)
+            return
+        }
+
         this.context = application
         this.bridgeClient = BridgeClient(context)
 
@@ -174,23 +184,60 @@ object GrindrPlus {
             Config.put("forced_coordinates", "")
         }
 
+        registerActivityLifecycleCallbacks(application)
+
+        if (shouldShowVersionMismatchDialog) {
+            Logger.i("Version mismatch detected, stopping initialization", LogSource.MODULE)
+            return
+        }
+
+        try {
+            setupInstanceManager()
+        } catch (t: Throwable) {
+            Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)
+            Logger.writeRaw(t.stackTraceToString())
+            showToast(Toast.LENGTH_LONG, "Failed to hook critical classes: ${t.message}")
+            return
+        }
+
+        fetchRemoteData(splineDataEndpoint) { points ->
+            spline = PCHIP(points)
+            Logger.i("Updated spline with remote data", LogSource.MODULE)
+        }
+
+        try {
+            val initTime = measureTimeMillis { initializeCore() }
+            Logger.i("Initialization completed in $initTime ms", LogSource.MODULE)
+            isInitialized = true
+        } catch (t: Throwable) {
+            Logger.e("Failed to initialize: ${t.message}", LogSource.MODULE)
+            Logger.writeRaw(t.stackTraceToString())
+            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${t.message}")
+            return
+        }
+    }
+
+    private fun registerActivityLifecycleCallbacks(application: Application) {
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                if (activity.javaClass.name == ageVerificationActivity) {
-                    showAgeVerificationComplianceDialog(activity)
+                // Only handle special activities and one-time setup
+                when {
+                    activity.javaClass.name == ageVerificationActivity -> {
+                        showAgeVerificationComplianceDialog(activity)
+                    }
+                    shouldShowBridgeConnectionError -> {
+                        showBridgeConnectionError(activity)
+                        shouldShowBridgeConnectionError = false
+                    }
+                    shouldShowVersionMismatchDialog -> {
+                        showVersionMismatchDialog(activity)
+                        shouldShowVersionMismatchDialog = false
+                    }
                 }
 
-                if (shouldShowBridgeConnectionError) {
-                    showBridgeConnectionError(activity)
-                    shouldShowBridgeConnectionError = false
+                if (isImportingSomething) {
+                    handleImports(activity)
                 }
-
-                if (shouldShowVersionMismatchDialog) {
-                    showVersionMismatchDialog(activity)
-                    shouldShowVersionMismatchDialog = false
-                }
-
-                handleImports(activity)
             }
 
             override fun onActivityStarted(activity: Activity) {}
@@ -213,55 +260,42 @@ object GrindrPlus {
 
             override fun onActivityDestroyed(activity: Activity) {}
         })
-
-        if (shouldShowVersionMismatchDialog) {
-            Logger.i("Version mismatch detected, stopping initialization", LogSource.MODULE)
-            return
-        }
-
-        try {
-            instanceManager.hookClassConstructors(
-                userAgent,
-                userSession,
-                deviceInfo,
-                grindrLocationProvider,
-                serverDrivenCascadeRepo
-            )
-
-            instanceManager.setCallback(userSession) { uSession ->
-                myProfileId = getObjectField(uSession, "z") as String
-                instanceManager.setCallback(userAgent) { uAgent ->
-                    instanceManager.setCallback(deviceInfo) { dInfo ->
-                        httpClient = Client(Interceptor(uSession, uAgent, dInfo))
-                        taskManager.registerTasks() // Tasks require httpClient
-                    }
-                }
-            }
-        } catch (t: Throwable) {
-            Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)
-            Logger.writeRaw(t.stackTraceToString())
-            showToast(Toast.LENGTH_LONG, "Failed to hook critical classes: ${t.message}")
-            return
-        }
-
-        fetchRemoteData(splineDataEndpoint) { points ->
-            spline = PCHIP(points)
-            Logger.i("Updated spline with remote data", LogSource.MODULE)
-        }
-
-        try {
-            val initTime = measureTimeMillis { init() }
-            Logger.i("Initialization completed in $initTime ms", LogSource.MODULE)
-        } catch (t: Throwable) {
-            Logger.e("Failed to initialize: ${t.message}", LogSource.MODULE)
-            Logger.writeRaw(t.stackTraceToString())
-            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${t.message}")
-            return
-        }
     }
 
-    private fun init() {
-        Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
+    private fun setupInstanceManager() {
+        if (isInstanceManagerInitialized) {
+            Logger.d("InstanceManager already initialized, skipping", LogSource.MODULE)
+            return
+        }
+
+        instanceManager.hookClassConstructors(
+            userAgent,
+            userSession,
+            deviceInfo,
+            grindrLocationProvider,
+            serverDrivenCascadeRepo
+        )
+
+        instanceManager.setCallback(userSession) { uSession ->
+            myProfileId = getObjectField(uSession, "z") as String
+            instanceManager.setCallback(userAgent) { uAgent ->
+                instanceManager.setCallback(deviceInfo) { dInfo ->
+                    httpClient = Client(Interceptor(uSession, uAgent, dInfo))
+                    taskManager.registerTasks()
+                }
+            }
+        }
+
+        isInstanceManagerInitialized = true
+    }
+
+    private fun initializeCore() {
+        if (isMainInitialized) {
+            Logger.d("Core already initialized, skipping", LogSource.MODULE)
+            return
+        }
+
+        Logger.i("Initializing GrindrPlus core...", LogSource.MODULE)
 
         if ((Config.get("reset_database", false) as Boolean)) {
             Logger.i("Resetting database...", LogSource.MODULE)
@@ -270,8 +304,8 @@ object GrindrPlus {
         }
 
         hookManager.init()
+        isMainInitialized = true
     }
-
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
         val useContext = appContext ?: context
@@ -317,16 +351,16 @@ object GrindrPlus {
             Handler(Looper.getMainLooper()).postDelayed({
                 val intent = context.packageManager
                     .getLaunchIntentForPackage(context.packageName)?.apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
                 context.startActivity(intent)
                 android.os.Process.killProcess(android.os.Process.myPid())
             }, timeout)
         } else {
             val intent = context.packageManager
                 .getLaunchIntentForPackage(context.packageName)?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
             context.startActivity(intent)
             android.os.Process.killProcess(android.os.Process.myPid())
         }
