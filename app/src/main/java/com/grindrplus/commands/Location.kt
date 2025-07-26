@@ -222,7 +222,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             val url =
                 "https://nominatim.openstreetmap.org/search?q=${Uri.encode(location)}&format=json"
 
-            val randomUserAgent = getRandomGarbageUserAgent()
+            val randomUserAgent = getUserAgent()
             val request =
                 okhttp3.Request.Builder().url(url).header("User-Agent", randomUserAgent).build()
 
@@ -267,16 +267,47 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
     }
 
-    private fun getRandomGarbageUserAgent(): String {
-        val randomPlatform =
-            "Mozilla/5.0 (${getRandomGarbageString(10)}) AppleWebKit/${getRandomGarbageString(6)} (KHTML, like Gecko)"
-        val randomBrowser = "${getRandomGarbageString(6)}/${getRandomGarbageString(4)}"
-        return "$randomPlatform $randomBrowser"
-    }
+    private fun getUserAgent(): String {
+        val chromeVersions = listOf("120.0.0.0", "119.0.0.0", "118.0.0.0", "117.0.0.0", "116.0.0.0")
+        val firefoxVersions = listOf("121.0", "120.0", "119.0", "118.0", "117.0")
+        val safariVersions = listOf("17.2", "17.1", "17.0", "16.6", "16.5")
+        val edgeVersions = listOf("120.0.0.0", "119.0.0.0", "118.0.0.0", "117.0.0.0")
 
-    private fun getRandomGarbageString(length: Int): String {
-        val chars =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?"
-        return (1..length).map { chars.random() }.joinToString("")
+        val windowsVersions = listOf("10.0", "11.0")
+        val macVersions = listOf("10_15_7", "11_7_10", "12_7_2", "13_6_3", "14_2_1")
+
+        return when ((1..5).random()) {
+            1 -> {
+                val version = chromeVersions.random()
+                val winVer = windowsVersions.random()
+                "Mozilla/5.0 (Windows NT $winVer; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36"
+            }
+            2 -> {
+                val version = chromeVersions.random()
+                val macVer = macVersions.random()
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X $macVer) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36"
+            }
+            3 -> {
+                val version = firefoxVersions.random()
+                val platform = if ((1..2).random() == 1) {
+                    "Windows NT ${windowsVersions.random()}; Win64; x64"
+                } else {
+                    "Macintosh; Intel Mac OS X ${macVersions.random().replace("_", ".")}"
+                }
+                "Mozilla/5.0 ($platform; rv:$version) Gecko/20100101 Firefox/$version"
+            }
+            4 -> {
+                val safariVer = safariVersions.random()
+                val macVer = macVersions.random()
+                val webkitVer = "605.1.${(10..20).random()}"
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X $macVer) AppleWebKit/$webkitVer (KHTML, like Gecko) Version/$safariVer Safari/$webkitVer"
+            }
+            5 -> {
+                val version = edgeVersions.random()
+                val winVer = windowsVersions.random()
+                "Mozilla/5.0 (Windows NT $winVer; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36 Edg/$version"
+            }
+            else -> chromeVersions.random()
+        }
     }
 }
