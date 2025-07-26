@@ -13,6 +13,7 @@ import android.os.Looper
 import android.widget.Toast
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.core.Config
+import com.grindrplus.core.EventManager
 import com.grindrplus.core.InstanceManager
 import com.grindrplus.core.Logger
 import com.grindrplus.core.LogSource
@@ -24,8 +25,11 @@ import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
+import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.hookConstructor
 import dalvik.system.DexClassLoader
 import de.robv.android.xposed.XposedHelpers.getObjectField
+import de.robv.android.xposed.XposedHelpers.callMethod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,6 +41,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
@@ -106,6 +111,7 @@ object GrindrPlus {
     internal val grindrLocationProvider = "F9.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     internal val ageVerificationActivity = "com.grindrapp.android.ageverification.presentation.ui.AgeVerificationActivity"
+    internal val serverNotification = "com.grindrapp.android.network.websocket.model.WebSocketNotification\$ServerNotification"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
     private val taskScheduer = TaskScheduler(ioScope)
@@ -114,6 +120,8 @@ object GrindrPlus {
 
     private val splineDataEndpoint =
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/refs/heads/master/spline.json"
+
+    val serverNotifications = EventManager.serverNotifications
 
     fun init(modulePath: String, application: Application,
              versionCodes: IntArray, versionNames: Array<String>) {
@@ -193,6 +201,7 @@ object GrindrPlus {
 
         try {
             setupInstanceManager()
+            setupServerNotificationHook()
         } catch (t: Throwable) {
             Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)
             Logger.writeRaw(t.stackTraceToString())
@@ -217,10 +226,31 @@ object GrindrPlus {
         }
     }
 
+    private fun setupServerNotificationHook() {
+        try {
+            classLoader.loadClass(serverNotification).hookConstructor(HookStage.AFTER) { param ->
+                try {
+                    val serverNotification = param.thisObject()
+                    val typeValue = callMethod(serverNotification, "getTypeValue") as String
+                    val notificationId = callMethod(serverNotification, "getNotificationId") as String?
+                    val payload = callMethod(serverNotification, "getPayload") as JSONObject?
+                    val status = callMethod(serverNotification, "getStatus") as Int?
+                    val refValue = callMethod(serverNotification, "getRefValue") as String?
+
+                    EventManager.emitServerNotification(typeValue, notificationId, payload, status, refValue)
+                    Logger.d("ServerNotification hooked and event emitted: $typeValue", LogSource.MODULE)
+                } catch (e: Exception) {
+                    Logger.e("Failed to emit server notification event: ${e.message}", LogSource.MODULE)
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("Failed to setup server notification hook: ${e.message}", LogSource.MODULE)
+        }
+    }
+
     private fun registerActivityLifecycleCallbacks(application: Application) {
         application.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                // Only handle special activities and one-time setup
                 when {
                     activity.javaClass.name == ageVerificationActivity -> {
                         showAgeVerificationComplianceDialog(activity)
