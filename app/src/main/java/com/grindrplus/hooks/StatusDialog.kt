@@ -5,12 +5,18 @@ import android.content.Context
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
+import com.grindrplus.GrindrPlus.restartGrindr
 import com.grindrplus.core.Config
+import com.grindrplus.core.loge
+import com.grindrplus.core.logi
+import com.grindrplus.core.logw
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
+import java.io.File
 
 class StatusDialog : Hook(
     "Status Dialog",
@@ -91,6 +97,10 @@ class StatusDialog : Hook(
                     .setTitle("GrindrPlus")
                     .setMessage(message)
                     .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                    .setNegativeButton("Restart") { dialog, _ ->
+                        dialog.dismiss()
+                        performCacheClearOperation(context)
+                    }
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .show()
 
@@ -101,6 +111,128 @@ class StatusDialog : Hook(
                     .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                     .show()
             }
+        }
+    }
+
+    private fun performCacheClearOperation(context: Context) {
+        GrindrPlus.executeAsync {
+            val operationResult = CacheClearResult()
+
+            try {
+                val cacheDirs = getCacheDirectories(context)
+
+                cacheDirs.forEach { cacheDir ->
+                    if (cacheDir.exists() && cacheDir.canWrite()) {
+                        val clearResult = clearDirectoryContents(cacheDir)
+                        operationResult.addResult(clearResult)
+                    }
+                }
+
+                clearTemporarySharedPreferences(context, operationResult)
+                clearWebViewCache(context, operationResult)
+
+                val totalSizeMB = operationResult.totalSize / (1024 * 1024)
+                logi("Cache operation completed: ${operationResult.totalFiles} files removed, ${totalSizeMB}MB freed")
+                restartGrindr(100, "Restarting Grindr... (${totalSizeMB}MB freed)")
+            } catch (e: Exception) {
+                loge("Cache clear operation failed: ${e.message}")
+                GrindrPlus.runOnMainThread {
+                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Cache clear operation failed: ${e.localizedMessage}")
+                }
+            }
+        }
+    }
+
+    private fun getCacheDirectories(context: Context): List<File> {
+        val directories = mutableListOf<File>()
+
+        context.cacheDir?.let { directories.add(it) }
+        context.externalCacheDir?.let { directories.add(it) }
+
+        return directories
+    }
+
+    private fun clearDirectoryContents(directory: File): ClearOperationResult {
+        val result = ClearOperationResult()
+
+        if (!directory.exists() || !directory.isDirectory) {
+            return result
+        }
+
+        try {
+            directory.listFiles()?.forEach { file ->
+                val fileSize = if (file.isFile) file.length() else 0L
+
+                val deleted = if (file.isDirectory) {
+                    val subResult = clearDirectoryContents(file)
+                    result.addSubResult(subResult)
+                    file.delete()
+                } else {
+                    file.delete()
+                }
+
+                if (deleted) {
+                    result.filesCleared++
+                    result.bytesCleared += fileSize
+                }
+            }
+        } catch (e: SecurityException) {
+            logw("Permission denied accessing directory: ${directory.absolutePath}")
+        } catch (e: Exception) {
+            logw("Error processing directory: ${directory.absolutePath} - ${e.message}")
+        }
+
+        return result
+    }
+
+    private fun clearWebViewCache(context: Context, operationResult: CacheClearResult) {
+        try {
+            val webViewCacheDir = File(context.filesDir.parent, "app_webview")
+            if (webViewCacheDir.exists()) {
+                val clearResult = clearDirectoryContents(webViewCacheDir)
+                operationResult.addResult(clearResult)
+            }
+        } catch (e: Exception) {
+            logw("WebView cache clear failed: ${e.message}")
+        }
+    }
+
+    private fun clearTemporarySharedPreferences(context: Context, operationResult: CacheClearResult) {
+        try {
+            val sharedPrefsDir = File(context.filesDir.parent, "shared_prefs")
+            if (sharedPrefsDir.exists()) {
+                sharedPrefsDir.listFiles()
+                    ?.filter { it.name.contains("cache", ignoreCase = true) || it.name.contains("temp", ignoreCase = true) }
+                    ?.forEach { file ->
+                        val size = file.length()
+                        if (file.delete()) {
+                            operationResult.totalFiles++
+                            operationResult.totalSize += size
+                        }
+                    }
+            }
+        } catch (e: Exception) {
+            logw("Temporary shared preferences clear failed: ${e.message}")
+        }
+    }
+
+    private data class ClearOperationResult(
+        var filesCleared: Int = 0,
+        var bytesCleared: Long = 0L
+    ) {
+        fun addSubResult(other: ClearOperationResult) {
+            filesCleared += other.filesCleared
+            bytesCleared += other.bytesCleared
+        }
+    }
+
+    private data class CacheClearResult(
+        var totalFiles: Int = 0,
+        var totalSize: Long = 0L
+    ) {
+        fun addResult(result: ClearOperationResult) {
+            totalFiles += result.filesCleared
+            totalSize += result.bytesCleared
         }
     }
 }
