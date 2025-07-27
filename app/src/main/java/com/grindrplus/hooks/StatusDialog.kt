@@ -74,6 +74,11 @@ class StatusDialog : Hook(
                 val androidDeviceIdStatus = (Config.get("android_device_id", "") as String)
                     .let { id -> if (id.isNotEmpty()) "Spoofing ($id)" else "Not Spoofing (stock)" }
 
+                if (GrindrPlus.bridgeClient.isConnected()) {
+                    val isLSPosed = GrindrPlus.bridgeClient.isLSPosed()
+                    val isRooted = GrindrPlus.bridgeClient.isRooted()
+                }
+
                 val message = buildString {
                     appendLine("GrindrPlus is active and running")
                     appendLine()
@@ -85,6 +90,10 @@ class StatusDialog : Hook(
                     appendLine("Module Information:")
                     appendLine("• GrindrPlus: $moduleVersion")
                     appendLine("• Bridge Status: $bridgeStatus")
+                    if (GrindrPlus.bridgeClient.isConnected()) {
+                        appendLine("• LSPosed: ${GrindrPlus.bridgeClient.isLSPosed()}")
+                        appendLine("• Rooted: ${GrindrPlus.bridgeClient.isRooted()}")
+                    }
                     appendLine()
                     appendLine("Device Information:")
                     appendLine("• Device: $deviceModel")

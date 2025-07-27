@@ -260,7 +260,9 @@ object GrindrPlus {
                     }
                     activity.javaClass.name == browseExploreActivity -> {
                         if ((Config.get("maps_api_key", "") as String).isEmpty()) {
-                            showMapsApiKeyDialog(activity)
+                            if (!bridgeClient.isLSPosed()) {
+                                showMapsApiKeyDialog(activity)
+                            }
                         }
                     }
                     shouldShowBridgeConnectionError -> {

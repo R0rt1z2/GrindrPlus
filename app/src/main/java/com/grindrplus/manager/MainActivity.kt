@@ -78,6 +78,7 @@ import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
 import com.grindrplus.manager.utils.FileOperationHandler
+import com.grindrplus.manager.utils.isLSPosed
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.TaskManager
 import com.onebusaway.plausible.android.AndroidResourcePlausibleConfig
@@ -115,7 +116,13 @@ sealed class MainNavItem(
     // data object Experiments : MainNavItem(Icons.Rounded.Science, "Experiments", { ComingSoon() })
 
     companion object {
-        val VALUES by lazy { listOf(InstallPage, Home, BlockLog, Settings) }
+        val VALUES by lazy {
+            if (isLSPosed()) {
+                listOf(Home, BlockLog, Settings)
+            } else {
+                listOf(InstallPage, Home, BlockLog, Settings)
+            }
+        }
     }
 }
 

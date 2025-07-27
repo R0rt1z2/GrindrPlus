@@ -11,6 +11,8 @@ interface IBridgeService {
     void deleteForcedLocation(String packageName);
     void logBlockEvent(String profileId, String displayName, boolean isBlock, String packageName);
     String getBlockEvents();
+    boolean isRooted();
+    boolean isLSPosed();
     void clearBlockEvents();
     void sendNotification(String title, String message, int notificationId, String channelId, String channelName, String channelDescription);
     void sendNotificationWithActions(String title, String message, int notificationId, String channelId,

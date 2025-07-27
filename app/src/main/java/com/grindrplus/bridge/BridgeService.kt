@@ -370,6 +370,14 @@ class BridgeService : Service() {
                 coordinatesFile.delete()
             }
         }
+
+        override fun isRooted(): Boolean {
+            return com.grindrplus.manager.utils.isRooted(applicationContext)
+        }
+
+        override fun isLSPosed(): Boolean {
+            return com.grindrplus.manager.utils.isLSPosed()
+        }
     }
 
     private fun createNotificationChannel(
