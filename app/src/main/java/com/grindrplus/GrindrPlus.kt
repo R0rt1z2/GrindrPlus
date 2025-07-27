@@ -2,6 +2,7 @@ package com.grindrplus
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
@@ -46,6 +47,7 @@ import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
+import androidx.core.net.toUri
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
@@ -111,6 +113,7 @@ object GrindrPlus {
     internal val grindrLocationProvider = "F9.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     internal val ageVerificationActivity = "com.grindrapp.android.ageverification.presentation.ui.AgeVerificationActivity"
+    internal val browseExploreActivity = "com.grindrapp.android.ui.browse.BrowseExploreMapActivity"
     internal val serverNotification = "com.grindrapp.android.network.websocket.model.WebSocketNotification\$ServerNotification"
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -254,6 +257,11 @@ object GrindrPlus {
                 when {
                     activity.javaClass.name == ageVerificationActivity -> {
                         showAgeVerificationComplianceDialog(activity)
+                    }
+                    activity.javaClass.name == browseExploreActivity -> {
+                        if ((Config.get("maps_api_key", "") as String).isEmpty()) {
+                            showMapsApiKeyDialog(activity)
+                        }
                     }
                     shouldShowBridgeConnectionError -> {
                         showBridgeConnectionError(activity)
@@ -488,7 +496,7 @@ object GrindrPlus {
 
     private fun showAgeVerificationComplianceDialog(activity: Activity) {
         try {
-            val dialog = android.app.AlertDialog.Builder(activity)
+            val dialog = AlertDialog.Builder(activity)
                 .setTitle("Age Verification Required")
                 .setMessage("You are accessing Grindr from the UK where age verification is legally mandated.\n\n" +
                         "LEGAL COMPLIANCE NOTICE:\n" +
@@ -522,6 +530,42 @@ object GrindrPlus {
             showToast(Toast.LENGTH_LONG,
                 "Age verification required. Please use official Grindr app to verify, then reinstall GrindrPlus.")
             activity.finish()
+        }
+    }
+
+    private fun showMapsApiKeyDialog(context: Context) {
+        try {
+            AlertDialog.Builder(context)
+                .setTitle("Maps API Key Required")
+                .setMessage("Maps functionality requires a Google Maps API key for LSPatch users due to signature validation issues.\n\n" +
+                        "Quick Setup:\n" +
+                        "1. Create a Google Cloud project at console.cloud.google.com\n" +
+                        "2. Enable: Maps SDK for Android, Geocoding API, Maps JavaScript API\n" +
+                        "3. Create API key with NO restrictions\n" +
+                        "4. Add key to GrindrPlus settings\n" +
+                        "5. REINSTALL GrindrPlus (restart won't work)\n\n" +
+                        "Note: Google may request credit card for free tier.")
+                .setPositiveButton("Open Console") { dialog, _ ->
+                    dialog.dismiss()
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = "https://console.cloud.google.com/".toUri()
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+
+                        val appContext = context.applicationContext
+                        appContext.startActivity(intent)
+
+                    } catch (e: Exception) {
+                        showToast(Toast.LENGTH_LONG, "Unable to open browser. Please visit console.cloud.google.com manually")
+                    }
+                }
+                .setNegativeButton("Dismiss") { dialog, _ -> dialog.dismiss() }
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setCancelable(true)
+                .show()
+        } catch (e: Exception) {
+            Logger.e("Maps API key dialog error: ${e.message}")
         }
     }
 
