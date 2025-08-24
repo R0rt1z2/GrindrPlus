@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
@@ -55,22 +57,20 @@ import com.scottyab.rootbeer.RootBeer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 import com.grindrplus.manager.ui.components.FileDialog
 
 private val logEntries = mutableStateListOf<LogEntry>()
 
 @Composable
-fun InstallPage(context: Activity, innerPadding: PaddingValues) {
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val versionData = remember { mutableStateListOf<Data>() }
+fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
+    // 1. State from ViewModel
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val versionData = viewModel.versionData
+
+    // 2. UI-Specific State
     var selectedVersion by remember { mutableStateOf<Data?>(null) }
     var isInstalling by remember { mutableStateOf(false) }
     var isCloning by remember { mutableStateOf(false) }
@@ -85,12 +85,19 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
     var customVersionName by remember { mutableStateOf("custom") }
     var customBundleUri by remember { mutableStateOf<Uri?>(null) }
     var customModUri by remember { mutableStateOf<Uri?>(null) }
+
+    // 3. Side Effects
     val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
 
-    val print: Print = { output ->
-        val logType = ConsoleLogger.parseLogType(output)
-        context.runOnUiThread {
-            addLog(output, logType)
+    LaunchedEffect(Unit) {
+        viewModel.loadVersionData(manifestUrl.toString())
+    }
+
+    // Creates a background task to auto-select the latest version
+    LaunchedEffect(versionData.size) {
+        if (selectedVersion == null && versionData.isNotEmpty()) {
+            selectedVersion = versionData.first()
+            addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
         }
     }
 
@@ -108,32 +115,11 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
         )
     }
 
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            StorageUtils.cleanupOldInstallationFiles(context, true, null)
+    val print: Print = { output ->
+        val logType = ConsoleLogger.parseLogType(output)
+        context.runOnUiThread {
+            addLog(output, logType)
         }
-
-        addLog("Welcome to Grindr Plus Manager")
-        addLog("Loading available versions...", LogType.INFO)
-
-        loadVersionData(
-            manifestUrl = manifestUrl.toString(),
-            onSuccess = { data ->
-                versionData.clear()
-                versionData.addAll(data)
-                if (data.isNotEmpty()) {
-                    selectedVersion = data.first()
-                    addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
-                }
-                isLoading = false
-                addLog("Found ${data.size} available versions", LogType.SUCCESS)
-            },
-            onError = { error ->
-                errorMessage = error
-                isLoading = false
-                addLog("Failed to load version data: $error", LogType.ERROR)
-            }
-        )
     }
 
     fun startCustomInstallation() {
@@ -241,28 +227,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues) {
             LoadingScreen()
         } else if (errorMessage != null) {
             ErrorScreen(errorMessage!!) {
-                isLoading = true
-                errorMessage = null
-                activityScope.launch {
-                    addLog("Retrying version data load...", LogType.INFO)
-                    loadVersionData(
-                        manifestUrl = manifestUrl.toString(),
-                        onSuccess = { data ->
-                            versionData.clear()
-                            versionData.addAll(data)
-                            isLoading = false
-                            addLog(
-                                "Found ${data.size} available versions",
-                                LogType.SUCCESS
-                            )
-                        },
-                        onError = { error ->
-                            errorMessage = error
-                            isLoading = false
-                            addLog("Failed to load version data: $error", LogType.ERROR)
-                        }
-                    )
-                }
+                viewModel.loadVersionData(manifestUrl.toString())
             }
         } else {
             MessageBanner(
@@ -502,74 +467,6 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
         ) {
             Text("Retry")
         }
-    }
-}
-
-private fun loadVersionData(
-    manifestUrl: String = DATA_URL,
-    onSuccess: (List<Data>) -> Unit,
-    onError: (String) -> Unit,
-) {
-    activityScope.launch(Dispatchers.IO) {
-        try {
-            val client = OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build()
-
-            Logger.d("Loading version data from $manifestUrl")
-
-            val request = Request.Builder()
-                .url(manifestUrl)
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    throw IOException("Failed to load data: ${response.code}")
-                }
-
-                val responseBody = response.body?.string()
-                    ?: throw IOException("Empty response body")
-
-                val data = parseVersionData(responseBody)
-                withContext(Dispatchers.Main) {
-                    onSuccess(data)
-                }
-            }
-        } catch (e: Exception) {
-            Logger.e("Error loading version data: ${e.localizedMessage}")
-            withContext(Dispatchers.Main) {
-                onError(e.localizedMessage ?: "Unknown error")
-            }
-        }
-    }
-}
-
-private fun parseVersionData(jsonData: String): List<Data> {
-    try {
-        val result = mutableListOf<Data>()
-        val jsonObject = JSONObject(jsonData)
-        val keys = jsonObject.keys()
-
-        while (keys.hasNext()) {
-            val key = keys.next()
-            val jsonArray = jsonObject.getJSONArray(key)
-
-            if (jsonArray.length() >= 2) {
-                result.add(
-                    Data(
-                        modVer = key,
-                        grindrUrl = jsonArray.getString(0),
-                        modUrl = jsonArray.getString(1)
-                    )
-                )
-            }
-        }
-
-        return result.sortedByDescending { it.modVer }
-    } catch (e: JSONException) {
-        Logger.e("Error parsing version data: ${e.localizedMessage}")
-        throw IOException("Invalid data format: ${e.localizedMessage}")
     }
 }
 
