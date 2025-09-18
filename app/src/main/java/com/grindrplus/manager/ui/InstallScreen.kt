@@ -60,6 +60,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import com.grindrplus.manager.ui.components.FileDialog
+import com.grindrplus.manager.utils.isLSPosed
 
 private val logEntries = mutableStateListOf<LogEntry>()
 
@@ -239,9 +240,9 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 onDismiss = { warningBannerVisible = false }
             )
 
-            if (isRooted) {
+            if (isLSPosed()) {
                 MessageBanner(
-                    text = "We detected that your device is rooted.\nThe recommended way to use GrindrPlus with root is LSPosed.",
+                    text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
                     isVisible = rootedBannerVisible,
                     isPulsating = true,
                     modifier = Modifier.fillMaxWidth(),
