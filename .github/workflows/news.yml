@@ -1,0 +1,27 @@
+name: Fetch News from Telegram and dump to a json
+on:
+  workflow_dispatch:
+  schedule:
+     - cron: '*/1 * * * *'
+
+jobs:
+    fetch-news:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            - name: Fetch updates
+              run: |
+                curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/getUpdates?offset=-20" \
+                  | jq -c '.result[] | {message_id: .channel_post.message_id, text: .channel_post.text, date: .channel_post.date}' \
+                  | sed 's/^/|/' >> news.json && gawk -i inplace '!seen[$0]++' news.json && sed -i '/null/I d' news.json
+
+            - name: Commit and push if changed
+              run: |
+                git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                git config --local user.name "github-actions[bot]"
+                git add news.json
+                git diff --quiet && git diff --staged --quiet || git commit -m "GrindrPlus: Fetch latest news from Telegram"
+                git push

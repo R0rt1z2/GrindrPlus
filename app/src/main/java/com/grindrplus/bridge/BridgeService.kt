@@ -16,6 +16,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
+import com.grindrplus.manager.fetchNotifs
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -80,6 +82,17 @@ class BridgeService : Service() {
                 .setOngoing(true)
                 .setShowWhen(false)
                 .build()
+
+            try {
+                periodicTasksExecutor.scheduleWithFixedDelay(
+                    { runBlocking { fetchNotifs(this@BridgeService) } },
+                    0,
+                    15,
+                    java.util.concurrent.TimeUnit.SECONDS
+                )
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to schedule periodic tasks")
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceCompat.startForeground(
