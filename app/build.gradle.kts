@@ -1,6 +1,5 @@
-import java.io.ByteArrayOutputStream
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
-import java.net.URL
+import java.net.URI
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -10,19 +9,19 @@ plugins {
 }
 
 android {
-    val grindrVersionName = listOf("25.15.0")
-    val grindrVersionCode = listOf(144041)
-
     namespace = "com.grindrplus"
     compileSdk = 35
 
     defaultConfig {
+        val grindrVersionName = listOf("25.15.0")
+        val grindrVersionCode = listOf(144041)
         val gitCommitHash = getGitCommitHash() ?: "unknown"
+
         applicationId = "com.grindrplus"
         minSdk = 26
         targetSdk = 34
         versionCode = 14
-        versionName = "4.6.0-${grindrVersionName.joinToString("_")}_$gitCommitHash"
+        versionName = "4.6.0-${grindrVersionName.let { it.joinToString("_") }}_$gitCommitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -33,18 +32,20 @@ android {
         buildConfigField(
             "String[]",
             "TARGET_GRINDR_VERSION_NAMES",
-            grindrVersionName.joinToString(prefix = "{", separator = ", ", postfix = "}") { "\"$it\"" }
+            grindrVersionName.let { it.joinToString(prefix = "{", separator = ", ", postfix = "}") { version -> "\"$version\"" } }
         )
 
         buildConfigField(
             "int[]",
             "TARGET_GRINDR_VERSION_CODES",
-            grindrVersionCode.joinToString(prefix = "{", separator = ", ", postfix = "}") { "$it" }
+            grindrVersionCode.let { it.joinToString(prefix = "{", separator = ", ", postfix = "}") { code -> "$code" } }
         )
+    }
 
-        buildFeatures {
-            compose = true
-        }
+    buildFeatures {
+        buildConfig = true
+        aidl = true
+        compose = true
     }
 
     buildTypes {
@@ -64,11 +65,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-    }
-
-    buildFeatures {
-        buildConfig = true
-        aidl = true
     }
 
     packaging {
@@ -104,10 +100,8 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
     implementation(composeBom)
 
-    // Material Design 3
     implementation(libs.androidx.material3)
 
-    // Android Studio Preview support
     implementation(libs.androidx.ui.tooling.preview)
     debugImplementation(libs.androidx.ui.tooling)
 
@@ -136,55 +130,53 @@ dependencies {
 
 tasks.register("setupLSPatch") {
     doLast {
-        val jarUrl =
-            Regex("https:\\/\\/nightly\\.link\\/JingMatrix\\/LSPatch\\/workflows\\/main\\/master\\/lspatch-debug-[^.]+\\.zip").find(
-                URL("https://nightly.link/JingMatrix/LSPatch/workflows/main/master?preview").readText()
-            )!!.value
+        val jarUrl = Regex("https:\\/\\/nightly\\.link\\/JingMatrix\\/LSPatch\\/workflows\\/main\\/master\\/lspatch-debug-[^.]+\\.zip").find(
+            URI("https://nightly.link/JingMatrix/LSPatch/workflows/main/master?preview").toURL().readText()
+        )!!.value
 
-        exec {
-            commandLine = listOf("mkdir", "-p", "/tmp/lspatch")
-        }
+        providers.exec {
+            commandLine("mkdir", "-p", "/tmp/lspatch")
+        }.result.get()
 
-        exec {
-            commandLine = listOf("wget", jarUrl, "-O", "/tmp/lspatch/lspatch.zip")
-        }
+        providers.exec {
+            commandLine("wget", jarUrl, "-O", "/tmp/lspatch/lspatch.zip")
+        }.result.get()
 
-        exec {
-            commandLine = listOf("unzip", "-o", "/tmp/lspatch/lspatch.zip", "-d", "/tmp/lspatch")
-        }
+        providers.exec {
+            commandLine("unzip", "-o", "/tmp/lspatch/lspatch.zip", "-d", "/tmp/lspatch")
+        }.result.get()
 
-        val jarPath =
-            File("/tmp/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
+        val jarPath = File("/tmp/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
 
-        exec {
-            commandLine = listOf("unzip", "-o", jarPath, "assets/lspatch/so*", "-d", "src/main/")
-        }
+        providers.exec {
+            commandLine("unzip", "-o", jarPath, "assets/lspatch/so*", "-d", "${project.projectDir}/src/main/")
+        }.result.get()
 
-        exec {
-            commandLine = listOf("mv", jarPath, "./libs/lspatch.jar")
-        }
+        providers.exec {
+            commandLine("mv", jarPath, "${project.projectDir}/libs/lspatch.jar")
+        }.result.get()
 
-        exec {
-            commandLine = listOf("zip", "-d", "./libs/lspatch.jar", "com/google/common/util/concurrent/ListenableFuture.class")
-        }
+        providers.exec {
+            commandLine("zip", "-d", "${project.projectDir}/libs/lspatch.jar", "com/google/common/util/concurrent/ListenableFuture.class")
+        }.result.get()
 
-        exec {
-            commandLine = listOf("zip", "-d", "./libs/lspatch.jar", "com/google/errorprone/annotations/*")
-        }
+        providers.exec {
+            commandLine("zip", "-d", "${project.projectDir}/libs/lspatch.jar", "com/google/errorprone/annotations/*")
+        }.result.get()
     }
 }
 
 fun getGitCommitHash(): String? {
     return try {
-        if (exec {
-                commandLine = "git rev-parse --is-inside-work-tree".split(" ")
-            }.exitValue == 0) {
-            val output = ByteArrayOutputStream()
-            exec {
-                commandLine = "git rev-parse --short HEAD".split(" ")
-                standardOutput = output
-            }
-            output.toString().trim()
+        val isGitRepo = providers.exec {
+            commandLine("git", "rev-parse", "--is-inside-work-tree")
+            isIgnoreExitValue = true
+        }.result.get().exitValue == 0
+
+        if (isGitRepo) {
+            providers.exec {
+                commandLine("git", "rev-parse", "--short", "HEAD")
+            }.standardOutput.asText.get().trim()
         } else {
             null
         }
