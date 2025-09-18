@@ -508,8 +508,7 @@ object GrindrPlus {
                         "2. Comply with all UK legal verification processes\n" +
                         "3. Install GrindrPlus only after successful verification through official channels\n\n" +
                         "WARNING:\n" +
-                        "Continued use of this module without proper age verification may result in legal consequences. The developers assume no responsibility for violations of age verification laws.\n\n" +
-                        "This module operates in full compliance with legal requirements and does not provide any means to bypass verification systems.")
+                        "The developers of this module are not responsible for any legal consequences resulting from non-compliance with age verification requirements.")
                 .setPositiveButton("I Understand") { dialog, _ ->
                     activity.finish()
                     dialog.dismiss()
