@@ -18,7 +18,7 @@ class UnlimitedProfiles : Hook(
     "Allow unlimited profiles"
 ) {
     private val function2 = "kotlin.jvm.functions.Function2"
-    private val onProfileClicked = "com.grindrapp.android.ui.browse.w" // search for 'com.grindrapp.android.ui.browse.ServerDrivenCascadeViewModel$onProfileClicked$1'
+    private val onProfileClicked = "com.grindrapp.android.ui.browse.E" // search for 'com.grindrapp.android.ui.browse.ServerDrivenCascadeViewModel$onProfileClicked$1'
     private val profileWithPhoto = "com.grindrapp.android.persistence.pojo.ProfileWithPhoto"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"

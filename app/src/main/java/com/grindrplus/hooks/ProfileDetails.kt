@@ -26,8 +26,8 @@ import kotlin.math.roundToInt
 
 class ProfileDetails : Hook("Profile details", "Add extra fields and details to profiles") {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesObserver = "cf.p" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
-    private val profileViewHolder = "cf.F\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "Uh.t" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
+    private val profileViewHolder = "ng.A\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
 
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -50,8 +50,11 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
         }
 
         findClass(blockedProfilesObserver).hook("onChanged", HookStage.AFTER) { param ->
+            // recently got merged into a case statement, so filter for the right argument type
+            if ((getObjectField(param.thisObject(), "a") as Int) != 0) return@hook
+
             val profileList = getObjectField(
-                getObjectField(param.thisObject(), "a"), "o") as ArrayList<*>
+                getObjectField(param.thisObject(), "b"), "o") as ArrayList<*>
             for (profile in profileList) {
                 val profileId = callMethod(profile, "getProfileId") as String
                 val displayName =

@@ -48,13 +48,12 @@ object Utils {
 
         val chatArgsInstance = chatArgsClass.constructors.first().newInstance(
             conversationMetadataInstance,
-            "0xDEADBEEF", // str
+            "notification_chat_message", // str
             profileType,
             refererType,
             "0xDEADBEEF", // str2
             "0xDEADBEEF", // str3
             null,
-            null, // chatMediaDrawerArgs
             false,
             844
         )

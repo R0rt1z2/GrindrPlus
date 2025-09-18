@@ -11,8 +11,8 @@ class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
 ) {
-    private val drawerProfileUiState = "Af.k\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
-    private val radarUiModel = "tc.a\$a" // search for 'RadarUiModel(boostButton='
+    private val drawerProfileUiState = "Lg.h\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
+    private val radarUiModel = "Gd.a\$a" // search for 'RadarUiModel(boostButton='
     private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUiModel"
     private val rightNowMicrosFabUiModel =
         "com.grindrapp.android.rightnow.presentation.model.RightNowMicrosFabUiModel"
@@ -61,7 +61,7 @@ class DisableBoosting : Hook(
         //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
         //   'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
         //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
-        listOf("Kf.r0", "Kf.t0", "Kf.x0", "Kf.s0").forEach {
+        listOf("Vg.w0", "Vg.y0", "Vg.C0", "Vg.x0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }

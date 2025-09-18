@@ -106,11 +106,11 @@ object GrindrPlus {
     val currentActivity: Activity?
         get() = currentActivityRef?.get()
 
-    internal val userAgent = "g7.g" // search for 'grindr3/'
-    internal val userSession = "Ng.f" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    internal val userAgent = "U7.q" // search for 'grindr3/'
+    internal val userSession = "com.grindrapp.android.usersession.a" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
-        "E4.E" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
-    internal val grindrLocationProvider = "F9.d" // search for 'system settings insufficient for location request, attempting to resolve'
+        "i5.w" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    internal val grindrLocationProvider = "Ia.d" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     internal val ageVerificationActivity = "com.grindrapp.android.ageverification.presentation.ui.AgeVerificationActivity"
     internal val browseExploreActivity = "com.grindrapp.android.ui.browse.BrowseExploreMapActivity"

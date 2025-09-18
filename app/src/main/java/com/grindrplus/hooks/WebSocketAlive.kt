@@ -13,12 +13,12 @@ import com.grindrplus.utils.hook
 import de.robv.android.xposed.XposedHelpers.callMethod
 
 class WebSocketAlive : Hook(
-    "Background WebSocket Keep Alive",
+    "Keep Alive WebSocket",
     "Prevents WebSocket disconnections when app goes to background. Causes battery drain, use with caution."
 ) {
     private val safeDkLifecycleManager = "com.safedk.android.internal.b"
     private val webSocketClientImpl = "com.grindrapp.android.network.websocket.WebSocketClientImpl"
-    private val webSocketFactory = "Aa.p"
+    private val webSocketFactory = "Ab.p"
 
     override fun init() {
         hookSafeDkBackgroundDetection()

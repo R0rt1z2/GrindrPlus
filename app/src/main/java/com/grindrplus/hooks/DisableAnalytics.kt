@@ -11,26 +11,7 @@ class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
 ) {
-    private val analyticsRestService = "E6.a" // search for 'v1/telemetry'
-
     override fun init() {
-        val analyticsRestServiceClass = findClass(analyticsRestService)
-
-        // First party analytics
-        findClass(RETROFIT_NAME)
-            .hook("create", HookStage.AFTER) { param ->
-                val service = param.getResult()
-                if (service != null && analyticsRestServiceClass.isAssignableFrom(service.javaClass)) {
-                    param.setResult(createServiceProxy(service, analyticsRestServiceClass))
-                }
-            }
-
-        // Amplitude Analytics
-        findClass("com.amplitude.android.Configuration")
-            .hook("getOptOut", HookStage.AFTER) { param ->
-                param.setResult(true)
-            }
-
         // Braze
         findClass("com.braze.Braze\$Companion")
             // See https://braze-inc.github.io/braze-android-sdk/kdoc/braze-android-sdk/com.braze/-braze/-companion/outbound-network-requests-offline.html

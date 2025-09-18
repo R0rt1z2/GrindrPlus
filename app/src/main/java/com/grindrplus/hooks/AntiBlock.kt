@@ -25,16 +25,18 @@ class AntiBlock : Hook(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var myProfileId: Long = 0
-    private val chatDeleteConversationPlugin = "U5.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "Y8.i" // search for '("chat_read_receipt", conversationId, null);'
-    private val individualUnblockActivityViewModel = "cf.s" // search for '@DebugMetadata(c = "com.grindrapp.android.ui.block.IndividualUnblockActivityViewModel$unblockAllProfile$1", f = "IndividualUnblockActivityViewModel.kt",'
+    private val chatDeleteConversationPlugin = "F6.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
+    private val inboxFragmentV2DeleteConversations = "ca.i" // search for '("chat_read_receipt", conversationId, null);'
+    private val individualUnblockActivityViewModel = "ng.p" // search for 'SnackbarEvent.i.ERROR, R.string.unblock_individual_sync_blocks_failure, null, new SnackbarEvent'
 
     override fun init() {
-        findClass(individualUnblockActivityViewModel).hook("I", HookStage.BEFORE) { param ->
+        // search for '.setValue(new DialogMessage(116, null, 2, null));'
+        findClass(individualUnblockActivityViewModel).hook("K", HookStage.BEFORE) { param ->
             GrindrPlus.shouldTriggerAntiblock = false
         }
 
-        findClass(individualUnblockActivityViewModel).hook("I", HookStage.AFTER) { param ->
+        // search for '.setValue(new DialogMessage(116, null, 2, null));'
+        findClass(individualUnblockActivityViewModel).hook("K", HookStage.AFTER) { param ->
             Thread.sleep(700) // Wait for WS to unblock
             GrindrPlus.shouldTriggerAntiblock = true
         }
