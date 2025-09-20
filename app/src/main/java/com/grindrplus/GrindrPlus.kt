@@ -48,6 +48,7 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
 import androidx.core.net.toUri
+import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
@@ -133,6 +134,8 @@ object GrindrPlus {
             Logger.d("GrindrPlus already initialized, skipping", LogSource.MODULE)
             return
         }
+
+        setupCrashLogging()
 
         this.context = application
         this.bridgeClient = BridgeClient(context)
@@ -640,6 +643,32 @@ object GrindrPlus {
             } catch (e: Exception) {
                 Logger.e("Error fetching own user ID: ${e.message}", LogSource.MODULE)
                 Logger.writeRaw(e.stackTraceToString())
+            }
+        }
+    }
+
+    private fun setupCrashLogging() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                Logger.e("Uncaught exception in thread: ${thread.name}", LogSource.MODULE)
+                Logger.e("Exception: ${throwable.javaClass.simpleName}: ${throwable.message}", LogSource.MODULE)
+                Logger.writeRaw("Thread: ${thread.name} (id=${thread.id})")
+                Logger.writeRaw("Exception: ${throwable.javaClass.name}")
+                Logger.writeRaw("Message: ${throwable.message}")
+                Logger.writeRaw("Stack trace:")
+                Logger.writeRaw(throwable.stackTraceToString())
+
+                throwable.cause?.let { cause ->
+                    Logger.writeRaw("Caused by: ${cause.javaClass.name}: ${cause.message}")
+                    Logger.writeRaw(cause.stackTraceToString())
+                }
+            } catch (e: Exception) {
+                Timber.tag("GrindrPlus").e("Failed to log crash: ${e.message}")
+                Timber.tag("GrindrPlus").e("Original crash: ${throwable.message}")
+            } finally {
+                defaultHandler?.uncaughtException(thread, throwable)
             }
         }
     }
