@@ -627,7 +627,6 @@ object GrindrPlus {
 
                             if (profileId.isNotEmpty()) {
                                 myProfileId = profileId
-                                Logger.i("Own user ID fetched and saved: $myProfileId", LogSource.MODULE)
                             } else {
                                 Logger.w("Profile ID field is empty in response", LogSource.MODULE)
                             }
