@@ -44,9 +44,7 @@ This mod does not collect any personal data nor does it display ads of any kind.
 </details>
 
 <details closed>
-  <summary>Media</summary>
-   
-  - `Unlimited expiring photos`
+  <summary>Media</565485d expiring photos`
   - `View all albums you've received`
   - `Ability to take screenshots`
 </details>
