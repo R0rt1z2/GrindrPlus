@@ -13,8 +13,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        val grindrVersionName = listOf("25.15.0")
-        val grindrVersionCode = listOf(144041)
+        val grindrVersionName = listOf("25.20.0")
+        val grindrVersionCode = listOf(147239)
         val gitCommitHash = getGitCommitHash() ?: "unknown"
 
         applicationId = "com.grindrplus"

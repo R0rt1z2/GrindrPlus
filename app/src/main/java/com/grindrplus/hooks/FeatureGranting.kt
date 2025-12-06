@@ -12,11 +12,12 @@ import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
+// supported version: 25.20.0
 class FeatureGranting : Hook(
     "Feature granting",
     "Grant all Grindr features"
 ) {
-    private val isFeatureFlagEnabled = "Hc.d" // search for 'implements IsFeatureFlagEnabled {'
+    private val isFeatureFlagEnabled = "ih.e" // search for 'implements IsFeatureFlagEnabled {'
     private val upsellsV8Model = "com.grindrapp.android.model.UpsellsV8"
     private val insertsModel = "com.grindrapp.android.model.Inserts"
     private val settingDistanceVisibilityViewModel =
@@ -29,6 +30,7 @@ class FeatureGranting : Hook(
     override fun init() {
         initFeatures()
 
+		// search for 'Assignment.Flag'
         findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
             val flagKey = callMethod(param.args()[0], "toString") as String
             if (featureManager.isManaged(flagKey)) {

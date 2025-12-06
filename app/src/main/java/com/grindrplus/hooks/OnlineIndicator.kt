@@ -6,11 +6,12 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import kotlin.time.Duration.Companion.minutes
 
+// supported version: 25.20.0
 class OnlineIndicator : Hook(
     "Online indicator",
     "Customize online indicator duration"
 ) {
-    val utils = "di.q0" // search for ' <= 600000;'
+    val utils = "Vm.m0" // search for ' <= 600000;'
 
     override fun init() {
         findClass(utils) // shouldShowOnlineIndicator()
