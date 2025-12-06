@@ -10,7 +10,10 @@ class AntiDetection : Hook(
     "Anti Detection",
     "Hides root, emulator, and environment detections"
 ) {
+
+	private val singleStartActivity = "com.grindrapp.android.ui.base.SingleStartActivity"
 	private val appLovinSdkClass = "com.applovin.sdk.AppLovinSdkUtils"
+	private val pubnativeUtils = "net.pubnative.lite.sdk.vpaid.utils.Utils"
 	private val facebookAppEventClass = "com.facebook.appevents.internal.AppEventUtility"
     private val devicePropertiesCollector = "siftscience.android.DevicePropertiesCollector"
     private val commonUtils = "com.google.firebase.crashlytics.internal.common.CommonUtils"
@@ -18,7 +21,17 @@ class AntiDetection : Hook(
 	private val crashlyticsDeviceData = "com.google.firebase.crashlytics.internal.model.AutoValue_StaticSessionData_DeviceData"
 
     override fun init() {
+		findClass(singleStartActivity)
+			.hook("N", HookStage.AFTER) { param ->
+				param.setResult(false)
+			}
+
 		findClass(appLovinSdkClass)
+			.hook("isEmulator", HookStage.AFTER) { param ->
+				param.setResult(false)
+			}
+
+		findClass(pubnativeUtils)
 			.hook("isEmulator", HookStage.AFTER) { param ->
 				param.setResult(false)
 			}
