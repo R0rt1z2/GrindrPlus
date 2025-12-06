@@ -24,6 +24,7 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
+// supported version: 25.20.0
 class ProfileDetails : Hook(
 	"Profile details",
 	"Add extra fields and details to profiles"

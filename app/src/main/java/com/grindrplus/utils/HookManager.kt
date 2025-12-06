@@ -49,7 +49,7 @@ class HookManager {
 //                AntiBlock(),
                 NotificationAlerts(),
                 DisableUpdates(),
-//                DisableBoosting(),
+                DisableBoosting(),
                 DisableShuffle(),
                 AllowScreenshots(),
                 ChatIndicators(),
