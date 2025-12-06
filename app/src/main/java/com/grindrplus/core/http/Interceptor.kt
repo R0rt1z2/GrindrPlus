@@ -19,13 +19,13 @@ class Interceptor(
     private fun modifyRequest(originalRequest: Request): Request {
         try {
             // search for 'getJwt().length() > 0 &&' in userSession
-            val isLoggedIn = invokeMethodSafe(userSession, "s") as? Boolean ?: false
+            val isLoggedIn = invokeMethodSafe(userSession, "r") as? Boolean ?: false
 
             val builder: Builder = originalRequest.newBuilder()
 
             if (isLoggedIn) {
-                // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
-                val authTokenFlow = invokeMethodSafe(userSession, "y")
+                // search for 'return FlowKt.asStateFlow' in userSession (return type is StateFlow<String>)
+                val authTokenFlow = invokeMethodSafe(userSession, "x")
                 val authToken = if (authTokenFlow != null) {
                     invokeMethodSafe(authTokenFlow, "getValue") as? String ?: ""
                 } else {
@@ -33,7 +33,7 @@ class Interceptor(
                 }
 
                 // search for one line method returning an string in userSession
-                val roles = invokeMethodSafe(userSession, "G") as? String ?: ""
+                val roles = invokeMethodSafe(userSession, "F") as? String ?: ""
 
                 if (authToken.isNotEmpty()) {
                     builder.header("Authorization", "Grindr3 $authToken")
@@ -86,7 +86,7 @@ class Interceptor(
             val result = method.invoke(obj)
             result
         } catch (e: NoSuchMethodException) {
-            Logger.e("Method not found: $methodName on ${obj?.javaClass?.simpleName}", LogSource.HTTP)
+            Logger.e("Method not found: $methodName on ${obj?.javaClass?.name}", LogSource.HTTP)
             null
         } catch (e: Exception) {
             Logger.e("Failed to invoke method $methodName: ${e.message}", LogSource.HTTP)

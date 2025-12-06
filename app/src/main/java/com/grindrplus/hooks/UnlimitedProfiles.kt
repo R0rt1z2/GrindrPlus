@@ -13,6 +13,7 @@ import de.robv.android.xposed.XposedHelpers.callStaticMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.Proxy
 
+// supported version: 25.20.0
 class UnlimitedProfiles : Hook(
     "Unlimited profiles",
     "Allow unlimited profiles"
@@ -37,7 +38,7 @@ class UnlimitedProfiles : Hook(
             }
 
         findClass(profileTagCascadeFragment) // search for 'new StringBuilder("cascadeClickEvent/position=");'
-            .hook("R", HookStage.BEFORE) { param ->
+            .hook("O", HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
 
