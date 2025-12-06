@@ -42,10 +42,10 @@ class EnableUnlimited : Hook(
     override fun init() {
         val userSessionClass = findClass(GrindrPlus.userSession)
 
-        userSessionClass.hook( // rolesUpdated()
-            "W", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(roles, "roles");' in userSession
-        ) { param ->
-            val roles = param.arg(0) as List<String>
+		userSessionClass.hook( // rolesUpdated()
+			"W", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(roles, "roles");' in userSession
+		) { param ->
+			val roles = param.arg(0) as List<String>
 			val allRoles = listOf(
 				"Plus",
 				"Xtra",
@@ -60,6 +60,14 @@ class EnableUnlimited : Hook(
 			logi("received roles: $roles, replacing with $allRoles")
 
 			param.setArg(0, allRoles)
+		}
+
+		// prevent leak of faked roles into http headers
+		// search for one line method returning an string in userSession
+		userSessionClass.hook( // get roles list as string
+			"F", HookStage.BEFORE
+		) { param ->
+			param.setResult("[]")
 		}
 
         subscribeToInterstitialsList.forEach {

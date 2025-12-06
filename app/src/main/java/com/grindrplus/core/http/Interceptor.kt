@@ -10,6 +10,7 @@ import java.io.IOException
 import java.util.TimeZone
 import okhttp3.Request.Builder
 
+// supported version: 25.20.0
 class Interceptor(
     private val userSession: Any,
     private val userAgent: Any,
