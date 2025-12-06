@@ -54,28 +54,40 @@ class DisableUpdates : Hook(
     }
 
     private fun fetchLatestVersionInfo() {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(versionInfoEndpoint).build()
+//        val client = OkHttpClient()
+//        val request = Request.Builder()
+//            .url(versionInfoEndpoint).build()
 
-        try {
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val jsonData = response.body?.string()
-                if (jsonData != null) {
-                    val json = JSONObject(jsonData)
-                    versionCode = json.getInt("versionCode")
-                    versionName = json.getString("versionName")
-                    logd("Successfully fetched version info: $versionName ($versionCode)")
-                    updateVersionInfo()
-                }
-            } else {
-                loge("Failed to fetch version info: ${response.message}")
-            }
-        } catch (e: Exception) {
-            loge("Error fetching version info: ${e.message}")
-            Logger.writeRaw(e.stackTraceToString())
-        }
+//		try {
+//			val response = client.newCall(request).execute()
+//			if (response.isSuccessful) {
+//				val jsonData = response.body?.string()
+//				if (jsonData != null) {
+//					val json = JSONObject(jsonData)
+//					versionCode = json.getInt("versionCode")
+//					versionName = json.getString("versionName")
+//					logd("Successfully fetched version info: $versionName ($versionCode)")
+//					updateVersionInfo()
+//				}
+//			} else {
+//				loge("Failed to fetch version info: ${response.message}")
+//			}
+//		} catch (e: Exception) {
+//			loge("Error fetching version info: ${e.message}")
+//			Logger.writeRaw(e.stackTraceToString())
+//		}
+
+
+		try {
+			versionCode = 147239
+			versionName = "25.20.0"
+			logd("Fake fetched version info: $versionName ($versionCode)")
+			updateVersionInfo()
+
+		} catch (e: Exception) {
+			loge("Error fetching version info: ${e.message}")
+			Logger.writeRaw(e.stackTraceToString())
+		}
     }
 
     private fun compareVersions(v1: String, v2: String): Int {
