@@ -24,10 +24,14 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
-class ProfileDetails : Hook("Profile details", "Add extra fields and details to profiles") {
+// supported version: 25.20.0
+class ProfileDetails : Hook(
+	"Profile details",
+	"Add extra fields and details to profiles"
+) {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesObserver = "Uh.t" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
-    private val profileViewHolder = "ng.A\$b" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "Hm.f" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
+    private val profileViewHolder = "bl.u\$c" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
 
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -53,8 +57,10 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
             // recently got merged into a case statement, so filter for the right argument type
             if ((getObjectField(param.thisObject(), "a") as Int) != 0) return@hook
 
-            val profileList = getObjectField(
-                getObjectField(param.thisObject(), "b"), "o") as ArrayList<*>
+			// what is the expected class?It is Object in the decompiled source
+			val obj = getObjectField(param.thisObject(), "b")
+			val profileList = getObjectField(obj, "o") as ArrayList<*>
+
             for (profile in profileList) {
                 val profileId = callMethod(profile, "getProfileId") as String
                 val displayName =
@@ -67,7 +73,7 @@ class ProfileDetails : Hook("Profile details", "Add extra fields and details to 
 
         findClass(profileViewHolder).hookConstructor(HookStage.AFTER) { param ->
             val textView =
-                getObjectField(param.thisObject(), "b") as TextView
+                getObjectField(param.thisObject(), "a") as TextView
 
             textView.setOnLongClickListener {
                 val text = textView.text.toString()

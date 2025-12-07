@@ -7,6 +7,7 @@ import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
 import com.grindrplus.utils.RetrofitUtils.createServiceProxy
 import com.grindrplus.utils.hook
 
+// supported version: 25.20.0
 class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"

@@ -39,14 +39,14 @@ class HookManager {
     fun registerHooks(init: Boolean = true) {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
-                WebSocketAlive(),
+//                WebSocketAlive(),
                 TimberLogging(),
                 BanManagement(),
                 FeatureGranting(),
                 EnableUnlimited(),
                 AntiDetection(),
-                StatusDialog(),
-                AntiBlock(),
+//                StatusDialog(),
+//                AntiBlock(),
                 NotificationAlerts(),
                 DisableUpdates(),
                 DisableBoosting(),
@@ -56,15 +56,15 @@ class HookManager {
                 ChatTerminal(),
                 DisableAnalytics(),
                 ExpiringMedia(),
-                Favorites(),
-                LocalSavedPhrases(),
+//                Favorites(),
+//                LocalSavedPhrases(),
                 LocationSpoofer(),
                 OnlineIndicator(),
                 UnlimitedProfiles(),
                 ProfileDetails(),
                 ProfileViews(),
-                QuickBlock(),
-                EmptyCalls(),
+//                QuickBlock(),
+//                EmptyCalls(),
                 UnlimitedAlbums()
             )
 
