@@ -41,8 +41,7 @@ class EnableUnlimited : Hook(
 
     override fun init() {
         val userSessionClass = findClass(GrindrPlus.userSession)
-
-		userSessionClass.hook( // rolesUpdated()
+        userSessionClass.hook( // rolesUpdated()
 			"W", HookStage.BEFORE // search for 'Intrinsics.checkNotNullParameter(roles, "roles");' in userSession
 		) { param ->
 			val roles = param.arg(0) as List<String>

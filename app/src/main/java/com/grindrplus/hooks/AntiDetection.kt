@@ -81,7 +81,7 @@ class AntiDetection : Hook(
                 param.setArg(2, false) // search for 'this.isRooted = ' in constructor
             }
 
-		findClass(crashlyticsDeviceData)
+        findClass(crashlyticsDeviceData)
 			.hookConstructor(HookStage.BEFORE) { param ->
 				param.setArg(5, false) // search for 'this.isEmulator = ' in constructor
 			}

@@ -568,11 +568,11 @@ class MainActivity : ComponentActivity() {
                                     navController.currentBackStackEntryAsState().value?.destination?.route
                                         ?: Home.toString()
 
-                                    MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
-                                        if (navigationItem.toString() == currentRoute) {
-                                            selectedItem = index
-                                        }
+                                MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
+                                    if (navigationItem.toString() == currentRoute) {
+                                        selectedItem = index
                                     }
+                                }
 
                                 NavigationBar {
                                     MainNavItem.VALUES.forEachIndexed { index, item ->

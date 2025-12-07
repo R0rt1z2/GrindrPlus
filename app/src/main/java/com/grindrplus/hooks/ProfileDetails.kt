@@ -58,7 +58,7 @@ class ProfileDetails : Hook(
             if ((getObjectField(param.thisObject(), "a") as Int) != 0) return@hook
 
 			// what is the expected class?It is Object in the decompiled source
-			val obj = getObjectField(param.thisObject(), "b")
+            val obj = getObjectField(param.thisObject(), "b")
 			val profileList = getObjectField(obj, "o") as ArrayList<*>
 
             for (profile in profileList) {
