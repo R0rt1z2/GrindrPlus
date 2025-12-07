@@ -8,11 +8,11 @@ class EmptyCalls : Hook(
     "Video calls",
     "Allow video calls on empty chats"
 ) {
-    private val individualChatNavViewModel = "W6.e0" // search for 'com.grindrapp.android.chat.presentation.viewmodel.IndividualChatNavViewModel'
+    private val individualChatNavViewModel = "ma.c0" // search for 'com.grindrapp.android.chat.presentation.viewmodel.IndividualChatNavViewModel'
 
     override fun init() {
         findClass(individualChatNavViewModel) // isTalkBefore()
-            .hook("G",  HookStage.BEFORE) { param ->
+            .hook("N",  HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
     }
