@@ -21,6 +21,9 @@ class DisableBoosting : Hook(
     private val boostStateClass =
         "com.grindrapp.android.ui.drawer.model.MicrosDrawerItemState\$Unavailable"
 
+	private val navbarClass = "com.grindrapp.android.home.presentation.model.HomeScreenBottomNavigationUiModel"
+	private val smallPersistentVector = "kotlinx.collections.immutable.implementations.immutableList.SmallPersistentVector"
+
     override fun init() {
         findClass(drawerProfileUiState).hookConstructor(HookStage.AFTER) { param ->
             setObjectField(param.thisObject(), "a", false) // showBoostMeButton
@@ -55,6 +58,17 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "isClickEnabled", false) // isClickEnabled
             setObjectField(param.thisObject(), "isFabVisible", false) // isFabVisible
         }
+
+		val spvConstructor = findClass(smallPersistentVector).constructors[0]
+
+		findClass(navbarClass).hookConstructor(HookStage.BEFORE) { param ->
+			val routeList = param.args()[2] as List<*>
+			spvConstructor
+			val newRouteArray =	routeList.filter { it?.javaClass?.simpleName != "Store" }.toTypedArray()
+			val newRouteList = spvConstructor.newInstance(newRouteArray)
+
+			param.setArg(2, newRouteList)
+		}
 
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
