@@ -25,8 +25,8 @@ class AntiBlock : Hook(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var myProfileId: Long = 0
-    private val chatDeleteConversationPlugin = "F6.c" // search for 'com.grindrapp.android.chat.ChatDeleteConversationPlugin'
-    private val inboxFragmentV2DeleteConversations = "ca.i" // search for '("chat_read_receipt", conversationId, null);'
+    private val chatDeleteConversationPlugin = "R9.c" // com.grindrapp.android.chat.ChatDeleteConversationPlugin
+    private val inboxFragmentV2DeleteConversations = "re.d" // ConversationInteractor.deleteConversations
     private val individualUnblockActivityViewModel = "ng.p" // search for 'SnackbarEvent.i.ERROR, R.string.unblock_individual_sync_blocks_failure, null, new SnackbarEvent'
 
     override fun init() {

@@ -11,6 +11,8 @@ import com.grindrplus.utils.HookAdapter
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.getAdditionalInstanceField
+import de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField
 
 class WebSocketAlive : Hook(
     "Keep Alive WebSocket",
@@ -76,6 +78,12 @@ class WebSocketAlive : Hook(
 
     private fun hookWebSocketLifecycle() {
         try {
+            // cache auth token for reconnects
+            findClass(webSocketClientImpl).hook("b", HookStage.BEFORE) { param ->
+                val auth = param.arg<String>(0)
+                setAdditionalInstanceField(param.thisObject(), "gp_last_auth_token", auth)
+            }
+
             findClass(webSocketClientImpl).hook("disconnect", HookStage.BEFORE) { param ->
                 if (isBackgroundTriggeredDisconnect()) {
                     logd("Preventing background-triggered WebSocket disconnect")
@@ -185,15 +193,12 @@ class WebSocketAlive : Hook(
     private fun scheduleReconnection(webSocketClient: Any, delayMs: Long) {
         Handler(Looper.getMainLooper()).postDelayed({
             try {
-                val urlField = webSocketClient.javaClass.getDeclaredField("c")
-                urlField.isAccessible = true
-                val authToken = urlField.get(webSocketClient) as? String
-
+                val authToken = getAdditionalInstanceField(webSocketClient, "gp_last_auth_token") as? String
                 if (authToken != null) {
                     callMethod(webSocketClient, "b", authToken)
                     logi("WebSocket reconnection initiated")
                 } else {
-                    logd("Cannot reconnect WebSocket - no auth token found")
+                    logd("Cannot reconnect WebSocket - no auth token cached")
                 }
             } catch (e: Exception) {
                 loge("Failed to auto-reconnect WebSocket: $e")

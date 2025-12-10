@@ -10,3 +10,6 @@ local.properties
 .idea/*
 .idea
 build_keys/*
+/.venv/
+*.xapk
+*XAPK*

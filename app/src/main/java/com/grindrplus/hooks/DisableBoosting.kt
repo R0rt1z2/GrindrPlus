@@ -7,7 +7,6 @@ import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.newInstance
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
-// supported version: 25.20.0
 class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
@@ -37,8 +36,7 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "c", false) // showRNBoostCard
             setObjectField(param.thisObject(), "i", null) // showDayPassItem
             setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
-            setObjectField(param.thisObject(), "u", false) // isRightNowAvailable
-			setObjectField(param.thisObject(), "w", false) // showMegaBoost
+            setObjectField(param.thisObject(), "s", false) // isRightNowAvailable
         }
 
         findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
@@ -59,12 +57,11 @@ class DisableBoosting : Hook(
         // the two anonymous functions that get called to invoke the annoying tooltip
         // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
         // search for:
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity$showTapsAndViewedMePopup$1$1'
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
-		//   "Il.w0" - 'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
-		// TODO find the showTapsAndViewedMePopup in 25.20.0
-        listOf("Il.w0").forEach {
+        //   'com.grindrapp.android.ui.home.HomeActivity$showTapsAndViewedMePopup$1$1'
+        //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
+        //   'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
+        //   'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
+        listOf("Vg.w0", "Vg.y0", "Vg.C0", "Vg.x0").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }

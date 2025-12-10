@@ -20,8 +20,8 @@ class LocalSavedPhrases : Hook(
     "Local saved phrases",
     "Save unlimited phrases locally"
 ) {
-    private val phrasesRestService = "x5.k" // search for 'v3/me/prefs'
-    private val createSuccessResult = "xb.a\$b" // search for 'Success(successValue='
+    private val phrasesRestService = "J8.k" // search for 'v3/me/prefs'
+    private val createSuccessResult = "Yb.a\$b" // search for 'Success(successValue='
     private val chatRestService = "com.grindrapp.android.chat.data.datasource.api.service.ChatRestService"
     private val addSavedPhraseResponse =
         "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"

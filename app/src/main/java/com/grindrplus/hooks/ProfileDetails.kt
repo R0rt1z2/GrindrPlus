@@ -24,14 +24,10 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
-// supported version: 25.20.0
-class ProfileDetails : Hook(
-	"Profile details",
-	"Add extra fields and details to profiles"
-) {
+class ProfileDetails : Hook("Profile details", "Add extra fields and details to profiles") {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesObserver = "Hm.f" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
-    private val profileViewHolder = "bl.u\$c" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "bl.u" // IndividualUnblockAdapter (blockedProfiles list)
+    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g" // Profile screen binder
 
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -53,27 +49,30 @@ class ProfileDetails : Hook(
                 }
         }
 
-        findClass(blockedProfilesObserver).hook("onChanged", HookStage.AFTER) { param ->
-            // recently got merged into a case statement, so filter for the right argument type
-            if ((getObjectField(param.thisObject(), "a") as Int) != 0) return@hook
-
-			// what is the expected class?It is Object in the decompiled source
-            val obj = getObjectField(param.thisObject(), "b")
-			val profileList = getObjectField(obj, "o") as ArrayList<*>
-
-            for (profile in profileList) {
-                val profileId = callMethod(profile, "getProfileId") as String
-                val displayName =
-                    (callMethod(profile, "getDisplayName") as? String)
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { "$it ($profileId)" } ?: profileId
-                setObjectField(profile, "displayName", displayName)
+        findClass(blockedProfilesObserver).hook("onBindViewHolder", HookStage.BEFORE) { param ->
+            try {
+                val pos = param.arg<Int>(1)
+                val list = getObjectField(param.thisObject(), "o") as? ArrayList<*>
+                if (list != null) {
+                    val idx = pos - 1 // adapter offsets by 1 for header
+                    if (idx in 0 until list.size) {
+                        val profile = list[idx]
+                        val profileId = callMethod(profile, "getProfileId") as? String ?: return@hook
+                        val displayName =
+                            (callMethod(profile, "getDisplayName") as? String)
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { "$it ($profileId)" } ?: profileId
+                        setObjectField(profile, "displayName", displayName)
+                    }
+                }
+            } catch (e: Exception) {
+                logw("Blocked profiles hook error: ${e.message}")
             }
         }
 
         findClass(profileViewHolder).hookConstructor(HookStage.AFTER) { param ->
             val textView =
-                getObjectField(param.thisObject(), "a") as TextView
+                getObjectField(param.thisObject(), "b") as TextView
 
             textView.setOnLongClickListener {
                 val text = textView.text.toString()

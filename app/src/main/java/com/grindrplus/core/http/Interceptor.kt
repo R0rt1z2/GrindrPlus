@@ -22,12 +22,12 @@ class Interceptor(
 
     private fun modifyRequest(originalRequest: Request): Request {
         // search for 'getJwt().length() > 0 &&' in userSession
-        val isLoggedIn = invokeMethodSafe(userSession, "r") as? Boolean ?: false
+        val isLoggedIn = invokeMethodSafe(userSession, "t") as? Boolean ?: false
 
         val builder: Builder = originalRequest.newBuilder()
 
         if (isLoggedIn) {
-            // search for 'return FlowKt.asStateFlow' in userSession (return type is StateFlow<String>)
+            // search for 'return FlowKt.asStateFlow' in userSession (return type is String)
             val authTokenFlow = invokeMethodSafe(userSession, "x")
             val authToken = if (authTokenFlow != null) {
                 invokeMethodSafe(authTokenFlow, "getValue") as? String ?: ""
