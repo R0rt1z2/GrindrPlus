@@ -1,0 +1,18 @@
+### 2025-12-09
+- Release v4.7.0 targeting Grindr 25.20.0 (build 147239); module versionCode 15; retargeted all hooks listed below.
+- Remapped paywall/restart-required handler to `dk.c::d(...)` (25.20.0) so the app-restart dialog is intercepted by the Unlimited hook instead of the old `Sj.d` analytics logger.
+- Remapped NotificationAlerts to `ue.e::a` (25.20.0) to suppress the notification reminder dialog tied to `notification_reminder_time`.
+- BanManagement: updated auth service to `J8.h` (password-validation API) and banned args to `N8.a` (25.20.0).
+- OnlineIndicator fallback: force `ServerDrivenCascadeCachedProfile` `onlineUntil` into the future based on configurable minutes to keep the online dot visible despite obfuscation changes.
+- Device ID fallback: hook `Settings.Secure.getString(..., "android_id")` to return the spoofed `android_device_id` when set.
+- AntiDetection: hook `SingleStartActivity.N()` to bypass emulator detection list.
+- DisableUpdates: hook Play Core `zzr.zze` (requestUpdateInfo) to return a completed task (no-op).
+- WebSocketAlive: confirmed hooks aligned to `WebSocketClientImpl` (disconnect/onClosed/onFailure) to avoid background-triggered disconnects and auto-reconnect.
+- LocalSavedPhrases: remapped to `J8.k` (phrases service) and `Yb.a$b` (Success wrapper).
+- UnlimitedAlbums: remapped albums service to `K8.a` (v1/albums/red-dot).
+- AntiBlock: remapped chat delete plugin to `R9.c` and delete-conversations interactor to `re.d`.
+- QuickBlock: remapped block ViewModel to `ml.a::O` and toolbar menu hook to `com.grindrapp.android.ui.profileV2.g::A`.
+- ProfileDetails: remapped blocked profiles observer to `bl.u` (IndividualUnblock adapter) and profile screen binder to `com.grindrapp.android.ui.profileV2.g`.
+- ReverseRadarTabs: remapped radar tabs enum to `hi.b`, adapter to `RadarFragment$a`, tab callback to `RadarFragment$d`, Flow collector to `Il.m0.emit`, and index loader to `ii.a::N()` to keep Taps first while preserving ordinals.
+- AntiDetection: extended feature-flag override set to include `emulator-check-kill-switch` so emulator checks remain disabled alongside existing SingleStartActivity/Crashlytics/Sift/Firebase hooks.
+- WebSocketAlive: cache last auth token via `WebSocketClientImpl.b(...)` and reuse it on reconnect to make reconnects reliable; keep SafeDK/background disconnect suppression.
