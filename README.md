@@ -24,6 +24,12 @@ Neither I ([@R0rt1z2](https://github.com/R0rt1z2)) nor any contributors listed h
 
 Use this mod at your own discretion, and be aware that future updates may introduce changes or require further adjustments.
 
+## Current Support
+- Grindr app: **25.20.0 (147239)**
+- GrindrPlus: **4.7.0 (versionCode 15)**
+- Supported install modes: LSPosed (preferred) and LSPatch (no-root).
+- See `changelog.md` for hook remaps and `architecture.md` for a system overview.
+
 ## Disclaimer
 This mod is provided for free with no warranty of any kind. Use at your own risk! We are not responsible for lost chats, user data, unexpected bans or any other problems incurred from the use of this module.
 

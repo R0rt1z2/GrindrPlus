@@ -1,4 +1,5 @@
 ### 2025-12-09
+- Release v4.7.0 targeting Grindr 25.20.0 (build 147239); module versionCode 15; retargeted all hooks listed below.
 - Remapped paywall/restart-required handler to `dk.c::d(...)` (25.20.0) so the app-restart dialog is intercepted by the Unlimited hook instead of the old `Sj.d` analytics logger.
 - Remapped NotificationAlerts to `ue.e::a` (25.20.0) to suppress the notification reminder dialog tied to `notification_reminder_time`.
 - BanManagement: updated auth service to `J8.h` (password-validation API) and banned args to `N8.a` (25.20.0).
