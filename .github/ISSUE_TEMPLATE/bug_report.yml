@@ -1,0 +1,185 @@
+name: 🐞 Bug Report
+description:  Create a report about something that is not working
+title: "[BUG]: "
+labels: ["bug"]
+projects: ["R0rt1z2/GrindrPlus"]
+assignees:
+  - R0rt1z2
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug report. We greatly appreciate your effort in helping us improve the project :) Before submitting your report, please take a moment to ensure that all the information provided is as complete and accurate as possible.
+
+        Well-detailed bug reports allow us to identify, replicate, and fix issues faster. Please include the steps to reproduce the problem, your device and environment details, and any relevant logs or additional information. If possible, describe what you expected to happen versus what actually occurred.
+
+        > [!IMPORTANT]
+        > **Malformed or incomplete bug reports will NOT be accepted.**
+        > This includes reports with missing key information, vague descriptions, or those lacking logs and proper reproduction steps.
+
+  - type: markdown
+    attributes:
+      value: |
+        Please search to see if an issue already exists for the bug you encountered. You can search existing issues [here](https://github.com/R0rt1z2/GrindrPlus/issues).
+
+  - type: checkboxes
+    id: existing-issue
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please confirm that you have searched the existing issues.
+      options:
+        - label: I have searched the existing issues
+          required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: Provide a clear and concise description of the bug.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Provide the steps to reproduce the issue. For example:
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+      placeholder: List the steps to reproduce the bug.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dns-adblock
+    attributes:
+      label: Are you using a custom DNS server or ad blocker?
+      description: |
+        DNS services like AdGuard or system-wide ad blockers can interfere with how Grindr loads certain elements (e.g. cookie prompts, albums, etc.). 
+        These may cause bugs that aren't related to GrindrPlus itself.
+
+        ⚠️ Some DNS resolvers may set long TTL (time-to-live) values, meaning their effects can persist even after disabling them. 
+        A **device reboot** may be required to fully clear the DNS cache.
+
+        Please try disabling your custom DNS or ad blocker, **reboot your device**, and test again before submitting this report.
+      options:
+        - No, I'm not using any custom DNS or ad blocker
+        - Yes, but I have tested with it disabled and rebooted; the bug still occurs
+        - Yes, but I have not tested with it disabled and rebooted
+    validations:
+      required: true
+
+  - type: dropdown
+    id: using-lsposed
+    attributes:
+      label: Are you using LSPosed?
+      description: |
+        ⚠️ **WARNING: The original LSPosed is no longer maintained and therefore not fully functional.**
+        
+        Users should use JingMatrix's maintained fork instead: https://github.com/JingMatrix/LSPosed/releases
+        
+        **__IF YOU ARE NOT ROOTED, YOU ARE NOT USING LSPOSSED. ANSWER "NO" TO THIS QUESTION AND SKIP THE NEXT FIELD.__**
+      options:
+        - "No"
+        - "Yes"
+    validations:
+     required: true
+
+  - type: input
+    id: lsposed-version
+    attributes:
+      label: LSPosed version
+      description: |
+        If you are using LSPosed, enter the version (e.g. `1.9.2 (7024)`).
+        *If you are not using LSPosed, leave this field blank.*
+      placeholder: Enter the LSPosed version
+    validations:
+      required: false
+
+  - type: input
+    id: rom
+    attributes:
+      label: ROM
+      description: ROM (e.g. `OneUI`, `LineageOS`)
+      placeholder: Enter the ROM version
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version
+      description: Android Version (e.g. `13`, `12`, `8.1`, `14`)
+      placeholder: Enter the Android version
+    validations:
+      required: false
+
+  - type: input
+    id: security-patch-date
+    attributes:
+      label: Security patch date
+      description: Security patch date (e.g. `June 15, 2024`)
+      placeholder: Enter the security patch date
+    validations:
+      required: true
+
+  - type: input
+    id: grindr-version
+    attributes:
+      label: Grindr version
+      description: Grindr version (e.g. `24.12.0 (127593)`)
+      placeholder: Enter the Grindr version
+    validations:
+      required: true
+
+  - type: dropdown
+    id: grindrplus-version
+    attributes:
+      label: GrindrPlus version
+      description: Please select the version of GrindrPlus you are using.
+      options:
+        - v4.1.2-25.6.0
+        - v4.0.0-25.5.0
+        - v3.5.3-25.3.0
+        - v3.5.1-25.3.0
+        - v3.3.0-25.0.0
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### GrindrPlus Debug Logs
+        
+        Please attach the debug logs ZIP file which can be generated from within the app.
+        
+        1. Go to GrindrPlus Settings
+        2. Tap the three dot menu (top bar)
+        3. Select "Debug Logs"
+        4. Tap "Export Logs"
+        5. Generate ZIP and save it
+        6. Upload the saved ZIP file below
+
+  - type: textarea
+    id: debug-logs-zip
+    attributes:
+      label: GrindrPlus Debug Logs ZIP
+      description: Please attach the generated debug logs ZIP file to this issue. You can drag and drop the file into this text area or attach it using the file attachment feature when submitting the issue.
+      placeholder: Attach your ZIP file to this issue (you can drag and drop it here after submitting the form or use the file attachment button)
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Android Logs (Optional)
+      description: |
+        Sometimes the module logs alone aren't enough to determine the root cause of an issue. Android system logs can provide additional context about what's happening at the system level.
+        
+        If you're comfortable with it, take logs and grep for `Grindr`, `LSPosed`, `LSPatch` if possible. For information about how to capture these logs, check the LineageOS website [here](https://wiki.lineageos.org/how-to/logcat/).
+      render: shell
+      placeholder: Paste your Android logs here if available

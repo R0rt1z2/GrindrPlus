@@ -1,0 +1,160 @@
+{
+    "global": {
+        "version_mismatch": "GrindrPlus: Grindr-Version stimmt nicht überein (installiert: {installedVersion}, erwartet: {expectedVersion}). Mod deaktiviert",
+        "unable_to_fetch_translations": "Übersetzungen konnten nicht abgerufen werden"
+    },
+    "hooks": {
+        "allow_screenshots": {
+            "name": "Screenshots zulassen",
+            "description": "Screenshots überall in der App zulassen"
+        },
+        "chat_indicators": {
+            "name": "Chat-Indikatoren",
+            "description": "Chat-Marker / -Indikatoren anderen nicht anzeigen"
+        },
+        "chat_terminal": {
+            "name": "Chat-Konsole",
+            "description": "Erstelle eine Chat-Konsole zum Ausführen von Befehlen"
+        },
+        "disable_analytics": {
+            "name": "Analytics deaktivieren",
+            "description": "Grindr Analytics deaktivieren (Daten Sammlung)"
+        },
+        "disable_boosting": {
+            "name": "Boosting deaktivieren",
+            "description": "Alle Upsells im Zusammenhang mit Boosting entfernen"
+        },
+        "disable_updates": {
+            "name": "Updates deaktivieren",
+            "description": "Zwangs-Updates deaktivieren"
+        },
+        "enable_unlimited": {
+            "name": "Unlimited aktivieren",
+            "description": "Grindr Unlimited Funktionen aktivieren"
+        },
+        "expiring_photos": {
+            "name": "Ablaufende Bilder",
+            "description": "Unbegrenzt viele Bilderansichten zulassen"
+        },
+        "favorites": {
+            "name": "Favoriten",
+            "description": "Layout für den Favoriten-Tab anpassen"
+        },
+        "feature_granting": {
+            "name": "Funktionen freischalten",
+            "description": "Alle Grindr-Funktionen freischalten (einschließlich Experimenten)"
+        },
+        "local_saved_phrases": {
+            "name": "Lokal gespeicherte Phrasen",
+            "description": "Unbegrenzt viele Phrasen Lokal speichern"
+        },
+        "location_spoofer": {
+            "name": "Standort spoofer",
+            "description": "Standort spoofen"
+        },
+        "mod_settings": {
+            "name": "Mod Einstellungen",
+            "description": "GrindrPlus Einstellungen"
+        },
+        "online_indicator": {
+            "name": "Online Indikator",
+            "description": "Präzisere online Indikatoren"
+        },
+        "profile_details": {
+            "name": "Profil Details",
+            "description": "Hinzufügen von extra Feldern und Details zu Profilen",
+            "profile_id": "Profil ID",
+            "approximate_distance": "Approximierte Distanz",
+            "found_via_teleport": "Gefunden durch Teleportieren",
+            "favorite": "Favoriten",
+            "from_viewed_me": "Von hat mein Profil angesehen",
+            "innaccessible_profile": "Nicht verfügbare Profile",
+            "jwt_boosting": "JWT-Boosting",
+            "new": "Neu",
+            "teleporting": "Teleportieren",
+            "online_now": "Jetzt online",
+            "hidden_profile_details": "Versteckte Profildetails",
+            "ok": "OK",
+            "underweight": "Untergewichtig",
+            "normal_weight": "Normalgewicht",
+            "overweight": "Übergewichtig",
+            "obese": "Fettleibig"
+        },
+        "profile_views": {
+            "name": "Profilansichten",
+            "description": "Entscheide, ob andere sehen können, dass du ihr Profil angesehen hast"
+        },
+        "removable_messages": {
+            "name": "Entfernbare Nachrichten",
+            "description": "Nachricht für beide Benutzer entfernen"
+        },
+        "signature_spoofer": {
+            "title": "Signaturen spoofer",
+            "description": "Anmeldung mit Google durch LSPatch erlauben"
+        },
+        "unlimited_albums": {
+            "name": "Unbegrenzte Alben",
+            "description": "Unbegrenzt viele Alben sehen"
+        },
+        "unlimited_profiles": {
+            "name": "Unbegrenzte Profile",
+            "description": "Unbegrenzt viele Profile in Kaskade sehen"
+        }
+    },
+    "commands": {
+        "location": {
+            "teleport_to_location": "Zu einem Standort teleportieren",
+            "teleportation_disabled": "Teleportieren deaktiviert",
+            "teleported_to_coords": "Teleportieren nach {lat}, {lon}",
+            "location_not_found": "Standort nicht gefunden",
+            "save_current_location": "Derzeitigen Standort speichern",
+            "provide_name_for_location": "Bitte gib einen Namen für den Standort an",
+            "successfully_updated_location": "Erfolgreich {name} aktualisiert!",
+            "successfully_saved_location": "Erfolgreich {name} gespeichert!",
+            "delete_saved_location": "Lösche einen gespeicherten Standort",
+            "successfully_deleted_location": "Erfolgreich {name} gelöscht!"
+        },
+        "profile": {
+            "open_user_profile": "Öffne ein Benutzer Profil",
+            "provide_user_id": "Bitte gib eine valide ID an",
+            "get_and_copy_id": "Profil-IDs abrufen und kopieren",
+            "your_id": "Deine ID",
+            "profile_id": "Profil ID",
+            "profile_ids": "Profil IDs",
+            "copy_my_id": "Kopiere meine ID",
+            "copy_profile_id": "Kopiere Profil ID",
+            "close": "Schließen"
+        }
+    },
+    "settings": {
+        "export_config": "Konfiguration exportieren",
+        "import_config": "Konfiguration importieren",
+        "export_database": "Datenbank exportieren",
+        "import_database": "Datenbank importieren",
+        "reset_grindrplus": "GrindrPlus zurücksetzen",
+        "reload_hooks": "Hooks neu laden",
+        "manage_hooks": "Hooks verwalten",
+        "database_imported_successfully": "Datenbank erfolgreich importiert",
+        "database_exported_successfully": "Datenbank erfolgreich exportiert",
+        "failed_to_export_database": "Exportieren der Datenbank fehlgeschlagen!",
+        "failed_to_restore_database": "Wiederherstellung der Datenbank fehlgeschlagen!",
+        "failed_to_import_database": "Importieren der Datenbank fehlgeschlagen!",
+        "config_imported_successfully": "Konfiguration erfolgreich importiert",
+        "config_exported_successfully": "Konfiguration erfolgreich exportiert",
+        "failed_to_restore_config": "Wiederherstellen der Konfiguration fehlgeschlagen!",
+        "failed_to_import_config": "Importieren der Konfiguration fehlgeschlagen!",
+        "failed_to_export_config": "Exportieren der Einstellungen fehlgeschlagen!",
+        "database_import": "Datenbank importieren",
+        "database_import_description": "Datenbank wurden erfolgreich importiert. Die App wird sich schließen, um die Änderungen anzuwenden.",
+        "ok": "OK",
+        "other_settings": "Weitere Einstellungen",
+        "online_indicator_title": "Online Indikator Länge (min)",
+        "online_indicator_description": "Legt fest wann grüne Online-Punkte nach Inaktivität verschwinden",
+        "favorites_grid_size": "Favoriten Rastergröße",
+        "favorites_grid_size_description": "Anpassen der Rastergröße vom Layout des Favoriten-Tabs",
+        "reset_grindrplus_title": "GrindrPlus zurücksetzen",
+        "reset_grindrplus_description": "Dies setzt die Datenbank und Mod-Einstellungen zurück. Du verlierst deine gecachte Alben/Bilder, gespeicherte Phrasen und Standorte.",
+        "yes": "Ja",
+        "no": "Nein"
+    }
+}
