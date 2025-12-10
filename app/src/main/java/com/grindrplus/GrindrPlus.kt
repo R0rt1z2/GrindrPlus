@@ -108,7 +108,7 @@ object GrindrPlus {
         get() = currentActivityRef?.get()
 
     internal val userAgent = "Pb.e" // search for 'grindr3/'
-    internal val userSession = "com.grindrapp.android.usersession.b" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
+    internal val userSession = "com.grindrapp.android.usersession.b" // implements UserSession
     private val deviceInfo =
         "u8.u" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
     internal val grindrLocationProvider = "ff.e" // search for 'system settings insufficient for location request, attempting to resolve'

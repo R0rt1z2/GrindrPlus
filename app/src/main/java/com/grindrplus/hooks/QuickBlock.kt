@@ -14,34 +14,31 @@ class QuickBlock : Hook(
     "Quick block",
     "Ability to block users quickly"
 ) {
-    private val blockViewModel = "ml.a" // search for '("STATUS_BLOCK_DIALOG_SHOWN", 1)'
-    private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g" // search for 'com.grindrapp.android.ui.profileV2.ProfileViewHolder$onBind$3'
+    private val blockViewModel = "ml.a" // ViewModel posting STATUS_BLOCK_DIALOG_SHOWN
+    private val profileScreen = "com.grindrapp.android.ui.profileV2.g" // Profile screen binder (inflates menu_profile)
 
     override fun init() {
-        findClass(profileViewHolder).hook("y", HookStage.AFTER) { param ->
-            val arg0 = param.arg(0) as Any
-            val profileId = param.args().getOrNull(1) ?: return@hook
-            val viewBinding = getObjectField(arg0, "b")
-            val profileToolbar = getObjectField(viewBinding, "p")
-            val toolbarMenu = callMethod(profileToolbar, "getMenu") as Menu
-            val menuActions = getId("menu_actions", "id", GrindrPlus.context)
-            val actionsMenuItem = callMethod(toolbarMenu, "findItem", menuActions) as MenuItem
-            actionsMenuItem.setOnMenuItemClickListener { GrindrPlus.httpClient.blockUser(profileId as String); true }
+        // Short-circuit block dialog: when block dialog is about to show, just block directly and skip UI.
+        findClass(blockViewModel).hook("O", HookStage.BEFORE) { param ->
+            val profileId = param.argNullable<String>(0)
+            if (!profileId.isNullOrEmpty()) {
+                GrindrPlus.httpClient.blockUser(profileId)
+            }
+            param.setResult(null) // skip showing dialog
         }
 
-        findClass(blockViewModel).hook("P", HookStage.BEFORE) { param ->
-            val profileId = param.thisObject().javaClass.declaredFields
-                .asSequence()
-                .filter { it.type == String::class.java }
-                .mapNotNull { field ->
-                    try {
-                        field.isAccessible = true
-                        field.get(param.thisObject()) as? String
-                    } catch (e: Exception) { null }
-                }
-                .firstOrNull { it.isNotEmpty() && it.all { char -> char.isDigit() } }
-            GrindrPlus.httpClient.blockUser(profileId as String)
-            param.setResult(null)
+        // Attach block action to profile toolbar menu action.
+        findClass(profileScreen).hook("A", HookStage.AFTER) { param ->
+            val profileId = param.argNullable<String>(1) ?: return@hook
+            val bindingArg = param.argNullable<Any>(0) ?: return@hook
+            val viewBinding = getObjectField(bindingArg, "p") // LHb/q5; field p is ProfileToolbar
+            val toolbarMenu = callMethod(viewBinding, "getMenu") as? Menu ?: return@hook
+            val menuActions = getId("menu_actions", "id", GrindrPlus.context)
+            val actionsMenuItem = callMethod(toolbarMenu, "findItem", menuActions) as? MenuItem ?: return@hook
+            actionsMenuItem.setOnMenuItemClickListener {
+                GrindrPlus.httpClient.blockUser(profileId)
+                true
+            }
         }
     }
 }

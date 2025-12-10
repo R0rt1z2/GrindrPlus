@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
-// supported version: 25.20.0
+
 class DisableUpdates : Hook(
     "Disable updates",
     "Disable forced updates"
@@ -22,7 +22,8 @@ class DisableUpdates : Hook(
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
     private val appUpdateInfo = "com.google.android.play.core.appupdate.AppUpdateInfo"
     private val appUpdateZzm = "com.google.android.play.core.appupdate.zzm" // search for 'requestUpdateInfo(%s)'
-	private val appUpgradeManager = "jf.n" // search for 'Uri.parse("market://details?id=com.grindrapp.android");'
+    private val appUpdateZzr = "com.google.android.play.core.appupdate.zzr" // Play Core requestUpdateInfo(%s)
+    private val appUpgradeManager = "Ma.s" // search for 'Uri.parse("market://details?id=com.grindrapp.android");'
     private val appConfiguration = "com.grindrapp.android.platform.config.AppConfiguration"
     private var versionCode: Int = 0
     private var versionName: String = ""
@@ -39,14 +40,24 @@ class DisableUpdates : Hook(
             }
 
         findClass(appUpgradeManager) // showDeprecatedVersionDialog()
-			// search for '.setMessage(R.string.deprecation_message);'
-            .hook("b", HookStage.BEFORE) { param ->
+            .hook("a", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }
 
         findClass(appUpdateZzm) // requestUpdateInfo()
             .hook("zza", HookStage.BEFORE) { param ->
                 param.setResult(null)
+            }
+
+        findClass(appUpdateZzr) // requestUpdateInfo(%s)
+            .hook("zze", HookStage.BEFORE) { param ->
+                try {
+                    val tasks = Class.forName("com.google.android.gms.tasks.Tasks")
+                    val forResult = tasks.getMethod("forResult", Any::class.java)
+                    param.setResult(forResult.invoke(null, null))
+                } catch (_: Throwable) {
+                    param.setResult(null)
+                }
             }
 
         Thread {

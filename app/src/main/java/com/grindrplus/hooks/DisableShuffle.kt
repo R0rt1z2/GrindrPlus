@@ -5,7 +5,7 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
-// supported version: 25.20.0
+
 class DisableShuffle : Hook(
     "Disable shuffle",
     "Forcefully disable the shuffle feature"

@@ -18,14 +18,13 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// supported version: 25.20.0
 class ExpiringMedia : Hook(
     "Expiring media",
     "Allow unlimited photo/video viewing and save media permanently"
 ) {
     private val classMap = mapOf(
-        "expiringVideoBody" to "com.grindrapp.android.chat.data.model.messagebody.ExpiringVideoBody",
-        "expiringImageBody" to "com.grindrapp.android.chat.data.model.messagebody.ExpiringImageBody",
+        "expiringVideoBody" to "com.grindrapp.android.chat.model.ExpiringVideoBody",
+        "expiringImageBody" to "com.grindrapp.android.chat.model.ExpiringImageBody",
         "expiringImageBodyUiData" to "com.grindrapp.android.chat.presentation.model.BodyUiData\$ExpiringImageBodyUiData",
         "expiringStatusResponse" to "com.grindrapp.android.chat.api.model.ExpiringPhotoStatusResponse"
     )

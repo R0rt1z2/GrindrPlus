@@ -7,7 +7,6 @@ import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
 import com.grindrplus.utils.RetrofitUtils.createServiceProxy
 import com.grindrplus.utils.hook
 
-// supported version: 25.20.0
 class ChatIndicators : Hook(
     "Chat indicators",
     "Don't show chat markers / indicators to others"

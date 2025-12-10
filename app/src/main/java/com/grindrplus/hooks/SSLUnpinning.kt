@@ -15,7 +15,6 @@ import javax.net.ssl.SSLSession
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-// supported version: 25.20.0
 @OptIn(ExperimentalStdlibApi::class)
 @SuppressLint("CustomX509TrustManager", "TrustAllX509TrustManager", "BadHostnameVerifier")
 fun sslUnpinning(param: XC_LoadPackage.LoadPackageParam) {

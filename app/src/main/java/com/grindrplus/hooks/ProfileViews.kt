@@ -7,11 +7,7 @@ import com.grindrplus.utils.RetrofitUtils.createServiceProxy
 import com.grindrplus.utils.RetrofitUtils.findPOSTMethod
 import com.grindrplus.utils.hook
 
-// supported version: 25.20.0
-class ProfileViews : Hook(
-	"Profile views",
-	"Don't let others know you viewed their profile"
-) {
+class ProfileViews : Hook("Profile views", "Don't let others know you viewed their profile") {
     private val profileRestService = "com.grindrapp.android.api.ProfileRestService"
     private val blacklistedPaths = setOf(
         "v4/views/{profileId}",
