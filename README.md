@@ -168,6 +168,10 @@ Each installation method is completely different and comes with its own challeng
 - If these features don't work, check that the module is properly enabled in LSPosed
 </details>
 
+## Development
+
+Read our [Development docs](docs/README.md)
+
 ## FAQ & Troubleshooting
 <details>
   <summary>How do I login with Google?</summary>
