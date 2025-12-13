@@ -1,5 +1,9 @@
 package com.grindrplus.hooks
 
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
@@ -13,6 +17,7 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+
 
 // supported version: 25.20.0
 class DisableUpdates : Hook(
@@ -70,8 +75,7 @@ class DisableUpdates : Hook(
                     val versionName = json.getString("versionName")
                     logd("Successfully fetched version info: $versionName ($versionCode)")
 
-					Config.put("disable_updates_version_name", versionName)
-					Config.put("disable_updates_version_code", versionCode)
+					versionFetchCallback(versionName, versionCode)
                 }
             } else {
                 loge("Failed to fetch version info: ${response.message}")
@@ -95,19 +99,60 @@ class DisableUpdates : Hook(
         return 0
     }
 
-    private fun updateVersionInfo() {
+	private fun versionFetchCallback(versionName: String, versionCode: Int) {
+		val (versionNamePrevious, _) = getVersionInfoPatched()
 
+		Config.put("disable_updates_version_name", versionName)
+		Config.put("disable_updates_version_code", versionCode)
+
+		if (versionName != versionNamePrevious)
+			restartApp()
+	}
+
+	private fun restartApp() {
+		val context = GrindrPlus.context
+		Handler(Looper.getMainLooper()).post {
+			logd("Restarting the app")
+			Toast.makeText(context, "Restarting the app to disable forced updates", Toast.LENGTH_SHORT).show()
+
+			val intent: Intent? = context.packageManager.getLaunchIntentForPackage(context.packageName)
+			if (intent == null) {
+				loge("unable to get app launch intent")
+				return@post
+			}
+
+			val mainIntent = Intent.makeRestartActivityTask(intent.component)
+			mainIntent.setPackage(context.packageName)
+			context.startActivity(mainIntent)
+			Runtime.getRuntime().exit(0)
+		}
+	}
+
+	private fun getVersionInfo(): Pair<String, Int> {
 		val packageInfo = GrindrPlus.context.packageManager.getPackageInfo(
 			GrindrPlus.context.packageName,
 			0
 		)
 		val currentVersionName = packageInfo.versionName.toString()
-		val currentVersionCode = packageInfo.longVersionCode
+		val currentVersionCode = packageInfo.longVersionCode.toInt()
+
+		return Pair(currentVersionName, currentVersionCode)
+	}
+
+	private fun getVersionInfoPatched(): Pair<String, Int> {
+		val (currentVersionName, currentVersionCode) = getVersionInfo()
 
 		val versionName = Config.get("disable_updates_version_name", currentVersionName).toString()
 		val versionCode = Config.get("disable_updates_version_code", currentVersionCode).toString().toInt()
 
-        if (compareVersions(versionName, currentVersionName) > 0) {
+		return Pair(versionName, versionCode)
+	}
+
+    private fun updateVersionInfo() {
+		val (currentVersionName, currentVersionCode) = getVersionInfo()
+		val (versionName, versionCode) = getVersionInfoPatched()
+
+		if (compareVersions(versionName, currentVersionName) > 0) {
             findClass(appConfiguration).hookConstructor(HookStage.AFTER) { param ->
                 setObjectField(param.thisObject(), "d", "$versionName.$versionCode")
             }
