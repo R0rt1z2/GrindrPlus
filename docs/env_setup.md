@@ -4,7 +4,7 @@ What you (might) need:
  - Android Studio [link](https://developer.android.com/studio)
  - Grindr apk
  - JADX [link](https://github.com/skylot/jadx/releases)
- - mitmproxy [link](https://www.mitmproxy.org/downloads/)
+ - HTTP interception
  - an Android phone with LSPosed
 
 
@@ -48,24 +48,51 @@ get renamed to an unique name. This might also be useful on Windows because of i
 case insensitive file system - you can not have two classes/files differing only in one being
 upper-case and the other lower-case (A.java and a.java).
 
+## HTTP interception
+HTTP interception is used to inspect what the app is sending to the servers and getting back from them.
 
-## Mitmproxy
-Mitmproxy is used to inspect what the app is sending to the servers and getting back from them.
-There are other tools, but mitmproxy is simple to set up and enable/disable afterwards.
-Download it and run `mitmweb -m wireguard`, a web browser will open. Install wireguard app
-on your phone, add tunnel config and scan the qr code in mitmproxy webpage in th `Capture` tab.
-Optionally install the CA certificate in your phone, but this is not necessary for the pathed 
-Grindr app.
+### Mitmproxy
+[Mitmproxy](https://www.mitmproxy.org/downloads/)'s main advantage is that it is simple to set up and enable/disable afterwards
+and does not require root and/or patching the target app. One disadvantage is
+that it intercepts traffic from the whole OS/phone.
+
+Download it and run `mitmweb -m wireguard`, a web browser will open.
+Install wireguard app on your phone, add tunnel config and scan 
+the QR code on mitmproxy webpage in th `Capture` tab.
+Paste `~d grindr.mobi` in the `Flow List` tab into filter/search field.
+
+Optionally install the CA certificate in your phone for other apps to work while connected,
+but this is not necessary for the patched Grindr app.
+
+### HTTP Toolkit
+[HTTP toolkit](https://httptoolkit.com/) works by patching the target app,
+so it intercepts only that one app.
+Allegedly requires rooted phone to set up.
+
+Download, install and open it, select `Android App via Frida` and follow the manual.
+
 
 ## Android phone
+There are two options for efficient development: LSPatch (non-root) and LSPosed (for root).
+
+### LSPatch
+Download and install [LSPatch](https://github.com/JingMatrix/LSPatch/releases),
+[Shizuku](https://github.com/RikkaApps/Shizuku/releases)
+and Grindr app (see above).
+Set up Shizuku and open LSPatch and patch Grindr app in local mode.
+Then tap on Grindr in LSPatch in installed apps, open Module scope and enable Grindr Plus.
+
+### LSPosed
 You will need to look up a method/manual to install LSPosed specifically for your brand/model.
-Generally, you want to install [Magisk](https://github.com/topjohnwu/Magisk), enable Zygisk, 
-install [LSPosed](https://github.com/JingMatrix/LSPosed) as Magisk module. 
+Generally, you want to install [Magisk](https://github.com/topjohnwu/Magisk), enable Zygisk,
+install [LSPosed](https://github.com/JingMatrix/LSPosed) as Magisk module.
 Rooting your phone carries some risks, please study them carefully before deciding.
 
-You can also use a non-rooted phone, but every change to the patch code will require you
-to open the GrindrPlus app, build a patched Grindr app and install it - instead of
-just installing the GrindrPlus app and force-stopping the Grindr app.
+### Plain Grindr plus manager
+You can also use just the GrindrPlus app to patch the Grindr app,
+but every change to the patch code will require you build a patched Grindr app and install it,
+instead of just installing the GrindrPlus app and force-stopping the Grindr app.
 
-Alternatively, you can use Android emulator on your pc, wither with or without LSPosed,
+### Android emulator / VM
+Alternatively, you can use Android emulator on your PC, with any of the above methods,
 but this is out of scope of this guide.
