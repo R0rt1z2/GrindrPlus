@@ -8,9 +8,9 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 object RetrofitUtils {
-    const val FAIL_CLASS_NAME = "Yf.a\$a"
-    const val SUCCESS_CLASS_NAME = "Yf.a\$b"
-    const val SUCCESS_VALUE_NAME = "a"
+    const val FAIL_CLASS_NAME = "Yf.a\$a" // search for '"Fail(failValue="'
+    const val SUCCESS_CLASS_NAME = "Yf.a\$b" // search for '"Success(successValue="'
+    const val SUCCESS_VALUE_NAME = "a" // probably the only field in the class
     const val RETROFIT_NAME = "retrofit2.Retrofit"
 
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {
