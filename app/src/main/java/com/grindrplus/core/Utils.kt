@@ -52,7 +52,6 @@ object Utils {
             profileType,
             refererType,
             "0xDEADBEEF", // str2
-            "0xDEADBEEF", // str3
             null,
             false,
             844
@@ -70,15 +69,7 @@ object Utils {
 
         intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        val generalDeepLinksClass =
-            GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
-        val startActivityMethod = generalDeepLinksClass.getDeclaredMethod(
-            "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6",
-            Context::class.java,
-            Intent::class.java
-        )
-
-        startActivityMethod.invoke(null, context, intent)
+        context.startActivity(intent)
     }
 
     fun openProfile(id: String) {
@@ -108,15 +99,7 @@ object Utils {
         ) as Intent?
         intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        val generalDeepLinksClass =
-            GrindrPlus.loadClass("com.grindrapp.android.deeplink.GeneralDeepLinks")
-        val startActivityMethod = generalDeepLinksClass.getDeclaredMethod(
-            "safedk_Context_startActivity_97cb3195734cf5c9cc3418feeafa6dd6",
-            Context::class.java,
-            Intent::class.java
-        )
-
-        startActivityMethod.invoke(null, context, intent)
+        context.startActivity(intent)
     }
 
     fun calculateBMI(isMetric: Boolean, weight: Double, height: Double): Double {
