@@ -65,11 +65,17 @@ Optionally install the CA certificate in your phone for other apps to work while
 but this is not necessary for the patched Grindr app.
 
 ### HTTP Toolkit
-[HTTP toolkit](https://httptoolkit.com/) works by patching the target app,
-so it intercepts only that one app.
-Allegedly requires rooted phone to set up.
+[HTTP toolkit](https://httptoolkit.com/) has several modes.
+The one we're most interested in is Android Device via ADB. In combination with Grindr plus 
+this will disable certificate pinning and allow for interception of https traffic between 
+Grindr/the manager, and internet servers they may connect to. 
+Note that this requires either a rooted phone or for Grindr/Grindr plus to be running 
+in a supported emulator (the one bundled with Android studio has been the most 
+extensively tested)
 
-Download, install and open it, select `Android App via Frida` and follow the manual.
+Alternatively, it can hook the app at runtime via frida (requires root), though this 
+has not been extensively tested and may cause issues with lspatch. To try that, download, 
+install and open it, select Android App via Frida and follow the manual.
 
 
 ## Android phone
