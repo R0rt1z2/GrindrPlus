@@ -9,6 +9,7 @@ import com.grindrplus.utils.RetrofitUtils.isDELETE
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPOST
 import com.grindrplus.utils.hook
+import com.grindrplus.core.*
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -20,8 +21,8 @@ class LocalSavedPhrases : Hook(
     "Local saved phrases",
     "Save unlimited phrases locally"
 ) {
-    private val phrasesRestService = "x5.k" // search for 'v3/me/prefs'
-    private val createSuccessResult = "xb.a\$b" // search for 'Success(successValue='
+    private val phrasesRestService = "J8.k" // search for 'v3/me/prefs'
+    private val createSuccessResult = "Yf.a\$b" // search for 'Success(successValue='
     private val chatRestService = "com.grindrapp.android.chat.data.datasource.api.service.ChatRestService"
     private val addSavedPhraseResponse =
         "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
@@ -29,19 +30,28 @@ class LocalSavedPhrases : Hook(
     private val phraseModel = "com.grindrapp.android.persistence.model.Phrase"
 
     override fun init() {
+        logi("Initializing Local Saved Phrases Hook...")
+
         val chatRestServiceClass = findClass(chatRestService)
-        val createSuccess = findClass(createSuccessResult).constructors.firstOrNull() ?: return
+        val createSuccess = findClass(createSuccessResult).constructors.firstOrNull() ?: run {
+            loge("Failed to find Success result constructor (check obfuscation)")
+            return
+        }
         val phrasesRestServiceClass = findClass(phrasesRestService)
 
         findClass(RETROFIT_NAME).hook("create", HookStage.AFTER) { param ->
             val service = param.getResult()
             if (service != null) {
                 param.setResult(when {
-                    chatRestServiceClass.isAssignableFrom(service.javaClass) ->
+                    chatRestServiceClass.isAssignableFrom(service.javaClass) -> {
+                        logd("Proxying ChatRestService for local storage")
                         createChatRestServiceProxy(service, createSuccess)
+                    }
 
-                    phrasesRestServiceClass.isAssignableFrom(service.javaClass) ->
+                    phrasesRestServiceClass.isAssignableFrom(service.javaClass) -> {
+                        logd("Proxying PhrasesRestService for local retrieval")
                         createPhrasesRestServiceProxy(service, createSuccess)
+                    }
 
                     else -> service
                 })
@@ -53,7 +63,10 @@ class LocalSavedPhrases : Hook(
         originalService: Any,
         createSuccess: Constructor<*>
     ): Any {
+        val savedPhraseConstructor = findClass(addSavedPhraseResponse).constructors.first()
+
         val invocationHandler = Proxy.getInvocationHandler(originalService)
+
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
             arrayOf(findClass(chatRestService))
@@ -61,27 +74,36 @@ class LocalSavedPhrases : Hook(
             when {
                 method.isPOST("v3/me/prefs/phrases") -> {
                     val phrase = getObjectField(args[0], "phrase") as String
+                    logi("Adding new local phrase: \"$phrase\"")
 
                     runBlocking {
                         val index = getCurrentPhraseIndex() + 1
                         addPhrase(index, phrase, 0, System.currentTimeMillis())
-                        val response = findClass(addSavedPhraseResponse).constructors.first()
-                            ?.newInstance(index.toString())
+                        logs("Phrase saved locally with ID: $index")
+
+                        val response = savedPhraseConstructor?.newInstance(index.toString())
                         createSuccess.newInstance(response)
                     }
                 }
 
                 method.isDELETE("v3/me/prefs/phrases/{id}") -> {
+                    val id = args[0] as? String ?: "unknown"
+                    logi("Deleting local phrase ID: $id")
+
                     runBlocking {
-                        val index = getCurrentPhraseIndex()
+                        val index = id.toLongOrNull() ?: getCurrentPhraseIndex()
                         deletePhrase(index)
+                        logs("Deleted local phrase ID: $index")
                         createSuccess.newInstance(Unit)
                     }
                 }
 
                 method.isPOST("v4/phrases/frequency/{id}") -> {
+                    val id = args[0] as? String ?: "0"
+                    logd("Incrementing usage frequency for ID: $id")
+
                     runBlocking {
-                        val index = getCurrentPhraseIndex()
+                        val index = id.toLongOrNull() ?: 0L
                         val phrase = getPhrase(index)
                         if (phrase != null) {
                             updatePhrase(
@@ -104,6 +126,10 @@ class LocalSavedPhrases : Hook(
         originalService: Any,
         createSuccess: Constructor<*>
     ): Any {
+        val phraseModelConstructor = GrindrPlus.loadClass(phraseModel).constructors.first()
+        val phraseResponseConstructor = findClass(phrasesResponse)
+            .constructors.find { it.parameterTypes.size == 1 }
+
         val invocationHandler = Proxy.getInvocationHandler(originalService)
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
@@ -111,15 +137,17 @@ class LocalSavedPhrases : Hook(
         ) { proxy, method, args ->
             when {
                 method.isGET("v3/me/prefs") -> {
+                    logd("Intercepted GET v3/me/prefs - pulling from local database")
                     runBlocking {
                         val currentPhrases = getPhraseList()
+                        logd("Loaded ${currentPhrases.size} local phrases")
+
                         val phrases = currentPhrases.associateWith { phrase ->
-                            GrindrPlus.loadClass(phraseModel).constructors.first()?.newInstance(
+                            phraseModelConstructor?.newInstance(
                                 phrase.phraseId.toString(), phrase.text, phrase.timestamp, phrase.frequency
                             )
                         }
-                        val phrasesResponse = findClass(phrasesResponse)
-                            .constructors.find { it.parameterTypes.size == 1 }?.newInstance(phrases)
+                        val phrasesResponse = phraseResponseConstructor?.newInstance(phrases)
                         createSuccess.newInstance(phrasesResponse)
                     }
                 }

@@ -54,7 +54,7 @@ class HookManager {
                 ExpiringMedia(),
  //                Favorites(),
                 FeatureGranting(),
- //                LocalSavedPhrases(),
+                LocalSavedPhrases(),
                 LocationSpoofer(),
                 NotificationAlerts(),
                 OnlineIndicator(),
