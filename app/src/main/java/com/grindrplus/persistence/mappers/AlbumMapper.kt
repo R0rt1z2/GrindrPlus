@@ -12,9 +12,9 @@ import java.lang.Long.parseLong
 
 private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
 
-private const val ALBUM_CLASS = "com.grindrapp.android.model.Album"
+private const val ALBUM_CLASS = "com.grindrapp.android.chat.domain.model.Album"
 private const val ALBUM_BRIEF_CLASS = "com.grindrapp.android.model.albums.AlbumBrief"
-private const val ALBUM_CONTENT_CLASS = "com.grindrapp.android.model.AlbumContent"
+private const val ALBUM_CONTENT_CLASS = "com.grindrapp.android.chat.domain.model.AlbumContent"
 
 fun Any.asAlbumToAlbumEntity(): AlbumEntity {
     return try {
