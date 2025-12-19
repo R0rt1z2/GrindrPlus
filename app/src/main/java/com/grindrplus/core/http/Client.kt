@@ -2,6 +2,7 @@ package com.grindrplus.core.http
 
 import android.content.ContentValues
 import android.widget.Toast
+import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.showToast
 import com.grindrplus.core.DatabaseHelper
@@ -12,10 +13,22 @@ import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
+import com.grindrplus.hooks.unsafeTrustManager
+import com.grindrplus.hooks.unsafeSslContext
+
 class Client(interceptor: Interceptor) {
-    private val httpClient: OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(interceptor)
-        .build()
+    // although we have SSLUnpinning which hooks the OkHttpClient.Builder(),
+    // the hook is set up later than this constructor is called,
+    // so we need to set the "unpinning" manually
+    private val httpClient: OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(interceptor)
+            .apply {
+                if (BuildConfig.DEBUG)
+                    this.sslSocketFactory(unsafeSslContext.socketFactory, unsafeTrustManager)
+            }
+            .build()
+
 
     fun sendRequest(
         url: String,
