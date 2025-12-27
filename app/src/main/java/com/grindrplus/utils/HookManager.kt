@@ -40,7 +40,7 @@ class HookManager {
         runBlocking(Dispatchers.IO) {
             val hookList = listOf(
                 AllowScreenshots(),
-//                AntiBlock(),
+                AntiBlock(),
                 AntiDetection(),
                 BanManagement(),
                 ChatIndicators(),
