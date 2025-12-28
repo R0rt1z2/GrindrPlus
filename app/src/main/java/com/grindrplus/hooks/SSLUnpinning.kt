@@ -24,29 +24,11 @@ fun sslUnpinning(param: XC_LoadPackage.LoadPackageParam) {
         param.classLoader,
         object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam<*>) {
-                val trustAlLCerts =
-                    arrayOf<TrustManager>(
-                        object : X509TrustManager {
-                            override fun checkClientTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?,
-                            ) {}
-
-                            override fun checkServerTrusted(
-                                chain: Array<out X509Certificate>?,
-                                authType: String?,
-                            ) {}
-
-                            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-                        }
-                    )
-                val sslContext = SSLContext.getInstance("TLSv1.3")
-                sslContext.init(null, trustAlLCerts, SecureRandom())
                 callMethod(
                     param.thisObject,
                     "sslSocketFactory",
-                    sslContext.socketFactory,
-                    trustAlLCerts.first() as X509TrustManager
+                    unsafeSslContext.socketFactory,
+                    unsafeTrustManager
                 )
                 callMethod(
                     param.thisObject,
@@ -83,4 +65,28 @@ fun sslUnpinning(param: XC_LoadPackage.LoadPackageParam) {
             }
         }
     )
+}
+
+val unsafeTrustManager = @SuppressLint("CustomX509TrustManager")
+object : X509TrustManager {
+    @SuppressLint("TrustAllX509TrustManager")
+    override fun checkClientTrusted(
+        chain: Array<out X509Certificate>?,
+        authType: String?,
+    ) {
+    }
+
+    @SuppressLint("TrustAllX509TrustManager")
+    override fun checkServerTrusted(
+        chain: Array<out X509Certificate>?,
+        authType: String?,
+    ) {
+    }
+
+    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+}
+
+val unsafeSslContext: SSLContext = SSLContext.getInstance("TLSv1.3").apply {
+    val trustAlLCerts = arrayOf<TrustManager>(unsafeTrustManager)
+    this.init(null, trustAlLCerts, SecureRandom())
 }
