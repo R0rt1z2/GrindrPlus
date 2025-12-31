@@ -76,6 +76,29 @@ class Installation(
         print = print,
     )
 
+    // New cloneGrindrCustom method,
+    // like installCustom() but for cloning
+    suspend fun cloneGrindrCustom(
+        packageName: String,
+        appName: String,
+        debuggable: Boolean,
+        embedLSpatch: Boolean,
+        bundleFile: File,
+        modFile: File,
+        print: Print,
+    ) = performOperation(
+        steps = listOf(
+            CheckStorageSpaceStep(folder),
+            ExtractBundleStep(bundleFile, unzipFolder),
+            CloneGrindrStep(folder = unzipFolder, packageName = packageName, appName = appName, debuggable = debuggable,),
+            SignClonedGrindrApk(keyStoreUtils, unzipFolder),
+            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey, embedLSpatch),
+            InstallApkStep(outputDir)
+        ),
+        operationName = "custom_clone",
+        print = print,
+    )
+
     suspend fun installCustom(
         bundleFile: File,
         modFile: File,
