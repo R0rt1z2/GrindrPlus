@@ -41,9 +41,8 @@ suspend fun fetchNotifs(context: Context) = withContext(Dispatchers.IO) {
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
         tgMessages.value =
-            response.body!!.string().replace("\n", "").split("|{").asSequence().drop(1)
-                .map { "{$it" }
-                .map {JsonParser.parseString(it).asJsonObject }
+            JsonParser.parseString(response.body!!.string()).asJsonArray
+                .map { it.asJsonObject }
                 .map { obj ->
                     GPlusMessage(
                         obj.get("message_id").asString,
