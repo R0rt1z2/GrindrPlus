@@ -16,15 +16,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
@@ -82,6 +86,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     var warningBannerVisible by remember { mutableStateOf(true) }
     var rootedBannerVisible by remember { mutableStateOf(isRooted) }
     var showCustomFileDialog by remember { mutableStateOf(false) }
+	var showInstallUnpatchedDialog by remember { mutableStateOf(false) }
     var useCustomFiles by remember { mutableStateOf(false) }
     var customVersionName by remember { mutableStateOf("custom") }
     var customBundleUri by remember { mutableStateOf<Uri?>(null) }
@@ -240,17 +245,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 onDismiss = { warningBannerVisible = false }
             )
 
-            if (isLSPosed()) {
-                MessageBanner(
-                    text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
-                    isVisible = rootedBannerVisible,
-                    isPulsating = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    type = BannerType.ERROR,
-                    onDismiss = { rootedBannerVisible = false }
-                )
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -335,6 +329,67 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
                 Spacer(modifier = Modifier.width(16.dp))
 
+                if (showInstallUnpatchedDialog) {
+                    val onDismiss: () -> Unit = {
+                        showInstallUnpatchedDialog = false
+                    }
+                    Dialog(onDismissRequest = onDismiss) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "LSposed detected",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Text(
+                                    text = "You are using LSPosed, so you don't need to patch the app here. " +
+                                            "Do you want to install (or update) unpatched Grindr app?",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(onClick = onDismiss) {
+                                        Text("Cancel")
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Button(
+                                        onClick = {
+                                            startInstallation(
+                                                selectedVersion!!,
+                                                false,
+                                                onStarted = { isInstalling = true },
+                                                onCompleted = { success ->
+                                                    isInstalling = false
+                                                    installationSuccessful = success
+                                                },
+                                                context,
+                                                print
+                                            )
+                                        }
+                                    ) {
+                                        Text("OK")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
                         if (installationSuccessful) {
@@ -348,8 +403,14 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                                     return@Button
                                 }
 
+                                if (isLSPosed()) {
+                                    showInstallUnpatchedDialog = true
+                                    return@Button
+                                }
+
                                 startInstallation(
                                     selectedVersion!!,
+                                    true,
                                     onStarted = { isInstalling = true },
                                     onCompleted = { success ->
                                         isInstalling = false
@@ -473,6 +534,7 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
 
 private fun startInstallation(
     version: Data,
+    patched: Boolean,
     onStarted: () -> Unit,
     onCompleted: (Boolean) -> Unit,
     context: Activity,
@@ -495,9 +557,15 @@ private fun startInstallation(
             )
 
             withContext(Dispatchers.IO) {
-                installation.install(
-                    print = print
-                )
+                if (patched) {
+                    installation.install(
+                        print = print
+                    )
+                } else {
+                    installation.installUnpatched(
+                        print = print
+                    )
+                }
             }
 
             addLog("Installation completed successfully!", LogType.SUCCESS)
