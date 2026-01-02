@@ -28,6 +28,7 @@ import com.grindrplus.hooks.StatusDialog
 import com.grindrplus.hooks.TimberLogging
 import com.grindrplus.hooks.UnlimitedAlbums
 import com.grindrplus.hooks.UnlimitedProfiles
+import com.grindrplus.hooks.UnlockExplorer
 import com.grindrplus.hooks.WebSocketAlive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -64,6 +65,7 @@ class HookManager {
                 TimberLogging(),
                 UnlimitedAlbums(),
                 UnlimitedProfiles(),
+                UnlockExplorer(),
 //                StatusDialog(),
 //                WebSocketAlive()
             )
