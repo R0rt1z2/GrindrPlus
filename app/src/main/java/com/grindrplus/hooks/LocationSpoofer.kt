@@ -10,6 +10,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
@@ -25,7 +26,6 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Logger
 import com.grindrplus.core.logw
 import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
@@ -33,12 +33,14 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.reflect.Proxy
 
 class LocationSpoofer : Hook(
     "Location spoofer",
@@ -201,9 +203,11 @@ class LocationSpoofer : Hook(
             }
 
             // Add RadioButtons dynamically
-            suspend fun refreshLocations() {
+            suspend fun refreshLocations(newSelectedLocatioName: String = "") {
                 locations = getLocations()
-                val selectedLocationName = Config.get("current_location_name", "") as String
+                val selectedLocationName = newSelectedLocatioName.ifEmpty {
+                    Config.get("current_location_name", "") as String
+                }
 
                 withContext(Dispatchers.Main) {
                     radioGroup.clearCheck()
@@ -273,9 +277,7 @@ class LocationSpoofer : Hook(
                             withContext(Dispatchers.Main) {
                                 addLocation(location)
                             }
-                            refreshLocations()
-
-                            GrindrPlus.showToast(Toast.LENGTH_SHORT, "Location saved")
+                            refreshLocations(location.name)
                         }
                     }
                 }
@@ -334,7 +336,6 @@ class LocationSpoofer : Hook(
                     coroutineScope.launch {
                         deleteLocation(location.name)
                         refreshLocations()
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "Location deleted")
                     }
                 }
             }
@@ -382,7 +383,7 @@ class LocationSpoofer : Hook(
                 setTitle("Teleport Locations")
                 setView(locationDialogView)
                 setPositiveButton("OK") { dialog, _ -> teleport() }
-                setNegativeButton("Close") { dialog, _ -> }
+                setNegativeButton("Close", null)
                 show()
             }
         }
@@ -467,11 +468,30 @@ class LocationSpoofer : Hook(
             }
         }
 
+        val buttonPickOnMap = Button(context).apply {
+            text = "Pick on map"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                marginStart = 70
+                marginEnd = 70
+                bottomMargin = 16
+            }
+            setOnClickListener {
+                mapsLocationPickerDialog(context, { tle ->
+                    inputLatitude.setText(tle.latitude.toString())
+                    inputLongitude.setText(tle.longitude.toString())
+                })
+            }
+        }
+
         // add all views
         container.addView(inputName)
         container.addView(inputLatitude)
         container.addView(inputLongitude)
         container.addView(buttonLoadGps)
+        container.addView(buttonPickOnMap)
 
         suspend fun saveLocation(): Boolean {
             val name = inputName.text.toString()
@@ -504,6 +524,8 @@ class LocationSpoofer : Hook(
             setPositiveButton("Save", null)
 
             val dialog = show()
+            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
+            // setPositiveButton listener always closes it
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 coroutineScope.launch {
                     if (saveLocation())
@@ -513,6 +535,121 @@ class LocationSpoofer : Hook(
         }
     }
 
+    private fun mapsLocationPickerDialog(context: Context, onLocationPicked: (TeleportLocationEntity) -> Unit) {
+        var selectedLatLng: Any? = null
+        var marker: Any? = null
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 64, 24, 24)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // create google maps mapView
+        val mapViewConstructor = findClass("com.google.android.gms.maps.MapView").getConstructor(Context::class.java)
+        val mapView = mapViewConstructor.newInstance(context) as View
+        callMethod(mapView, "onCreate", arrayOf(Bundle::class.java), null)
+        callMethod(mapView, "onResume")
+
+        mapView.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            820
+        )
+
+        container.addView(mapView)
+
+        // create initial LatLng (set to current gps position)
+        val latLngClass = findClass("com.google.android.gms.maps.model.LatLng")
+        selectedLatLng = XposedHelpers.newInstance(latLngClass, gpsLocationLatitude, gpsLocationLongitude)
+
+        // create marker options
+        val markerOptionsClass = findClass("com.google.android.gms.maps.model.MarkerOptions")
+        val markerOptions = markerOptionsClass
+            .getConstructor()
+            .newInstance()
+
+        // set initial marker position
+        callMethod(markerOptions, "position", selectedLatLng)
+
+
+        // implement OnMapClickListener via proxy
+        val onMapClickListener = Proxy.newProxyInstance(
+            context.classLoader,
+            arrayOf(findClass("com.google.android.gms.maps.GoogleMap\$OnMapClickListener"))
+        ) { _, method, args ->
+
+            if (method.name == "onMapClick") {
+                selectedLatLng = args?.get(0)  // Any
+
+                if (marker != null)
+                    callMethod(marker, "setPosition", selectedLatLng)
+            }
+            null
+        }
+
+        // create camera update to zoom the map to initial location
+        val cameraUpdateFactoryClass = findClass("com.google.android.gms.maps.CameraUpdateFactory")
+        val cameraUpdate = XposedHelpers.callStaticMethod(
+            cameraUpdateFactoryClass,
+            "newLatLngZoom",
+            selectedLatLng,
+            14f   // zoom level
+        )
+
+        // implement OnMapReadyCallback via proxy
+        val onMapReadyListener = Proxy.newProxyInstance(
+            context.classLoader,
+            arrayOf(findClass("com.google.android.gms.maps.OnMapReadyCallback"))
+        ) { _, method, args ->
+
+            if (method.name == "onMapReady") {
+                val googleMap = args?.get(0)
+                marker = callMethod(
+                    googleMap,
+                    "addMarker",
+                    markerOptions
+                )
+
+                callMethod(googleMap, "setOnMapClickListener", onMapClickListener)
+                callMethod(googleMap, "moveCamera", cameraUpdate)
+            }
+            null
+        }
+
+        callMethod(mapView, "getMapAsync", onMapReadyListener)
+
+
+        AlertDialog.Builder(context).apply {
+            setTitle("Pick Location")
+            setView(container)
+            setNegativeButton("Cancel", null)
+            setPositiveButton("OK", null)
+
+            val dialog = show()
+            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
+            // setPositiveButton listener always closes it
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                coroutineScope.launch {
+                    if (selectedLatLng != null) {
+                        val latitude = getObjectField(selectedLatLng, "latitude") as Double
+                        val longitude = getObjectField(selectedLatLng, "longitude") as Double
+
+                        val location = TeleportLocationEntity("maps-pick", latitude, longitude)
+                        onLocationPicked(location)
+
+                        dialog.dismiss()
+
+                    } else {
+                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                    }
+                }
+            }
+        }
+
+    }
     private suspend fun getLocations(): List<TeleportLocationEntity> = withContext(Dispatchers.IO) {
         return@withContext GrindrPlus.database.teleportLocationDao().getLocations()
     }
