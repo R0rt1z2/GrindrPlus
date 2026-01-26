@@ -8,17 +8,21 @@ import com.grindrplus.GrindrPlus.packageName
 import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils.coordsToGeoHash
+import com.grindrplus.persistence.model.TeleportLocationEntity
+import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONArray
 
 class Location(recipient: String, sender: String) : CommandModule("Location", recipient, sender) {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    @Command(name = "tp", aliases = ["tp"], help = "Teleport to a location")
+    @Command(name = "teleport", aliases = ["tp"], help = "Teleport to a location")
     fun teleport(args: List<String>) {
         /**
          * If the user is currently used forced coordinates, don't allow teleportation.
@@ -120,7 +124,10 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         coroutineScope.launch {
             val location =
                 when {
-                    args.size == 1 -> Config.get("current_location", "") as String
+                    args.size == 1 -> {
+                        val currentAppliedLocation = Config.get("current_location", "") as String
+                        currentAppliedLocation.ifEmpty { getGpsLocation() }
+                    }
                     args.size == 2 && args[1].contains(",") -> args[1]
                     args.size == 3 &&
                             args[1].toDoubleOrNull() != null &&
@@ -191,7 +198,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         withContext(Dispatchers.IO) {
             val locationDao = GrindrPlus.database.teleportLocationDao()
             val entity =
-                com.grindrplus.persistence.model.TeleportLocationEntity(
+                TeleportLocationEntity(
                     name = name,
                     latitude = latitude,
                     longitude = longitude
@@ -203,7 +210,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         withContext(Dispatchers.IO) {
             val locationDao = GrindrPlus.database.teleportLocationDao()
             val entity =
-                com.grindrplus.persistence.model.TeleportLocationEntity(
+                TeleportLocationEntity(
                     name = name,
                     latitude = latitude,
                     longitude = longitude
@@ -224,7 +231,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
 
             val randomUserAgent = getUserAgent()
             val request =
-                okhttp3.Request.Builder().url(url).header("User-Agent", randomUserAgent).build()
+                Request.Builder().url(url).header("User-Agent", randomUserAgent).build()
 
             return@withContext try {
                 OkHttpClient().newCall(request).execute().use { response ->
@@ -250,6 +257,22 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                 null
             }
         }
+
+    private fun getGpsLocation(): String? {
+        try {
+            val grindrLocationProviderInstance =
+                GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.grindrLocationProvider)
+
+            val location = getObjectField(grindrLocationProviderInstance, "e")
+            val latitude = callMethod(location, "getLatitude") as Double
+            val longitude = callMethod(location, "getLongitude") as Double
+
+            return "$latitude,$longitude"
+        } catch (e: Exception) {
+            Logger.e("Error getting gps location: ${e.message}")
+            return null
+        }
+    }
 
     private fun teleportToCoordinates(lat: Double, lon: Double, silent: Boolean = false) {
         Config.put("current_location", "$lat,$lon")
