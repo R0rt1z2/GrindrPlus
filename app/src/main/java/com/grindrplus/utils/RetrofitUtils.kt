@@ -59,6 +59,10 @@ object RetrofitUtils {
         return javaClass.name == SUCCESS_CLASS_NAME
     }
 
+    fun Any.isResult(): Boolean {
+        return isSuccess() || isFail()
+    }
+
     fun Any.getSuccessValue(): Any {
         return getObjectField(this, SUCCESS_VALUE_NAME)
     }
@@ -92,6 +96,12 @@ object RetrofitUtils {
         }
     }
 
+    /**
+     * The retrofit methods are suspend funs (use continuations) and therefore will sometimes
+     * return COROUTINE_SUSPENDED constant instead of the actual result. Be sure to check
+     * if the returned value actually is a result and if not, just return it early.
+     * Hint: if (!result.isResult()) return result
+     */
     fun hookService(
         serviceClass: Class<*>,
         invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?

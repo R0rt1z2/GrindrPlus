@@ -25,6 +25,7 @@ import com.grindrplus.utils.RetrofitUtils.getSuccessValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPUT
+import com.grindrplus.utils.RetrofitUtils.isResult
 import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
@@ -57,6 +58,10 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             albumsServiceClass,
         ) { originalHandler, proxy, method, args ->
             val result = originalHandler.invoke(proxy, method, args)
+
+            if (!result.isResult())
+                return@hookService result
+
             try {
                 when {
                     method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
@@ -491,10 +496,6 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     private fun handleGetAlbumsSharesProfileId(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
             logd("Fetching shared albums for profile ID")
-
-            // sometimes we get an ArrayList instead of Retrofit result and it causes the app to crash later
-            if (result::class == ArrayList::class)
-                return@withSuspendResult result
 
             val profileId = args[0] as? Long ?: return@withSuspendResult result
 
