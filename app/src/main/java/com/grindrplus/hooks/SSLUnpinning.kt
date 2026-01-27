@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.setObjectField
 import de.robv.android.xposed.XposedHelpers.findAndHookConstructor
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -30,7 +31,8 @@ fun sslUnpinning(param: XC_LoadPackage.LoadPackageParam) {
                     unsafeSslContext.socketFactory,
                     unsafeTrustManager
                 )
-                callMethod(
+                // the builder does not have hostnameVerifier() method
+                setObjectField(
                     param.thisObject,
                     "hostnameVerifier",
                     object : HostnameVerifier {
