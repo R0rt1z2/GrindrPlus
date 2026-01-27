@@ -20,7 +20,6 @@ import com.grindrplus.persistence.model.AlbumEntity
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
-import com.grindrplus.utils.RetrofitUtils.SUCCESS_VALUE_NAME
 import com.grindrplus.utils.RetrofitUtils.createSuccess
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
 import com.grindrplus.utils.RetrofitUtils.isFail
@@ -30,7 +29,6 @@ import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import com.grindrplus.utils.withSuspendResult
-import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.io.Closeable
@@ -493,6 +491,11 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     private fun handleGetAlbumsSharesProfileId(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
             logd("Fetching shared albums for profile ID")
+
+            // sometimes we get an ArrayList instead of Retrofit result and it causes the app to crash later
+            if (result::class == ArrayList::class)
+                return@withSuspendResult result
+
             val profileId = args[0] as? Long ?: return@withSuspendResult result
 
             if (result.isSuccess()) {
