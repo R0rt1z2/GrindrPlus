@@ -1,14 +1,15 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Logger
-import com.grindrplus.core.logi
+import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 
@@ -25,6 +26,7 @@ class FeatureGranting : Hook(
     private val featureModel = "com.grindrapp.android.usersession.model.Feature"
     private val tapModel = "com.grindrapp.android.taps.model.Tap"
     private val tapInboxModel = "com.grindrapp.android.taps.data.model.TapsInboxEntity"
+    private val alertParams = "P" // search for 'AlertController.AlertParams' in androidx.appcompat.app.AlertDialog
     private val featureManager = FeatureManager()
 
     override fun init() {
@@ -65,6 +67,35 @@ class FeatureGranting : Hook(
             findClass(model).hook("isViewable", HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
+        }
+
+        val boostAlertStringId = Utils.getId(
+            "incognito_while_boosting_confilct_warning_message",
+            "string",
+            GrindrPlus.context
+        )
+
+        val boostAlertString = GrindrPlus.context.resources.getString(boostAlertStringId)
+
+        findClass("androidx.appcompat.app.AlertDialog\$Builder")
+            .hook("show", HookStage.BEFORE) { param ->
+                val builder = param.thisObject()
+                val alertParams = getObjectField(builder, alertParams)
+                val messageString = getObjectField(alertParams, "mMessage")
+
+                if (messageString.equals(boostAlertString)) {
+                    val dialog = callMethod(builder, "create")
+                    val positiveButtonListener = getObjectField(alertParams, "mPositiveButtonListener")
+
+                    val positiveButtonId = XposedHelpers.getStaticIntField(
+                        findClass("android.content.DialogInterface"),
+                        "BUTTON_POSITIVE"
+                    )
+
+                    callMethod(positiveButtonListener, "onClick", dialog, positiveButtonId)
+
+                    param.setResult(dialog)
+                }
         }
     }
 
