@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/R0rt1z2/GrindrPlus/actions/workflows/build_apk.yml?query=branch%3Amaster+event%3Apush+is%3Acompleted"><img src="https://img.shields.io/github/actions/workflow/status/R0rt1z2/GrindrPlus/build_apk.yml?branch=master&logo=github&label=Build" alt="Build"></a>
   <img src="https://shields.io/github/downloads/R0rt1z2/GrindrPlus/total?logo=Bookmeter&label=Downloads&logoColor=Green&color=Green" alt="Total downloads">
-  <a href="https://discord.gg/5ZxHJVGR"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
+  <a href="https://discord.gg/invite/SPb6Kc7S4C"><img src="https://img.shields.io/discord/1161706617729974352?label=Discord&logo=discord" alt="Discord"></a>
   <a href="https://t.me/GrindrPlus"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=flat&logo=telegram&logoColor=white" alt="Telegram"></a>
 </p>
 <h1 align="center">Grindr Plus</h1>
@@ -110,7 +110,7 @@ This mod does not collect any personal data nor does it display ads of any kind.
 - **LSPatch Limitations**: Users may experience additional stability issues compared to LSPosed installations.
 
 > [!TIP]
-> Before reporting a new bug, please check our [Discord](https://discord.gg/5ZxHJVGR) or [Telegram](https://t.me/GrindrPlus) channels to see if it's already known.
+> Before reporting a new bug, please check our [Discord](https://discord.gg/invite/SPb6Kc7S4C) or [Telegram](https://t.me/GrindrPlus) channels to see if it's already known.
 
 ## Installation
 > <small>[!WARNING]
