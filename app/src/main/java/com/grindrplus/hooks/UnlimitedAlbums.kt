@@ -20,17 +20,16 @@ import com.grindrplus.persistence.model.AlbumEntity
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
-import com.grindrplus.utils.RetrofitUtils.SUCCESS_VALUE_NAME
 import com.grindrplus.utils.RetrofitUtils.createSuccess
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPUT
+import com.grindrplus.utils.RetrofitUtils.isResult
 import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import com.grindrplus.utils.withSuspendResult
-import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.io.Closeable
@@ -59,6 +58,10 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             albumsServiceClass,
         ) { originalHandler, proxy, method, args ->
             val result = originalHandler.invoke(proxy, method, args)
+
+            if (!result.isResult())
+                return@hookService result
+
             try {
                 when {
                     method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
@@ -493,6 +496,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     private fun handleGetAlbumsSharesProfileId(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
             logd("Fetching shared albums for profile ID")
+
             val profileId = args[0] as? Long ?: return@withSuspendResult result
 
             if (result.isSuccess()) {

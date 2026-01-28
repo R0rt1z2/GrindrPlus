@@ -10,7 +10,8 @@ import java.lang.reflect.Proxy
 object RetrofitUtils {
     const val FAIL_CLASS_NAME = "Yf.a\$a" // search for '"Fail(failValue="'
     const val SUCCESS_CLASS_NAME = "Yf.a\$b" // search for '"Success(successValue="'
-    const val SUCCESS_VALUE_NAME = "a" // probably the only field in the class
+    const val SUCCESS_VALUE_NAME = "a" // probably the only field in the success class
+    const val FAIL_VALUE_NAME = "a" // probably the only field in the fail class
     const val RETROFIT_NAME = "retrofit2.Retrofit"
 
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {
@@ -58,12 +59,16 @@ object RetrofitUtils {
         return javaClass.name == SUCCESS_CLASS_NAME
     }
 
+    fun Any.isResult(): Boolean {
+        return isSuccess() || isFail()
+    }
+
     fun Any.getSuccessValue(): Any {
         return getObjectField(this, SUCCESS_VALUE_NAME)
     }
 
     fun Any.getFailValue(): Any {
-        return getObjectField(this, SUCCESS_VALUE_NAME)
+        return getObjectField(this, FAIL_VALUE_NAME)
     }
 
     fun createSuccess(value: Any): Any {
@@ -91,6 +96,12 @@ object RetrofitUtils {
         }
     }
 
+    /**
+     * The retrofit methods are suspend funs (use continuations) and therefore will sometimes
+     * return COROUTINE_SUSPENDED constant instead of the actual result. Be sure to check
+     * if the returned value actually is a result and if not, just return it early.
+     * Hint: if (!result.isResult()) return result
+     */
     fun hookService(
         serviceClass: Class<*>,
         invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
