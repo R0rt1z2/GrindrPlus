@@ -88,5 +88,10 @@
     "message_id": 193,
     "text": "New Update\n• Unlock all profiles in the Explorer view (thanks to DavidL)\n• Fixed the Online Indicator hook\n• Fixed the AntiBlock hook\n• Fixed Unlimited Albums crashes\n• Fixed Ban Management crashes\n• Disable boost warning when entering incognito\n\nACKNOWLEDGMENTS\nThese fixes were mostly done by ASDF Biker so huge thanks to him.\n\nHOW TO UPDATE\nYou can update without uninstalling the original Grindr app if you're upgrading from the previous version of the mod.\n\nNon-root method (for users who normally use the GrindrPlus manager to install the mod):\n• Install the new version of GrindrPlus over the existing installation\n• Open the new version of GrindrPlus and navigate to the Install section\n• Select the latest version from the available options\n• Click the Install button and wait for the APK to download and patch\n• When prompted to upgrade Grindr, select \"Yes\"\n• Done\n\nRoot method (for LSPosed users):\n• Install the new version of GrindrPlus over the existing installation\n• Done",
     "date": 1769589012
+  },
+  {
+    "message_id": 194,
+    "text": "Grindr is down once again. This is NOT caused by Grindr Plus.\n\nThere is nothing we (or you) can do about it. Please wait until it’s fixed by Grindr.\n\nPlease DO NOT spam the chat with messages like “My app doesn’t work” or “The feed doesn’t load,” or we will lock the chat.\n\nKeep checking the status here: https://status.grindr.com/",
+    "date": 1769706943
   }
 ]
