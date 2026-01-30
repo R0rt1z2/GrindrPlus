@@ -178,17 +178,54 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                     addLog("Target package: $packageName", LogType.INFO)
                     addLog("Target app name: $appName", LogType.INFO)
 
-                    val success = try {
-                        installation!!.cloneGrindr(
-                            packageName, appName, debuggable, embedLSPatch,
-                            print
-                        )
-                        true
-                    } catch (e: Exception) {
-                        Logger.i("Cloning failed: ${e.localizedMessage}")
-                        addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
-                        false
+                    // Check if we should use custom files, if specified by user, or the server version,
+                    // previously the server version was always used for cloning even when user had selected custom files
+                    // CODE FIX: IF (useCustomFiles ...) use logic from startCustomInstallation() for cloning ELSE use old logic
+                    // Also a new method, cloneGrindrCustom(), has been created in Installation.kt
+                    val success = if (useCustomFiles && customBundleUri != null && customModUri != null) {
+                        try {
+                            addLog("Processing custom files...", LogType.INFO)
+
+                            // START logic from startCustomInstallation():
+                            val bundleFile = createTempFileFromUri(context, customBundleUri!!, "grindr-$customVersionName.zip")
+                            val modFile = createTempFileFromUri(context, customModUri!!, "mod-$customVersionName.zip")
+                            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+                            val customInstallation = Installation(
+                                context,
+                                customVersionName,
+                                modFile.absolutePath,
+                                bundleFile.absolutePath,
+                                mapsApiKey
+                            )
+                            // Call the NEW method for custom cloning in Installation.kt instead of installCustom()
+                            withContext(Dispatchers.IO) {
+                                customInstallation.cloneGrindrCustom(
+                                    packageName, appName, debuggable, embedLSPatch,
+                                    bundleFile, modFile, print
+                                )
+                            }
+                            // END logic from startCustomInstallation()
+                            true
+                        } catch (e: Exception) {
+                            Logger.i("Custom cloning failed: ${e.localizedMessage}")
+                            addLog("Custom cloning failed: ${e.localizedMessage}", LogType.ERROR)
+                            false
+                        }
+                    } else {
+                        // Old logic for server files:
+                        try {
+                            installation!!.cloneGrindr(
+                                packageName, appName, debuggable, embedLSPatch,
+                                print
+                            )
+                            true
+                        } catch (e: Exception) {
+                            Logger.i("Cloning failed: ${e.localizedMessage}")
+                            addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
+                            false
+                        }
                     }
+                    // FIX ENDS HERE
 
                     if (success) {
                         addLog("Grindr clone created successfully!", LogType.SUCCESS)
