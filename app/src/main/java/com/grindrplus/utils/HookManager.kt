@@ -17,6 +17,7 @@ import com.grindrplus.hooks.EnableUnlimited
 import com.grindrplus.hooks.ExpiringMedia
 import com.grindrplus.hooks.Favorites
 import com.grindrplus.hooks.FeatureGranting
+import com.grindrplus.hooks.GoogleAuthBypass
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
 import com.grindrplus.hooks.NotificationAlerts
@@ -55,6 +56,7 @@ class HookManager {
                 ExpiringMedia(),
  //                Favorites(),
                 FeatureGranting(),
+                GoogleAuthBypass(),
                 LocalSavedPhrases(),
                 LocationSpoofer(),
                 NotificationAlerts(),
