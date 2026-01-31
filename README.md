@@ -18,7 +18,7 @@ Grindr Plus is an Xposed Module that unlocks and adds unique features to the Gri
 ## Introduction
 This repository contains a completely rewritten version of [ElJaviLuki's original mod](https://github.com/ElJaviLuki/GrindrPlus), rebuilt from the ground up. It introduces new features, ensures compatibility with the latest Grindr versions, and offers improved performance and functionality.
 
-As the title of the repo suggests, this mod is designed to enhance the user experience, but please note that it’s under active development, so stability is not always guaranteed.
+As the title of the repo suggests, this mod is designed to enhance the user experience, but please note that it's under active development, so stability is not always guaranteed.
 
 Neither I ([@R0rt1z2](https://github.com/R0rt1z2)) nor any contributors listed here are affiliated with Grindr LLC. For any important inquiries related to this repository, feel free to reach out to me directly at hello@r0rt1z2.com.
 
@@ -60,6 +60,7 @@ This mod does not collect any personal data nor does it display ads of any kind.
   - `Unlock developer special features`
   - `Built-in mod settings to manage hooks`
   - `Disable forced app updates (extend mod lifespan)`
+  - `Google Play Services authentication bypass (LSPatch)`
 </details>
 
 <details closed>
@@ -100,7 +101,7 @@ This mod does not collect any personal data nor does it display ads of any kind.
 > [!WARNING]
 > Please read this section carefully before reporting bugs. Many issues listed here are known limitations.
 
-- **Google Login (LSPatch only)**: Requires a workaround to function properly. See the [FAQ section](#faq--troubleshooting) for detailed instructions.
+- **Google Login (LSPatch only)**: Now includes automatic GMS signature bypass that significantly improves reliability. The manual workaround (see FAQ) may still be needed for initial login, but subsequent logins should work more smoothly with extended 30-minute token validity and automatic session caching.
 - **Incognito Mode**: Does not work reliably and turns off automatically after a short period.
 - **"Viewed Me" List**: Will not work as this is a server-side feature that cannot be modified.
 - **Boosting & Roaming**: Disabled by default. To enable, turn off the "Disable Boosting" hook in settings and restart Grindr.
@@ -176,17 +177,26 @@ Read our [Development docs](docs/README.md)
 <details>
   <summary>How do I login with Google?</summary>
 
-- If you're not using LSPosed you might have noticed that the Google Login button doesn't work. This is because the original signature of the application is invalidated when using LSPatch, which causes all functions related to Google Services (GMS) to not work properly.
-- In order to fix that, you have to:
+- **Good news**: Recent versions of GrindrPlus include automatic Google Play Services signature bypass that significantly improves login reliability!
+- The new `GoogleAuthBypass` hook automatically:
+  - Intercepts and bypasses GMS signature validation
+  - Extends login session validity from 10 to 30 minutes
+  - Caches authentication tokens for smoother re-authentication
+  - Handles GoogleAuthUtil and GoogleSignInClient flows transparently
+
+- **For first-time login or if automatic bypass doesn't work**, use this manual workaround:
     1. Uninstall the patched Grindr app.
     2. Reinstall the original Grindr app (either from the Play Store or the official APK).
-    3. Reboot your device (this is optional, but **HIGHLY RECOMMENDED**).
+    3. Reboot your device (optional, but **HIGHLY RECOMMENDED**).
     4. Log in using your Google account.
     5. Uninstall the original Grindr app.
     6. Install the app again with GrindrPlus.
-    7. Open the patched app and log in with Google **within 10 minutes**. If you wait too long, **the login will fail**.
+    7. Open the patched app and log in with Google **within 30 minutes** (extended from 10 minutes).
     8. You should now be able to log in successfully using Google.
-- NOTE: **You'll need to repeat this process every time you want to log in with Google**.
+
+- **Note**: With the new bypass, you should rarely need to repeat the manual process. The mod now maintains your Google session more reliably across app restarts.
+
+- **Troubleshooting**: If Google login still fails, ensure the "Google Auth Bypass" hook is enabled in GrindrPlus settings.
 </details>
 <details>
   <summary>Maps not loading on LSPatch version?</summary>
@@ -223,7 +233,9 @@ Read our [Development docs](docs/README.md)
 <details>
   <summary>I'm using LSPatch and I can't login with Google!</summary> 
 
-- As mentioned above, when using LSPatch the original signature of the application is invalidated which causes all functions related to Google Services (GMS) to not work properly.
+- Recent versions include automatic signature bypass! Make sure you're using the latest version of GrindrPlus and that the "Google Auth Bypass" hook is enabled in settings.
+- If the automatic bypass doesn't work, follow the manual workaround described in the "How do I login with Google?" section above.
+- The manual process is now easier with extended 30-minute token validity and automatic session caching.
 </details>
 <details>
   <summary>Can I get banned with this?</summary>
@@ -253,7 +265,7 @@ Read our [Development docs](docs/README.md)
 </details>
 
 ## Acknowledgments
-Big part of the credit goes to [ElJaviLuki](https://github.com/ElJaviLuki/GrindrPlus), the creator of the original idea and mod — this project wouldn’t exist without his initial work.
+Big part of the credit goes to [ElJaviLuki](https://github.com/ElJaviLuki/GrindrPlus), the creator of the original idea and mod — this project wouldn't exist without his initial work.
 
 This project relies on several third-party libraries, and we extend our gratitude to their authors for their valuable contributions. For a complete list of these dependencies, please refer to the [dependencies](https://github.com/R0rt1z2/GrindrPlus/blob/master/app/build.gradle.kts#L67-L79) section of the `build.gradle.kts` file.
 
