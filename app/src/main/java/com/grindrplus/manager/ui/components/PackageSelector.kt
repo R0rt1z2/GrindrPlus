@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
-import com.grindrplus.manager.utils.AppCloneUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,28 +40,12 @@ fun PackageSelector(
     }
 
     fun formatPackageName(packageName: String): String {
-        val packageManager = context.packageManager
+        if (packageName == Constants.GRINDR_PACKAGE_NAME)
+            return "Main Grindr App"
 
-        return when {
-            packageName == Constants.GRINDR_PACKAGE_NAME -> "Main Grindr App"
-            packageName.startsWith(AppCloneUtils.GRINDR_PACKAGE_PREFIX) -> {
-                try {
-                    val appInfo = packageManager.getApplicationInfo(packageName, 0)
-                    val appName = packageManager.getApplicationLabel(appInfo).toString()
-
-                    if (appName != packageName && appName.isNotEmpty()) {
-                        "Clone: $appName"
-                    } else {
-                        val suffix = packageName.removePrefix(AppCloneUtils.GRINDR_PACKAGE_PREFIX)
-                        "Clone: $suffix"
-                    }
-                } catch (_: Exception) {
-                    val suffix = packageName.removePrefix(AppCloneUtils.GRINDR_PACKAGE_PREFIX)
-                    "Clone: $suffix"
-                }
-            }
-            else -> packageName
-        }
+        return packages.firstOrNull { it.packageName == packageName }
+            ?.let { "Clone: ${it.appName}" }
+            ?: packageName
     }
 
     Column(
@@ -113,19 +96,19 @@ fun PackageSelector(
                 .fillMaxWidth(0.9f)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
-            packages.forEach { packageName ->
+            packages.forEach { app ->
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = formatPackageName(packageName),
+                            text = formatPackageName(app.packageName),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     },
                     onClick = {
-                        selectedPackage = packageName
+                        selectedPackage = app.packageName
                         expanded = false
-                        Config.setCurrentPackage(packageName)
-                        onPackageSelected(packageName)
+                        Config.setCurrentPackage(app.packageName)
+                        onPackageSelected(app.packageName)
                     }
                 )
             }
