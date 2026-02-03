@@ -22,15 +22,35 @@ object AppCloneUtils {
         }
     }
 
+    fun getAppName(packageName: String, packageManager: PackageManager): String {
+        try {
+            val appInfo = packageManager.getApplicationInfo(packageName, 0)
+            val appName = packageManager.getApplicationLabel(appInfo).toString()
+
+            if (appName != packageName && appName.isNotEmpty())
+                return appName
+
+        } catch (_: Exception) {
+        }
+
+        val suffix = packageName.removePrefix(GRINDR_PACKAGE_PREFIX)
+        return "Grindr " + suffix.replaceFirstChar { it.uppercase() }
+    }
+
     /**
      * Get existing Grindr clones to determine next suffix number
      */
-    fun getExistingClones(context: Context): List<String> {
+    fun getExistingClones(context: Context): List<AppInfo> {
         val pm = context.packageManager
         val packages = pm.getInstalledPackages(0)
         return packages
             .filter { it.packageName.startsWith(GRINDR_PACKAGE_PREFIX) }
-            .map { it.packageName }
+            .map {
+                AppInfo(
+                    it.packageName,
+                    getAppName(it.packageName, pm)
+                )
+            }
     }
 
     /**
@@ -47,7 +67,7 @@ object AppCloneUtils {
 
         var nextNum = 1
 
-        while (clones.any { it == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
+        while (clones.any { it.packageName == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
             nextNum++
         }
 
@@ -60,4 +80,9 @@ object AppCloneUtils {
     fun hasReachedMaxClones(context: Context): Boolean {
         return getExistingClones(context).size >= MAX_CLONES
     }
+
+    /**
+     * Data class to hold an app's package name and display name
+     */
+    data class AppInfo(val packageName: String, val appName: String)
 }
