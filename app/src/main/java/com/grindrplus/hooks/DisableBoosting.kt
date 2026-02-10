@@ -7,13 +7,12 @@ import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.newInstance
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
-// supported version: 25.20.0
 class DisableBoosting : Hook(
     "Disable boosting",
     "Get rid of all upsells related to boosting"
 ) {
-    private val drawerProfileUiState = "yl.e\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
-    private val radarUiModel = "ii.a\$a" // search for 'RadarUiModel(boostButton='
+    private val drawerProfileUiState = "sc0.j\$a" // search for 'DrawerProfileUiState(showBoostMeButton='
+    private val radarUiModel = "r50.a\$a" // search for 'RadarUiModel(boostButton='
     private val fabUiModel = "com.grindrapp.android.boost2.presentation.model.FabUiModel"
     private val rightNowMicrosFabUiModel =
         "com.grindrapp.android.rightnow.presentation.model.RightNowMicrosFabUiModel"
@@ -40,8 +39,8 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "c", false) // showRNBoostCard
             setObjectField(param.thisObject(), "i", null) // showDayPassItem
             setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
-            setObjectField(param.thisObject(), "u", false) // isRightNowAvailable
-			setObjectField(param.thisObject(), "w", false) // showMegaBoost
+            setObjectField(param.thisObject(), "t", false) // isRightNowAvailable
+			setObjectField(param.thisObject(), "v", false) // showMegaBoost
         }
 
         findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
@@ -59,11 +58,10 @@ class DisableBoosting : Hook(
             setObjectField(param.thisObject(), "isFabVisible", false) // isFabVisible
         }
 
-		val spvConstructor = findClass(smallPersistentVector).constructors[0]
+        val spvConstructor = findClass(smallPersistentVector).constructors[0]
 
 		findClass(navbarClass).hookConstructor(HookStage.BEFORE) { param ->
 			val routeList = param.args()[2] as List<*>
-			spvConstructor
 			val newRouteArray =	routeList.filter { it?.javaClass?.simpleName != "Store" }.toTypedArray()
 			val newRouteList = spvConstructor.newInstance(newRouteArray)
 
@@ -78,7 +76,7 @@ class DisableBoosting : Hook(
         //   ???     - 'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
 		//   "Il.w0" - 'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
 		// TODO find the showTapsAndViewedMePopup in 25.20.0
-        listOf("Il.w0").forEach {
+        listOf("cd0.j2").forEach {
             findClass(it).hook("invoke", HookStage.BEFORE) { param ->
                 param.setResult(null)
             }

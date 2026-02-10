@@ -4,7 +4,6 @@ import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 
-// supported version: 25.20.0
 class UnlockExplorer : Hook(
     "Unlock Explorer",
     "Unlock all profiles in Explorer"

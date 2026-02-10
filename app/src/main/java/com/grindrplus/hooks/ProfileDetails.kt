@@ -24,14 +24,13 @@ import de.robv.android.xposed.XposedHelpers.setObjectField
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
-// supported version: 25.20.0
 class ProfileDetails : Hook(
 	"Profile details",
 	"Add extra fields and details to profiles"
 ) {
     private var boostedProfilesList = emptyList<String>()
-    private val blockedProfilesObserver = "Hm.f" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
-    private val profileViewHolder = "bl.u\$c" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
+    private val blockedProfilesObserver = "ze0.n" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
+    private val profileViewHolder = "vb0.m0\$c" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
 
     private val distanceUtils = "com.grindrapp.android.utils.DistanceUtils"
     private val profileBarView = "com.grindrapp.android.ui.profileV2.ProfileBarView"
@@ -54,12 +53,8 @@ class ProfileDetails : Hook(
         }
 
         findClass(blockedProfilesObserver).hook("onChanged", HookStage.AFTER) { param ->
-            // recently got merged into a case statement, so filter for the right argument type
-            if ((getObjectField(param.thisObject(), "a") as Int) != 0) return@hook
-
-			// what is the expected class?It is Object in the decompiled source
-            val obj = getObjectField(param.thisObject(), "b")
-			val profileList = getObjectField(obj, "o") as ArrayList<*>
+            val obj = getObjectField(param.thisObject(), "a")
+            val profileList = getObjectField(obj, "o") as ArrayList<*>
 
             for (profile in profileList) {
                 val profileId = callMethod(profile, "getProfileId") as String
@@ -73,7 +68,7 @@ class ProfileDetails : Hook(
 
         findClass(profileViewHolder).hookConstructor(HookStage.AFTER) { param ->
             val textView =
-                getObjectField(param.thisObject(), "a") as TextView
+                getObjectField(param.thisObject(), "b") as TextView
 
             textView.setOnLongClickListener {
                 val text = textView.text.toString()
@@ -167,9 +162,9 @@ class ProfileDetails : Hook(
         }
 
         findClass(distanceUtils).hook("c", HookStage.AFTER) { param ->
-            val distance = param.arg<Double>(0)
-            // val isAbbreviated = param.arg<Boolean>(1)
-            val isFeet = param.arg<Boolean>(2)
+            val distance = param.arg<Double>(1)
+            // val isAbbreviated = param.arg<Boolean>(3)
+            val isFeet = param.arg<Boolean>(0)
 
             param.setResult(
                 if (isFeet) {

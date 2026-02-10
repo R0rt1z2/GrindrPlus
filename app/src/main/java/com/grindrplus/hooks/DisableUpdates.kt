@@ -13,7 +13,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
-// supported version: 25.20.0
 class DisableUpdates : Hook(
     "Disable updates",
     "Disable forced updates"
@@ -22,7 +21,7 @@ class DisableUpdates : Hook(
         "https://raw.githubusercontent.com/R0rt1z2/GrindrPlus/master/version.json"
     private val appUpdateInfo = "com.google.android.play.core.appupdate.AppUpdateInfo"
     private val appUpdateZzm = "com.google.android.play.core.appupdate.zzm" // search for 'requestUpdateInfo(%s)'
-	private val appUpgradeManager = "jf.n" // search for 'Uri.parse("market://details?id=com.grindrapp.android");'
+	private val appUpgradeManager = "rz.v" // search for 'Uri.parse("market://details?id=com.grindrapp.android");'
     private val appConfiguration = "com.grindrapp.android.platform.config.AppConfiguration"
     private var versionCode: Int = 0
     private var versionName: String = ""

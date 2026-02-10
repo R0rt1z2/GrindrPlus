@@ -17,7 +17,6 @@ import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.setObjectField
 
-// supported version: 25.20.0
 class EnableUnlimited : Hook(
     "Enable unlimited",
     "Enable Grindr Unlimited features"
@@ -26,10 +25,10 @@ class EnableUnlimited : Hook(
     private val profileModel = "com.grindrapp.android.persistence.model.Profile"
     private val tabLayoutClass = "com.google.android.material.tabs.TabLayout"
 
-    private val paywallUtils = "dk.c" // search for 'app_restart_required'
-    private val persistentAdBannerContainer = "Z4.a" // search for 'GrindrAdContainer grindrAdContainer = (GrindrAdContainer) ViewBindings.findChildViewById(view, R.id.persistent_banner_ad_compose_view);'
+    private val paywallUtils = "x90.e" // search for 'app_restart_required'
+    private val persistentAdBannerContainer = "nb.d" // search for '(ComposeView) ViewBindings.findChildViewById(view,'
     private val subscribeToInterstitialsList = listOf(
-        "fa.A\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
+        "mo.b1\$a" // search for 'com.grindrapp.android.chat.presentation.ui.ChatActivityV2$subscribeToInterstitialAds$1$1$1'
     )
     private val viewsToHide = mapOf(
         "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment\$b" to listOf("upsell_bottom_bar"), // search for 'bind(Landroid/view/View;)Lcom/grindrapp/android/databinding/ProfileTagCascadeFragmentBinding;'
@@ -64,7 +63,7 @@ class EnableUnlimited : Hook(
 		// prevent leak of faked roles into http headers
 		// search for one line method returning an string in userSession
 		userSessionClass.hook( // get roles list as string
-			"F", HookStage.BEFORE
+			"D", HookStage.BEFORE
 		) { param ->
 			param.setResult("[]")
 		}

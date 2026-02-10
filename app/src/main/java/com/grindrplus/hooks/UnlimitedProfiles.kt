@@ -13,13 +13,12 @@ import de.robv.android.xposed.XposedHelpers.callStaticMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import java.lang.reflect.Proxy
 
-// supported version: 25.20.0
 class UnlimitedProfiles : Hook(
     "Unlimited profiles",
     "Allow unlimited profiles"
 ) {
     private val function2 = "kotlin.jvm.functions.Function2"
-    private val onProfileClicked = "com.grindrapp.android.ui.browse.E" // search for 'com.grindrapp.android.ui.browse.ServerDrivenCascadeViewModel$onProfileClicked$1'
+    private val onProfileClicked = "com.grindrapp.android.ui.browse.e0" // search for 'com.grindrapp.android.ui.browse.ServerDrivenCascadeViewModel$onProfileClicked$1'
     private val profileWithPhoto = "com.grindrapp.android.persistence.pojo.ProfileWithPhoto"
     private val serverDrivenCascadeCachedState =
         "com.grindrapp.android.persistence.model.serverdrivencascade.ServerDrivenCascadeCacheState"
@@ -38,7 +37,7 @@ class UnlimitedProfiles : Hook(
             }
 
         findClass(profileTagCascadeFragment) // search for 'new StringBuilder("cascadeClickEvent/position=");'
-            .hook("O", HookStage.BEFORE) { param ->
+            .hook("R", HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
 

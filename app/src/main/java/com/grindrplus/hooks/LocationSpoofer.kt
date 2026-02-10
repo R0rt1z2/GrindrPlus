@@ -54,7 +54,6 @@ class LocationSpoofer : Hook(
     var gpsLocationLatitude: Double = 0.0
     var gpsLocationLongitude: Double = 0.0
 
-
     override fun init() {
         val locationClass = findClass(location)
 
@@ -650,6 +649,7 @@ class LocationSpoofer : Hook(
         }
 
     }
+
     private suspend fun getLocations(): List<TeleportLocationEntity> = withContext(Dispatchers.IO) {
         return@withContext GrindrPlus.database.teleportLocationDao().getLocations()
     }

@@ -15,7 +15,6 @@ import com.grindrplus.hooks.DisableUpdates
 import com.grindrplus.hooks.EmptyCalls
 import com.grindrplus.hooks.EnableUnlimited
 import com.grindrplus.hooks.ExpiringMedia
-import com.grindrplus.hooks.Favorites
 import com.grindrplus.hooks.FeatureGranting
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
@@ -53,7 +52,6 @@ class HookManager {
                 EmptyCalls(),
                 EnableUnlimited(),
                 ExpiringMedia(),
- //                Favorites(),
                 FeatureGranting(),
                 LocalSavedPhrases(),
                 LocationSpoofer(),
@@ -66,7 +64,7 @@ class HookManager {
                 UnlimitedAlbums(),
                 UnlimitedProfiles(),
                 UnlockExplorer(),
-//                StatusDialog(),
+                StatusDialog(),
 //                WebSocketAlive()
             )
 

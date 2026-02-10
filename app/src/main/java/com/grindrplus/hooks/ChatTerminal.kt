@@ -8,12 +8,11 @@ import com.grindrplus.utils.hook
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import org.json.JSONObject
 
-// supported version: 25.20.0
 class ChatTerminal : Hook(
     "Chat terminal",
     "Create a chat terminal to execute commands"
 ) {
-    private val chatMessageHandler = "Y9.k" // search for '(chatMessageMetaData, "chatMessageMetaData")'
+    private val chatMessageHandler = "fo.k" // search for '(chatMessageMetaData, "chatMessageMetaData")'
 
     override fun init() {
         findClass(chatMessageHandler).hook("l", HookStage.BEFORE) { param ->

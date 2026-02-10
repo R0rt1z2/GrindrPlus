@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import android.util.Log
 import android.widget.Toast
 import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
@@ -37,9 +38,8 @@ import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
-// supported version: 25.20.0
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
-    private val albumsService = "K8.a" // search for 'v1/albums/red-dot'
+    private val albumsService = "tk.a" // search for 'v1/albums/red-dot'
     private val albumModel = "com.grindrapp.android.chat.domain.model.Album"
     private val filteredSpankBankAlbumContent =
         "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"
@@ -59,8 +59,11 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         ) { originalHandler, proxy, method, args ->
             val result = originalHandler.invoke(proxy, method, args)
 
+            // Possible crash fix, currently disabled because it breaks this feature entirely.
+            /*
             if (!result.isResult())
                 return@hookService result
+            */
 
             try {
                 when {
@@ -114,7 +117,6 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         }
 
         findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
-
     }
 
     @Suppress("UNCHECKED_CAST")

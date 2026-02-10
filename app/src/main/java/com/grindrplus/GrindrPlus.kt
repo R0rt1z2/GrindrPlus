@@ -107,11 +107,11 @@ object GrindrPlus {
     val currentActivity: Activity?
         get() = currentActivityRef?.get()
 
-    internal val userAgent = "Pb.e" // search for 'grindr3/'
+    internal val userAgent = "as.r" // search for 'grindr3/'
     internal val userSession = "com.grindrapp.android.usersession.b" // search for 'com.grindrapp.android.storage.UserSessionImpl$1'
     private val deviceInfo =
-        "u8.u" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
-    internal val grindrLocationProvider = "ff.e" // search for 'system settings insufficient for location request, attempting to resolve'
+        "ek.y" // search for 'AdvertisingIdClient.Info("00000000-0000-0000-0000-000000000000", true)'
+    internal val grindrLocationProvider = "nz.e" // search for 'system settings insufficient for location request, attempting to resolve'
     internal val serverDrivenCascadeRepo = "com.grindrapp.android.persistence.repository.ServerDrivenCascadeRepo"
     internal val ageVerificationActivity = "com.grindrapp.android.ageverification.presentation.ui.AgeVerificationActivity"
     internal val browseExploreActivity = "com.grindrapp.android.ui.browse.BrowseExploreMapActivity"
@@ -206,7 +206,9 @@ object GrindrPlus {
         }
 
         try {
+            Logger.e("Setting Up Instance Manager")
             setupInstanceManager()
+            Logger.e("Setting Up Notification Hook")
             setupServerNotificationHook()
         } catch (t: Throwable) {
             Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)

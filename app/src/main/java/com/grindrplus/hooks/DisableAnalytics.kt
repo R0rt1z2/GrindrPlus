@@ -7,7 +7,6 @@ import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
 import com.grindrplus.utils.RetrofitUtils.createServiceProxy
 import com.grindrplus.utils.hook
 
-// supported version: 25.20.0
 class DisableAnalytics : Hook(
     "Disable analytics",
     "Disable Grindr analytics (data collection)"
@@ -16,6 +15,7 @@ class DisableAnalytics : Hook(
         // Braze
         findClass("com.braze.Braze\$Companion")
             // See https://braze-inc.github.io/braze-android-sdk/kdoc/braze-android-sdk/com.braze/-braze/-companion/outbound-network-requests-offline.html
+            // Investigate switching to https://braze-inc.github.io/braze-android-sdk/kdoc/braze-android-sdk/com.braze/-braze/-companion/enable-mock-network-requests-and-drop-events-mode.html
             .hook("setOutboundNetworkRequestsOffline", HookStage.BEFORE) {
                 param -> param.setArg(0, true)
             }
