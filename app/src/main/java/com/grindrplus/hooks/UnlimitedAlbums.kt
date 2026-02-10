@@ -67,13 +67,10 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                     method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
                     method.isGET("v2/albums/shares/{profileId}") ->
                         handleGetAlbumsSharesProfileId(args, result)
-
                     method.isGET("v3/albums/{albumId}/view") ->
                         handleGetAlbumsViewAlbumId(args, result)
-
                     method.isPUT("v1/albums/{albumId}/shares/remove") ->
                         handleRemoveAlbumShares(args, result)
-
                     else -> result
                 }
             } catch (e: Exception) {
