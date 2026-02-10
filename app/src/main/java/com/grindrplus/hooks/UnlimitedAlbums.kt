@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import android.util.Log
 import android.widget.Toast
 import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
@@ -58,9 +59,6 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             albumsServiceClass,
         ) { originalHandler, proxy, method, args ->
             val result = originalHandler.invoke(proxy, method, args)
-
-            if (!result.isResult())
-                return@hookService result
 
             try {
                 when {
@@ -367,6 +365,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     @Suppress("UNCHECKED_CAST")
     private fun handleGetAlbums(args: Array<Any?>, result: Any) =
         withSuspendResult(args, result) { args, result ->
+            logd("Fetching albums")
             if (result.isSuccess()) {
                 try {
                     val albums = getObjectField(result.getSuccessValue(), "albums") as? List<Any>
@@ -408,11 +407,13 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                     }
                 }
 
+                logd("albums: $albums")
                 val newValue =
                     findClass(albumsList)
                         .getConstructor(List::class.java)
                         .newInstance(albums)
 
+                logd("newValue: $newValue")
                 createSuccess(newValue)
             } catch (e: Exception) {
                 loge("Error creating albums list: ${e.message}")
@@ -479,12 +480,20 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                     }
                 }
 
+                logd("Fetching shared albums")
+                logd("albumBriefs: $albumBriefs")
                 val newValue =
                     findClass(sharedAlbumsBrief)
                         .getConstructor(List::class.java)
                         .newInstance(albumBriefs)
 
-                createSuccess(newValue)
+                logd("newValue: $newValue")
+                if (result.isSuccess()) {
+                    createSuccess(newValue)
+                } else {
+                    logw("Fetching shared albums failed")
+                    result
+                }
             } catch (e: Exception) {
                 loge("Error creating shared albums brief: ${e.message}")
                 Logger.writeRaw(e.stackTraceToString())
@@ -500,6 +509,9 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             val profileId = args[0] as? Long ?: return@withSuspendResult result
 
             if (result.isSuccess()) {
+                logd("Fetching shared albums for profile ID")
+                logd("result: $result");
+
                 try {
                     runBlocking {
                         GrindrPlus.database.withTransaction {
@@ -553,12 +565,19 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
                     }
                 }
 
+                logd("albumBriefs: $albumBriefs");
                 val newValue =
                     findClass(sharedAlbumsBrief)
                         .getConstructor(List::class.java)
                         .newInstance(albumBriefs)
 
-                createSuccess(newValue)
+                logd("newValue: $newValue");
+                if (result.isFail()) {
+                    createSuccess(newValue)
+                } else {
+                    logw("Fetching shared albums for profile ID failed")
+                    result;
+                }
             } catch (e: Exception) {
                 loge("Error creating shared albums brief: ${e.message}")
                 result
