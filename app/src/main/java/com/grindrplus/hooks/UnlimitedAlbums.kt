@@ -55,30 +55,23 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         RetrofitUtils.hookService(
             albumsServiceClass,
         ) { originalHandler, proxy, method, args ->
-
-            val newContinuation =
-                RetrofitUtils.wrapContinuation(args.last()!!) { result ->
-                   try {
-                        when {
-                            method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
-                            method.isGET("v1/albums") -> handleGetAlbums(args, result)
-                            method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
-                            method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
-                            method.isGET("v3/albums/{albumId}/view") -> handleGetAlbumsViewAlbumId(args, result)
-                            method.isPUT("v1/albums/{albumId}/shares/remove") -> handleRemoveAlbumShares(args, result)
-                            else -> result
-                        }
-                    } catch (e: Exception) {
-                        loge("Error handling album request: ${e.message}")
-                        Logger.writeRaw(e.stackTraceToString())
-                        result
+            return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
+                try {
+                    when {
+                        method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
+                        method.isGET("v1/albums") -> handleGetAlbums(args, result)
+                        method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
+                        method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
+                        method.isGET("v3/albums/{albumId}/view") -> handleGetAlbumsViewAlbumId(args, result)
+                        method.isPUT("v1/albums/{albumId}/shares/remove") -> handleRemoveAlbumShares(args, result)
+                        else -> result
                     }
+                } catch (e: Exception) {
+                    loge("Error handling album request: ${e.message}")
+                    Logger.writeRaw(e.stackTraceToString())
+                    result
                 }
-
-            val newArgs = args.clone()
-            newArgs[newArgs.lastIndex] = newContinuation
-
-            originalHandler.invoke(proxy, method, newArgs)
+            }
         }
 
         findClass(albumModel).hookConstructor(HookStage.AFTER) { param ->

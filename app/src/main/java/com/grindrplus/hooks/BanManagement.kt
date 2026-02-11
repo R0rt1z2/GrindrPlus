@@ -52,16 +52,10 @@ class BanManagement : Hook(
                     args[1]!!::class.java.name.contains("LoginEmailRequest")
             when {
                 isLogin -> {
-                    val newContinuation =
-                        RetrofitUtils.wrapContinuation(args.last()!!) { result ->
-                            handleLoginResult(result)
-                            result
-                        }
-
-                    val newArgs = args.clone()
-                    newArgs[newArgs.lastIndex] = newContinuation
-
-                    return@hookService originalHandler.invoke(proxy, method, newArgs)
+                   return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
+                        handleLoginResult(result)
+                        result
+                    }
                 }
             }
 
