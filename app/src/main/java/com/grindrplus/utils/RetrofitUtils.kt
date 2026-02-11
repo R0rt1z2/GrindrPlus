@@ -84,6 +84,7 @@ object RetrofitUtils {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
         val successConstructor =
             GrindrPlus.loadClass(SUCCESS_CLASS_NAME).constructors.firstOrNull()
+
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
             arrayOf(serviceClass)
@@ -97,11 +98,29 @@ object RetrofitUtils {
     }
 
     /**
-     * The retrofit methods are suspend funs (use continuations) and therefore will sometimes
-     * return COROUTINE_SUSPENDED constant instead of the actual result. Be sure to check
-     * if the returned value actually is a result and if not, just return it early.
-     * Hint: if (!result.isResult()) return result
+     * suspend funcs are compiled in java to continuation objects. The return value
+     * is not really returned to the calling method, but is provided by calling it's resumeWith
+     * something very similar to a callback. Therefore we try to hook this callback to modify
+     * the value and then invoke the original callback
      */
+    val continuationInterface = GrindrPlus.loadClass("kotlin.coroutines.Continuation")
+    fun wrapContinuation(originalContinuation: Any, valueMapper: (Any) -> Any): Any {
+        return Proxy.newProxyInstance(
+            originalContinuation.javaClass.classLoader,
+            arrayOf(continuationInterface)
+        ) { proxy, method, argsOpt: Array<Any>? ->
+            if (method.name == "resumeWith") {
+                val result = argsOpt!![0]
+                val newResult = valueMapper(result)
+                method.invoke(originalContinuation, newResult)
+
+            } else if (method.parameterCount == 0)
+                return@newProxyInstance method.invoke(originalContinuation)
+            else
+                return@newProxyInstance method.invoke(originalContinuation, argsOpt)
+        }
+    }
+
     fun hookService(
         serviceClass: Class<*>,
         invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
