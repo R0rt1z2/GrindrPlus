@@ -72,6 +72,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     val versionData = viewModel.versionData
 
     // 2. UI-Specific State
+    val warningBannerDismissed = Config.get("install_warning_banner_dismissed", false) as Boolean
     var selectedVersion by remember { mutableStateOf<Data?>(null) }
     var isInstalling by remember { mutableStateOf(false) }
     var isCloning by remember { mutableStateOf(false) }
@@ -79,7 +80,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     val isRooted = remember { RootBeer(context).isRooted }
     var showCloneDialog by remember { mutableStateOf(false) }
     var installation by remember { mutableStateOf<Installation?>(null) }
-    var warningBannerVisible by remember { mutableStateOf(true) }
+    var warningBannerVisible by remember { mutableStateOf(!warningBannerDismissed) }
     var rootedBannerVisible by remember { mutableStateOf(isRooted) }
     var showCustomFileDialog by remember { mutableStateOf(false) }
     var useCustomFiles by remember { mutableStateOf(false) }
@@ -237,7 +238,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 isPulsating = isInstalling || isCloning,
                 modifier = Modifier.fillMaxWidth(),
                 type = BannerType.WARNING,
-                onDismiss = { warningBannerVisible = false }
+                onDismiss = {
+                    warningBannerVisible = false
+                    Config.put("install_warning_banner_dismissed", true)
+                }
             )
 
             if (isLSPosed()) {
@@ -406,7 +410,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
-                        text = if (isCloning) "Cloning..." else "Clone Grindr",
+                        text = if (isCloning) "Cloning..." else "Manage clones",
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }

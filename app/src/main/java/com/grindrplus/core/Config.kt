@@ -82,13 +82,16 @@ object Config {
         }
     }
 
-    fun getAvailablePackages(context: Context): List<String> {
+    fun getAvailablePackages(context: Context): List<AppCloneUtils.AppInfo> {
         Logger.d("Getting available packages", LogSource.MANAGER)
-        val installedClones = listOf(Constants.GRINDR_PACKAGE_NAME) + AppCloneUtils.getExistingClones(context)
-        val clones = localConfig.optJSONObject("clones") ?: return listOf(Constants.GRINDR_PACKAGE_NAME)
+        val mainGrindrAppInfo = AppCloneUtils.AppInfo(Constants.GRINDR_PACKAGE_NAME, "Grindr")
 
-        return installedClones.filter { pkg ->
-            clones.has(pkg)
+        val installedApps = listOf(mainGrindrAppInfo) + AppCloneUtils.getExistingClones(context)
+        val clones = localConfig.optJSONObject("clones") ?: return listOf(mainGrindrAppInfo)
+
+        // unsure why are we filtering here
+        return installedApps.filter { pkg ->
+            clones.has(pkg.packageName)
         }
     }
 
