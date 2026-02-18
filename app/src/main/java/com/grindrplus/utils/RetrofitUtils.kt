@@ -97,6 +97,11 @@ object RetrofitUtils {
         }
     }
 
+    /**
+     * hook Retrofit's create method, which is used to create instances of "API services"
+     * we take the original create result and replace it with our own proxy.
+     * The proxy then calls our own method to intercept and modify the request and the result
+     */
     fun hookService(
         serviceClass: Class<*>,
         invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
