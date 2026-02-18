@@ -84,6 +84,7 @@ object RetrofitUtils {
         val invocationHandler = Proxy.getInvocationHandler(originalService)
         val successConstructor =
             GrindrPlus.loadClass(SUCCESS_CLASS_NAME).constructors.firstOrNull()
+
         return Proxy.newProxyInstance(
             originalService.javaClass.classLoader,
             arrayOf(serviceClass)
@@ -97,10 +98,9 @@ object RetrofitUtils {
     }
 
     /**
-     * The retrofit methods are suspend funs (use continuations) and therefore will sometimes
-     * return COROUTINE_SUSPENDED constant instead of the actual result. Be sure to check
-     * if the returned value actually is a result and if not, just return it early.
-     * Hint: if (!result.isResult()) return result
+     * hook Retrofit's create method, which is used to create instances of "API services"
+     * we take the original create result and replace it with our own proxy.
+     * The proxy then calls our own method to intercept and modify the request and the result
      */
     fun hookService(
         serviceClass: Class<*>,
@@ -111,13 +111,74 @@ object RetrofitUtils {
                 val serviceInstance = param.getResult()
                 if (serviceInstance != null && serviceClass.isAssignableFrom(serviceInstance.javaClass)) {
                     val invocationHandler = Proxy.getInvocationHandler(serviceInstance)
-                    param.setResult(Proxy.newProxyInstance(
+
+                    // create a proxy for the Retrofit service
+                    val serviceInstanceProxy = Proxy.newProxyInstance(
                         serviceInstance.javaClass.classLoader,
                         arrayOf(serviceClass)
                     ) { proxy, method, args ->
                         invoke(invocationHandler, proxy, method, args)
-                    })
+                    }
+
+                    // return our proxy instead of the original service
+                    param.setResult(serviceInstanceProxy)
                 }
             }
     }
+
+    /**
+     * Kotlin uspend funcs are compiled in java to continuation "objects". The return value
+     * is not simply returned to the calling method, but is provided by calling it's resumeWith
+     * something very similar to a callback. Therefore we try to replace this callback with our own,
+     * which will to get the return value first, possibly modify it and then pass it to the original
+     * caller by passing the new value to the original "callback"
+     */
+    val continuationInterface = GrindrPlus.loadClass("kotlin.coroutines.Continuation")
+    fun wrapContinuation(
+        originalContinuation: Any,
+        resultMapper: (result: Any) -> Any
+    ): Any {
+        if (!continuationInterface.isAssignableFrom(originalContinuation.javaClass))
+            throw Exception("Provided object does not implement Continuation interface")
+
+        return Proxy.newProxyInstance(
+            originalContinuation.javaClass.classLoader,
+            arrayOf(continuationInterface)
+        ) { proxy, method, args ->
+            // only intercept resumeWith method
+            if (method.name == "resumeWith") {
+                val result = args!![0]
+                val newResult = resultMapper(result)
+                method.invoke(originalContinuation, newResult)
+
+            } else if (method.parameterCount == 0)
+                return@newProxyInstance method.invoke(originalContinuation)
+            else
+                return@newProxyInstance method.invoke(originalContinuation, args)
+        }
+    }
+
+    fun invokeAndReplaceResult(
+        originalHandler: InvocationHandler,
+        proxy: Any,
+        method: Method,
+        args: Array<Any?>,
+        resultMapper: (result: Any) -> Any
+    ): Any? {
+        // suspend fun has Continuation as last argument
+        val isSuspendFun = !args.isEmpty() || continuationInterface.isAssignableFrom(args.last()!!.javaClass)
+
+        if (!isSuspendFun) {
+            val result = originalHandler.invoke(proxy, method, args)
+            return resultMapper.invoke(result)
+        }
+
+        val newContinuation = wrapContinuation(args.last()!!, resultMapper)
+
+        val newArgs = args.clone()
+        newArgs[newArgs.lastIndex] = newContinuation
+
+        return originalHandler.invoke(proxy, method, newArgs)
+    }
+
 }

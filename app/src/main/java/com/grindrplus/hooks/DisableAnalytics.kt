@@ -1,10 +1,7 @@
 package com.grindrplus.hooks
 
-import com.grindrplus.core.logi
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
-import com.grindrplus.utils.RetrofitUtils.createServiceProxy
 import com.grindrplus.utils.hook
 
 class DisableAnalytics : Hook(
