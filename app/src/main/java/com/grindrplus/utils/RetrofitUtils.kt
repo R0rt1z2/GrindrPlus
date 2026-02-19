@@ -93,21 +93,18 @@ object RetrofitUtils {
         return successClass.constructors.first().newInstance(value)
     }
 
-    fun createServiceProxy(
-        originalProxy: Any,
+    /**
+     * Creates a proxy for a service that blocks specified methods (returns Success(Unit)).
+     * If an empty set is provided, it blocks all calls.
+     * Used to selectively disable API calls.
+     */
+    fun blockServiceMethods(
         serviceClass: Class<*>,
-        blacklist: Array<String> = emptyArray()
-    ): Any {
-        val originalHandler = Proxy.getInvocationHandler(originalProxy)
-        val successConstructor =
-            GrindrPlus.loadClass(SUCCESS_CLASS_NAME).constructors.firstOrNull()
-
-        return Proxy.newProxyInstance(
-            originalProxy.javaClass.classLoader,
-            arrayOf(serviceClass)
-        ) { _, method, args ->
-            if (successConstructor != null && (blacklist.isEmpty() || method.name in blacklist)) {
-                successConstructor.newInstance(Unit)
+        blacklist: Set<String> = emptySet()
+    ) {
+        hookService(serviceClass) { originalHandler, originalProxy, method, args ->
+            if (blacklist.isEmpty() || method.name in blacklist) {
+                createSuccess(Unit)
             } else {
                 originalHandler.invoke(originalProxy, method, args)
             }

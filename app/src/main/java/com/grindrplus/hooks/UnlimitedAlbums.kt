@@ -215,7 +215,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
     private fun handleGetAlbum(args: Array<Any?>, result: Any): Any {
         val albumId = args[0] as? Long ?: return result
-        logd("Fetching album with ID: $albumId: ${result.javaClass.name}: $result")
+        logd("Fetching album with ID: $albumId")
 
         try {
             GrindrPlus.httpClient
@@ -483,7 +483,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
             val profileId = args[0] as? Long ?: return result
 
-            logd("Fetching shared albums for profile ID $profileId: ${result.javaClass.name}: $result")
+            logd("Fetching shared albums for profile ID $profileId")
 
             if (result.isSuccess()) {
                 try {
