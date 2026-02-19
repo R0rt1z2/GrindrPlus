@@ -7,13 +7,24 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
+/**
+ * Utilities for hooking and manipulating Retrofit services.
+ * This object allows intercepting Retrofit service creation, inspecting methods,
+ * and modifying return values of both synchronous and asynchronous (suspend) functions.
+ */
 object RetrofitUtils {
+    // Obfuscated class names for Retrofit's Success/Fail result wrappers.
     const val FAIL_CLASS_NAME = "g10.a\$a" // search for '"Fail(failValue="'
     const val SUCCESS_CLASS_NAME = "g10.a\$b" // search for '"Success(successValue="'
     const val SUCCESS_VALUE_NAME = "a" // probably the only field in the success class
     const val FAIL_VALUE_NAME = "a" // probably the only field in the fail class
     const val RETROFIT_NAME = "retrofit2.Retrofit"
+    
+    val continuationInterface = GrindrPlus.loadClass("kotlin.coroutines.Continuation")
 
+    /**
+     * Finds a method annotated with @POST matching the given URL value.
+     */
     fun findPOSTMethod(clazz: Class<*>, value: String): Method? {
         return clazz.declaredMethods.find { method ->
             method.annotations.any {
@@ -23,6 +34,7 @@ object RetrofitUtils {
         }
     }
 
+    // Helper extension methods to check Retrofit annotations on methods.
     fun Method.isPOST(value: String): Boolean {
         return this.annotations.any {
             it.annotationClass.java.name == "retrofit2.http.POST"
@@ -51,6 +63,7 @@ object RetrofitUtils {
         }
     }
 
+    // Helper extension methods to check and extract values from Retrofit Result wrappers.
     fun Any.isFail(): Boolean {
         return javaClass.name == FAIL_CLASS_NAME
     }
@@ -71,69 +84,75 @@ object RetrofitUtils {
         return getObjectField(this, FAIL_VALUE_NAME)
     }
 
+    /**
+     * Creates a new instance of the Retrofit Success wrapper class.
+     * Useful for returning successful mock responses.
+     */
     fun createSuccess(value: Any): Any {
         val successClass = GrindrPlus.loadClass(SUCCESS_CLASS_NAME)
         return successClass.constructors.first().newInstance(value)
     }
 
     fun createServiceProxy(
-        originalService: Any,
+        originalProxy: Any,
         serviceClass: Class<*>,
         blacklist: Array<String> = emptyArray()
     ): Any {
-        val invocationHandler = Proxy.getInvocationHandler(originalService)
+        val originalHandler = Proxy.getInvocationHandler(originalProxy)
         val successConstructor =
             GrindrPlus.loadClass(SUCCESS_CLASS_NAME).constructors.firstOrNull()
 
         return Proxy.newProxyInstance(
-            originalService.javaClass.classLoader,
+            originalProxy.javaClass.classLoader,
             arrayOf(serviceClass)
-        ) { proxy, method, args ->
+        ) { _, method, args ->
             if (successConstructor != null && (blacklist.isEmpty() || method.name in blacklist)) {
                 successConstructor.newInstance(Unit)
             } else {
-                invocationHandler.invoke(proxy, method, args)
+                originalHandler.invoke(originalProxy, method, args)
             }
         }
     }
 
     /**
-     * hook Retrofit's create method, which is used to create instances of "API services"
-     * we take the original create result and replace it with our own proxy.
-     * The proxy then calls our own method to intercept and modify the request and the result
+     * Hooks Retrofit's `create` method to wrap the returned service instance.
+     * 
+     * Retrofit.create() returns a Proxy implementation of the API interface.
+     * We intercept this and wrap it in *another* Proxy (our wrapper).
+     * This allows us to intercept every method call made to the API service.
+     *
+     * @param serviceClass The interface class of the service we want to hook (e.g., AlbumService::class.java).
+     * @param invoke A lambda that acts as the InvocationHandler for our wrapper proxy.
      */
     fun hookService(
         serviceClass: Class<*>,
-        invoke: (originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>) -> Any?
+        invoke: (originalHandler: InvocationHandler, originalProxy: Any, method: Method, args: Array<Any?>) -> Any?
     ) {
         GrindrPlus.loadClass(RETROFIT_NAME)
             .hook("create", HookStage.AFTER) { param ->
-                val serviceInstance = param.getResult()
-                if (serviceInstance != null && serviceClass.isAssignableFrom(serviceInstance.javaClass)) {
-                    val invocationHandler = Proxy.getInvocationHandler(serviceInstance)
+                val originalProxy = param.getResult()
+                if (originalProxy != null && serviceClass.isAssignableFrom(originalProxy.javaClass)) {
+                    val originalHandler = Proxy.getInvocationHandler(originalProxy)
 
                     // create a proxy for the Retrofit service
                     val serviceInstanceProxy = Proxy.newProxyInstance(
-                        serviceInstance.javaClass.classLoader,
+                        originalProxy.javaClass.classLoader,
                         arrayOf(serviceClass)
-                    ) { proxy, method, args ->
-                        invoke(invocationHandler, serviceInstance, method, args)
+                    ) { _, method, args ->
+                        invoke(originalHandler, originalProxy, method, args)
                     }
 
-                    // return our proxy instead of the original service
+                    // Return our wrapper proxy to the app, so all calls go through us.
                     param.setResult(serviceInstanceProxy)
                 }
             }
     }
 
     /**
-     * Kotlin uspend funcs are compiled in java to continuation "objects". The return value
-     * is not simply returned to the calling method, but is provided by calling it's resumeWith
-     * something very similar to a callback. Therefore we try to replace this callback with our own,
-     * which will to get the return value first, possibly modify it and then pass it to the original
-     * caller by passing the new value to the original "callback"
+     * Helper to wrap a Continuation using Proxy.
+     * This allows for intercepting and modifying the result of a suspend function
+     * before it resumes the original caller.
      */
-    val continuationInterface = GrindrPlus.loadClass("kotlin.coroutines.Continuation")
     fun wrapContinuation(
         originalContinuation: Any,
         resultMapper: (result: Any) -> Any
@@ -144,42 +163,59 @@ object RetrofitUtils {
         return Proxy.newProxyInstance(
             originalContinuation.javaClass.classLoader,
             arrayOf(continuationInterface)
-        ) { proxy, method, args ->
-            // only intercept resumeWith method
+        ) { _, method, args ->
             if (method.name == "resumeWith") {
-                val result = args!![0]
-                val newResult = resultMapper(result)
-                method.invoke(originalContinuation, newResult)
+                val result = args[0]
 
-            } else if (method.parameterCount == 0)
-                return@newProxyInstance method.invoke(originalContinuation)
-            else
-                return@newProxyInstance method.invoke(originalContinuation, args)
+                 // Retrofit's suspend support returns the value directly (or throws).
+                 // args[0] is the result value (Success wrapper or Failure exception)
+
+                 val newResult = resultMapper(result)
+                 method.invoke(originalContinuation, newResult)
+            } else if (method.name == "getContext") {
+                 method.invoke(originalContinuation)
+            } else {
+                 method.invoke(originalContinuation, *args)
+            }
         }
     }
 
+    /**
+     * Intercepts a method call, executes it, and allows modifying the result.
+     * Handles both standard synchronous methods and Kotlin `suspend` functions.
+     * 
+     * @param resultMapper A function that takes the original result and returns a modified result.
+     */
     fun invokeAndReplaceResult(
         originalHandler: InvocationHandler,
-        proxy: Any,
+        originalProxy: Any,
         method: Method,
         args: Array<Any?>,
         resultMapper: (result: Any) -> Any
     ): Any? {
-        // suspend fun has Continuation as last argument
+        // Kotlin suspend functions are compiled to static methods (or member methods) 
+        // that take a Continuation as the *last* argument.
         val isSuspendFun =
             args.isNotEmpty() && continuationInterface.isAssignableFrom(args.last()!!.javaClass)
 
         if (!isSuspendFun) {
-            val result = originalHandler.invoke(proxy, method, args)
-            return resultMapper.invoke(result)
+            // Synchronous call: Invoke and modify result immediately.
+            val result = originalHandler.invoke(originalProxy, method, args)
+            return resultMapper(result as Any)
         }
 
+        // Asynchronous (Suspend) call:
+        // 1. Wrap the Continuation logic to intercept the callback.
         val newContinuation = wrapContinuation(args.last()!!, resultMapper)
 
+        // 2. Replace the original Continuation in the arguments with our wrapper.
         val newArgs = args.clone()
         newArgs[newArgs.lastIndex] = newContinuation
 
-        return originalHandler.invoke(proxy, method, newArgs)
+        // 3. Invoke the original method with the wrapped continuation.
+        // The method will return COROUTINE_SUSPENDED (usually), and eventually call 
+        // newContinuation.resumeWith(result), which triggers our mapper.
+        return originalHandler.invoke(originalProxy, method, newArgs)
     }
 
 }
