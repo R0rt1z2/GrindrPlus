@@ -117,7 +117,7 @@ object RetrofitUtils {
                         serviceInstance.javaClass.classLoader,
                         arrayOf(serviceClass)
                     ) { proxy, method, args ->
-                        invoke(invocationHandler, proxy, method, args)
+                        invoke(invocationHandler, serviceInstance, method, args)
                     }
 
                     // return our proxy instead of the original service
@@ -166,7 +166,8 @@ object RetrofitUtils {
         resultMapper: (result: Any) -> Any
     ): Any? {
         // suspend fun has Continuation as last argument
-        val isSuspendFun = !args.isEmpty() || continuationInterface.isAssignableFrom(args.last()!!.javaClass)
+        val isSuspendFun =
+            args.isNotEmpty() && continuationInterface.isAssignableFrom(args.last()!!.javaClass)
 
         if (!isSuspendFun) {
             val result = originalHandler.invoke(proxy, method, args)
