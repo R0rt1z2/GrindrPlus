@@ -46,8 +46,9 @@ class BanManagement : Hook(
         RetrofitUtils.hookService(
             authService,
         ) { originalHandler, originalProxy, method, args ->
-            val isLogin = args.size > 1 && args[1] != null &&
-                    (args[1]?.javaClass?.name?.contains("LoginEmailRequest") == true)
+            val isLogin = args.size > 1
+                    && args[1] != null
+                    && args[1]?.javaClass?.name?.contains("LoginEmailRequest") == true
 
             if (isLogin) {
                logi("BanManagement: Intercepting login attempt: ${method.name}")
