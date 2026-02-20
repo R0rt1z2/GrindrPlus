@@ -25,7 +25,7 @@ class LocalSavedPhrases : Hook(
     private val createSuccessResult = "g10.a\$b" // search for 'Success(successValue='
     private val chatRestService = "vn.a" // search for '"v4/chat/conversation/{conversationId}"'
     private val addSavedPhraseResponse =
-        "com.grindrapp.android.chat.api.model.AddSavedPhraseResponse"
+        "com.grindrapp.android.chat.data.datasource.api.model.AddSavedPhraseResponse"
     private val phrasesResponse = "com.grindrapp.android.model.PhrasesResponse"
     private val phraseModel = "com.grindrapp.android.persistence.model.Phrase"
 

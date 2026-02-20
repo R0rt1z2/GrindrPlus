@@ -45,24 +45,23 @@ class BanManagement : Hook(
 
         RetrofitUtils.hookService(
             authService,
-        ) { originalHandler, proxy, method, args ->
-            val result = originalHandler.invoke(proxy, method, args)
+        ) { originalHandler, originalProxy, method, args ->
+            val isLogin = args.size > 1
+                    && args[1] != null
+                    && args[1]?.javaClass?.name?.contains("LoginEmailRequest") == true
 
-            val isLogin = args.size > 1 && args[1] != null &&
-                    args[1]!!::class.java.name.contains("LoginEmailRequest")
-            when {
-                isLogin -> {
-                   return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
-                        handleLoginResult(result)
-                        result
-                    }
+            if (isLogin) {
+               logi("BanManagement: Intercepting login attempt: ${method.name}")
+               return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, originalProxy, method, args) { result ->
+                    handleLoginResult(result)
+                    result
                 }
             }
 
-            return@hookService originalHandler.invoke(proxy, method, args)
+            return@hookService originalHandler.invoke(originalProxy, method, args)
         }
 
-		// search for 'Settings.Secure.getString(context.getContentResolver(), "android_id");' in deviceUtility class
+        // search for 'Settings.Secure.getString(context.getContentResolver(), "android_id");' in deviceUtility class
         findClass(deviceUtility).hook("h", HookStage.AFTER) { param ->
             val androidId = Config.get("android_device_id", "") as String
             if (androidId.isNotEmpty()) {

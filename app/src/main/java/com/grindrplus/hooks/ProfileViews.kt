@@ -1,11 +1,8 @@
 package com.grindrplus.hooks
 
 import com.grindrplus.utils.Hook
-import com.grindrplus.utils.HookStage
-import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
-import com.grindrplus.utils.RetrofitUtils.createServiceProxy
+import com.grindrplus.utils.RetrofitUtils.blockServiceMethods
 import com.grindrplus.utils.RetrofitUtils.findPOSTMethod
-import com.grindrplus.utils.hook
 
 class ProfileViews : Hook(
 	"Profile views",
@@ -22,17 +19,6 @@ class ProfileViews : Hook(
         val methodBlacklist =
             blacklistedPaths.mapNotNull { findPOSTMethod(profileRestServiceClass, it)?.name }
 
-        findClass(RETROFIT_NAME).hook("create", HookStage.AFTER) { param ->
-            val service = param.getResult()
-            if (service != null && profileRestServiceClass.isAssignableFrom(service.javaClass)) {
-                param.setResult(
-                    createServiceProxy(
-                        service,
-                        profileRestServiceClass,
-                        methodBlacklist.toTypedArray()
-                    )
-                )
-            }
-        }
+        blockServiceMethods(profileRestServiceClass, methodBlacklist.toSet())
     }
 }
