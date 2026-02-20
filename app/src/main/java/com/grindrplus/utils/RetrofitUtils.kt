@@ -63,6 +63,16 @@ object RetrofitUtils {
         }
     }
 
+    fun Method.getMethodAndValue(): String {
+        return this.annotations.first {
+            it.annotationClass.java.name.startsWith("retrofit2.http.")
+        }.let {
+            val name = it.annotationClass.java.name
+            val value = callMethod(it, "value") as String
+            "@$name($value)"
+        }
+    }
+
     // Helper extension methods to check and extract values from Retrofit Result wrappers.
     fun Any.isFail(): Boolean {
         return javaClass.name == FAIL_CLASS_NAME

@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import android.util.Log
 import android.widget.Toast
 import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
@@ -23,8 +22,10 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.createSuccess
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
+import com.grindrplus.utils.RetrofitUtils.getMethodAndValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
+import com.grindrplus.utils.RetrofitUtils.isPOST
 import com.grindrplus.utils.RetrofitUtils.isPUT
 import com.grindrplus.utils.RetrofitUtils.isSuccess
 import com.grindrplus.utils.hook
@@ -35,9 +36,13 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.io.Closeable
 import java.io.IOException
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
 
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
+    // there are now two services for album stuff, some methods are duplicated
     private val albumsService = "tk.a" // search for 'v1/albums/red-dot'
+    private val albumsService2 = "yi.a" // search for 'v3/pressie-albums/feed'
     private val albumModel = "com.grindrapp.android.chat.domain.model.Album"
     private val filteredSpankBankAlbumContent =
         "com.grindrapp.android.albums.spankbank.domain.model.FilteredSpankBankAlbumContent"
@@ -51,28 +56,10 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
     override fun init() {
         val albumsServiceClass = findClass(albumsService)
+        val albumsServiceClass2 = findClass(albumsService2)
 
-        RetrofitUtils.hookService(
-            albumsServiceClass,
-        ) { originalHandler, proxy, method, args ->
-            return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
-                try {
-                    when {
-                        method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
-                        method.isGET("v1/albums") -> handleGetAlbums(args, result)
-                        method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
-                        method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
-                        method.isGET("v3/albums/{albumId}/view") -> handleGetAlbumsViewAlbumId(args, result)
-                        method.isPUT("v1/albums/{albumId}/shares/remove") -> handleRemoveAlbumShares(args, result)
-                        else -> result
-                    }
-                } catch (e: Exception) {
-                    loge("Error handling album request: ${e.message}")
-                    Logger.writeRaw(e.stackTraceToString())
-                    result
-                }
-            }
-        }
+        RetrofitUtils.hookService(albumsServiceClass, this::handleResult)
+        RetrofitUtils.hookService(albumsServiceClass2, this::handleResult)
 
         findClass(albumModel).hookConstructor(HookStage.AFTER) { param ->
             try {
@@ -106,6 +93,29 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         }
 
         findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
+    }
+
+    private fun handleResult(originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>): Any? {
+        //logd("calling albums retrofit ${method.getMethodAndValue()}")
+        return RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
+            //logd("got result for albums retrofit ${method.getMethodAndValue()}: $result")
+            try {
+                when {
+                    method.isGET("v2/albums/{albumId}") -> handleGetAlbum(args, result)
+                    method.isPOST("v3/pressie-albums/feed") -> handleGetPressieAlbums(args, result)
+                    method.isGET("v1/albums") -> handleGetAlbums(args, result)
+                    method.isGET("v2/albums/shares") -> handleGetAlbumsShares(args, result)
+                    method.isGET("v2/albums/shares/{profileId}") -> handleGetAlbumsSharesProfileId(args, result)
+                    method.isGET("v3/albums/{albumId}/view") -> handleGetAlbumsViewAlbumId(args, result)
+                    method.isPUT("v1/albums/{albumId}/shares/remove") -> handleRemoveAlbumShares(args, result)
+                    else -> result
+                }
+            } catch (e: Exception) {
+                loge("Error handling album request: ${e.message}")
+                Logger.writeRaw(e.stackTraceToString())
+                result
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -350,6 +360,24 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         }
 
         return originalResult
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun handleGetPressieAlbums(args: Array<Any?>, result: Any): Any {
+        if (result.isSuccess()) {
+            try {
+                val albums = getObjectField(result.getSuccessValue(), "sharedAlbums") as? List<Any>
+                albums?.forEach { album ->
+                    setObjectField(album, "albumViewable", true)
+                    // TODO saveAlbum
+                }
+            } catch (e: Exception) {
+                loge("Error processing pressie albums: ${e.message}")
+                Logger.writeRaw(e.stackTraceToString())
+            }
+        }
+
+        return result
     }
 
     @Suppress("UNCHECKED_CAST")
