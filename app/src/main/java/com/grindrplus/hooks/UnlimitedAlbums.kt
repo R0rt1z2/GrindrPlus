@@ -22,7 +22,6 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.createSuccess
 import com.grindrplus.utils.RetrofitUtils.getSuccessValue
-import com.grindrplus.utils.RetrofitUtils.getMethodAndValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPOST
@@ -40,7 +39,8 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 
 class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlimited albums") {
-    // there are now two services for album stuff, some methods are duplicated
+    // at least since 26.0.1, there are 2 services for albums with a few methods in common
+    // not sure why there are 2 of them, but we need to hook them both
     private val albumsService = "tk.a" // search for 'v1/albums/red-dot'
     private val albumsService2 = "yi.a" // search for 'v3/pressie-albums/feed'
     private val albumModel = "com.grindrapp.android.chat.domain.model.Album"
@@ -95,9 +95,9 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
     }
 
-    private fun handleResult(originalHandler: InvocationHandler, proxy: Any, method: Method, args: Array<Any?>): Any? {
+    private fun handleResult(originalHandler: InvocationHandler, originalProxy: Any, method: Method, args: Array<Any?>): Any? {
         //logd("calling albums retrofit ${method.getMethodAndValue()}")
-        return RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
+        return RetrofitUtils.invokeAndReplaceResult(originalHandler, originalProxy, method, args) { result ->
             //logd("got result for albums retrofit ${method.getMethodAndValue()}: $result")
             try {
                 when {

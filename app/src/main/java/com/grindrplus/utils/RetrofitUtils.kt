@@ -13,7 +13,6 @@ import java.lang.reflect.Proxy
  * and modifying return values of both synchronous and asynchronous (suspend) functions.
  */
 object RetrofitUtils {
-    // Obfuscated class names for Retrofit's Success/Fail result wrappers.
     const val FAIL_CLASS_NAME = "g10.a\$a" // search for '"Fail(failValue="'
     const val SUCCESS_CLASS_NAME = "g10.a\$b" // search for '"Success(successValue="'
     const val SUCCESS_VALUE_NAME = "a" // probably the only field in the success class

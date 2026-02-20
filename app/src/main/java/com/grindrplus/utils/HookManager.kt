@@ -42,7 +42,7 @@ class HookManager {
                 AllowScreenshots(),
                 AntiBlock(),
                 AntiDetection(),
-//                BanManagement(),
+                BanManagement(),
                 ChatIndicators(),
                 ChatTerminal(),
                 DisableAnalytics(),
