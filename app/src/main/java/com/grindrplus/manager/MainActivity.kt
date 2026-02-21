@@ -79,6 +79,7 @@ import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.NotificationScreen
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
+import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.FileOperationHandler
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.TaskManager
@@ -244,6 +245,7 @@ class MainActivity : ComponentActivity() {
                 GrindrPlus.bridgeClient.connectAsync { connected ->
                     Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
                     Config.initialize()
+                    AppCloneUtils.init(this@MainActivity)
                     HookManager().registerHooks(false)
                     TaskManager().registerTasks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean

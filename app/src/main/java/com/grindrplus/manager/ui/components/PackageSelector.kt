@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
+import com.grindrplus.manager.utils.AppCloneUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,20 +22,10 @@ fun PackageSelector(
     selectedPackage: String,
     onPackageSelected: (String) -> Unit
 ) {
-    val context = LocalContext.current
+    val apps by AppCloneUtils.apps.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    var packages by remember(Config.readRemoteConfig()) {
-        mutableStateOf(Config.getAvailablePackages(context))
-    }
-
-    LaunchedEffect(selectedPackage) {
-        packages = Config.getAvailablePackages(context)
-    }
-
-    if (packages.size <= 1) {
-        return
-    }
+    val packages = remember(apps) { apps }
 
     fun formatPackageName(packageName: String): String {
         if (packageName == Constants.GRINDR_PACKAGE_NAME)
