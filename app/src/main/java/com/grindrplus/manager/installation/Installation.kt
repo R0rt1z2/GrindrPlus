@@ -103,13 +103,13 @@ class Installation(
             add(InstallApkStep(outputDir))
         }
 
+        val appType = if (appInfo == null) "install" else "clone"
+        val patchType = if (embedLSPatch) "lspatch" else "lsposed"
+        val versionString = if (sourceFiles is SourceFiles.Local) "custom" else version
+
         performOperation(
             steps = steps,
-            operationName = if (appInfo != null) {
-                if (sourceFiles is SourceFiles.Local) "custom_clone" else "clone-$version"
-            } else {
-                if (sourceFiles is SourceFiles.Local) "custom_install" else "install-$version"
-            },
+            operationName = "$appType-$patchType-$versionString",
             print = print
         )
     }
