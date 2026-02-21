@@ -240,13 +240,7 @@ fun BlockEventItem(
     val formattedPackage = remember(event.packageName) {
         when (val pkg = event.packageName) {
             null, "com.grindrapp.android" -> null
-            else -> when {
-                pkg.startsWith(AppCloneUtils.GRINDR_PACKAGE_PREFIX) -> {
-                    val cloneName = pkg.removePrefix(AppCloneUtils.GRINDR_PACKAGE_PREFIX)
-                    "Clone ${cloneName.replaceFirstChar { it.uppercase() }}"
-                }
-                else -> pkg.substringAfterLast('.')
-            }
+            else -> AppCloneUtils.formatAppName(pkg)
         }
     }
 

@@ -82,17 +82,19 @@ object Config {
         }
     }
 
-    fun getAvailablePackages(context: Context): List<AppCloneUtils.AppInfo> {
-        Logger.d("Getting available packages", LogSource.MANAGER)
-        val mainGrindrAppInfo = AppCloneUtils.AppInfo(Constants.GRINDR_PACKAGE_NAME, "Grindr")
+    fun removePackage(packageName: String) {
+        Logger.d("Removing package $packageName from config", LogSource.MANAGER)
+        val clones = localConfig.optJSONObject("clones") ?: return
 
-        val installedApps = listOf(mainGrindrAppInfo) + AppCloneUtils.getExistingClones(context)
-        val clones = localConfig.optJSONObject("clones") ?: return listOf(mainGrindrAppInfo)
-
-        // unsure why are we filtering here
-        return installedApps.filter { pkg ->
-            clones.has(pkg.packageName)
+        if (clones.has(packageName)) {
+            clones.remove(packageName)
+            writeRemoteConfig(localConfig)
         }
+    }
+
+    fun getAvailablePackages(context: Context): List<AppCloneUtils.AppInfo> {
+        val knownClones = AppCloneUtils.getKnownClones(context)
+        return listOf(AppCloneUtils.AppInfo(Constants.GRINDR_PACKAGE_NAME, "Grindr")) + knownClones
     }
 
     fun readRemoteConfig(): JSONObject {

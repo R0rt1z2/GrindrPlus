@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.grindrplus.manager.blocks.BlockEvent
+import com.grindrplus.manager.utils.AppCloneUtils
 
 enum class FilterTimeRange {
     ALL_TIME,
@@ -269,14 +270,7 @@ fun PackageFilterSelector(
 ) {
     val displayNames = remember(availablePackages) {
         availablePackages.associateWith { packageName ->
-            when {
-                packageName == "com.grindrapp.android" -> "Original Grindr"
-                packageName.startsWith("com.grindrapp.android.") -> {
-                    val cloneName = packageName.removePrefix("com.grindrapp.android.")
-                    "Clone ${cloneName.replaceFirstChar { it.uppercase() }}"
-                }
-                else -> packageName.substringAfterLast('.')
-            }
+            AppCloneUtils.formatAppName(packageName)
         }
     }
 
