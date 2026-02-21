@@ -18,6 +18,7 @@ import com.grindrplus.core.Constants
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PackageSelector(
+    selectedPackage: String,
     onPackageSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -27,12 +28,8 @@ fun PackageSelector(
         mutableStateOf(Config.getAvailablePackages(context))
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(selectedPackage) {
         packages = Config.getAvailablePackages(context)
-    }
-
-    var selectedPackage by remember {
-        mutableStateOf(Config.getCurrentPackage())
     }
 
     if (packages.size <= 1) {
@@ -43,9 +40,17 @@ fun PackageSelector(
         if (packageName == Constants.GRINDR_PACKAGE_NAME)
             return "Main Grindr App"
 
-        return packages.firstOrNull { it.packageName == packageName }
-            ?.let { "Clone: ${it.appName}" }
-            ?: packageName
+        val app = packages.firstOrNull { it.packageName == packageName }
+        return app?.let {
+            val name = "Clone: ${it.appName}"
+            if (!it.isInstalled) {
+                "$name (Not installed)"
+            } else if (it.needsUpdate) {
+                "$name (Needs update)"
+            } else {
+                name
+            }
+        } ?: packageName
     }
 
     Column(
@@ -105,7 +110,6 @@ fun PackageSelector(
                         )
                     },
                     onClick = {
-                        selectedPackage = app.packageName
                         expanded = false
                         Config.setCurrentPackage(app.packageName)
                         onPackageSelected(app.packageName)

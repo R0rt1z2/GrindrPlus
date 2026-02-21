@@ -253,7 +253,7 @@ fun NewPackageInfoDialog(
             var errorText by remember { mutableStateOf("") }
 
             val packagePrefix = AppCloneUtils.GRINDR_PACKAGE_PREFIX
-            var packageSuffix by remember { mutableStateOf(numberToWords(nextCloneNumber).lowercase()) }
+            val packageSuffix = numberToWords(nextCloneNumber).lowercase()
 
             val fullPackageName = "$packagePrefix$packageSuffix"
 
@@ -292,10 +292,8 @@ fun NewPackageInfoDialog(
 
                 OutlinedTextField(
                     value = packageSuffix,
-                    onValueChange = {
-                        packageSuffix = it
-                        isError = false
-                    },
+                    onValueChange = { },
+                    readOnly = true,
                     label = { Text("Package Name") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = isError,
@@ -303,7 +301,7 @@ fun NewPackageInfoDialog(
                         if (isError) {
                             Text(errorText, color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text("Suffix must be unique and have no numbers in it")
+                            Text("Automatic suffix assignment")
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),

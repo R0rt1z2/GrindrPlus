@@ -16,7 +16,7 @@ import java.io.IOException
 class PatchApkStep(
     private val unzipFolder: File,
     private val outputDir: File,
-    private val modFile: File,
+    private val modFile: File?,
     private val keyStore: File,
     private val customMapsApiKey: String?,
     private val embedLSPatch: Boolean = true
@@ -99,6 +99,10 @@ class PatchApkStep(
             }
 
             return
+        }
+
+        if (modFile == null) {
+            throw IOException("Mod file is required for LSPatch embedding")
         }
 
         print("Starting LSPatch process with ${apkFiles.size} APK files")

@@ -1,6 +1,7 @@
 package com.grindrplus.manager.installation
 
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import com.grindrplus.manager.MainActivity.Companion.plausible
 import com.grindrplus.manager.installation.steps.CheckStorageSpaceStep
@@ -25,9 +26,9 @@ typealias Print = (String) -> Unit
 class Installation(
     private val context: Context,
     val version: String,
-    modUrl: String,
-    grindrUrl: String,
-    private val mapsApiKey: String?
+    val sourceFiles: SourceFiles,
+    val appInfo: AppInfoOverride?,
+    val embedLSPatch: Boolean,
 ) {
     private val keyStoreUtils = KeyStoreUtils(context)
     private val folder = context.getExternalFilesDir(null)
@@ -37,59 +38,81 @@ class Installation(
     private val modFile = File(folder, "mod-$version.zip")
     private val bundleFile = File(folder, "grindr-$version.zip")
 
-    private val installStep = InstallApkStep(outputDir)
-    private val patchApkStep = PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey)
+    private val patchApkStepBuilder = { mod: File?, mapsApiKey: String?, embedLSpatch: Boolean ->
+        PatchApkStep(unzipFolder, outputDir, mod, keyStoreUtils.keyStore, mapsApiKey, embedLSpatch)
+    }
+
     private val commonSteps = listOf(
         // Order matters
         CheckStorageSpaceStep(folder),
-        DownloadStep(bundleFile, grindrUrl, "Grindr bundle"),
-        DownloadStep(modFile, modUrl, "mod"),
-        ExtractBundleStep(bundleFile, unzipFolder),
     )
 
-    suspend fun install(print: Print) = performOperation(
-        steps = commonSteps + listOf(patchApkStep, installStep),
-        operationName = "install-$version",
-        print = print,
+    sealed interface SourceFiles {
+        class Local(val bundleFileUri: Uri, val modFileUri: Uri?) : SourceFiles
+        class Download(val bundleUrl: String, val modUrl: String?) : SourceFiles
+    }
+
+    data class AppInfoOverride(
+        val packageName: String,
+        val appName: String,
+        val mapsApiKey: String?
     )
 
-    suspend fun cloneGrindr(
-        packageName: String,
-        appName: String,
-        debuggable: Boolean,
-        embedLSpatch: Boolean,
-        print: Print,
-    ) = performOperation(
-        steps = commonSteps + listOf(
-            CloneGrindrStep(
-                folder = unzipFolder,
-                packageName = packageName,
-                appName = appName,
-                debuggable = debuggable,
-            ),
-            PatchApkStep(unzipFolder, outputDir, modFile,
-                keyStoreUtils.keyStore, mapsApiKey, embedLSpatch),
-            SignClonedGrindrApk(keyStoreUtils, outputDir),
-            installStep
-        ),
-        operationName = "clone",
-        print = print,
-    )
 
-    suspend fun installCustom(
-        bundleFile: File,
-        modFile: File,
+
+    private suspend fun createTempFileFromUri(context: Context, uri: Uri, file: File) {
+        withContext(Dispatchers.IO) {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                file.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            } ?: throw IOException("Failed to open input stream for URI: $uri")
+        }
+    }
+
+    suspend fun start(
         print: Print
-    ) = performOperation(
-        steps = listOf(
-            CheckStorageSpaceStep(folder),
-            ExtractBundleStep(bundleFile, unzipFolder),
-            PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey),
-            InstallApkStep(outputDir)
-        ),
-        operationName = "custom_install",
-        print = print
-    )
+    ) {
+        val steps = mutableListOf<Step>().apply {
+            add(CheckStorageSpaceStep(folder))
+
+            when (sourceFiles) {
+                is SourceFiles.Download -> {
+                    add(DownloadStep(bundleFile, sourceFiles.bundleUrl, "Grindr bundle"))
+                    sourceFiles.modUrl?.let { add(DownloadStep(modFile, it, "mod")) }
+                }
+                is SourceFiles.Local -> {
+                    createTempFileFromUri(context, sourceFiles.bundleFileUri, bundleFile)
+                    sourceFiles.modFileUri?.let { createTempFileFromUri(context, it, modFile) }
+                }
+            }
+
+            add(ExtractBundleStep(bundleFile, unzipFolder))
+
+            if (appInfo != null) {
+                add(CloneGrindrStep(unzipFolder, appInfo.packageName, appInfo.appName, debuggable = false))
+            }
+
+            val mapsApiKey = appInfo?.mapsApiKey
+            add(patchApkStepBuilder(modFile, mapsApiKey, embedLSPatch))
+
+            if (appInfo != null) {
+                add(SignClonedGrindrApk(keyStoreUtils, outputDir))
+            }
+
+            add(InstallApkStep(outputDir))
+        }
+
+        performOperation(
+            steps = steps,
+            operationName = if (appInfo != null) {
+                if (sourceFiles is SourceFiles.Local) "custom_clone" else "clone-$version"
+            } else {
+                if (sourceFiles is SourceFiles.Local) "custom_install" else "install-$version"
+            },
+            print = print
+        )
+    }
 
     suspend fun performOperation(
         steps: List<Step>,

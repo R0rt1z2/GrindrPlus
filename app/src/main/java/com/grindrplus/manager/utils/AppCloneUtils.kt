@@ -4,11 +4,14 @@ import android.content.Context
 import android.content.pm.PackageManager
 import timber.log.Timber
 import com.grindrplus.manager.installation.steps.numberToWords
+import com.grindrplus.core.Config
 
 object AppCloneUtils {
     const val MAX_CLONES = 5
     const val GRINDR_PACKAGE_PREFIX = "com.grindrapp.android."
-    const val GRINDR_PACKAGE_NAME = "com.grindr"
+    const val GRINDR_PACKAGE_NAME = "com.grindrapp.android"
+    
+    private var cachedClones: List<AppInfo>? = null
 
     /**
      * Check if Grindr is installed on the device
@@ -37,20 +40,65 @@ object AppCloneUtils {
         return "Grindr " + suffix.replaceFirstChar { it.uppercase() }
     }
 
-    /**
-     * Get existing Grindr clones to determine next suffix number
-     */
     fun getExistingClones(context: Context): List<AppInfo> {
+        return cachedClones?.map {
+            it.copy(needsUpdate = !com.grindrplus.BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(it.versionName))
+        } ?: refreshCache(context)
+    }
+
+    fun refreshCache(context: Context): List<AppInfo> {
         val pm = context.packageManager
         val packages = pm.getInstalledPackages(0)
-        return packages
-            .filter { it.packageName.startsWith(GRINDR_PACKAGE_PREFIX) }
+
+        cachedClones = packages
+            .filter { isClone(it.packageName) }
             .map {
+                val vName = it.versionName
+                val updateNeeded = !com.grindrplus.BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(vName)
                 AppInfo(
                     it.packageName,
-                    getAppName(it.packageName, pm)
+                    getAppName(it.packageName, pm),
+                    isInstalled = true,
+                    needsUpdate = updateNeeded,
+                    versionName = vName
                 )
             }
+        return getExistingClones(context) // re-apply needsUpdate if needed, or just return cachedClones
+    }
+
+    /**
+     * Returns union of installed clones AND uninstalled clones that still have stored configuration
+     */
+    fun getKnownClones(context: Context): List<AppInfo> {
+        val installed = getExistingClones(context)
+        val installedPackages = installed.map { it.packageName }.toSet()
+        
+        val settingsClones = Config.readRemoteConfig().optJSONObject("clones")?.keys()?.asSequence()?.toList() ?: emptyList()
+        val uninstalled = settingsClones.filter { 
+            isClone(it) && !installedPackages.contains(it) 
+        }.map { packageName ->
+            AppInfo(packageName, formatAppName(packageName), isInstalled = false)
+        }
+
+        return installed + uninstalled
+    }
+
+    fun isClone(packageName: String): Boolean {
+        return packageName.startsWith(GRINDR_PACKAGE_PREFIX) && packageName != GRINDR_PACKAGE_NAME
+    }
+
+    fun formatAppNameDescriptive(packageName: String): String {
+        if (packageName == GRINDR_PACKAGE_NAME) return "Main Grindr App"
+
+        val suffix = packageName.removePrefix(GRINDR_PACKAGE_PREFIX)
+        return "Clone ${suffix.replaceFirstChar { it.uppercase() }}"
+    }
+
+    fun formatAppName(packageName: String): String {
+        if (packageName == GRINDR_PACKAGE_NAME) return "Grindr"
+
+        val suffix = packageName.removePrefix(GRINDR_PACKAGE_PREFIX)
+        return "Grindr ${suffix.replaceFirstChar { it.uppercase() }}"
     }
 
     /**
@@ -84,5 +132,11 @@ object AppCloneUtils {
     /**
      * Data class to hold an app's package name and display name
      */
-    data class AppInfo(val packageName: String, val appName: String)
+    data class AppInfo(
+        val packageName: String, 
+        val appName: String, 
+        val isInstalled: Boolean = true,
+        val needsUpdate: Boolean = false,
+        val versionName: String? = null
+    )
 }
