@@ -52,6 +52,7 @@ import com.grindrplus.manager.ui.components.FileDialog
 import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.ui.components.NewPackageInfoDialog
 import com.grindrplus.manager.ui.components.PackageSelector
+import com.grindrplus.manager.ui.components.VersionSelector
 import com.grindrplus.manager.ui.components.rememberLauncherFilePicker
 import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.ErrorHandler
@@ -451,7 +452,7 @@ fun NormalSourceFileSelector(
 ) {
     var showCustomFileDialog by remember { mutableStateOf(false) }
     var selectedVersion by remember { mutableStateOf<ModVersion?>(null) }
-    var customVersionName by remember { mutableStateOf<String?>(null) }
+    var customModVersion by remember { mutableStateOf<ModVersion?>(null) }
     val versionData = viewModel.versionData
 
     // Creates a background task to auto-select the latest version
@@ -462,40 +463,40 @@ fun NormalSourceFileSelector(
         }
     }
 
+    fun onVersionSelected(selected: ModVersion) {
+        selectedVersion = selected
+
+        if (selected.isCustom) {
+            onFilesSelected(SourceFileSet(
+                Installation.SourceFiles.Local(selected.grindrUrl.toUri(), selected.modUrl.toUri()),
+                selected.modVer
+            ))
+        } else {
+            onFilesSelected(SourceFileSet(
+                Installation.SourceFiles.Download(selected.grindrUrl, selected.modUrl),
+                selected.modVer
+            ))
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (customVersionName != null) {
-            Text(
-                text = "Custom: $customVersionName",
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedButton(
-                onClick = { showCustomFileDialog = true },
-                enabled = enabled,
-            ) {
-                Text("Change Files")
+        VersionSelector(
+            versions = versionData + listOfNotNull(customModVersion),
+            selectedVersion = selectedVersion,
+            onVersionSelected = { selected ->
+                onVersionSelected(selected)
+                viewModel.addLog("Selected version ${selected.modVer}", LogType.INFO)
+            },
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth(),
+            customOption = "Select Custom Files...",
+            onCustomOptionSelected = {
+                showCustomFileDialog = true
             }
-            OutlinedButton(
-                onClick = { customVersionName = null },
-                enabled = enabled,
-            ) {
-                Text("Reset")
-            }
-        } else {
-            Text(
-                text = "Latest Version: ${selectedVersion?.modVer ?: "Loading..."}",
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedButton(
-                onClick = { showCustomFileDialog = true },
-                enabled = enabled,
-            ) {
-                Text("Custom Installation")
-            }
-        }
+        )
     }
 
     if (showCustomFileDialog) {
@@ -503,10 +504,13 @@ fun NormalSourceFileSelector(
             context = context,
             onDismiss = { showCustomFileDialog = false },
             onSelect = { versionName, bundleUri, modUri ->
-                onFilesSelected(SourceFileSet(
-                    Installation.SourceFiles.Local(bundleUri, modUri),
-                    versionName
-                ))
+                customModVersion = ModVersion(
+                    versionName,
+                    bundleUri.toString(),
+                    modUri.toString(),
+                    isCustom = true
+                )
+                onVersionSelected(customModVersion!!)
                 showCustomFileDialog = false
                 viewModel.addLog("Custom files selected. Version: $versionName", LogType.INFO)
                 viewModel.addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
