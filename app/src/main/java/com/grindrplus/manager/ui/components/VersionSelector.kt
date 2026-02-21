@@ -37,13 +37,14 @@ import com.grindrplus.manager.ui.ModVersion
 
 @Composable
 fun VersionSelector(
+    modifier: Modifier = Modifier,
+    label: String = "Select a GrindrPlus version",
+    enabled: Boolean = true,
     versions: List<ModVersion>,
     selectedVersion: ModVersion?,
-    onVersionSelected: (ModVersion) -> Unit,
-    modifier: Modifier = Modifier,
-    isEnabled: Boolean = true,
-    label: String = "Select a GrindrPlus version",
-    customOption: String? = null
+    customOption: String? = null,
+    onCustomOptionSelected: () -> Unit,
+    onVersionSelected: (ModVersion) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
@@ -54,7 +55,7 @@ fun VersionSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
-                    enabled = isEnabled,
+                    enabled = enabled,
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
@@ -110,7 +111,7 @@ fun VersionSelector(
                         )
                     },
                     onClick = {
-                        onVersionSelected(ModVersion("custom", "", ""))
+                        onCustomOptionSelected()
                         expanded = false
                     },
                     leadingIcon = {
@@ -138,15 +139,13 @@ fun VersionSelector(
                 )
             } else {
                 versions.forEach { version ->
-                    if (version.modVer != "custom") {
-                        DropdownMenuItem(
-                            text = { Text("Version ${version.modVer}") },
-                            onClick = {
-                                onVersionSelected(version)
-                                expanded = false
-                            }
-                        )
-                    }
+                    DropdownMenuItem(
+                        text = { Text("Version ${version.modVer}") },
+                        onClick = {
+                            onVersionSelected(version)
+                            expanded = false
+                        }
+                    )
                 }
             }
         }

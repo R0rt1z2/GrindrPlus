@@ -242,6 +242,7 @@ data class ModVersion(
     val modVer: String,
     val grindrUrl: String,
     val modUrl: String,
+    val isCustom: Boolean = false
 )
 
 data class SourceFileSet(
