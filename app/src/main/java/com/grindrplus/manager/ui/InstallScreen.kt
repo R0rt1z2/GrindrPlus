@@ -50,6 +50,7 @@ import com.grindrplus.manager.installation.Installation
 import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.FileDialog
 import com.grindrplus.manager.ui.components.MessageBanner
+import com.grindrplus.manager.ui.components.NewPackageInfoDialog
 import com.grindrplus.manager.ui.components.PackageSelector
 import com.grindrplus.manager.ui.components.rememberLauncherFilePicker
 import com.grindrplus.manager.utils.AppCloneUtils
@@ -77,6 +78,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     var selectedPackageName by remember { mutableStateOf(Config.getCurrentPackage()) }
 
     val isNewClone by viewModel.isNewClone.collectAsState()
+    val uiEnabled = when (status) {
+        InstallStatus.INSTALLING, InstallStatus.UNINSTALLING -> false
+        else -> true
+    }
 
     // 3. Side Effects
     val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
@@ -91,7 +96,8 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
         // Add a small delay to ensure the OS has updated the package list
         (context as androidx.lifecycle.LifecycleOwner).lifecycleScope.launch {
             delay(500)
-            val isStillInstalled = AppCloneUtils.refresh(context).any { it.packageName == selectedPackageName }
+            AppCloneUtils.refresh(context)
+            val isStillInstalled = AppCloneUtils.findApp(selectedPackageName)?.isInstalled ?: false
             viewModel.uninstallCompleted(selectedPackageName, isStillInstalled)
             if (!isStillInstalled) {
                 selectedPackageName = GRINDR_PACKAGE_NAME
@@ -127,7 +133,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     }
 
     if (showNewPackageInfoDialog) {
-        com.grindrplus.manager.ui.components.NewPackageInfoDialog(
+        NewPackageInfoDialog(
             context = context,
             onDismiss = { showNewPackageInfoDialog = false },
             onConfirm = { appInfo ->
@@ -174,8 +180,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 Box(modifier = Modifier.weight(1f)) {
                     PackageSelector(
                         selectedPackage = selectedPackageName,
+                        enabled = uiEnabled,
                         onPackageSelected = { packageName ->
                             selectedPackageName = packageName
+                            viewModel.resetStatus()
                             viewModel.addLog("Selected package: $packageName", LogType.INFO)
                         }
                     )
@@ -196,13 +204,15 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
             // clone management buttons
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = { showNewPackageInfoDialog = true },
                     modifier = Modifier.weight(1f),
-                    enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS
+                    enabled = uiEnabled
                 ) {
                     Text("New Clone")
                 }
@@ -224,7 +234,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS,
+                        enabled = uiEnabled,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isInstalled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.errorContainer,
                             contentColor = if (isInstalled) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onErrorContainer
@@ -236,9 +246,9 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             }
 
             if (!isLSPosed())
-                NormalSourceFileSelector(context, viewModel) { sourceFileSet = it }
+                NormalSourceFileSelector(context, viewModel, uiEnabled) { sourceFileSet = it }
             else
-                LSPosedSourceFileSelector(viewModel) { sourceFileSet = it }
+                LSPosedSourceFileSelector(viewModel, uiEnabled) { sourceFileSet = it }
 
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -262,7 +272,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                     onClick = {
                         viewModel.cleanup(context, sourceFileSet?.versionName)
                     },
-                    enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS,
+                    enabled = uiEnabled,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
@@ -279,65 +289,71 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                if (status == InstallStatus.SUCCESS) {
-                    Button(
-                        onClick = { launchApp(context, selectedPackageName) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Open Grindr",
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                } else if (status == InstallStatus.INSTALLING) {
-                    Button(
-                        onClick = {},
-                        enabled = false,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Installing...",
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                } else {
-                    val isInstalled = remember(selectedPackageName) {
-                        if (selectedPackageName == GRINDR_PACKAGE_NAME) {
-                            isGrindrInstalled(context)
-                        } else {
-                            AppCloneUtils.getExistingClones(context).any { it.packageName == selectedPackageName && it.isInstalled }
+                when (status) {
+                    InstallStatus.SUCCESS ->
+                        Button(
+                            onClick = { launchApp(context, selectedPackageName) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Open Grindr",
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
                         }
-                    }
 
-                    val buttonEnabled = sourceFileSet != null && (status == InstallStatus.IDLE || status == InstallStatus.SUCCESS)
+                    InstallStatus.INSTALLING ->
+                        Button(
+                            onClick = {},
+                            enabled = false,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.12f
+                                ),
+                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Installing...",
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
 
-                    Button(
-                        onClick = {
-                            performInstallation()
-                        },
-                        enabled = buttonEnabled,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = if (isInstalled) "Update" else "Install",
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                    else -> {
+                        val isInstalled = remember(selectedPackageName) {
+                            AppCloneUtils.findApp(selectedPackageName)?.isInstalled ?: false
+                        }
+
+                        Button(
+                            onClick = {
+                                performInstallation()
+                            },
+                            enabled = uiEnabled && sourceFileSet != null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.12f
+                                ),
+                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (isInstalled) "Update" else "Install",
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -348,6 +364,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 @Composable
 fun LSPosedSourceFileSelector(
     viewModel: InstallScreenViewModel,
+    enabled: Boolean,
     onFilesSelected: (SourceFileSet) -> Unit
 ) {
     var useCustomFile by remember { mutableStateOf(false) }
@@ -411,6 +428,7 @@ fun LSPosedSourceFileSelector(
 
             OutlinedButton(
                 onClick = { bundlePickerLauncher.launch(arrayOf("*/*")) },
+                enabled = enabled
             ) {
                 Text(if (versionName != null) "Change Bundle" else "Select Bundle")
             }
@@ -428,6 +446,7 @@ fun LSPosedSourceFileSelector(
 fun NormalSourceFileSelector(
     context: Context,
     viewModel: InstallScreenViewModel,
+    enabled: Boolean,
     onFilesSelected: (SourceFileSet) -> Unit
 ) {
     var showCustomFileDialog by remember { mutableStateOf(false) }
@@ -455,11 +474,13 @@ fun NormalSourceFileSelector(
             )
             OutlinedButton(
                 onClick = { showCustomFileDialog = true },
+                enabled = enabled,
             ) {
                 Text("Change Files")
             }
             OutlinedButton(
                 onClick = { customVersionName = null },
+                enabled = enabled,
             ) {
                 Text("Reset")
             }
@@ -470,6 +491,7 @@ fun NormalSourceFileSelector(
             )
             OutlinedButton(
                 onClick = { showCustomFileDialog = true },
+                enabled = enabled,
             ) {
                 Text("Custom Installation")
             }

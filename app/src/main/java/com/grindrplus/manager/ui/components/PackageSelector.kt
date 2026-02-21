@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
@@ -20,6 +19,7 @@ import com.grindrplus.manager.utils.AppCloneUtils
 @Composable
 fun PackageSelector(
     selectedPackage: String,
+    enabled: Boolean = true,
     onPackageSelected: (String) -> Unit
 ) {
     val apps by AppCloneUtils.apps.collectAsState()
@@ -61,8 +61,9 @@ fun PackageSelector(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            onClick = { expanded = true },
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+            onClick = { if (enabled) expanded = true },
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            enabled = enabled
         ) {
             Row(
                 modifier = Modifier
@@ -74,13 +75,13 @@ fun PackageSelector(
                 Text(
                     text = formatPackageName(selectedPackage),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)
                 )
 
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = "Select app",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f)
                 )
             }
         }

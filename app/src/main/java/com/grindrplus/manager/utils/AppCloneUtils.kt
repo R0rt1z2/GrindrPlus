@@ -22,18 +22,6 @@ object AppCloneUtils {
         refresh(context)
     }
 
-    /**
-     * Check if Grindr is installed on the device
-     */
-    fun isGrindrInstalled(context: Context): Boolean {
-        return try {
-            context.packageManager.getPackageInfo(GRINDR_PACKAGE_NAME, 0)
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
-    }
-
     fun getAppName(packageName: String, packageManager: PackageManager): String {
         try {
             val appInfo = packageManager.getApplicationInfo(packageName, 0)
@@ -49,6 +37,9 @@ object AppCloneUtils {
         return "Grindr " + suffix.replaceFirstChar { it.uppercase() }
     }
 
+    fun findApp(packageName: String) =
+        apps.value.find { it.packageName == packageName }
+
     fun getExistingClones(context: Context): List<AppInfo> {
         val allApps = _apps.value
         if (allApps.isEmpty()) {
@@ -60,10 +51,6 @@ object AppCloneUtils {
     }
 
     fun refresh(context: Context): List<AppInfo> {
-        return refreshCache(context)
-    }
-
-    private fun refreshCache(context: Context): List<AppInfo> {
         val pm = context.packageManager
         val packages = pm.getInstalledPackages(0)
 
@@ -106,22 +93,8 @@ object AppCloneUtils {
         return allApps
     }
 
-    /**
-     * Returns union of installed clones AND uninstalled clones that still have stored configuration
-     */
-    fun getKnownClones(context: Context): List<AppInfo> {
-        return _apps.value.filter { isClone(it.packageName) }
-    }
-
     fun isClone(packageName: String): Boolean {
         return packageName.startsWith(GRINDR_PACKAGE_PREFIX) && packageName != GRINDR_PACKAGE_NAME
-    }
-
-    fun formatAppNameDescriptive(packageName: String): String {
-        if (packageName == GRINDR_PACKAGE_NAME) return "Main Grindr App"
-
-        val suffix = packageName.removePrefix(GRINDR_PACKAGE_PREFIX)
-        return "Clone ${suffix.replaceFirstChar { it.uppercase() }}"
     }
 
     fun formatAppName(packageName: String): String {

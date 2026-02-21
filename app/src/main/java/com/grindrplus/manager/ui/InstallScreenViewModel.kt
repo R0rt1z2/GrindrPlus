@@ -58,10 +58,6 @@ class InstallScreenViewModel : ViewModel() {
     private val _isNewClone = MutableStateFlow(false)
     val isNewClone = _isNewClone.asStateFlow()
 
-    fun setStatus(status: InstallStatus) {
-        _status.value = status
-    }
-
     fun addLog(message: String, type: LogType = LogType.INFO) {
         if (message.contains("<>:")) {
             val prefix = message.split("<>:")[0]
@@ -124,10 +120,11 @@ class InstallScreenViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val isClone = packageName != GRINDR_PACKAGE_NAME
-                _isNewClone.value = isClone && AppCloneUtils.getExistingClones(context).none { it.packageName == packageName }
+                _isNewClone.value = isClone && AppCloneUtils.apps.value
+                    .none { it.packageName == packageName && it.isInstalled }
 
                 val appInfo = if (!isClone) null else {
-                    val cloneName = AppCloneUtils.getKnownClones(context)
+                    val cloneName = AppCloneUtils.apps.value
                         .find { it.packageName == packageName }?.appName
                         ?: AppCloneUtils.formatAppName(packageName)
 
@@ -188,6 +185,11 @@ class InstallScreenViewModel : ViewModel() {
             addLog("Uninstall cancelled or failed.", LogType.WARNING)
         }
         _status.value = InstallStatus.IDLE
+    }
+
+    fun resetStatus() {
+        _status.value = InstallStatus.IDLE
+        _errorMessage.value = null
     }
 
     private fun fetchVersions(manifestUrl: String): Result<List<ModVersion>> {
