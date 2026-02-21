@@ -83,7 +83,7 @@ class PatchApkStep(
             apkFiles.forEach { apkFile ->
                 val outputFile = File(outputDir, apkFile.name)
                 apkFile.copyTo(outputFile, overwrite = true)
-                print("Copied ${apkFile.name} to output directory")
+                print("Copied ${apkFile.name}")
             }
 
             val copiedFiles = outputDir.listFiles()
