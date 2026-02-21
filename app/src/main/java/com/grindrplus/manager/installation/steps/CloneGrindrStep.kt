@@ -1,7 +1,6 @@
 package com.grindrplus.manager.installation.steps
 
 import android.content.Context
-import com.github.diamondminer88.zip.ZipReader
 import com.github.diamondminer88.zip.ZipWriter
 import com.grindrplus.manager.installation.BaseStep
 import com.grindrplus.manager.installation.Print
@@ -22,10 +21,8 @@ class CloneGrindrStep(
         print("Cloning Grindr APK...")
 
         for (file in folder.listFiles()!!) {
-            if (!file.name.endsWith(".apk")) {
-                print("Skipping ${file.name} as it is not an APK")
+            if (!file.name.endsWith(".apk"))
                 continue
-            }
 
             val manifest = ZipFile(file)
                 .use { zip ->

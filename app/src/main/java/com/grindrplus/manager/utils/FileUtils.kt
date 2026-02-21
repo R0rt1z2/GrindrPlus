@@ -1,6 +1,5 @@
 package com.grindrplus.manager.utils
 
-import com.github.diamondminer88.zip.ZipReader
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
@@ -9,7 +8,7 @@ import java.util.zip.ZipFile
 /**
  * Validates that a downloaded file is complete and not corrupted
  */
-fun validateFile(file: File): Boolean {
+fun validateFile(file: File, logTag: String = "Download"): Boolean {
     if (!file.exists() || file.length() <= 0) {
         return false
     }
@@ -19,7 +18,7 @@ fun validateFile(file: File): Boolean {
             ZipFile(file).close()
             return true
         } catch (e: Exception) {
-            Timber.tag("Download").e("Invalid ZIP file: ${e.localizedMessage}")
+            Timber.tag(logTag).e("Invalid ZIP file: ${e.localizedMessage}")
             file.delete()
             return false
         }

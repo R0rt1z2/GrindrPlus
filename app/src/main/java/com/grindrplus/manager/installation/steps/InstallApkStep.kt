@@ -29,7 +29,7 @@ class InstallApkStep(
 
         print("Starting installation of ${filteredApks.size} APK files")
         filteredApks.forEachIndexed { index, file ->
-            print("  Installing (${index + 1}/${filteredApks.size}): ${file.name}")
+            print("  ${index + 1}. ${file.name}")
         }
 
         print("Launching installer...")
