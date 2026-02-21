@@ -30,48 +30,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.grindrplus.BuildConfig
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.MainActivity
 import com.grindrplus.manager.TAG
-import com.grindrplus.manager.activityScope
 import com.grindrplus.manager.installation.Installation
-import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.ui.components.BannerType
 import com.grindrplus.manager.ui.components.FileDialog
 import com.grindrplus.manager.ui.components.MessageBanner
-import com.grindrplus.manager.utils.AppCloneUtils
-import com.grindrplus.manager.utils.ErrorHandler
-import com.grindrplus.manager.utils.StorageUtils
-import com.grindrplus.manager.utils.isLSPosed
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import androidx.core.net.toUri
-import com.grindrplus.BuildConfig
 import com.grindrplus.manager.ui.components.PackageSelector
 import com.grindrplus.manager.ui.components.rememberLauncherFilePicker
+import com.grindrplus.manager.utils.AppCloneUtils
+import com.grindrplus.manager.utils.ErrorHandler
+import com.grindrplus.manager.utils.isLSPosed
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
-
-private val logEntries = mutableStateListOf<LogEntry>()
 
 @Composable
 fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
     // 1. State from ViewModel
-    val isLoading by viewModel.isLoading.collectAsState()
+    val status by viewModel.status.collectAsState()
+    val loadingText by viewModel.loadingText.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val versionData = viewModel.versionData
+    val logEntries = viewModel.logEntries
 
     // 2. UI-Specific State
     val warningBannerDismissed = Config.get("install_warning_banner_dismissed", false) as Boolean
@@ -82,11 +76,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     var sourceFileSet by remember { mutableStateOf<SourceFileSet?>(null) }
     var selectedPackageName by remember { mutableStateOf(Config.getCurrentPackage()) }
 
-    var isInstalling by remember { mutableStateOf(false) }
-    var isUninstalling by remember { mutableStateOf(false) }
-    var installationSuccessful by remember { mutableStateOf(false) }
-    var isNewCloneInstallation by remember { mutableStateOf(false) }
-    var packagePendingUninstall by remember { mutableStateOf<String?>(null) }
+    val isNewClone by viewModel.isNewClone.collectAsState()
 
     // 3. Side Effects
     val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
@@ -95,98 +85,45 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
         viewModel.loadVersionData(manifestUrl.toString())
     }
 
-    val print: Print = { output ->
-        val logType = ConsoleLogger.parseLogType(output)
-        context.runOnUiThread {
-            addLog(output, logType)
-        }
-    }
-
     val uninstallLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        if (packagePendingUninstall != null) {
-            val isStillInstalled = AppCloneUtils.getExistingClones(context).any { it.packageName == packagePendingUninstall }
+        // Add a small delay to ensure the OS has updated the package list
+        (context as androidx.lifecycle.LifecycleOwner).lifecycleScope.launch {
+            delay(500)
+            val isStillInstalled = AppCloneUtils.refresh(context).any { it.packageName == selectedPackageName }
+            viewModel.uninstallCompleted(selectedPackageName, isStillInstalled)
             if (!isStillInstalled) {
-                Config.removePackage(packagePendingUninstall!!)
-                if (selectedPackageName == packagePendingUninstall) {
-                    selectedPackageName = GRINDR_PACKAGE_NAME
-                    Config.setCurrentPackage(GRINDR_PACKAGE_NAME)
-                }
-                addLog("Successfully uninstalled and removed clone settings.", LogType.SUCCESS)
-            } else {
-                addLog("Uninstall cancelled or failed.", LogType.WARNING)
+                selectedPackageName = GRINDR_PACKAGE_NAME
+                Config.setCurrentPackage(GRINDR_PACKAGE_NAME)
             }
-            packagePendingUninstall = null
         }
     }
 
-    LaunchedEffect(installationSuccessful) {
-        if (installationSuccessful && isNewCloneInstallation && isLSPosed()) {
+    LaunchedEffect(status) {
+        if (status == InstallStatus.SUCCESS && isNewClone && isLSPosed()) {
             showLSPosedEnableDialog = true
         }
     }
 
-    fun getSourceFileSet(): SourceFileSet? {
-        if (sourceFileSet == null)
-            showToast(context, "Please select version or custom files")
-
-        return sourceFileSet
-    }
-
-    fun getAppInfoOverride(): Installation.AppInfoOverride? {
-        val isClone = selectedPackageName != GRINDR_PACKAGE_NAME
-        if (!isClone)
-            return null
-
-        val cloneName = AppCloneUtils.getKnownClones(context)
-            .find { it.packageName == selectedPackageName }?.appName
-            ?: AppCloneUtils.formatAppName(selectedPackageName)
-
-        val apiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-        return Installation.AppInfoOverride(selectedPackageName, cloneName, apiKey)
-    }
 
     fun performInstallation() {
-        val sourceFileSet = getSourceFileSet() ?: return
-
-        isInstalling = true
-        val isClone = selectedPackageName != GRINDR_PACKAGE_NAME
-        isNewCloneInstallation = isClone && AppCloneUtils.getExistingClones(context).none { it.packageName == selectedPackageName }
-        val versionName = sourceFileSet.versionName
-
-        addLog("Starting installation with version: $versionName...", LogType.INFO)
-
-        activityScope.launch {
-            try {
-                isInstalling = true
-                val appInfo = getAppInfoOverride()
-
-                val installation = Installation(
-                    context,
-                    versionName,
-                    sourceFiles = sourceFileSet.sourceFiles,
-                    appInfo = appInfo,
-                    embedLSPatch = !isLSPosed(),
-                )
-
-                withContext(Dispatchers.IO) {
-                    installation.start(
-                        print = print
-                    )
-                }
-
-                addLog("Custom installation completed successfully!", LogType.SUCCESS)
-                AppCloneUtils.refreshCache(context)
-                showToast(context, "Installation complete!")
-                installationSuccessful = true
-            } catch (e: Exception) {
-                handleInstallationError(e, context)
-            } finally {
-                isInstalling = false
-            }
+        val currentFileSet = sourceFileSet ?: run {
+            Toast.makeText(context, "Please select version or custom files", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        viewModel.install(
+            context = context,
+            packageName = selectedPackageName,
+            sourceFileSet = currentFileSet,
+            onSuccess = {
+                Toast.makeText(context, "Installation complete!", Toast.LENGTH_SHORT).show()
+            },
+            onError = { e ->
+                handleInstallationError(e, context, viewModel)
+            }
+        )
     }
 
     if (showNewPackageInfoDialog) {
@@ -197,7 +134,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 showNewPackageInfoDialog = false
                 selectedPackageName = appInfo.packageName
                 Config.setCurrentPackage(appInfo.packageName)
-                addLog("Created new clone: ${appInfo.appName} (${appInfo.packageName})", LogType.INFO)
+                viewModel.addLog("Created new clone: ${appInfo.appName} (${appInfo.packageName})", LogType.INFO)
             }
         )
     }
@@ -221,8 +158,8 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             .padding(16.dp)
             .fillMaxSize()
     ) {
-        if (isLoading) {
-            LoadingScreen()
+        if (status == InstallStatus.LOADING_VERSIONS) {
+            LoadingScreen(loadingText)
         } else if (errorMessage != null) {
             ErrorScreen(errorMessage!!) {
                 viewModel.loadVersionData(manifestUrl.toString())
@@ -239,7 +176,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                         selectedPackage = selectedPackageName,
                         onPackageSelected = { packageName ->
                             selectedPackageName = packageName
-                            addLog("Selected package: $packageName", LogType.INFO)
+                            viewModel.addLog("Selected package: $packageName", LogType.INFO)
                         }
                     )
                 }
@@ -248,7 +185,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             MessageBanner(
                 text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
                 isVisible = warningBannerVisible,
-                isPulsating = isInstalling,
+                isPulsating = status == InstallStatus.INSTALLING,
                 modifier = Modifier.fillMaxWidth(),
                 type = BannerType.WARNING,
                 onDismiss = {
@@ -265,7 +202,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 Button(
                     onClick = { showNewPackageInfoDialog = true },
                     modifier = Modifier.weight(1f),
-                    enabled = !isInstalling && !isUninstalling
+                    enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS
                 ) {
                     Text("New Clone")
                 }
@@ -275,7 +212,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                     Button(
                         onClick = {
                             if (isInstalled) {
-                                packagePendingUninstall = selectedPackageName
+                                viewModel.uninstallStarted()
                                 val intent = Intent(Intent.ACTION_DELETE)
                                 intent.data = "package:$selectedPackageName".toUri()
                                 uninstallLauncher.launch(intent)
@@ -283,11 +220,11 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                                 Config.removePackage(selectedPackageName)
                                 selectedPackageName = GRINDR_PACKAGE_NAME
                                 Config.setCurrentPackage(GRINDR_PACKAGE_NAME)
-                                addLog("Removed clone from settings.", LogType.INFO)
+                                viewModel.addLog("Removed clone from settings.", LogType.INFO)
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = !isInstalling && !isUninstalling,
+                        enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isInstalled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.errorContainer,
                             contentColor = if (isInstalled) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onErrorContainer
@@ -299,9 +236,9 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             }
 
             if (!isLSPosed())
-                NormalSourceFileSelector(context, versionData) { sourceFileSet = it }
+                NormalSourceFileSelector(context, viewModel) { sourceFileSet = it }
             else
-                LSPosedSourceFileSelector(versionData) { sourceFileSet = it }
+                LSPosedSourceFileSelector(viewModel) { sourceFileSet = it }
 
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -310,8 +247,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 logEntries = logEntries,
                 modifier = Modifier.weight(0.5f),
                 onClear = {
-                    logEntries.clear()
-                    addLog("Successfully cleared logs!", LogType.SUCCESS)
+                    viewModel.clearLogs()
                 }
             )
 
@@ -324,26 +260,9 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             ) {
                 OutlinedButton(
                     onClick = {
-                        activityScope.launch {
-                            try {
-                                withContext(Dispatchers.IO) {
-                                    StorageUtils.cleanupOldInstallationFiles(
-                                        context, true, sourceFileSet?.versionName
-                                    )
-                                }
-                                addLog(
-                                    "Cleaned up old installation files",
-                                    LogType.SUCCESS
-                                )
-                            } catch (e: Exception) {
-                                addLog(
-                                    "Failed to clean up: ${e.localizedMessage}",
-                                    LogType.ERROR
-                                )
-                            }
-                        }
+                        viewModel.cleanup(context, sourceFileSet?.versionName)
                     },
-                    enabled = !isInstalling,
+                    enabled = status == InstallStatus.IDLE || status == InstallStatus.SUCCESS,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
@@ -360,7 +279,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                if (installationSuccessful) {
+                if (status == InstallStatus.SUCCESS) {
                     Button(
                         onClick = { launchApp(context, selectedPackageName) },
                         colors = ButtonDefaults.buttonColors(
@@ -374,7 +293,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                } else if (isInstalling) {
+                } else if (status == InstallStatus.INSTALLING) {
                     Button(
                         onClick = {},
                         enabled = false,
@@ -400,7 +319,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                         }
                     }
 
-                    val buttonEnabled = sourceFileSet != null
+                    val buttonEnabled = sourceFileSet != null && (status == InstallStatus.IDLE || status == InstallStatus.SUCCESS)
 
                     Button(
                         onClick = {
@@ -422,26 +341,22 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                     }
                 }
             }
-
-            // Existing Grindr management button removed
         }
     }
 }
 
 @Composable
 fun LSPosedSourceFileSelector(
-    versionData: SnapshotStateList<Data>,
+    viewModel: InstallScreenViewModel,
     onFilesSelected: (SourceFileSet) -> Unit
 ) {
     var useCustomFile by remember { mutableStateOf(false) }
     var versionName by remember { mutableStateOf<String?>(null) }
+    val versionData = viewModel.versionData
 
-    LaunchedEffect(versionData.size) {
-        if (useCustomFile || versionData.isEmpty()) {
-            useCustomFile = true
-            addLog("No versions found for LSPosed, requiring to select Grindr bundle.", LogType.WARNING)
+     LaunchedEffect(versionData.size) {
+        if (versionData.isEmpty()) // not loaded yet
             return@LaunchedEffect
-        }
 
         // if we find grindr apk with supported version, use it,
         // else let the user select manually downloaded file
@@ -449,7 +364,7 @@ fun LSPosedSourceFileSelector(
         val match = versionData.firstOrNull { it.modVer.substringAfterLast("-") in supportedVersions }
         if (match == null) {
             useCustomFile = true
-            addLog("No matching version found for LSPosed, requiring to select Grindr bundle.", LogType.WARNING)
+            viewModel.addLog("No matching version found for LSPosed, requiring to select Grindr bundle.", LogType.WARNING)
             return@LaunchedEffect
         }
 
@@ -459,7 +374,7 @@ fun LSPosedSourceFileSelector(
             versionName!!
         ))
 
-        addLog("Auto-selected matching version for LSPosed: ${versionName}", LogType.INFO)
+        viewModel.addLog("Auto-selected matching version for LSPosed: ${versionName}", LogType.INFO)
     }
 
     val bundlePickerLauncher = rememberLauncherFilePicker { uri: Uri? ->
@@ -473,7 +388,7 @@ fun LSPosedSourceFileSelector(
                 Installation.SourceFiles.Local(uri, null),
                 versionName!!
             ))
-            addLog("Grindr bundle selected: ${uri.lastPathSegment}", LogType.INFO)
+            viewModel.addLog("Grindr bundle selected: ${uri.lastPathSegment}", LogType.INFO)
         }
     }
 
@@ -512,20 +427,19 @@ fun LSPosedSourceFileSelector(
 @Composable
 fun NormalSourceFileSelector(
     context: Context,
-    versionData: SnapshotStateList<Data>,
+    viewModel: InstallScreenViewModel,
     onFilesSelected: (SourceFileSet) -> Unit
 ) {
     var showCustomFileDialog by remember { mutableStateOf(false) }
-
-    var selectedVersion by remember { mutableStateOf<Data?>(null) }
+    var selectedVersion by remember { mutableStateOf<ModVersion?>(null) }
     var customVersionName by remember { mutableStateOf<String?>(null) }
-
+    val versionData = viewModel.versionData
 
     // Creates a background task to auto-select the latest version
     LaunchedEffect(versionData.size) {
         if (selectedVersion == null && versionData.isNotEmpty()) {
             selectedVersion = versionData.first()
-            addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
+            viewModel.addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
         }
     }
 
@@ -572,15 +486,15 @@ fun NormalSourceFileSelector(
                     versionName
                 ))
                 showCustomFileDialog = false
-                addLog("Custom files selected. Version: $versionName", LogType.INFO)
-                addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
+                viewModel.addLog("Custom files selected. Version: $versionName", LogType.INFO)
+                viewModel.addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
             }
         )
     }
 }
 
 @Composable
-fun LoadingScreen() {
+fun LoadingScreen(text: String) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -595,7 +509,7 @@ fun LoadingScreen() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                "Loading available versions...",
+                text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -635,18 +549,18 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
     }
 }
 
-private fun handleInstallationError(e: Exception, context: Context) {
+private fun handleInstallationError(e: Exception, context: Context, viewModel: InstallScreenViewModel) {
     val errorMessage = "ERROR: ${e.localizedMessage ?: "Unknown error"}"
-    addLog(errorMessage, LogType.ERROR)
+    viewModel.addLog(errorMessage, LogType.ERROR)
 
     if (errorMessage.contains("INCOMPATIBLE") || e.message?.contains("INCOMPATIBLE") == true) {
         if (context is MainActivity) {
             context.runOnUiThread { MainActivity.showUninstallDialog.value = true }
         } else {
-            showToast(context, "Installation failed: Signature mismatch. Please uninstall Grindr first.")
+            Toast.makeText(context, "Installation failed: Signature mismatch. Please uninstall Grindr first.", Toast.LENGTH_SHORT).show()
         }
     } else {
-        showToast(context, "Installation failed: ${e.localizedMessage}")
+        Toast.makeText(context, "Installation failed: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
 
     ErrorHandler.logError(
@@ -657,33 +571,16 @@ private fun handleInstallationError(e: Exception, context: Context) {
     )
 }
 
-private fun addLog(message: String, type: LogType = LogType.INFO) {
-    if (message.contains("<>:")) {
-        val prefix = message.split("<>:")[0]
-
-        logEntries.find { it.message.startsWith(prefix) }?.let {
-            logEntries.remove(it)
-        }
-    }
-
-    val logEntry = ConsoleLogger.log(message.replace("<>:", ":"), type)
-    logEntries.add(logEntry)
-}
-
-private fun showToast(context: Context, message: String) {
-    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-}
-
 private fun launchApp(context: Context, packageName: String) {
     try {
         val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
         if (launchIntent != null) {
             context.startActivity(launchIntent)
         } else {
-            showToast(context, "Could not launch app. App may need to be opened manually.")
+            Toast.makeText(context, "Could not launch app. App may need to be opened manually.", Toast.LENGTH_SHORT).show()
         }
     } catch (e: Exception) {
-        showToast(context, "Error launching app: ${e.localizedMessage}")
+        Toast.makeText(context, "Error launching app: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -695,14 +592,3 @@ private fun isGrindrInstalled(context: Context): Boolean {
         false
     }
 }
-
-data class Data(
-    val modVer: String,
-    val grindrUrl: String,
-    val modUrl: String,
-)
-
-data class SourceFileSet(
-    val sourceFiles: Installation.SourceFiles,
-    val versionName: String
-)

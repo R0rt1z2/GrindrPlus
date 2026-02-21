@@ -92,11 +92,6 @@ object Config {
         }
     }
 
-    fun getAvailablePackages(context: Context): List<AppCloneUtils.AppInfo> {
-        val knownClones = AppCloneUtils.getKnownClones(context)
-        return listOf(AppCloneUtils.AppInfo(Constants.GRINDR_PACKAGE_NAME, "Grindr")) + knownClones
-    }
-
     fun readRemoteConfig(): JSONObject {
         return try {
             GrindrPlus.bridgeClient.getConfig()

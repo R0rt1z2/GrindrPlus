@@ -33,13 +33,13 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.grindrplus.manager.ui.Data
+import com.grindrplus.manager.ui.ModVersion
 
 @Composable
 fun VersionSelector(
-    versions: List<Data>,
-    selectedVersion: Data?,
-    onVersionSelected: (Data) -> Unit,
+    versions: List<ModVersion>,
+    selectedVersion: ModVersion?,
+    onVersionSelected: (ModVersion) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     label: String = "Select a GrindrPlus version",
@@ -110,7 +110,7 @@ fun VersionSelector(
                         )
                     },
                     onClick = {
-                        onVersionSelected(Data("custom", "", ""))
+                        onVersionSelected(ModVersion("custom", "", ""))
                         expanded = false
                     },
                     leadingIcon = {
