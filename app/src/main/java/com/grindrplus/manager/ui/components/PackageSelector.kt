@@ -25,13 +25,11 @@ fun PackageSelector(
     val apps by AppCloneUtils.apps.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    val packages = remember(apps) { apps }
-
     fun formatPackageName(packageName: String): String {
-        if (packageName == Constants.GRINDR_PACKAGE_NAME)
+        val app = apps.firstOrNull { it.packageName == packageName }
+        if (app?.isClone == false)
             return "Main Grindr App"
 
-        val app = packages.firstOrNull { it.packageName == packageName }
         return app?.let {
             val name = "Clone: ${it.appName}"
             if (!it.isInstalled) {
@@ -93,7 +91,7 @@ fun PackageSelector(
                 .fillMaxWidth(0.9f)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
-            packages.forEach { app ->
+            apps.forEach { app ->
                 DropdownMenuItem(
                     text = {
                         Text(

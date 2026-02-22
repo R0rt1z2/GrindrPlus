@@ -152,9 +152,8 @@ fun NewPackageInfoDialog(
                                 return@Button
                             }
 
-                            if (AppCloneUtils.getExistingClones(context)
-                                    .map { it.packageName }
-                                    .contains(fullPackageName)
+                            if (AppCloneUtils.findApp(fullPackageName)
+                                    ?.isInstalled ?: false
                             ) {
                                 isError = true
                                 errorText = "A clone with this package name already exists"
@@ -164,7 +163,8 @@ fun NewPackageInfoDialog(
                             onConfirm(
                                 AppCloneUtils.AppInfo(
                                     fullPackageName,
-                                    appName
+                                    appName,
+                                    isClone = true,
                                 )
                             )
                         }
