@@ -187,7 +187,6 @@ class InstallScreenViewModel : ViewModel() {
 
     fun uninstallCompleted(packageName: String, isStillInstalled: Boolean) {
         if (!isStillInstalled) {
-            Config.removePackage(packageName)
             addLog("Successfully uninstalled and removed clone settings.", LogType.SUCCESS)
         } else {
             addLog("Uninstall cancelled or failed.", LogType.WARNING)

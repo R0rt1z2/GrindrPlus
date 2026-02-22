@@ -6,12 +6,14 @@ import android.widget.Toast
 import com.grindrplus.manager.MainActivity.Companion.plausible
 import com.grindrplus.manager.installation.steps.AddModVersionInfoStep
 import com.grindrplus.manager.installation.steps.CheckStorageSpaceStep
+import com.grindrplus.manager.installation.steps.CleanupStep
 import com.grindrplus.manager.installation.steps.CloneGrindrStep
 import com.grindrplus.manager.installation.steps.CopyOutputStep
 import com.grindrplus.manager.installation.steps.CopySourceFileStep
 import com.grindrplus.manager.installation.steps.DownloadSourceFileStep
 import com.grindrplus.manager.installation.steps.ExtractBundleStep
 import com.grindrplus.manager.installation.steps.InstallApkStep
+import com.grindrplus.manager.installation.steps.MigrateTempFilesStep
 import com.grindrplus.manager.installation.steps.PatchApkStep
 import com.grindrplus.manager.installation.steps.ReplaceMapsApiKeyStep
 import com.grindrplus.manager.installation.steps.SignApkStep
@@ -36,12 +38,21 @@ class Installation(
     val embedLSPatch: Boolean,
 ) {
     private val keyStoreUtils = KeyStoreUtils(context)
-    private val tempDir = context.externalCacheDir
-        ?: throw IOException("External files directory not available")
-    private val unzipDir = File(tempDir, "splitApks/").also { it.mkdirs() }
-    private val outputDir = File(tempDir, "LSPatchOutput/").also { it.mkdirs() }
-    private val modFile = File(tempDir, "mod-$version.zip")
-    private val bundleFile = File(tempDir, "grindr-$version.zip")
+
+    data class Directories(
+        private val baseDir: File?
+    ) {
+        val base = baseDir ?: throw IOException("External files directory not available")
+
+        val input = File(base, "inputApks/").also { it.mkdirs() }
+        val unzip = File(base, "splitApks/").also { it.mkdirs() }
+        val output = File(base, "LSPatchOutput/").also { it.mkdirs() }
+    }
+
+    val dirs = Directories(context.externalCacheDir)
+
+    private val modFile = File(dirs.input, "mod-$version.zip")
+    private val bundleFile = File(dirs.input, "grindr-$version.zip")
 
     sealed interface SourceFiles {
         class Local(val bundleFileUri: Uri, val modFileUri: Uri?) : SourceFiles
@@ -54,7 +65,9 @@ class Installation(
     )
 
     val steps = mutableListOf<Step>().apply {
-        add(CheckStorageSpaceStep(tempDir))
+        add(MigrateTempFilesStep())
+
+        add(CheckStorageSpaceStep(dirs.base))
 
         when (sourceFiles) {
             is SourceFiles.Download -> {
@@ -67,7 +80,7 @@ class Installation(
             }
         }
 
-        add(ExtractBundleStep(bundleFile, unzipDir))
+        add(ExtractBundleStep(bundleFile, dirs.unzip))
 
 
         // keep track of whether we need to re-sign the apk
@@ -83,18 +96,18 @@ class Installation(
         // ReplaceMapsApiKeyStep uses different method to patch the manifest,
         // but this alone should not be an issue
         if (appInfo != null) {
-            add(CloneGrindrStep(unzipDir, appInfo.packageName, appInfo.appName))
+            add(CloneGrindrStep(dirs.unzip, appInfo.packageName, appInfo.appName))
             signingNeeded = true
         }
 
         if (embedLSPatch) {
-            add(AddModVersionInfoStep(unzipDir, version))
+            add(AddModVersionInfoStep(dirs.unzip, version))
             signingNeeded = true
         }
 
         // we should replace maps api key (only) when the signature of the final apk changes
         if (mapsApiKey != null && signingNeeded) {
-            add(ReplaceMapsApiKeyStep(unzipDir, mapsApiKey))
+            add(ReplaceMapsApiKeyStep(dirs.unzip, mapsApiKey))
             signingNeeded = true
         }
 
@@ -102,14 +115,16 @@ class Installation(
         // since lspatch requires an existing signature for some reason
         // no need to sign afterwards because lspatch regenerates the signature
         if (signingNeeded)
-            add(SignApkStep(keyStoreUtils, unzipDir))
+            add(SignApkStep(keyStoreUtils, dirs.unzip))
 
         if (embedLSPatch)
-            add(PatchApkStep(unzipDir, outputDir, modFile, keyStoreUtils))
+            add(PatchApkStep(dirs.unzip, dirs.output, modFile, keyStoreUtils))
         else
-            add(CopyOutputStep(unzipDir, outputDir))
+            add(CopyOutputStep(dirs.unzip, dirs.output))
 
-        add(InstallApkStep(outputDir))
+        add(InstallApkStep(dirs.output))
+
+        add(CleanupStep(dirs))
     }
 
     /**
@@ -179,13 +194,10 @@ class Installation(
         throw e
     }
 
-    private fun cleanupOnFailure() {
+    private suspend fun cleanupOnFailure() {
         try {
-            unzipDir.listFiles()?.forEach { it.delete() }
-            outputDir.listFiles()?.forEach { it.delete() }
-
-            if (bundleFile.exists() && bundleFile.length() <= 100) bundleFile.delete()
-            if (modFile.exists() && modFile.length() <= 100) modFile.delete()
+            CleanupStep(dirs, bundleFile, modFile)
+                .execute(context, {})
         } catch (_: Exception) {
         }
     }
