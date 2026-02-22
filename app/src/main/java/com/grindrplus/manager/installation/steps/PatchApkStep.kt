@@ -20,7 +20,7 @@ class PatchApkStep(
     private val modFile: File,
     private val keyStoreUtils: KeyStoreUtils,
 ) : BaseStep() {
-    override val name = "Patching Grindr APK"
+    override val name = "Patch Grindr APK"
 
 
     override suspend fun doExecute(context: Context, print: Print) {

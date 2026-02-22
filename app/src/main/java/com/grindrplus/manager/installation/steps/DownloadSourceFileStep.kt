@@ -17,7 +17,7 @@ class DownloadSourceFileStep(
     private val url: String,
     private val fileType: String
 ) : BaseStep() {
-    override val name = "Downloading $fileType"
+    override val name = "Download $fileType"
 
     override suspend fun doExecute(context: Context, print: Print) {
         print("Downloading $fileType file...")

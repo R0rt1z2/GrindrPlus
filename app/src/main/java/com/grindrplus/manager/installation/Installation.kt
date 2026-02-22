@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import com.grindrplus.manager.MainActivity.Companion.plausible
+import com.grindrplus.manager.installation.steps.AddModVersionInfoStep
 import com.grindrplus.manager.installation.steps.CheckStorageSpaceStep
 import com.grindrplus.manager.installation.steps.CloneGrindrStep
 import com.grindrplus.manager.installation.steps.CopyOutputStep
@@ -76,8 +77,18 @@ class Installation(
         // (lspatch itself also changes the signature)
         var signingNeeded = embedLSPatch
 
+
+        // Putting steps CloneGrindrStep or AddModVersionInfoStep after ReplaceMapsApiKeyStep
+        // produces invalid apk, which then fails to sign (something with invalid resource xml).
+        // ReplaceMapsApiKeyStep uses different method to patch the manifest,
+        // but this alone should not be an issue
         if (appInfo != null) {
             add(CloneGrindrStep(unzipDir, appInfo.packageName, appInfo.appName))
+            signingNeeded = true
+        }
+
+        if (embedLSPatch) {
+            add(AddModVersionInfoStep(unzipDir, version))
             signingNeeded = true
         }
 

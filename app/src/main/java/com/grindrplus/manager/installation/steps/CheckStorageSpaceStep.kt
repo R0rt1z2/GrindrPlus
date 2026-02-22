@@ -15,7 +15,8 @@ import java.io.IOException
 class CheckStorageSpaceStep(
     private val dir: File
 ) : BaseStep() {
-    override val name = "Checking system resources"
+    override val name = "Check system resources"
+
 
     override suspend fun doExecute(
         context: Context,

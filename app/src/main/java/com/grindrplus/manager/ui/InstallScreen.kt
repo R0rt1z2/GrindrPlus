@@ -84,11 +84,9 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
         else -> true
     }
 
-    // 3. Side Effects
-    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
 
     LaunchedEffect(Unit) {
-        viewModel.loadVersionData(manifestUrl.toString())
+        viewModel.loadVersionData(context)
     }
 
     val uninstallLauncher = rememberLauncherForActivityResult(
@@ -169,7 +167,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             LoadingScreen(loadingText)
         } else if (errorMessage != null) {
             ErrorScreen(errorMessage!!) {
-                viewModel.loadVersionData(manifestUrl.toString())
+                viewModel.loadVersionData(context)
             }
         } else {
             // package selector
@@ -210,12 +208,15 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // TODO does not refresh after adding the last clone
+                val hasReachedMaxClones = AppCloneUtils.hasReachedMaxClones()
+
                 Button(
                     onClick = { showNewPackageInfoDialog = true },
                     modifier = Modifier.weight(1f),
-                    enabled = uiEnabled
+                    enabled = uiEnabled && !hasReachedMaxClones
                 ) {
-                    Text("New Clone")
+                    Text(if (hasReachedMaxClones) "Max clones reached" else "New Clone")
                 }
 
                 if (selectedPackageName != GRINDR_PACKAGE_NAME) {
@@ -231,6 +232,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                                 Config.removePackage(selectedPackageName)
                                 selectedPackageName = GRINDR_PACKAGE_NAME
                                 Config.setCurrentPackage(GRINDR_PACKAGE_NAME)
+                                AppCloneUtils.refresh(context)
                                 viewModel.addLog("Removed clone from settings.", LogType.INFO)
                             }
                         },
@@ -379,14 +381,14 @@ fun LSPosedSourceFileSelector(
         // if we find grindr apk with supported version, use it,
         // else let the user select manually downloaded file
         val supportedVersions = BuildConfig.TARGET_GRINDR_VERSION_NAMES
-        val match = versionData.firstOrNull { it.modVer.substringAfterLast("-") in supportedVersions }
+        val match = versionData.firstOrNull { it.modVersion.substringAfterLast("-") in supportedVersions }
         if (match == null) {
             useCustomFile = true
             viewModel.addLog("No matching version found for LSPosed, requiring to select Grindr bundle.", LogType.WARNING)
             return@LaunchedEffect
         }
 
-        versionName = match.modVer.substringAfterLast("-")
+        versionName = match.modVersion.substringAfterLast("-")
         onFilesSelected(SourceFileSet(
             Installation.SourceFiles.Download(match.grindrUrl, null),
             versionName!!
@@ -455,29 +457,31 @@ fun NormalSourceFileSelector(
     var customModVersion by remember { mutableStateOf<ModVersion?>(null) }
     val versionData = viewModel.versionData
 
-    // Creates a background task to auto-select the latest version
-    LaunchedEffect(versionData.size) {
-        if (selectedVersion == null && versionData.isNotEmpty()) {
-            selectedVersion = versionData.first()
-            viewModel.addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
-        }
-    }
-
     fun onVersionSelected(selected: ModVersion) {
         selectedVersion = selected
 
         if (selected.isCustom) {
             onFilesSelected(SourceFileSet(
                 Installation.SourceFiles.Local(selected.grindrUrl.toUri(), selected.modUrl.toUri()),
-                selected.modVer
+                selected.modVersion
             ))
         } else {
             onFilesSelected(SourceFileSet(
                 Installation.SourceFiles.Download(selected.grindrUrl, selected.modUrl),
-                selected.modVer
+                selected.modVersion
             ))
         }
     }
+
+    // Creates a background task to auto-select the latest version
+    LaunchedEffect(versionData.size) {
+        if (selectedVersion == null && versionData.isNotEmpty()) {
+            selectedVersion = versionData.first()
+            onVersionSelected(selectedVersion!!)
+            viewModel.addLog("Auto-selected latest version: ${selectedVersion?.modVersion}", LogType.INFO)
+        }
+    }
+
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -488,7 +492,7 @@ fun NormalSourceFileSelector(
             selectedVersion = selectedVersion,
             onVersionSelected = { selected ->
                 onVersionSelected(selected)
-                viewModel.addLog("Selected version ${selected.modVer}", LogType.INFO)
+                viewModel.addLog("Selected version ${selected.modVersion}", LogType.INFO)
             },
             enabled = enabled,
             modifier = Modifier.fillMaxWidth(),

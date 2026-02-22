@@ -74,7 +74,7 @@ fun VersionSelector(
             ) {
                 Column {
                     Text(
-                        text = selectedVersion?.modVer ?: label,
+                        text = selectedVersion?.modVersion ?: label,
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (selectedVersion != null)
                             MaterialTheme.colorScheme.onSurface
@@ -140,7 +140,7 @@ fun VersionSelector(
             } else {
                 versions.forEach { version ->
                     DropdownMenuItem(
-                        text = { Text("Version ${version.modVer}") },
+                        text = { Text("Version ${version.modVersion}") },
                         onClick = {
                             onVersionSelected(version)
                             expanded = false
