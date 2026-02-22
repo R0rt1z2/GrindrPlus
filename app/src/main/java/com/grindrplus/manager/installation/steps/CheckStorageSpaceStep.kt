@@ -22,13 +22,14 @@ class CheckStorageSpaceStep(
         context: Context,
         print: Print,
     ) {
-        val required = 200 * 1024 * 1024
+        val requiredStorage = 350 * 1024 * 1024
+        val requiredRam = 200 * 1024 * 1024
         val availableStorage = StorageUtils.getAvailableSpace(dir)
 
-        print("Available storage space: ${availableStorage / 1024 / 1024}MB")
+        print("Available storage space: ${availableStorage / 1024 / 1024} MB")
 
-        if (availableStorage < required) {
-            throw IOException("Not enough storage space. Need ${required / 1024 / 1024}MB, but only ${availableStorage / 1024 / 1024}MB available.")
+        if (availableStorage < requiredStorage) {
+            throw IOException("Not enough storage space. Need ${requiredStorage / 1024 / 1024} MB, but only ${availableStorage / 1024 / 1024} MB available.")
         }
 
         val availableRam = try {
@@ -42,10 +43,10 @@ class CheckStorageSpaceStep(
             0L
         }
 
-        print("Available RAM: ${availableRam / 1024 / 1024}MB")
+        print("Available RAM: ${availableRam / 1024 / 1024} MB")
 
-        if (availableRam < required) {
-            throw IOException("Not enough RAM. Need ${required / 1024 / 1024}MB, but only ${availableRam / 1024 / 1024}MB available.")
+        if (availableRam < requiredRam) {
+            throw IOException("Not enough RAM. Need ${requiredRam / 1024 / 1024} MB, but only ${availableRam / 1024 / 1024} MB available.")
         }
 
         print("System resource checks passed")
