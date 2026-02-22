@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlin.system.measureTimeMillis
 
 interface Step {
     val name: String
@@ -15,9 +16,14 @@ abstract class BaseStep : Step {
     override suspend fun execute(context: Context, print: Print) {
         try {
             print("===== STEP: $name =====")
-            withContext(Dispatchers.IO) {
-                doExecute(context, print)
+
+            val time = measureTimeMillis {
+                withContext(Dispatchers.IO) {
+                    doExecute(context, print)
+                }
             }
+
+            print("Step $name completed in ${time / 1000} seconds")
             print("===== COMPLETED: $name =====")
         } catch (e: Exception) {
             print("===== FAILED: $name =====")

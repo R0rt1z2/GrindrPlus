@@ -63,15 +63,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.file.FileSystems
 
-enum class LogType {
-    INFO, WARNING, ERROR, DEBUG, VERBOSE, SUCCESS
-}
 
-data class LogEntry(
-    val timestamp: String?,
-    val message: String,
-    val type: LogType
-)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugLogsScreen(

@@ -33,17 +33,18 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.grindrplus.manager.ui.Data
+import com.grindrplus.manager.ui.ModVersion
 
 @Composable
 fun VersionSelector(
-    versions: List<Data>,
-    selectedVersion: Data?,
-    onVersionSelected: (Data) -> Unit,
     modifier: Modifier = Modifier,
-    isEnabled: Boolean = true,
     label: String = "Select a GrindrPlus version",
-    customOption: String? = null
+    enabled: Boolean = true,
+    versions: List<ModVersion>,
+    selectedVersion: ModVersion?,
+    customOption: String? = null,
+    onCustomOptionSelected: () -> Unit,
+    onVersionSelected: (ModVersion) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var textFieldSize by remember { mutableStateOf(Size.Zero) }
@@ -54,7 +55,7 @@ fun VersionSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
-                    enabled = isEnabled,
+                    enabled = enabled,
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
@@ -73,7 +74,7 @@ fun VersionSelector(
             ) {
                 Column {
                     Text(
-                        text = selectedVersion?.modVer ?: label,
+                        text = selectedVersion?.modVersion ?: label,
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (selectedVersion != null)
                             MaterialTheme.colorScheme.onSurface
@@ -110,7 +111,7 @@ fun VersionSelector(
                         )
                     },
                     onClick = {
-                        onVersionSelected(Data("custom", "", ""))
+                        onCustomOptionSelected()
                         expanded = false
                     },
                     leadingIcon = {
@@ -138,15 +139,13 @@ fun VersionSelector(
                 )
             } else {
                 versions.forEach { version ->
-                    if (version.modVer != "custom") {
-                        DropdownMenuItem(
-                            text = { Text("Version ${version.modVer}") },
-                            onClick = {
-                                onVersionSelected(version)
-                                expanded = false
-                            }
-                        )
-                    }
+                    DropdownMenuItem(
+                        text = { Text("Version ${version.modVersion}") },
+                        onClick = {
+                            onVersionSelected(version)
+                            expanded = false
+                        }
+                    )
                 }
             }
         }

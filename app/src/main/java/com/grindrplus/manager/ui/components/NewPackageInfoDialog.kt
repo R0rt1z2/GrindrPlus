@@ -1,73 +1,49 @@
 package com.grindrplus.manager.ui.components
 
 import android.content.Context
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.grindrplus.manager.installation.steps.numberToWords
 import com.grindrplus.manager.utils.AppCloneUtils
+import com.grindrplus.manager.utils.numberToWords
 
 @Composable
-fun CloneDialog(
+fun NewPackageInfoDialog(
     context: Context,
-    onDismiss: () -> Unit,
-    onStartCloning: (packageName: String, appName: String, debuggable: Boolean, embedLSPatch: Boolean) -> Unit
+    onConfirm: (AppCloneUtils.AppInfo) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    val hasReachedMaxClones = remember { AppCloneUtils.hasReachedMaxClones(context) }
-    val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
-
-    if (hasReachedMaxClones) {
-        MaxClonesReachedDialog(
-            onDismiss = onDismiss
-        )
-        return
-    }
-
-    var appName by remember { mutableStateOf("Grindr ${numberToWords(nextCloneNumber)}") }
-    var debuggable by remember { mutableStateOf(false) }
-    var embedLSPatch by remember { mutableStateOf(true) }
-    var isError by remember { mutableStateOf(false) }
-    var errorText by remember { mutableStateOf("") }
-
-    val packagePrefix = AppCloneUtils.GRINDR_PACKAGE_PREFIX
-    var packageSuffix by remember { mutableStateOf(numberToWords(nextCloneNumber).lowercase()) }
-
-    val fullPackageName = "$packagePrefix$packageSuffix"
-
-    val prefixVisualTransformation = VisualTransformation { text ->
-        val prefixedText = buildAnnotatedString {
-            withStyle(SpanStyle(color = Color.Gray)) {
-                append(packagePrefix)
-            }
-            append(text)
-        }
-
-        val offsetMapping = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int {
-                return offset + packagePrefix.length
-            }
-
-            override fun transformedToOriginal(offset: Int): Int {
-                return if (offset <= packagePrefix.length) 0 else offset - packagePrefix.length
-            }
-        }
-
-        TransformedText(prefixedText, offsetMapping)
-    }
-
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
@@ -76,6 +52,38 @@ fun CloneDialog(
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surface
         ) {
+            val nextCloneNumber = remember { AppCloneUtils.getNextCloneNumber(context) }
+
+            var appName by remember { mutableStateOf("Grindr ${numberToWords(nextCloneNumber)}") }
+            var isError by remember { mutableStateOf(false) }
+            var errorText by remember { mutableStateOf("") }
+
+            val packagePrefix = AppCloneUtils.GRINDR_PACKAGE_PREFIX
+            val packageSuffix = numberToWords(nextCloneNumber).lowercase()
+
+            val fullPackageName = "$packagePrefix$packageSuffix"
+
+            val prefixVisualTransformation = VisualTransformation { text ->
+                val prefixedText = buildAnnotatedString {
+                    withStyle(SpanStyle(color = Color.Gray)) {
+                        append(packagePrefix)
+                    }
+                    append(text)
+                }
+
+                val offsetMapping = object : OffsetMapping {
+                    override fun originalToTransformed(offset: Int): Int {
+                        return offset + packagePrefix.length
+                    }
+
+                    override fun transformedToOriginal(offset: Int): Int {
+                        return if (offset <= packagePrefix.length) 0 else offset - packagePrefix.length
+                    }
+                }
+
+                TransformedText(prefixedText, offsetMapping)
+            }
+
             Column(
                 modifier = Modifier
                     .padding(16.dp)
@@ -83,25 +91,15 @@ fun CloneDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Clone Grindr",
+                    text = "New clone app",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Text(
-                    text = "${AppCloneUtils.getExistingClones(context).size}/${AppCloneUtils.MAX_CLONES} clones used",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 OutlinedTextField(
                     value = packageSuffix,
-                    onValueChange = {
-                        packageSuffix = it
-                        isError = false
-                    },
+                    onValueChange = { },
+                    readOnly = true,
                     label = { Text("Package Name") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = isError,
@@ -109,7 +107,7 @@ fun CloneDialog(
                         if (isError) {
                             Text(errorText, color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text("Suffix must be unique and have no numbers in it")
+                            Text("Automatic suffix assignment")
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
@@ -132,30 +130,6 @@ fun CloneDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Debuggable")
-                    Switch(
-                        checked = debuggable,
-                        onCheckedChange = { debuggable = it }
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Embed LSPatch")
-                    Switch(
-                        checked = embedLSPatch,
-                        onCheckedChange = { embedLSPatch = it }
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
@@ -172,24 +146,31 @@ fun CloneDialog(
                                 return@Button
                             }
 
-                            if (AppCloneUtils.getExistingClones(context)
-                                    .contains(fullPackageName)
-                            ) {
-                                isError = true
-                                errorText = "This package name already exists"
-                                return@Button
-                            }
-
                             if (packageSuffix.any { it.isDigit() }) {
                                 isError = true
                                 errorText = "Package name must not contain numbers"
                                 return@Button
                             }
 
-                            onStartCloning(fullPackageName, appName, debuggable, embedLSPatch)
+                            if (AppCloneUtils.findApp(fullPackageName)
+                                    ?.isInstalled ?: false
+                            ) {
+                                isError = true
+                                errorText = "A clone with this package name already exists"
+                                return@Button
+                            }
+
+                            onConfirm(
+                                AppCloneUtils.AppInfo(
+                                    fullPackageName,
+                                    appName,
+                                    isClone = true,
+                                    isInstalled = false
+                                )
+                            )
                         }
                     ) {
-                        Text("Clone")
+                        Text("OK")
                     }
                 }
             }

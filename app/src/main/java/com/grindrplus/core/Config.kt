@@ -82,13 +82,13 @@ object Config {
         }
     }
 
-    fun getAvailablePackages(context: Context): List<String> {
-        Logger.d("Getting available packages", LogSource.MANAGER)
-        val installedClones = listOf(Constants.GRINDR_PACKAGE_NAME) + AppCloneUtils.getExistingClones(context)
-        val clones = localConfig.optJSONObject("clones") ?: return listOf(Constants.GRINDR_PACKAGE_NAME)
+    fun removePackage(packageName: String) {
+        Logger.d("Removing package $packageName from config", LogSource.MANAGER)
+        val clones = localConfig.optJSONObject("clones") ?: return
 
-        return installedClones.filter { pkg ->
-            clones.has(pkg)
+        if (clones.has(packageName)) {
+            clones.remove(packageName)
+            writeRemoteConfig(localConfig)
         }
     }
 

@@ -257,8 +257,14 @@ fun SettingsScreen(
                 )
             ) {
                 item {
+                    var selectedPackage by remember { mutableStateOf(Config.getCurrentPackage()) }
                     PackageSelector(
+                        selectedPackage = selectedPackage,
                         onPackageSelected = { packageName ->
+                            selectedPackage = packageName
+                            // force settings initialization
+                            com.grindrplus.utils.HookManager().registerHooks(false)
+                            com.grindrplus.utils.TaskManager().registerTasks(false)
                             viewModel.loadSettings()
                         }
                     )

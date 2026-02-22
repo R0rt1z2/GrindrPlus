@@ -2,7 +2,7 @@ package com.grindrplus.manager.utils
 
 import android.content.Context
 import android.os.StatFs
-import android.util.Log
+import com.grindrplus.manager.installation.Installation
 import timber.log.Timber
 import java.io.File
 
@@ -31,36 +31,23 @@ object StorageUtils {
         latestVersion: String? = null
     ) {
         try {
-            val folder = context.getExternalFilesDir(null) ?: return
+            val inputDir = Installation.Directories(context.externalCacheDir).input
             val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000)
 
-            val splitApksDir = File(folder, "splitApks/")
-            if (splitApksDir.exists() && splitApksDir.isDirectory) {
-                if (splitApksDir.lastModified() < threeDaysAgo) {
-                    splitApksDir.deleteRecursively()
-                }
-            }
-
-            val outputDir = File(folder, "LSPatchOutput/")
-            if (outputDir.exists() && outputDir.isDirectory) {
-                if (outputDir.lastModified() < threeDaysAgo) {
-                    outputDir.deleteRecursively()
-                }
-            }
-
-            folder.listFiles()?.forEach { file ->
-                if (file.name.startsWith("grindr-") && file.name.endsWith(".xapk")) {
-                    val version = file.name.removePrefix("grindr-").removeSuffix(".xapk")
+            inputDir.listFiles()
+                ?.filter { it.name.startsWith("grindr-") && it.name.endsWith(".zip") }
+                ?.forEach { file ->
+                    val version = file.name.removePrefix("grindr-").removeSuffix(".zip")
                     if (!keepLatestVersion || version != latestVersion) {
                         if (file.lastModified() < threeDaysAgo) {
                             file.delete()
                         }
                     }
                 }
-            }
 
-            folder.listFiles()?.forEach { file ->
-                if (file.name.startsWith("mod-") && file.name.endsWith(".zip")) {
+            inputDir.listFiles()
+                ?.filter { it.name.startsWith("mod-") && it.name.endsWith(".zip") }
+                ?.forEach { file ->
                     val version = file.name.removePrefix("mod-").removeSuffix(".zip")
                     if (!keepLatestVersion || version != latestVersion) {
                         if (file.lastModified() < threeDaysAgo) {
@@ -68,7 +55,7 @@ object StorageUtils {
                         }
                     }
                 }
-            }
+
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error during cleanup")
         }

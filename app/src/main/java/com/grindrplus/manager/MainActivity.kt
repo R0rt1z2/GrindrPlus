@@ -80,8 +80,8 @@ import com.grindrplus.manager.ui.InstallPage
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.NotificationScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
+import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.FileOperationHandler
-import com.grindrplus.manager.utils.isLSPosed
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.TaskManager
 import com.onebusaway.plausible.android.AndroidResourcePlausibleConfig
@@ -245,6 +245,7 @@ class MainActivity : ComponentActivity() {
                 GrindrPlus.bridgeClient.connectAsync { connected ->
                     Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
                     Config.initialize()
+                    AppCloneUtils.init(this@MainActivity)
                     HookManager().registerHooks(false)
                     TaskManager().registerTasks(false)
                     calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
@@ -515,11 +516,7 @@ class MainActivity : ComponentActivity() {
 
                                 Text(
                                     text = buildAnnotatedString {
-                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope. ")
-
-                                        withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                                            append("Do not use the Install section if you're using LSPosed.")
-                                        }
+                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope.")
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(bottom = 16.dp)

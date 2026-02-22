@@ -7,22 +7,24 @@ import com.grindrplus.manager.utils.unzip
 import java.io.File
 import java.io.IOException
 
-// 3rd
+/**
+ * Extract apk files from the apkm file
+ */
 class ExtractBundleStep(
     private val bundleFile: File,
-    private val unzipFolder: File
+    private val outputDir: File
 ) : BaseStep() {
-    override val name = "Extracting Bundle"
+    override val name = "Extract Bundle"
 
     override suspend fun doExecute(context: Context, print: Print) {
         try {
             print("Cleaning extraction directory...")
-            unzipFolder.listFiles()?.forEach { it.delete() }
+            outputDir.listFiles()?.forEach { it.delete() }
 
             print("Extracting bundle archive...")
-            bundleFile.unzip(unzipFolder)
+            bundleFile.unzip(outputDir)
 
-            val apkFiles = unzipFolder.listFiles()?.filter { it.name.endsWith(".apk") } ?: emptyList()
+            val apkFiles = outputDir.listFiles()?.filter { it.name.endsWith(".apk") } ?: emptyList()
             if (apkFiles.isEmpty()) {
                 throw IOException("No APK files found in the bundle archive")
             }
