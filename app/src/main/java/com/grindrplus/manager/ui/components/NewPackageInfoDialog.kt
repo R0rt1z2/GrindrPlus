@@ -165,6 +165,7 @@ fun NewPackageInfoDialog(
                                     fullPackageName,
                                     appName,
                                     isClone = true,
+                                    isInstalled = false
                                 )
                             )
                         }
