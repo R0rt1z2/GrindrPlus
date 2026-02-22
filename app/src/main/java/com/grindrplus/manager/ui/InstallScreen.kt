@@ -219,7 +219,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 }
 
                 if (selectedPackageName != GRINDR_PACKAGE_NAME) {
-                    val isInstalled = AppCloneUtils.getExistingClones(context).any { it.packageName == selectedPackageName }
+                    val isInstalled = AppCloneUtils.findApp(selectedPackageName)?.isInstalled ?: false
                     Button(
                         onClick = {
                             if (isInstalled) {

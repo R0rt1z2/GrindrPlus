@@ -21,7 +21,7 @@ object AppCloneUtils {
         refresh(context)
     }
 
-    fun getAppName(packageName: String, packageManager: PackageManager): String {
+    private fun getAppName(packageName: String, packageManager: PackageManager): String {
         try {
             val appInfo = packageManager.getApplicationInfo(packageName, 0)
             val appName = packageManager.getApplicationLabel(appInfo).toString()
@@ -38,16 +38,6 @@ object AppCloneUtils {
 
     fun findApp(packageName: String) =
         apps.value.find { it.packageName == packageName }
-
-    fun getExistingClones(context: Context): List<AppInfo> {
-        val allApps = _apps.value
-        if (allApps.isEmpty()) {
-            return refresh(context).filter { isClone(it.packageName) && it.isInstalled }
-        }
-        return allApps.filter { isClone(it.packageName) && it.isInstalled }.map {
-            it.copy(needsUpdate = calculateUpdateNeeded(it.versionName))
-        }
-    }
 
     private fun calculateUpdateNeeded(versionName: String?): Boolean {
         // TODO check in downloaded json versions file
@@ -67,6 +57,7 @@ object AppCloneUtils {
                 AppInfo(
                     it.packageName,
                     getAppName(it.packageName, pm),
+                    isClone = isClone(it.packageName),
                     isInstalled = true,
                     needsUpdate = updateNeeded,
                     versionName = vName
@@ -78,7 +69,12 @@ object AppCloneUtils {
         val uninstalledClones = settingsClones.filter { 
             isClone(it) && !installedPackages.contains(it) 
         }.map { packageName ->
-            AppInfo(packageName, formatAppName(packageName), isInstalled = false)
+            AppInfo(
+                packageName,
+                formatAppName(packageName),
+                isClone = isClone(packageName),
+                isInstalled = false
+            )
         }
 
         val allApps = (installedApps + uninstalledClones).sortedWith(compareBy { app ->
@@ -98,7 +94,7 @@ object AppCloneUtils {
         return allApps
     }
 
-    fun isClone(packageName: String): Boolean {
+    private fun isClone(packageName: String): Boolean {
         return packageName.startsWith(GRINDR_PACKAGE_PREFIX) && packageName != GRINDR_PACKAGE_NAME
     }
 
@@ -114,16 +110,16 @@ object AppCloneUtils {
      * Returns -1 if maximum number of clones is reached
      */
     fun getNextCloneNumber(context: Context): Int {
-        val clones = getExistingClones(context)
+        refresh(context)
 
-        if (clones.size >= MAX_CLONES) {
+        if (apps.value.size >= MAX_CLONES) {
             Timber.e("Maximum number of clones ($MAX_CLONES) reached")
             return -1
         }
 
         var nextNum = 1
 
-        while (clones.any { it.packageName == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
+        while (apps.value.any { it.packageName == "$GRINDR_PACKAGE_PREFIX${numberToWords(nextNum).lowercase()}" }) {
             nextNum++
         }
 
@@ -134,7 +130,7 @@ object AppCloneUtils {
      * Check if maximum number of clones is reached
      */
     fun hasReachedMaxClones(context: Context): Boolean {
-        return getExistingClones(context).size >= MAX_CLONES
+        return apps.value.size >= MAX_CLONES
     }
 
     /**
@@ -142,7 +138,8 @@ object AppCloneUtils {
      */
     data class AppInfo(
         val packageName: String, 
-        val appName: String, 
+        val appName: String,
+        val isClone: Boolean,
         val isInstalled: Boolean = true,
         val needsUpdate: Boolean = false,
         val versionName: String? = null

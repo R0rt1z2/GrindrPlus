@@ -165,7 +165,7 @@ object FileOperationHandler {
 
                 put("grindrplus_version", "${grindrPlusPackageInfo.versionName} (${grindrPlusVersionCode})")
                 put("grindr_version", "${grindrPackageInfo.versionName} (${grindrVersionCode})")
-                put("clones", AppCloneUtils.getExistingClones(context).size)
+                put("clones", AppCloneUtils.apps.value.filter{ it.isClone }.size)
             }
             mainJson.put("apps", appsSection)
 
