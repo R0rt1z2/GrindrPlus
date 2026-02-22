@@ -3,7 +3,6 @@ package com.grindrplus.manager.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import timber.log.Timber
-import com.grindrplus.manager.installation.steps.numberToWords
 import com.grindrplus.core.Config
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,8 +45,14 @@ object AppCloneUtils {
             return refresh(context).filter { isClone(it.packageName) && it.isInstalled }
         }
         return allApps.filter { isClone(it.packageName) && it.isInstalled }.map {
-            it.copy(needsUpdate = !BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(it.versionName))
+            it.copy(needsUpdate = calculateUpdateNeeded(it.versionName))
         }
+    }
+
+    private fun calculateUpdateNeeded(versionName: String?): Boolean {
+        // TODO check in downloaded json versions file
+        return versionName?.let { !BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(versionName) }
+            ?: false
     }
 
     fun refresh(context: Context): List<AppInfo> {
@@ -58,7 +63,7 @@ object AppCloneUtils {
             .filter { it.packageName == GRINDR_PACKAGE_NAME || isClone(it.packageName) }
             .map {
                 val vName = it.versionName
-                val updateNeeded = !BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(vName)
+                val updateNeeded = calculateUpdateNeeded(vName)
                 AppInfo(
                     it.packageName,
                     getAppName(it.packageName, pm),

@@ -3,8 +3,7 @@ package com.grindrplus.manager.installation.steps
 import android.content.Context
 import com.grindrplus.manager.installation.BaseStep
 import com.grindrplus.manager.installation.Print
-import com.reandroid.apk.ApkModule
-import com.reandroid.xml.StyleDocument
+import com.grindrplus.manager.utils.KeyStoreUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.lsposed.patch.LSPatch
@@ -12,115 +11,26 @@ import org.lsposed.patch.util.Logger
 import java.io.File
 import java.io.IOException
 
-// 5th
+/**
+ * install modfile into base apk and save all apks to output folder
+ */
 class PatchApkStep(
-    private val unzipFolder: File,
+    private val inputDir: File,
     private val outputDir: File,
-    private val modFile: File?,
-    private val keyStore: File,
-    private val customMapsApiKey: String?,
-    private val embedLSPatch: Boolean = true
+    private val modFile: File,
+    private val keyStoreUtils: KeyStoreUtils,
 ) : BaseStep() {
     override val name = "Patching Grindr APK"
 
-    private companion object {
-        const val MAPS_API_KEY_NAME = "com.google.android.geo.API_KEY"
-    }
 
     override suspend fun doExecute(context: Context, print: Print) {
         print("Cleaning output directory...")
         outputDir.listFiles()?.forEach { it.delete() }
 
-        val apkFiles = unzipFolder.listFiles()?.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
+        val apkFiles = inputDir.listFiles()?.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
 
         if (apkFiles.isNullOrEmpty()) {
             throw IOException("No valid APK files found to patch")
-        }
-
-        if (customMapsApiKey != null)
-            replaceMapsApiKey(print, apkFiles)
-
-        if (embedLSPatch)
-            executeLSPatch(apkFiles, print)
-        else
-            copyFilesWithoutLSPatch(apkFiles, print)
-    }
-
-    private fun replaceMapsApiKey(
-        print: Print,
-        apkFiles: List<File>
-    ) {
-        try {
-            print("Attempting to apply custom Maps API key...")
-
-            val baseApk = apkFiles.find {
-                it.name == "base.apk" || it.name.startsWith("base.apk-")
-            } ?: apkFiles.first()
-
-            print("Using ${baseApk.name} for Maps API key modification")
-            val apkModule = ApkModule.loadApkFile(baseApk)
-
-            val metaElements =
-                apkModule.androidManifest.applicationElement.getElements { element ->
-                    element.name == "meta-data"
-                }
-
-            var found = false
-            while (metaElements.hasNext() && !found) {
-                val element = metaElements.next()
-                val nameAttr = element.searchAttributeByName("name")
-
-                if (nameAttr != null && nameAttr.valueString == MAPS_API_KEY_NAME) {
-                    val valueAttr = element.searchAttributeByName("value")
-                    if (valueAttr != null) {
-                        print("Found Maps API key element, replacing with custom key")
-                        valueAttr.setValueAsString(
-                            StyleDocument.parseStyledString(
-                                customMapsApiKey
-                            )
-                        )
-                        found = true
-                    }
-                }
-            }
-
-            if (found) {
-                print("Successfully replaced Maps API key, saving APK")
-                apkModule.writeApk(baseApk)
-            } else {
-                print("Maps API key element not found in manifest, skipping replacement")
-            }
-
-        } catch (e: Exception) {
-            print("Error applying Maps API key: ${e.message}")
-        }
-    }
-
-    private fun copyFilesWithoutLSPatch(
-        apkFiles: List<File>,
-        print: Print
-    ) {
-        print("Skipping LSPatch as embedLSPatch is disabled")
-        print("Copying ${apkFiles.size} files")
-
-        apkFiles.forEachIndexed { index, apkFile ->
-            val outputFile = File(outputDir, apkFile.name)
-            apkFile.copyTo(outputFile, overwrite = true)
-            print("  ${index + 1}. ${apkFile.name} (${apkFile.length() / 1024}KB)")
-        }
-
-        val copiedFiles = outputDir.listFiles()
-        if (copiedFiles.isNullOrEmpty()) {
-            throw IOException("Copying APKs failed - no output files generated")
-        }
-    }
-
-    private suspend fun executeLSPatch(
-        apkFiles: List<File>,
-        print: Print
-    ) {
-        if (modFile == null) {
-            throw IOException("Mod file is required for LSPatch embedding")
         }
 
         print("Starting LSPatch process with ${apkFiles.size} APK files")
@@ -145,7 +55,7 @@ class PatchApkStep(
         }
 
         print("Using mod file: ${modFile.absolutePath}")
-        print("Using keystore: ${keyStore.absolutePath}")
+        print("Using keystore: ${keyStoreUtils.keyStore.absolutePath}")
 
         withContext(Dispatchers.IO) {
             LSPatch(
@@ -156,7 +66,7 @@ class PatchApkStep(
                 "-f",
                 "-v",
                 "-m", modFile.absolutePath,
-                "-k", keyStore.absolutePath,
+                "-k", keyStoreUtils.keyStore.absolutePath,
                 "password",
                 "alias",
                 "password"
@@ -168,8 +78,7 @@ class PatchApkStep(
             throw IOException("Patching failed - no output files generated")
         }
 
-        print("Patching completed successfully")
-        print("Generated ${patchedFiles.size} patched files")
+        print("Successfully patched ${patchedFiles.size} files")
 
         patchedFiles.forEachIndexed { index, file ->
             print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")

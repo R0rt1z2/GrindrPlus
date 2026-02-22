@@ -8,11 +8,14 @@ import com.grindrplus.manager.utils.ManifestPatcher
 import java.io.File
 import java.util.zip.ZipFile
 
+/**
+ * replace the app name and package name in the apk
+ * modifies the provided apk files, does not copy them to output folder
+ */
 class CloneGrindrStep(
-    val folder: File,
+    val dir: File,
     val packageName: String,
     val appName: String,
-    val debuggable: Boolean,
 ) : BaseStep() {
     override suspend fun doExecute(
         context: Context,
@@ -20,7 +23,7 @@ class CloneGrindrStep(
     ) {
         print("Cloning Grindr APK...")
 
-        for (file in folder.listFiles()!!) {
+        for (file in dir.listFiles()!!) {
             if (!file.name.endsWith(".apk"))
                 continue
 
@@ -33,26 +36,27 @@ class CloneGrindrStep(
                 ?: throw IllegalStateException("No manifest in ${file.name}")
 
             ZipWriter(file, true).use { zip ->
-                print("Changing package and app name in ${file.name}")
-                val patchedManifestBytes = if (file.name.contains("base")) {
-                    ManifestPatcher.patchManifest(
-                        manifestBytes = manifest,
-                        packageName = packageName,
-                        appName = appName,
-                        debuggable = debuggable,
-                    )
-                } else {
-                    print("Changing package name in ${file.name}")
-                    ManifestPatcher.renamePackage(manifest, packageName)
-                }
+                val patchedManifestBytes =
+                    if (file.name.contains("base")) {
+                        print("Changing package and app name in ${file.name}")
+                        ManifestPatcher.patchManifest(
+                            manifestBytes = manifest,
+                            packageName = packageName,
+                            appName = appName,
+                            debuggable = false,
+                        )
+                    } else {
+                        print("Changing package name in ${file.name}")
+                        ManifestPatcher.renamePackage(manifest, packageName)
+                    }
 
-                print("Deleting old AndroidManifest.xml in ${file.name}")
+//                print("Deleting old AndroidManifest.xml in ${file.name}")
                 zip.deleteEntry(
                     "AndroidManifest.xml",
                     /* fillVoid = */ true //TODO: maybe
                 ) // Preserve alignment in libs apk
 
-                print("Adding patched AndroidManifest.xml in ${file.name}")
+//                print("Adding patched AndroidManifest.xml in ${file.name}")
                 zip.writeEntry("AndroidManifest.xml", patchedManifestBytes)
             }
         }
