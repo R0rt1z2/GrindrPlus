@@ -31,26 +31,22 @@ object StorageUtils {
         latestVersion: String? = null
     ) {
         try {
-            val folder = context.getExternalFilesDir(null) ?: return
+            val folder = context.externalCacheDir ?: return
             val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000)
 
             val splitApksDir = File(folder, "splitApks/")
             if (splitApksDir.exists() && splitApksDir.isDirectory) {
-                if (splitApksDir.lastModified() < threeDaysAgo) {
-                    splitApksDir.deleteRecursively()
-                }
+                splitApksDir.deleteRecursively()
             }
 
             val outputDir = File(folder, "LSPatchOutput/")
             if (outputDir.exists() && outputDir.isDirectory) {
-                if (outputDir.lastModified() < threeDaysAgo) {
-                    outputDir.deleteRecursively()
-                }
+                outputDir.deleteRecursively()
             }
 
             folder.listFiles()?.forEach { file ->
-                if (file.name.startsWith("grindr-") && file.name.endsWith(".xapk")) {
-                    val version = file.name.removePrefix("grindr-").removeSuffix(".xapk")
+                if (file.name.startsWith("grindr-") && file.name.endsWith(".zip")) {
+                    val version = file.name.removePrefix("grindr-").removeSuffix(".zip")
                     if (!keepLatestVersion || version != latestVersion) {
                         if (file.lastModified() < threeDaysAgo) {
                             file.delete()
