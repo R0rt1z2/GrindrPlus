@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
+import com.grindrplus.manager.DATA_URL
 import com.grindrplus.manager.installation.Installation
 import com.grindrplus.manager.utils.AppCloneUtils
 import com.grindrplus.manager.utils.StorageUtils
@@ -21,6 +22,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
+import timber.log.Timber
 import java.io.IOException
 
 enum class LogType {
@@ -42,6 +44,8 @@ enum class InstallStatus {
 }
 
 class InstallScreenViewModel : ViewModel() {
+
+    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String)
 
     private val _status = MutableStateFlow(InstallStatus.IDLE)
     val status = _status.asStateFlow()
@@ -68,13 +72,15 @@ class InstallScreenViewModel : ViewModel() {
 
         val logEntry = ConsoleLogger.log(message.replace("<>:", ":"), type)
         logEntries.add(logEntry)
+
+        Timber.d("Install log: $type $message")
     }
 
     fun clearLogs() {
         logEntries.clear()
     }
 
-    fun loadVersionData(manifestUrl: String) {
+    fun loadVersionData(context: Context) {
         if (versionData.isNotEmpty()) return
 
         _status.value = InstallStatus.LOADING_VERSIONS
@@ -96,6 +102,8 @@ class InstallScreenViewModel : ViewModel() {
                 versionData.clear()
                 versionData.addAll(result.getOrThrow())
                 Logger.d("Found ${versionData.size} available versions")
+
+                AppCloneUtils.setAvailableModVersions(versionData.map { it.modVersion }, context)
             } else {
                 _errorMessage.value = result.exceptionOrNull()?.localizedMessage ?: "Unknown error"
                 Logger.e("Error loading version data: ${_errorMessage.value}")
@@ -224,14 +232,14 @@ class InstallScreenViewModel : ViewModel() {
                 if (jsonArray.length() >= 2) {
                     result.add(
                         ModVersion(
-                            modVer = key,
+                            modVersion = key,
                             grindrUrl = jsonArray.getString(0),
                             modUrl = jsonArray.getString(1)
                         )
                     )
                 }
             }
-            result.sortedByDescending { it.modVer }
+            result.sortedByDescending { it.modVersion }
         } catch (e: JSONException) {
             throw IOException("Invalid data format: ${e.localizedMessage}")
         }
@@ -239,7 +247,7 @@ class InstallScreenViewModel : ViewModel() {
 }
 
 data class ModVersion(
-    val modVer: String,
+    val modVersion: String,
     val grindrUrl: String,
     val modUrl: String,
     val isCustom: Boolean = false

@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.grindrplus.core.Config
-import com.grindrplus.core.Constants
 import com.grindrplus.manager.utils.AppCloneUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,8 +33,10 @@ fun PackageSelector(
             val name = "Clone: ${it.appName}"
             if (!it.isInstalled) {
                 "$name (Not installed)"
-            } else if (it.needsUpdate) {
+            } else if (it.updateNeeded) {
                 "$name (Needs update)"
+            }  else if (it.updateAvailable) {
+                "$name (Update available)"
             } else {
                 name
             }

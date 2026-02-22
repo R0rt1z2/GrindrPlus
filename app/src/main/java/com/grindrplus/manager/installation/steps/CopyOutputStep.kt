@@ -13,7 +13,7 @@ class CopyOutputStep(
     private val sourceDir: File,
     private val targetDir: File,
 ) : BaseStep() {
-    override val name = "Copying APK files to be installed"
+    override val name = "Copy APK files to be installed"
 
 
     override suspend fun doExecute(context: Context, print: Print) {

@@ -14,7 +14,7 @@ class ExtractBundleStep(
     private val bundleFile: File,
     private val outputDir: File
 ) : BaseStep() {
-    override val name = "Extracting Bundle"
+    override val name = "Extract Bundle"
 
     override suspend fun doExecute(context: Context, print: Print) {
         try {

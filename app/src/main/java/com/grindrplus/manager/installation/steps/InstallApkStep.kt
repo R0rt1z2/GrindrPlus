@@ -13,7 +13,7 @@ import java.io.IOException
 class InstallApkStep(
     private val dir: File
 ) : BaseStep() {
-    override val name = "Installing Grindr APK"
+    override val name = "Install Grindr APK"
 
     override suspend fun doExecute(context: Context, print: Print) {
         val patchedFiles = dir.listFiles()?.toList() ?: emptyList()
@@ -52,7 +52,5 @@ class InstallApkStep(
         if (!success) {
             throw IOException("Installation failed")
         }
-
-        print("APK installation completed successfully")
     }
 }

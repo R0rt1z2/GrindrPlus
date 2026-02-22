@@ -13,6 +13,9 @@ class SignApkStep(
     val keyStoreUtils: KeyStoreUtils,
     val dir: File
 ): BaseStep() {
+    override val name: String = "Sign modified Grindr APK"
+
+
     override suspend fun doExecute(
         context: Context,
         print: Print,
@@ -43,6 +46,4 @@ class SignApkStep(
             }
         }
     }
-
-    override val name: String = "Sign cloned Grindr APK"
 }

@@ -20,7 +20,7 @@ class CopySourceFileStep(
     private val uri: Uri,
     private val fileType: String
 ) : BaseStep() {
-    override val name = "Copying $fileType"
+    override val name = "Copy $fileType"
 
     override suspend fun doExecute(context: Context, print: Print) {
         print("Copying $fileType file...")

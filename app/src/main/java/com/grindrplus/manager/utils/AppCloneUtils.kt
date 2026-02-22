@@ -2,6 +2,7 @@ package com.grindrplus.manager.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import timber.log.Timber
 import com.grindrplus.core.Config
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,14 @@ object AppCloneUtils {
     private val _apps = MutableStateFlow<List<AppInfo>>(emptyList())
     val apps: StateFlow<List<AppInfo>> = _apps.asStateFlow()
 
+    private var _availableModVersions: List<String> = emptyList()
+
     fun init(context: Context) {
+        refresh(context)
+    }
+
+    fun setAvailableModVersions(versions: List<String>, context: Context) {
+        _availableModVersions = versions
         refresh(context)
     }
 
@@ -39,31 +47,48 @@ object AppCloneUtils {
     fun findApp(packageName: String) =
         apps.value.find { it.packageName == packageName }
 
-    private fun calculateUpdateNeeded(versionName: String?): Boolean {
-        // TODO check in downloaded json versions file
-        return versionName?.let { !BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(versionName) }
-            ?: false
+    private fun calculateUpdateNeeded(versionName: String, modVersionName: String?): Boolean {
+        if (isLSPosed()) {
+            val isSupportedAppVersion = BuildConfig.TARGET_GRINDR_VERSION_NAMES.contains(versionName)
+            val hasEmbeddedLSPatch = modVersionName != null
+            return !isSupportedAppVersion || hasEmbeddedLSPatch
+        } else {
+            return false
+        }
+    }
+
+    private fun calculateUpdateAvailable(versionName: String, modVersionName: String?): Boolean {
+        if (isLSPosed())
+            return false
+        else {
+            return modVersionName?.let { !_availableModVersions.contains(modVersionName) } ?: true
+        }
     }
 
     fun refresh(context: Context): List<AppInfo> {
         val pm = context.packageManager
-        val packages = pm.getInstalledPackages(0)
+        val packages = pm.getInstalledPackages(PackageManager.GET_META_DATA)
 
         val installedApps = packages
             .filter { it.packageName == GRINDR_PACKAGE_NAME || isClone(it.packageName) }
             .map {
-                val vName = it.versionName
-                val updateNeeded = calculateUpdateNeeded(vName)
+                val versionName = it.versionName!!
+                val modVersion = it.applicationInfo?.metaData?.getString(MOD_VERSION_METADATA_KEY)
+                val updateNeeded = calculateUpdateNeeded(versionName, modVersion)
+                val updateAvailable = calculateUpdateAvailable(versionName, modVersion)
+
                 AppInfo(
                     it.packageName,
                     getAppName(it.packageName, pm),
                     isClone = isClone(it.packageName),
                     isInstalled = true,
-                    needsUpdate = updateNeeded,
-                    versionName = vName
+                    updateNeeded = updateNeeded,
+                    updateAvailable = updateAvailable,
+                    versionName = versionName,
+                    modVersionName = modVersion
                 )
             }
-        
+
         val installedPackages = installedApps.map { it.packageName }.toSet()
         val settingsClones = Config.readRemoteConfig().optJSONObject("clones")?.keys()?.asSequence()?.toList() ?: emptyList()
         val uninstalledClones = settingsClones.filter { 
@@ -112,7 +137,7 @@ object AppCloneUtils {
     fun getNextCloneNumber(context: Context): Int {
         refresh(context)
 
-        if (apps.value.size >= MAX_CLONES) {
+        if (hasReachedMaxClones()) {
             Timber.e("Maximum number of clones ($MAX_CLONES) reached")
             return -1
         }
@@ -129,19 +154,25 @@ object AppCloneUtils {
     /**
      * Check if maximum number of clones is reached
      */
-    fun hasReachedMaxClones(context: Context): Boolean {
-        return apps.value.size >= MAX_CLONES
+    fun hasReachedMaxClones(): Boolean {
+        return getClones().size >= MAX_CLONES
+    }
+
+    fun getClones(): List<AppInfo> {
+        return apps.value.filter { it.isClone }
     }
 
     /**
      * Data class to hold an app's package name and display name
      */
     data class AppInfo(
-        val packageName: String, 
+        val packageName: String,
         val appName: String,
         val isClone: Boolean,
         val isInstalled: Boolean = true,
-        val needsUpdate: Boolean = false,
-        val versionName: String? = null
+        val updateNeeded: Boolean = false,
+        val updateAvailable: Boolean = false,
+        val versionName: String? = null,
+        val modVersionName: String? = null
     )
 }
