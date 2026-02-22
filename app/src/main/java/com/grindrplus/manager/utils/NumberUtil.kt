@@ -1,4 +1,4 @@
-package com.grindrplus.manager.installation.steps
+package com.grindrplus.manager.utils
 
 
 private val ones = arrayOf(

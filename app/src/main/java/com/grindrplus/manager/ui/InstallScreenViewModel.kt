@@ -72,7 +72,6 @@ class InstallScreenViewModel : ViewModel() {
 
     fun clearLogs() {
         logEntries.clear()
-        addLog("Successfully cleared logs!", LogType.SUCCESS)
     }
 
     fun loadVersionData(manifestUrl: String) {
@@ -128,16 +127,17 @@ class InstallScreenViewModel : ViewModel() {
                         .find { it.packageName == packageName }?.appName
                         ?: AppCloneUtils.formatAppName(packageName)
 
-                    val apiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-                    Installation.AppInfoOverride(packageName, cloneName, apiKey)
+                    Installation.AppInfoOverride(packageName, cloneName)
                 }
+
+                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
 
                 val installation = Installation(
                     context,
                     versionName,
                     sourceFiles = sourceFileSet.sourceFiles,
                     appInfo = appInfo,
+                    mapsApiKey = mapsApiKey,
                     embedLSPatch = !isLSPosed(),
                 )
 

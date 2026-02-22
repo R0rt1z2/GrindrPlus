@@ -9,8 +9,12 @@ import com.grindrplus.manager.utils.StorageUtils
 import java.io.File
 import java.io.IOException
 
-// 1st
-class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
+/**
+ * check available space by specified directory
+ */
+class CheckStorageSpaceStep(
+    private val dir: File
+) : BaseStep() {
     override val name = "Checking system resources"
 
     override suspend fun doExecute(
@@ -18,7 +22,7 @@ class CheckStorageSpaceStep(private val installFolder: File) : BaseStep() {
         print: Print,
     ) {
         val required = 200 * 1024 * 1024
-        val availableStorage = StorageUtils.getAvailableSpace(installFolder)
+        val availableStorage = StorageUtils.getAvailableSpace(dir)
 
         print("Available storage space: ${availableStorage / 1024 / 1024}MB")
 

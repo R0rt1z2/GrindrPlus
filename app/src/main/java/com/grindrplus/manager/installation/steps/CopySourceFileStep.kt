@@ -12,9 +12,11 @@ import timber.log.Timber
 import java.io.File
 import java.io.IOException
 
-// 2nd for Grindr, 4th for mod
-class CopyStep(
-    private val file: File,
+/**
+ * Copy user-selected local file to the app's cache folder
+ */
+class CopySourceFileStep(
+    private val tergetFile: File,
     private val uri: Uri,
     private val fileType: String
 ) : BaseStep() {
@@ -30,33 +32,33 @@ class CopyStep(
                 } ?: -1L
         }
 
-        if (file.exists() && file.length() > 0) {
-            val sizeMatches = expectedSize == -1L || file.length() == expectedSize
-            if (sizeMatches && validateFile(file, "Copy")) {
+        if (tergetFile.exists() && tergetFile.length() > 0) {
+            val sizeMatches = expectedSize == -1L || tergetFile.length() == expectedSize
+            if (sizeMatches && validateFile(tergetFile, "Copy")) {
                 print("Existing $fileType file found with matching size, skipping copy")
                 return
             } else {
                 val reason =
-                    if (!sizeMatches) "size mismatch (expected $expectedSize, got ${file.length()})" else "corruption"
-                Timber.tag("Copy").w("Existing file ${file.name} is $reason, copying again")
-                file.delete()
+                    if (!sizeMatches) "size mismatch (expected $expectedSize, got ${tergetFile.length()})" else "corruption"
+                Timber.tag("Copy").w("Existing file ${tergetFile.name} is $reason, copying again")
+                tergetFile.delete()
             }
         }
 
         withContext(Dispatchers.IO) {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                file.outputStream().use { outputStream ->
+                tergetFile.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
             } ?: throw IOException("Failed to open input stream for URI: $uri")
 
-            if (expectedSize != -1L && file.length() != expectedSize) {
-                file.delete()
-                throw IOException("File size mismatch for $fileType: expected $expectedSize, got ${file.length()}")
+            if (expectedSize != -1L && tergetFile.length() != expectedSize) {
+                tergetFile.delete()
+                throw IOException("File size mismatch for $fileType: expected $expectedSize, got ${tergetFile.length()}")
             }
         }
 
-        if (!file.exists() || file.length() <= 0) {
+        if (!tergetFile.exists() || tergetFile.length() <= 0) {
             throw IOException("Failed to copy $fileType: file is missing or empty")
         }
 
