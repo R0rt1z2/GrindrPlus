@@ -2,13 +2,13 @@ package com.grindrplus.manager.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import timber.log.Timber
 import com.grindrplus.core.Config
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.grindrplus.BuildConfig
+import com.grindrplus.core.Constants.MOD_VERSION_METADATA_KEY
 
 object AppCloneUtils {
     const val MAX_CLONES = 5
@@ -160,6 +160,10 @@ object AppCloneUtils {
 
     fun getClones(): List<AppInfo> {
         return apps.value.filter { it.isClone }
+    }
+
+    fun addNewClone(appInfo: AppInfo) {
+        _apps.value += appInfo
     }
 
     /**

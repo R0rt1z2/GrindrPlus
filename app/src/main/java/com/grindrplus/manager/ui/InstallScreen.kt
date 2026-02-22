@@ -98,10 +98,6 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             AppCloneUtils.refresh(context)
             val isStillInstalled = AppCloneUtils.findApp(selectedPackageName)?.isInstalled ?: false
             viewModel.uninstallCompleted(selectedPackageName, isStillInstalled)
-            if (!isStillInstalled) {
-                selectedPackageName = GRINDR_PACKAGE_NAME
-                Config.setCurrentPackage(GRINDR_PACKAGE_NAME)
-            }
         }
     }
 
@@ -137,6 +133,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             onDismiss = { showNewPackageInfoDialog = false },
             onConfirm = { appInfo ->
                 showNewPackageInfoDialog = false
+                AppCloneUtils.addNewClone(appInfo)
                 selectedPackageName = appInfo.packageName
                 Config.setCurrentPackage(appInfo.packageName)
                 viewModel.addLog("Created new clone: ${appInfo.appName} (${appInfo.packageName})", LogType.INFO)
