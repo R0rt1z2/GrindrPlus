@@ -177,23 +177,3 @@ fun NewPackageInfoDialog(
         }
     }
 }
-
-@Composable
-fun MaxClonesReachedDialog(
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Maximum Clones Reached") },
-        text = {
-            Text("GrindrPlus only supports up to 5 clones. Please uninstall an existing clone before creating a new one.")
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss
-            ) {
-                Text("OK")
-            }
-        }
-    )
-}
