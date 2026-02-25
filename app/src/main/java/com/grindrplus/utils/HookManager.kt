@@ -70,7 +70,7 @@ class HookManager {
 
             hookList.forEach { hook ->
                 Config.initHookSettings(
-                    hook.hookName, hook.hookDesc, true
+                    hook.hookName, hook.hookDesc, false
                 )
             }
 

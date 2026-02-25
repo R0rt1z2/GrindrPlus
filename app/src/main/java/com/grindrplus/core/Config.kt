@@ -114,7 +114,7 @@ object Config {
         }
     }
 
-    private fun getCurrentPackageConfig(): JSONObject {
+    fun getCurrentPackageConfig(): JSONObject {
         val clones = localConfig.optJSONObject("clones")
             ?: JSONObject().also { localConfig.put("clones", it) }
 
