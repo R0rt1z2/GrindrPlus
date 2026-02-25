@@ -24,6 +24,7 @@ import com.grindrplus.utils.RetrofitUtils.getFailValue
 import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
+import com.grindrplus.utils.withSuspendResult
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import org.json.JSONObject
@@ -45,24 +46,30 @@ class BanManagement : Hook(
 
         RetrofitUtils.hookService(
             authService,
-        ) { originalHandler, proxy, method, args ->
-            val result = originalHandler.invoke(proxy, method, args)
+        ) { originalHandler, originalProxy, method, args ->
+            val result = originalHandler.invoke(originalProxy, method, args)
 
-            val isLogin = args.size > 1 && args[1] != null &&
-                    args[1]!!::class.java.name.contains("LoginEmailRequest")
-            when {
-                isLogin -> {
-                   return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->
+            val isLogin = args.size > 1
+                    && args[1] != null
+                    && args[1]?.javaClass?.name?.contains("LoginEmailRequest") == true
+
+            if (isLogin) {
+                withSuspendResult(args, result) { args, result ->
+                    try {
+                        logi("BanManagement: Intercepting login attempt: ${method.name}")
                         handleLoginResult(result)
-                        result
+                    } catch (_: Throwable) {
+                        // Ignore exceptions here
                     }
+
+                    return@withSuspendResult result
                 }
             }
 
-            return@hookService originalHandler.invoke(proxy, method, args)
+            result
         }
 
-		// search for 'Settings.Secure.getString(context.getContentResolver(), "android_id");' in deviceUtility class
+        // search for 'Settings.Secure.getString(context.getContentResolver(), "android_id");' in deviceUtility class
         findClass(deviceUtility).hook("h", HookStage.AFTER) { param ->
             val androidId = Config.get("android_device_id", "") as String
             if (androidId.isNotEmpty()) {
