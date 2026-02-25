@@ -7,7 +7,6 @@ import android.graphics.drawable.GradientDrawable
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Constants
 import com.grindrplus.core.Logger
 import java.time.Instant
 import java.time.LocalDateTime
@@ -16,7 +15,7 @@ import java.time.format.DateTimeFormatter
 
 object Utils {
     fun getId(name: String, defType: String, context: Context): Int {
-        return context.resources.getIdentifier(name, defType, Constants.GRINDR_PACKAGE_NAME)
+        return context.resources.getIdentifier(name, defType, context.packageName)
     }
 
     fun createButtonDrawable(color: Int): GradientDrawable {
