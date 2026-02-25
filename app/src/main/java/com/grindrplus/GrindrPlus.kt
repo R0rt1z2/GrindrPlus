@@ -505,12 +505,12 @@ object GrindrPlus {
         try {
             val dialog = AlertDialog.Builder(activity)
                 .setTitle("Age Verification Required")
-                .setMessage("You are accessing Grindr from the UK where age verification is legally mandated.\n\n" +
+                .setMessage("You are accessing Grindr from a country where age verification is legally mandated.\n\n" +
                         "LEGAL COMPLIANCE NOTICE:\n" +
-                        "GrindrPlus does NOT bypass, disable, or interfere with age verification systems. Any attempt to circumvent age verification requirements is illegal under UK law and is strictly prohibited.\n\n" +
+                        "GrindrPlus does NOT bypass, disable, or interfere with age verification systems. Any attempt to circumvent age verification requirements may be illegal\n\n" +
                         "MANDATORY REQUIREMENTS:\n" +
                         "1. Complete age verification using the official Grindr application\n" +
-                        "2. Comply with all UK legal verification processes\n" +
+                        "2. Comply with all legally required verification processes\n" +
                         "3. Install GrindrPlus only after successful verification through official channels\n\n" +
                         "WARNING:\n" +
                         "The developers of this module are not responsible for any legal consequences resulting from non-compliance with age verification requirements.")
