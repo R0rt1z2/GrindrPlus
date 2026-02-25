@@ -1,11 +1,8 @@
 package com.grindrplus.hooks
 
 import com.grindrplus.utils.Hook
-import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
-import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
-import com.grindrplus.utils.RetrofitUtils.createServiceProxy
-import com.grindrplus.utils.hook
+import com.grindrplus.utils.RetrofitUtils.blockServiceMethods
 
 class ChatIndicators : Hook(
     "Chat indicators",
@@ -23,16 +20,6 @@ class ChatIndicators : Hook(
             RetrofitUtils.findPOSTMethod(chatRestServiceClass, it)?.name
         }
 
-        findClass(RETROFIT_NAME)
-            .hook("create", HookStage.AFTER) { param ->
-                val service = param.getResult()
-                if (service != null && chatRestServiceClass.isAssignableFrom(service.javaClass)) {
-                    param.setResult(createServiceProxy(
-                        service,
-                        chatRestServiceClass,
-                        methodBlacklist.toTypedArray()
-                    ))
-                }
-            }
+        blockServiceMethods(chatRestServiceClass, methodBlacklist.toSet())
     }
 }
