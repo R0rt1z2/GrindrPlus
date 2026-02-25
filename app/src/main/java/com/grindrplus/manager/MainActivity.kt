@@ -292,7 +292,6 @@ class MainActivity : ComponentActivity() {
                         patchInfoDialog = true
                         plausible?.pageView("app://grindrplus/first_launch")
                         Config.put("first_launch", false)
-
                     }
                 }
             }
