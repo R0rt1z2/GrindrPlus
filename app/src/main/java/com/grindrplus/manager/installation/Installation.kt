@@ -67,9 +67,9 @@ class Installation(
                 appName = appName,
                 debuggable = debuggable,
             ),
+            SignClonedGrindrApk(keyStoreUtils, unzipFolder),
             PatchApkStep(unzipFolder, outputDir, modFile,
                 keyStoreUtils.keyStore, mapsApiKey, embedLSpatch),
-            SignClonedGrindrApk(keyStoreUtils, outputDir),
             installStep
         ),
         operationName = "clone",
