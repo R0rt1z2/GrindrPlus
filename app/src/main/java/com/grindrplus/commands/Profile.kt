@@ -215,7 +215,7 @@ class Profile(
     @Command("id", help = "Get and copy profile IDs")
     fun id(args: List<String>) {
         val accountCreationTime = formatEpochSeconds(
-            GrindrPlus.spline.invert(sender.toDouble()).toLong())
+            GrindrPlus.accountCreationTimeSpline.invert(sender.toDouble()).toLong())
 
         GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
             val dialogView = LinearLayout(activity).apply {
