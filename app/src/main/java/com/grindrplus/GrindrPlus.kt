@@ -29,7 +29,6 @@ import com.grindrplus.utils.PCHIP
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
 import dalvik.system.DexClassLoader
-import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.callMethod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +80,7 @@ object GrindrPlus {
     private var isMainInitialized = false
     private var isInstanceManagerInitialized = false
 
-    var spline = PCHIP(
+    var accountCreationTimeSpline = PCHIP(
         listOf(
             1238563200L to 0,          // 2009-04-01
             1285027200L to 1000000,    // 2010-09-21
@@ -100,7 +99,8 @@ object GrindrPlus {
             1735229820L to 718934000,  // 2024-12-26
             1738065780L to 730248000,  // 2025-01-29
             1739059200L to 733779000,  // 2025-02-09
-            1741564800L to 744008000   // 2025-03-10
+            1741564800L to 744008000,  // 2025-03-10
+            1771974000L to 854538000,  // 2026-02-25
         )
     )
 
@@ -218,7 +218,7 @@ object GrindrPlus {
         }
 
         fetchRemoteData(splineDataEndpoint) { points ->
-            spline = PCHIP(points)
+            accountCreationTimeSpline = PCHIP(points)
             Logger.i("Updated spline with remote data", LogSource.MODULE)
         }
 
