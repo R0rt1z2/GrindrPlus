@@ -9,7 +9,7 @@ interface IBridgeService {
     boolean shouldRegenAndroidId(String packageName);
     String getForcedLocation(String packageName);
     void deleteForcedLocation(String packageName);
-    void logBlockEvent(String profileId, String displayName, boolean isBlock, String packageName);
+    void logBlockEvent(String profileId, String displayName, String eventType, String packageName);
     String getBlockEvents();
     boolean isRooted();
     boolean isLSPosed();

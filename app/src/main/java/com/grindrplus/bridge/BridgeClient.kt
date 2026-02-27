@@ -402,7 +402,7 @@ class BridgeClient(private val context: Context) {
         }
     }
 
-    fun logBlockEvent(profileId: String, displayName: String, isBlock: Boolean, packageName: String) {
+    fun logBlockEvent(profileId: String, displayName: String, eventType: String, packageName: String) {
         if (!isBound.get()) {
             if (connectBlocking(3000)) {
                 Logger.d("Connected to service on-demand for logBlockEvent", LogSource.BRIDGE)
@@ -413,7 +413,7 @@ class BridgeClient(private val context: Context) {
         }
 
         try {
-            bridgeService?.logBlockEvent(profileId, displayName, isBlock, packageName)
+            bridgeService?.logBlockEvent(profileId, displayName, eventType, packageName)
         } catch (e: Exception) {
             Logger.e("Error logging block event: ${e.message}", LogSource.BRIDGE)
         }

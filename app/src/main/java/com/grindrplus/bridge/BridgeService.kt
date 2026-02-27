@@ -296,7 +296,7 @@ class BridgeService : Service() {
         override fun logBlockEvent(
             profileId: String,
             displayName: String,
-            isBlock: Boolean,
+            eventType: String,
             packageName: String
         ) {
             ioExecutor.execute {
@@ -311,14 +311,14 @@ class BridgeService : Service() {
                         val event = JSONObject().apply {
                             put("profileId", profileId)
                             put("displayName", displayName)
-                            put("eventType", if (isBlock) "block" else "unblock")
+                            put("eventType", eventType)
                             put("timestamp", System.currentTimeMillis())
                             put("packageName", packageName)
                         }
                         eventsArray.put(event)
                         blockEventsFile.writeText(eventsArray.toString(4))
                         Logger.d(
-                            "Logged ${if (isBlock) "block" else "unblock"} event " +
+                            "Logged $eventType event " +
                                     "for profile ${profileId.take(profileId.length - 4) + "****"}",
                             LogSource.BRIDGE
                         )
