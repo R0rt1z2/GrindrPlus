@@ -37,21 +37,27 @@ class Installation(
     private val modFile = File(folder, "mod-$version.zip")
     private val bundleFile = File(folder, "grindr-$version.zip")
 
+	private val downloadModStep = DownloadStep(modFile, modUrl, "mod")
     private val installStep = InstallApkStep(outputDir)
     private val patchApkStep = PatchApkStep(unzipFolder, outputDir, modFile, keyStoreUtils.keyStore, mapsApiKey)
     private val commonSteps = listOf(
         // Order matters
         CheckStorageSpaceStep(folder),
         DownloadStep(bundleFile, grindrUrl, "Grindr bundle"),
-        DownloadStep(modFile, modUrl, "mod"),
         ExtractBundleStep(bundleFile, unzipFolder),
     )
 
-    suspend fun install(print: Print) = performOperation(
-        steps = commonSteps + listOf(patchApkStep, installStep),
-        operationName = "install-$version",
-        print = print,
-    )
+	suspend fun install(print: Print) = performOperation(
+		steps = commonSteps + listOf(downloadModStep, patchApkStep, installStep),
+		operationName = "install-$version",
+		print = print,
+	)
+
+	suspend fun installUnpatched(print: Print) = performOperation(
+		steps = commonSteps + listOf(InstallApkStep(unzipFolder)),
+		operationName = "install-unpatched-$version",
+		print = print,
+	)
 
     suspend fun cloneGrindr(
         packageName: String,
@@ -61,6 +67,7 @@ class Installation(
         print: Print,
     ) = performOperation(
         steps = commonSteps + listOf(
+			downloadModStep,
             CloneGrindrStep(
                 folder = unzipFolder,
                 packageName = packageName,
