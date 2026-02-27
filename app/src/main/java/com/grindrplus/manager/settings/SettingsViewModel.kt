@@ -277,18 +277,6 @@ class SettingsViewModel(
                         }
                     ),
                     SwitchSetting(
-                        id = "force_old_anti_block_behavior",
-                        title = "Force old AntiBlock behavior",
-                        description = "Use the old AntiBlock behavior (don't use this, required for testing)",
-                        isChecked = Config.get("force_old_anti_block_behavior", false) as Boolean,
-                        onCheckedChange = {
-                            viewModelScope.launch {
-                                Config.put("force_old_anti_block_behavior", it)
-                                loadSettings()
-                            }
-                        }
-                    ),
-                    SwitchSetting(
                         id = "anti_block_use_toasts",
                         title = "Use toasts for AntiBlock hook",
                         description = "Instead of receiving Android notifications, use toasts for block/unblock notifications",
