@@ -49,23 +49,6 @@ class AntiBlock : Hook(
             originalHandler.invoke(originalProxy, method, args)
         }
 
-        // Hook ConversationDeleteNotification (WS Event UI update)
-        findClass(conversationDeleteNotification)
-            .hookConstructor(HookStage.BEFORE) { param ->
-                try {
-                    @Suppress("UNCHECKED_CAST")
-                    val conversationIds = param.args().firstOrNull() as? List<String> ?: emptyList()
-                    val incomingBlockIds = conversationIds.filter { id -> isIncomingBlock(id) }
-
-                    if (incomingBlockIds.isEmpty()) {
-                        logd("ConversationDeleteNotification hook fired, but no incoming blocks found in ids: $conversationIds")
-                    }
-                } catch (e: Exception) {
-                    loge("Error in ConversationDeleteNotification hook: ${e.message}, ${e.stackTrace.joinToString("\n")}")
-                }
-            }
-
-
         // WS Notifications listener for live events
         scope.launch {
             GrindrPlus.serverNotifications.collect { notification ->
@@ -172,7 +155,7 @@ class AntiBlock : Hook(
 
             val resolvedName = getNameFromDatabase(conversationId) ?: "User"
 
-
+            // should not be empty for v7 requests
             if (profilesArray == null || profilesArray.length() == 0) {
                 logd("logic: Profile missing fully. Treating as block by $resolvedName ($profileId")
                 sendNotification(profileId, resolvedName, EventType.BLOCK)
@@ -180,16 +163,21 @@ class AntiBlock : Hook(
             }
 
             val profile = profilesArray.getJSONObject(0)
-            val displayName = profile.optString("displayName", resolvedName)
+            val profileDisplayName = profile.optString("displayName", "")
+
+            val displayName = when (profileDisplayName) {
+                "3", "4", "" -> resolvedName
+                else -> profileDisplayName
+            }
             val nameAndId = "$displayName ($profileId)"
 
-            when (displayName) {
+            when (profileDisplayName) {
                 "4" -> {
                     logd("Detected block by $nameAndId")
                     sendNotification(profileId, displayName, EventType.BLOCK)
                 }
                 "3" -> {
-                    logd("Profile $nameAndId was deleted, not a block.")
+                    logd("Profile $nameAndId was deleted")
                     sendNotification(profileId, displayName, EventType.PROFILE_DELETE)
                 }
                 else -> {
@@ -287,12 +275,15 @@ class AntiBlock : Hook(
 
     private fun getNameFromDatabase(conversationId: String): String? {
         try {
-            return (DatabaseHelper.query(
+            val name = (DatabaseHelper.query(
                 "SELECT name FROM chat_conversations WHERE conversation_id = ?",
                 arrayOf(conversationId)
             ).firstOrNull()
                 ?.get("name") as? String)
                 ?.takeIf { name -> name.isNotEmpty() }
+
+            logd("DB query for resolvedName: $name")
+            return name
         } catch (e: Exception) {
             loge("DB query for resolvedName failed: ${e.message}")
             return null
