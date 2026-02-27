@@ -138,11 +138,18 @@ class AntiBlock : Hook(
     }
 
     private fun fetchProfileData(profileId: String): String {
+        // GET v4/profiles/$profileId
+        // returns a single profile, only if not blocked (either way) and not deleted
+        // GET v7/profiles/$profileId
+        // returns a single profile with displayName 3 if deleted, 4 if blocked (either way)
+        // POST v3/profiles
+        // returns a list of non-deleted profiles, not differentiated by block status
         val response = GrindrPlus.httpClient.sendRequest(
-            url = "https://grindr.mobi/v4/profiles/$profileId",
+            url = "https://grindr.mobi/v7/profiles/$profileId",
             method = "GET"
         )
         val responseBody = response.body?.string()
+
         if (response.isSuccessful) {
             logd("fetchProfileData: HTTP ${response.code}: $responseBody")
             if (responseBody.isNullOrBlank()) {
@@ -150,6 +157,7 @@ class AntiBlock : Hook(
                 throw Exception("HTTP ${response.code}: response is null or blank")
             }
             return responseBody
+
         } else {
             logd("fetchProfileData: HTTP ${response.code}: $responseBody")
             throw Exception("HTTP ${response.code}: $responseBody")
