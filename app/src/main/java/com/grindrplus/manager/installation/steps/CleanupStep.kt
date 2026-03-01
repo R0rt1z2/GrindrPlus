@@ -13,7 +13,7 @@ class CleanupStep(
     private val dirs: Installation.Directories,
     private vararg val aditionalFiles: File
 ) : BaseStep() {
-    override val name = "Migrate temporary files"
+    override val name = "Remove temporary files"
 
 
     override suspend fun doExecute(
