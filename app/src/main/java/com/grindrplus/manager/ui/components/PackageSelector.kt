@@ -26,11 +26,16 @@ fun PackageSelector(
 
     fun formatPackageName(packageName: String): String {
         val app = apps.firstOrNull { it.packageName == packageName }
-        if (app?.isClone == false)
-            return "Main Grindr App"
+        if (app == null)
+            return packageName
 
-        return app?.let {
-            val name = "Clone: ${it.appName}"
+        val name =
+            if (!app.isClone)
+                "Main Grindr App"
+            else
+                "Clone: ${app.appName}"
+
+        return app.let {
             if (!it.isInstalled) {
                 "$name (Not installed)"
             } else if (it.updateNeeded) {
@@ -40,7 +45,7 @@ fun PackageSelector(
             } else {
                 name
             }
-        } ?: packageName
+        }
     }
 
     Column(
