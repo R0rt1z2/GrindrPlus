@@ -6,7 +6,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.h2n
@@ -85,7 +84,7 @@ class ProfileDetails : Hook(
         findClass(profileBarView).hook("setProfile", HookStage.BEFORE) { param ->
             val profileId = getObjectField(param.arg(0), "profileId") as String
             val accountCreationTime =
-                formatEpochSeconds(GrindrPlus.spline.invert(profileId.toDouble()).toLong())
+                formatEpochSeconds(GrindrPlus.accountCreationTimeSpline.invert(profileId.toDouble()).toLong())
             val distance = callMethod(param.arg(0), "getDistance") ?: "Unknown (hidden)"
             setObjectField(param.arg(0), "distance", distance)
 
