@@ -527,11 +527,7 @@ class MainActivity : ComponentActivity() {
 
                                 Text(
                                     text = buildAnnotatedString {
-                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope. ")
-
-                                        withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                                            append("Do not use the Install section if you're using LSPosed.")
-                                        }
+                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope.")
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(bottom = 16.dp)
