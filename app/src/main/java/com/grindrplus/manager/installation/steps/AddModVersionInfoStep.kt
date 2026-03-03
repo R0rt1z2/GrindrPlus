@@ -2,22 +2,18 @@ package com.grindrplus.manager.installation.steps
 
 import android.content.Context
 import com.github.diamondminer88.zip.ZipWriter
+import com.grindrplus.core.Constants
 import com.grindrplus.manager.installation.BaseStep
 import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.ManifestPatcher
 import java.io.File
 import java.util.zip.ZipFile
 
-/**
- * replace the app name and package name in the apk
- * modifies the provided apk files, does not copy them to output folder
- */
-class CloneGrindrStep(
-    val dir: File,
-    val packageName: String,
-    val appName: String,
+class AddModVersionInfoStep(
+    private val dir: File,
+    private val modVersion: String,
 ) : BaseStep() {
-    override val name = "Clone grindr apk"
+    override val name = "Add Mod version metadata"
 
 
     override suspend fun doExecute(
@@ -37,19 +33,16 @@ class CloneGrindrStep(
                 ?: throw IllegalStateException("No manifest in ${file.name}")
 
             ZipWriter(file, true).use { zip ->
-                val patchedManifestBytes =
-                    if (file.name.contains("base")) {
-                        print("Changing package and app name in ${file.name}")
-                        ManifestPatcher.patchManifest(
-                            manifestBytes = manifest,
-                            packageName = packageName,
-                            appName = appName,
-                            debuggable = false,
-                        )
-                    } else {
-                        print("Changing package name in ${file.name}")
-                        ManifestPatcher.renamePackage(manifest, packageName)
-                    }
+                var patchedManifestBytes = manifest
+
+                if (file.name.contains("base")) {
+                    print("Injecting MOD_VERSION into ${file.name}")
+                    patchedManifestBytes = ManifestPatcher.addMetadata(
+                        manifestBytes = patchedManifestBytes,
+                        metadataName = Constants.MOD_VERSION_METADATA_KEY,
+                        metadataValue = modVersion
+                    )
+                }
 
 //                print("Deleting old AndroidManifest.xml in ${file.name}")
                 zip.deleteEntry(

@@ -23,7 +23,16 @@ import java.util.Locale
 
 class KeyStoreUtils(context: Context) {
     val keyStore by lazy {
-        File(context.cacheDir, "keystore.jks").also {
+        val fileInCache = File(context.cacheDir, "keystore.jks")
+        val fileInFiles = File(context.filesDir, "keystore.jks")
+
+        // migrate from cache to files, so it does not get deleted on cache cleanup
+        if (fileInCache.exists() && !fileInFiles.exists()) {
+            fileInCache.copyTo(fileInFiles)
+            fileInCache.delete()
+        }
+
+        fileInFiles.also {
             if (!it.exists()) {
                 try {
                     newKeystore(it)

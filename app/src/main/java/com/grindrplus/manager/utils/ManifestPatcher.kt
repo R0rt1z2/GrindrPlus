@@ -228,6 +228,64 @@ object ManifestPatcher {
                                         TYPE_INT_BOOLEAN,
                                         1
                                     )
+
+                                    super.end()
+                                }
+                            }
+
+                            else -> nv
+                        }
+                    }
+                }
+        })
+
+        return writer.toByteArray()
+    }
+
+
+    fun addMetadata(
+        manifestBytes: ByteArray,
+        metadataName: String,
+        metadataValue: String,
+    ): ByteArray {
+        val reader = AxmlReader(manifestBytes)
+        val writer = AxmlWriter()
+
+        reader.accept(object : AxmlVisitor(writer) {
+            override fun child(ns: String?, name: String?) =
+                object : ReplaceAttrsVisitor(
+                    super.child(ns, name),
+                    mapOf()
+                ) {
+
+                    override fun child(ns: String?, name: String): NodeVisitor {
+                        val nv = super.child(ns, name)
+
+
+                        return when (name) {
+                            "application" -> object : ReplaceAttrsVisitor(
+                                nv,
+                                mapOf()
+                            ) {
+                                override fun end() {
+
+                                    val metaData = super.child(null, "meta-data")
+                                    metaData.attr(
+                                        ANDROID_NAMESPACE,
+                                        "name",
+                                        android.R.attr.name,
+                                        TYPE_STRING,
+                                        metadataName
+                                    )
+                                    metaData.attr(
+                                        ANDROID_NAMESPACE,
+                                        "value",
+                                        android.R.attr.value,
+                                        TYPE_STRING,
+                                        metadataValue
+                                    )
+                                    metaData.end()
+
                                     super.end()
                                 }
                             }

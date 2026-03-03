@@ -32,9 +32,9 @@
         <meta-data
                 android:name="xposedminversion"
                 android:value="93" />
-        <meta-data
-                android:name="xposedscope"
-                android:value="com.grindrapp.android" />
+		<meta-data
+			android:name="xposedscope"
+			android:value="com.grindrapp.android;com.grindrapp.android.one;com.grindrapp.android.two;com.grindrapp.android.three;com.grindrapp.android.four;com.grindrapp.android.five" />
 
         <service
             android:name=".bridge.BridgeService"

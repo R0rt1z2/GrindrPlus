@@ -7,14 +7,16 @@ import com.grindrplus.manager.utils.SessionInstaller
 import java.io.File
 import java.io.IOException
 
-// Last
+/**
+ * Install all apk files in the directory
+ */
 class InstallApkStep(
-    private val outputDir: File
+    private val dir: File
 ) : BaseStep() {
-    override val name = "Installing Grindr APK"
+    override val name = "Install Grindr APK"
 
     override suspend fun doExecute(context: Context, print: Print) {
-        val patchedFiles = outputDir.listFiles()?.toList() ?: emptyList()
+        val patchedFiles = dir.listFiles()?.toList() ?: emptyList()
         if (patchedFiles.isEmpty()) {
             throw IOException("No patched APK files found for installation")
         }
@@ -29,7 +31,7 @@ class InstallApkStep(
 
         print("Starting installation of ${filteredApks.size} APK files")
         filteredApks.forEachIndexed { index, file ->
-            print("  Installing (${index + 1}/${filteredApks.size}): ${file.name}")
+            print("  ${index + 1}. ${file.name}")
         }
 
         print("Launching installer...")
@@ -50,7 +52,5 @@ class InstallApkStep(
         if (!success) {
             throw IOException("Installation failed")
         }
-
-        print("APK installation completed successfully")
     }
 }

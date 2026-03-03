@@ -1,7 +1,10 @@
 package com.grindrplus.manager.ui.components
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -40,13 +43,8 @@ fun FileDialog(
     var bundleUri by remember { mutableStateOf<Uri?>(null) }
     var modUri by remember { mutableStateOf<Uri?>(null) }
 
-    val bundleFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { bundleUri = it } }
-
-    val modFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { modUri = it } }
+    val bundleFilePicker = rememberLauncherFilePicker { uri -> uri?.let { bundleUri = it } }
+    val modFilePicker = rememberLauncherFilePicker { uri -> uri?.let { modUri = it } }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -73,7 +71,7 @@ fun FileDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
-                    onClick = { bundleFilePicker.launch("*/*") },
+                    onClick = { bundleFilePicker.launch(arrayOf("*/*")) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(bundleUri?.lastPathSegment ?: "Select Grindr Bundle")
@@ -82,7 +80,7 @@ fun FileDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedButton(
-                    onClick = { modFilePicker.launch("*/*") },
+                    onClick = { modFilePicker.launch(arrayOf("*/*")) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(modUri?.lastPathSegment ?: "Select Mod File")
@@ -114,4 +112,21 @@ fun FileDialog(
             }
         }
     }
+}
+
+@Composable
+fun rememberLauncherFilePicker(onResult: (uri: Uri?) -> Unit): ManagedActivityResultLauncher<Array<String>, Uri?> {
+    return rememberLauncherForActivityResult(
+        contract = object : ActivityResultContracts.OpenDocument() {
+            override fun createIntent(context: Context, input: Array<String>): Intent {
+                return super.createIntent(context, input).apply {
+                    putExtra(
+                        DocumentsContract.EXTRA_INITIAL_URI,
+                        Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
+                    )
+                }
+            }
+        },
+        onResult
+    )
 }

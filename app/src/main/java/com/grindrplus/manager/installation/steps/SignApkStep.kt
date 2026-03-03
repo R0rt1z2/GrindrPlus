@@ -6,12 +6,21 @@ import com.grindrplus.manager.installation.Print
 import com.grindrplus.manager.utils.KeyStoreUtils
 import java.io.File
 
-class SignClonedGrindrApk(val keyStoreUtils: KeyStoreUtils, val outputDir: File): BaseStep() {
+/**
+ * sign the apk files (in-place)
+ */
+class SignApkStep(
+    val keyStoreUtils: KeyStoreUtils,
+    val dir: File
+): BaseStep() {
+    override val name: String = "Sign modified Grindr APK"
+
+
     override suspend fun doExecute(
         context: Context,
         print: Print,
     ) {
-        for (file in outputDir.listFiles()!!) {
+        for (file in dir.listFiles()!!) {
             if (!file.name.endsWith(".apk")) {
                 print("Skipping ${file.name} as it is not an APK")
                 continue
@@ -28,7 +37,7 @@ class SignClonedGrindrApk(val keyStoreUtils: KeyStoreUtils, val outputDir: File)
 //            print("Signing ${outFile.name}...")
 
             try {
-                keyStoreUtils.signApk(file, File(outputDir, "${file.name}-signed.apk"))
+                keyStoreUtils.signApk(file, File(dir, "${file.name}-signed.apk"))
                 //outFile.delete()
                 file.delete()
             } catch (e: Exception) {
@@ -37,6 +46,4 @@ class SignClonedGrindrApk(val keyStoreUtils: KeyStoreUtils, val outputDir: File)
             }
         }
     }
-
-    override val name: String = "Sign cloned Grindr APK"
 }
