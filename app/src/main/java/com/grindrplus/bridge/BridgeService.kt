@@ -384,10 +384,6 @@ class BridgeService : Service() {
             }
         }
 
-        override fun isRooted(): Boolean {
-            return com.grindrplus.manager.utils.isRooted(applicationContext)
-        }
-
         override fun isLSPosed(): Boolean {
             return com.grindrplus.manager.utils.isLSPosed()
         }

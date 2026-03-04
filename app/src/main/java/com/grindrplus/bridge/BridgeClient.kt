@@ -581,24 +581,6 @@ class BridgeClient(private val context: Context) {
         }
     }
 
-    fun isRooted(): Boolean {
-        if (!isBound.get()) {
-            if (connectBlocking(3000)) {
-                Logger.d("Connected to service on-demand for isRooted", LogSource.BRIDGE)
-            } else {
-                Logger.w("Cannot check root status, service not bound", LogSource.BRIDGE)
-                return false
-            }
-        }
-
-        return try {
-            bridgeService?.isRooted() ?: false
-        } catch (e: Exception) {
-            Logger.e("Error checking root status: ${e.message}", LogSource.BRIDGE)
-            false
-        }
-    }
-
     fun isLSPosed(): Boolean {
         if (!isBound.get()) {
             if (connectBlocking(3000)) {
