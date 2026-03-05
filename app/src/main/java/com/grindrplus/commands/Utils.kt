@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.utils.UiHelper.showToast
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -18,9 +19,9 @@ class Utils(
     @Command("shell", help = "Run a shell command and display output")
     fun shell(args: List<String>) {
         if (args.isEmpty()) {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide a shell command to execute"
+            showToast(
+                "Please provide a shell command to execute",
+                Toast.LENGTH_LONG
             )
             return
         }
@@ -85,38 +86,38 @@ class Utils(
     fun prefix(args: List<String>) {
         val prefix = Config.get("command_prefix", "/")
         when {
-            args.isEmpty() -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "The current command prefix is $prefix"
+            args.isEmpty() -> showToast(
+                "The current command prefix is $prefix",
+                Toast.LENGTH_LONG
             )
-            args[0].isBlank() -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Invalid command prefix"
+            args[0].isBlank() -> showToast(
+                "Invalid command prefix",
+                Toast.LENGTH_LONG
             )
             args[0] == "reset" || args[0] == "clear" -> {
                 Config.put("command_prefix", "/")
-                GrindrPlus.showToast(
-                    Toast.LENGTH_LONG,
+                showToast(
                     "Command prefix reset to /",
+                    Toast.LENGTH_LONG,
                 )
             }
-            args[0].length > 1 -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Command prefix must be a single character"
+            args[0].length > 1 -> showToast(
+                "Command prefix must be a single character",
+                Toast.LENGTH_LONG
             )
-            !args[0].matches(Regex("[^a-zA-Z0-9]")) -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Command prefix must be a special character (no letters or numbers)"
+            !args[0].matches(Regex("[^a-zA-Z0-9]")) -> showToast(
+                "Command prefix must be a special character (no letters or numbers)",
+                Toast.LENGTH_LONG
             )
-            args[0] == prefix -> GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Command prefix is already set to ${args[0]}"
+            args[0] == prefix -> showToast(
+                "Command prefix is already set to ${args[0]}",
+                Toast.LENGTH_LONG
             )
             else -> {
                 Config.put("command_prefix", args[0])
-                GrindrPlus.showToast(
-                    Toast.LENGTH_LONG,
-                    "Command prefix set to ${args[0]}"
+                showToast(
+                    "Command prefix set to ${args[0]}",
+                    Toast.LENGTH_LONG
                 )
             }
         }

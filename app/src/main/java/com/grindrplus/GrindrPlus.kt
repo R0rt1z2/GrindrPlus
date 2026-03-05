@@ -28,7 +28,6 @@ import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
-import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.callMethod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +45,7 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
 import androidx.core.net.toUri
+import com.grindrplus.utils.UiHelper.showToast
 import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
@@ -211,7 +211,7 @@ object GrindrPlus {
         } catch (t: Throwable) {
             Logger.e("Failed to hook critical classes: ${t.message}", LogSource.MODULE)
             Logger.writeRaw(t.stackTraceToString())
-            showToast(Toast.LENGTH_LONG, "Failed to hook critical classes: ${t.message}")
+            showToast("Failed to hook critical classes: ${t.message}", Toast.LENGTH_LONG)
             return
         }
 
@@ -227,7 +227,7 @@ object GrindrPlus {
         } catch (t: Throwable) {
             Logger.e("Failed to initialize: ${t.message}", LogSource.MODULE)
             Logger.writeRaw(t.stackTraceToString())
-            showToast(Toast.LENGTH_LONG, "Failed to initialize: ${t.message}")
+            showToast("Failed to initialize: ${t.message}", Toast.LENGTH_LONG)
             return
         }
     }
@@ -379,19 +379,12 @@ object GrindrPlus {
         }
     }
 
-    fun showToast(duration: Int, message: String, appContext: Context? = null) {
-        val useContext = appContext ?: context
-        runOnMainThread(useContext) {
-            Toast.makeText(useContext, message, duration).show()
-        }
-    }
-
     fun loadClass(name: String): Class<*> {
         return classLoader.loadClass(name)
     }
 
     fun restartGrindr(timeout: Long = 0, toast: String? = null) {
-        toast?.let { showToast(Toast.LENGTH_LONG, it) }
+        toast?.let { showToast(it, Toast.LENGTH_LONG) }
 
         if (timeout > 0) {
             Handler(Looper.getMainLooper()).postDelayed({
@@ -463,7 +456,10 @@ object GrindrPlus {
             Logger.i("Version mismatch dialog shown", LogSource.MODULE)
         } catch (e: Exception) {
             Logger.e("Failed to show version mismatch dialog: ${e.message}", LogSource.MODULE)
-            showToast(Toast.LENGTH_LONG, "Version mismatch detected. Please install a compatible Grindr version.")
+            showToast(
+                "Version mismatch detected. Please install a compatible Grindr version.",
+                Toast.LENGTH_LONG
+            )
         }
     }
 
@@ -491,11 +487,17 @@ object GrindrPlus {
 
                 Logger.i("Bridge connection error dialog shown", LogSource.MODULE)
             } else {
-                showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
+                showToast(
+                    "Bridge service connection failed - module features unavailable",
+                    Toast.LENGTH_LONG
+                )
             }
         } catch (e: Exception) {
             Logger.e("Failed to show bridge error dialog: ${e.message}", LogSource.MODULE)
-            showToast(Toast.LENGTH_LONG, "Bridge service connection failed - module features unavailable")
+            showToast(
+                "Bridge service connection failed - module features unavailable",
+                Toast.LENGTH_LONG
+            )
         }
     }
 
@@ -515,8 +517,10 @@ object GrindrPlus {
                 .setPositiveButton("I Understand") { dialog, _ ->
                     activity.finish()
                     dialog.dismiss()
-                    showToast(Toast.LENGTH_LONG,
-                        "Please complete age verification in the official Grindr app first, then reinstall GrindrPlus")
+                    showToast(
+                        "Please complete age verification in the official Grindr app first, then reinstall GrindrPlus",
+                        Toast.LENGTH_LONG
+                    )
                 }
                 .setNegativeButton("Exit App") { dialog, _ ->
                     dialog.dismiss()
@@ -531,8 +535,10 @@ object GrindrPlus {
 
         } catch (e: Exception) {
             Logger.e("Failed to show age verification dialog: ${e.message}", LogSource.MODULE)
-            showToast(Toast.LENGTH_LONG,
-                "Age verification required. Please use official Grindr app to verify, then reinstall GrindrPlus.")
+            showToast(
+                "Age verification required. Please use official Grindr app to verify, then reinstall GrindrPlus.",
+                Toast.LENGTH_LONG
+            )
             activity.finish()
         }
     }
@@ -561,7 +567,10 @@ object GrindrPlus {
                         appContext.startActivity(intent)
 
                     } catch (e: Exception) {
-                        showToast(Toast.LENGTH_LONG, "Unable to open browser. Please visit console.cloud.google.com manually")
+                        showToast(
+                            "Unable to open browser. Please visit console.cloud.google.com manually",
+                            Toast.LENGTH_LONG
+                        )
                     }
                 }
                 .setNegativeButton("Dismiss") { dialog, _ -> dialog.dismiss() }

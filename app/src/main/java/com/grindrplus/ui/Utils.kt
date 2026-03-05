@@ -9,6 +9,7 @@ import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants
 import com.grindrplus.core.Logger
+import com.grindrplus.utils.UiHelper.showToast
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -30,7 +31,7 @@ object Utils {
     fun copyToClipboard(label: String, text: String) {
         val clipboard = GrindrPlus.context.getSystemService(ClipboardManager::class.java)
         clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
-        GrindrPlus.showToast(Toast.LENGTH_LONG, "$label copied to clipboard.")
+        showToast("$label copied to clipboard.", Toast.LENGTH_LONG)
     }
 
     fun formatEpochSeconds(epochSec: Long): String {

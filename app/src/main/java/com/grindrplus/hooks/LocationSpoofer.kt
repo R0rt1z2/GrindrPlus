@@ -31,6 +31,7 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers
@@ -291,13 +292,13 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
                     val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
                     Config.put("current_location", coordinates)
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $coordinates")
+                    showToast("Teleported to $coordinates", Toast.LENGTH_LONG)
                 }
             }
 
@@ -310,7 +311,7 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
@@ -328,7 +329,7 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
@@ -368,14 +369,14 @@ class LocationSpoofer : Hook(
                 if (location == null) {
                     Config.put("current_location", "")
                     Config.put("current_location_name", "")
-                    GrindrPlus.showToast(Toast.LENGTH_SHORT, "Teleporting stopped")
+                    showToast("Teleporting stopped", Toast.LENGTH_SHORT)
                     return
                 }
 
                 val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
                 Config.put("current_location", coordinates)
                 Config.put("current_location_name", location.name)
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.name}")
+                showToast("Teleported to ${location.name}", Toast.LENGTH_LONG)
             }
 
             AlertDialog.Builder(context).apply {
@@ -458,7 +459,7 @@ class LocationSpoofer : Hook(
             }
             setOnClickListener {
                 if (gpsLocationLatitude == 0.0 || gpsLocationLongitude == 0.0) {
-                    GrindrPlus.showToast(Toast.LENGTH_SHORT, "Unable to load GPS location")
+                    showToast("Unable to load GPS location", Toast.LENGTH_SHORT)
                     return@setOnClickListener
                 }
 
@@ -498,7 +499,7 @@ class LocationSpoofer : Hook(
             val lon = inputLongitude.text.toString().toDoubleOrNull()
 
             if (lat == null || lon == null || name.isEmpty()) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "All fields are required")
+                showToast("All fields are required", Toast.LENGTH_SHORT)
                 return false
             }
 
@@ -506,7 +507,7 @@ class LocationSpoofer : Hook(
             val locationNames = locations.map { it.name }
 
             if (locationNames.contains(name)) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "Location with this name already exists")
+                showToast("Location with this name already exists", Toast.LENGTH_SHORT)
                 return false
             }
 
@@ -642,7 +643,7 @@ class LocationSpoofer : Hook(
                         dialog.dismiss()
 
                     } else {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                     }
                 }
             }

@@ -15,6 +15,7 @@ import com.grindrplus.core.logi
 import com.grindrplus.core.logw
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hookConstructor
 import java.io.File
 
@@ -143,9 +144,7 @@ class StatusDialog : Hook(
                 restartGrindr(100, "Restarting Grindr... (${totalSizeMB}MB freed)")
             } catch (e: Exception) {
                 loge("Cache clear operation failed: ${e.message}")
-                GrindrPlus.runOnMainThread {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Cache clear operation failed: ${e.localizedMessage}")
-                }
+                showToast("Cache clear operation failed: ${e.localizedMessage}", Toast.LENGTH_LONG)
             }
         }
     }

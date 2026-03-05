@@ -22,6 +22,7 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.getFailValue
 import com.grindrplus.utils.RetrofitUtils.isFail
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers
@@ -131,7 +132,7 @@ class BanManagement : Hook(
 
                         safeCallMethod(newButton, "setOnClickListener", View.OnClickListener {
                             if (bannedInfo.length() == 0) {
-                                Toast.makeText(context, "No ban details available", Toast.LENGTH_SHORT).show()
+                                showToast("No ban details available", Toast.LENGTH_SHORT)
                             } else {
                                 createBanDetailsDialog(context, bannedInfo)
                             }
@@ -223,11 +224,7 @@ class BanManagement : Hook(
         } else {
             dialog.setNeutralButton("Copy JSON") { _, _ ->
                 copyToClipboard("Ban Details", bannedInfo.toString(2))
-                Toast.makeText(
-                    GrindrPlus.currentActivity,
-                    "Ban details copied to clipboard",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("Ban details copied to clipboard", Toast.LENGTH_SHORT)
             }
         }
 

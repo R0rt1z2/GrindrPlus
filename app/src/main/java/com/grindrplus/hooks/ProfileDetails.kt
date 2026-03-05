@@ -6,7 +6,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.h2n
@@ -16,6 +15,7 @@ import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -77,7 +77,7 @@ class ProfileDetails : Hook(
                 else text
 
                 copyToClipboard("Profile ID", profileId)
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                showToast("Profile ID: $profileId", Toast.LENGTH_LONG)
                 true
             }
         }
@@ -101,7 +101,7 @@ class ProfileDetails : Hook(
             val displayNameTextView = getObjectField(viewBinding, "c") as TextView
 
             displayNameTextView.setOnLongClickListener {
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                showToast("Profile ID: $profileId", Toast.LENGTH_LONG)
                 copyToClipboard("Profile ID", profileId)
                 true
             }
@@ -146,7 +146,7 @@ class ProfileDetails : Hook(
                         .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                         .setNeutralButton("Copy Details") { dialog, _ ->
                             copyToClipboard("Profile Details", detailsText)
-                            GrindrPlus.showToast(Toast.LENGTH_SHORT, "Profile details copied to clipboard")
+                            showToast("Profile details copied to clipboard", Toast.LENGTH_SHORT)
                             dialog.dismiss()
                         }
                         .create()

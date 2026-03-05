@@ -12,6 +12,7 @@ import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
+import com.grindrplus.utils.UiHelper.showToast
 
 class Profile(
     recipient: String,
@@ -22,9 +23,9 @@ class Profile(
         if (args.isNotEmpty()) {
             return openProfile(args[0])
         } else {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
+            showToast(
+                "Please provide valid ID",
+                Toast.LENGTH_LONG
             )
         }
     }
@@ -65,9 +66,9 @@ class Profile(
         if (args.isNotEmpty()) {
             return openChat("$recipient:${args[0]}")
         } else {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
+            showToast(
+                "Please provide valid ID",
+                Toast.LENGTH_LONG
             )
         }
     }
@@ -133,9 +134,9 @@ class Profile(
                     .setNeutralButton("Export") { _, _ ->
                         val file = GrindrPlus.context.getFileStreamPath("blocks.txt")
                         file.writeText(blocks.joinToString("\n") { it })
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Exported blocked users. Use Mod Settings to access the file!"
+                        showToast(
+                            "Exported blocked users. Use Mod Settings to access the file!",
+                            Toast.LENGTH_LONG
                         )
                     }
                     .create()
@@ -193,9 +194,9 @@ class Profile(
                     .setNeutralButton("Export") { _, _ ->
                         val file = GrindrPlus.context.getFileStreamPath("favorites.txt")
                         file.writeText(favoriteListExport)
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Exported favorited users. Use Mod Settings to access the file!"
+                        showToast(
+                            "Exported favorited users. Use Mod Settings to access the file!",
+                            Toast.LENGTH_LONG
                         )
                     }
                     .create()

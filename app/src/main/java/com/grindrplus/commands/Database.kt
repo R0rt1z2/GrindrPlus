@@ -8,6 +8,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.ui.Utils.copyToClipboard
+import com.grindrplus.utils.UiHelper.showToast
 
 class Database(
     recipient: String,
@@ -60,14 +61,14 @@ class Database(
                     .show()
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 
     @Command("list_table", aliases = ["lt"], help = "List all rows from a specific table")
     fun listTable(args: List<String>) {
         if (args.isEmpty()) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a table name.")
+            showToast("Please provide a table name.", Toast.LENGTH_LONG)
             return
         }
 
@@ -122,7 +123,7 @@ class Database(
                     .show()
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 
@@ -172,7 +173,7 @@ class Database(
                     .show()
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 }

@@ -9,6 +9,7 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils.coordsToGeoHash
 import com.grindrplus.persistence.model.TeleportLocationEntity
+import com.grindrplus.utils.UiHelper.showToast
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
@@ -39,9 +40,9 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                     .setNegativeButton("Disable") { _, _ ->
                         Config.put("forced_coordinates", "")
                         GrindrPlus.bridgeClient.deleteForcedLocation(packageName)
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Forced coordinates disabled"
+                        showToast(
+                            "Forced coordinates disabled",
+                            Toast.LENGTH_LONG
                         )
                     }
                     .show()
@@ -58,10 +59,10 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             val status = (Config.get("current_location", "") as String).isEmpty()
             if (!status) {
                 Config.put("current_location", "")
-                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
+                return showToast("Teleportation disabled", Toast.LENGTH_LONG)
             }
 
-            return GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a location")
+            return showToast("Please provide a location", Toast.LENGTH_LONG)
         }
 
         /**
@@ -75,7 +76,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         when {
             args.size == 1 && args[0] == "off" -> {
                 Config.put("current_location", "")
-                return GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleportation disabled")
+                return showToast("Teleportation disabled", Toast.LENGTH_LONG)
             }
             args.size == 1 && args[0].contains(",") -> {
                 val (lat, lon) = args[0].split(",").map { it.toDouble() }
@@ -103,7 +104,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                         if (apiLocation != null) {
                             teleportToCoordinates(apiLocation.first, apiLocation.second)
                         } else {
-                            GrindrPlus.showToast(Toast.LENGTH_LONG, "Location not found")
+                            showToast("Location not found", Toast.LENGTH_LONG)
                         }
                     }
                 }
@@ -115,7 +116,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
     @Command(name = "save", aliases = ["sv"], help = "Save the current location")
     fun save(args: List<String>) {
         if (args.isEmpty()) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a name for the location")
+            showToast("Please provide a name for the location", Toast.LENGTH_LONG)
             return
         }
 
@@ -150,19 +151,19 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
 
                         if (existingLocation != null) {
                             updateLocation(name, lat, lon)
-                            GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully updated $name")
+                            showToast("Successfully updated $name", Toast.LENGTH_LONG)
                         } else {
                             addLocation(name, lat, lon)
-                            GrindrPlus.showToast(Toast.LENGTH_LONG, "Successfully saved $name")
+                            showToast("Successfully saved $name", Toast.LENGTH_LONG)
                         }
                     } catch (e: Exception) {
-                        GrindrPlus.showToast(Toast.LENGTH_LONG, "Invalid coordinates format")
+                        showToast("Invalid coordinates format", Toast.LENGTH_LONG)
                     }
                 } else {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Invalid coordinates format")
+                    showToast("Invalid coordinates format", Toast.LENGTH_LONG)
                 }
             } else {
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "No location provided")
+                showToast("No location provided", Toast.LENGTH_LONG)
             }
         }
     }
@@ -170,7 +171,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
     @Command(name = "delete", aliases = ["del"], help = "Delete a saved location")
     fun delete(args: List<String>) {
         if (args.isEmpty()) {
-            return GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a location to delete")
+            return showToast("Please provide a location to delete", Toast.LENGTH_LONG)
         }
 
         val name = args.joinToString(" ")
@@ -178,12 +179,12 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         coroutineScope.launch {
             val location = getLocation(name)
             if (location == null) {
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Location not found")
+                showToast("Location not found", Toast.LENGTH_LONG)
                 return@launch
             }
 
             deleteLocation(name)
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Location deleted")
+            showToast("Location deleted", Toast.LENGTH_LONG)
         }
     }
 
@@ -249,7 +250,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             } catch (e: Exception) {
                 val message =
                     "An error occurred while getting the location: ${e.message ?: "Unknown error"}"
-                withContext(Dispatchers.Main) { GrindrPlus.showToast(Toast.LENGTH_LONG, message) }
+                showToast(message, Toast.LENGTH_LONG)
                 Logger.apply {
                     e(message)
                     writeRaw(e.stackTraceToString())
@@ -287,7 +288,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
         }
 
         if (!silent)
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
+            showToast("Teleported to $lat, $lon", Toast.LENGTH_LONG)
     }
 
     private fun getUserAgent(): String {

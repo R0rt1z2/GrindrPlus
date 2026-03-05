@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.widget.Toast
 import com.grindrplus.BuildConfig
 import com.grindrplus.GrindrPlus
-import com.grindrplus.GrindrPlus.showToast
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.core.Logger
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +14,7 @@ import org.json.JSONObject
 
 import com.grindrplus.hooks.unsafeTrustManager
 import com.grindrplus.hooks.unsafeSslContext
+import com.grindrplus.utils.UiHelper.showToast
 
 class Client(interceptor: Interceptor) {
     // although we have SSLUnpinning which hooks the OkHttpClient.Builder(),
@@ -63,7 +63,7 @@ class Client(interceptor: Interceptor) {
                 "POST"
             )
             if (response.isSuccessful) {
-                if (!silent) showToast(Toast.LENGTH_LONG, "User blocked successfully")
+                if (!silent) showToast("User blocked successfully", Toast.LENGTH_LONG)
                 if (reflectInDb) {
                     val order = DatabaseHelper.query(
                         "SELECT MAX(order_) AS order_ FROM blocks"
@@ -79,7 +79,7 @@ class Client(interceptor: Interceptor) {
             } else {
                 if (!silent) {
                     response.useBody { errorBody ->
-                        showToast(Toast.LENGTH_LONG, "Failed to block user: $errorBody")
+                        showToast("Failed to block user: $errorBody", Toast.LENGTH_LONG)
                     }
                 }
             }
@@ -98,7 +98,7 @@ class Client(interceptor: Interceptor) {
                 "DELETE"
             )
             if (response.isSuccessful) {
-                if (!silent) showToast(Toast.LENGTH_LONG, "User unblocked successfully")
+                if (!silent) showToast("User unblocked successfully", Toast.LENGTH_LONG)
                 try {
                     if (reflectInDb) {
                         DatabaseHelper.delete(
@@ -116,7 +116,7 @@ class Client(interceptor: Interceptor) {
             } else {
                 if (!silent) {
                     response.useBody { errorBody ->
-                        showToast(Toast.LENGTH_LONG, "Failed to unblock user: $errorBody")
+                        showToast("Failed to unblock user: $errorBody", Toast.LENGTH_LONG)
                     }
                 }
             }
@@ -138,7 +138,7 @@ class Client(interceptor: Interceptor) {
                 "POST"
             )
             if (response.isSuccessful) {
-                if (!silent) showToast(Toast.LENGTH_LONG, "User favorited successfully")
+                if (!silent) showToast("User favorited successfully", Toast.LENGTH_LONG)
                 if (reflectInDb) {
                     DatabaseHelper.insert(
                         "favorite_profile",
@@ -150,7 +150,7 @@ class Client(interceptor: Interceptor) {
             } else {
                 if (!silent) {
                     response.useBody { errorBody ->
-                        showToast(Toast.LENGTH_LONG, "Failed to favorite user: $errorBody")
+                        showToast("Failed to favorite user: $errorBody", Toast.LENGTH_LONG)
                     }
                 }
             }
@@ -168,7 +168,7 @@ class Client(interceptor: Interceptor) {
                 "DELETE"
             )
             if (response.isSuccessful) {
-                if (!silent) showToast(Toast.LENGTH_LONG, "User unfavorited successfully")
+                if (!silent) showToast("User unfavorited successfully", Toast.LENGTH_LONG)
                 try {
                     if (reflectInDb) {
                         DatabaseHelper.delete(
@@ -186,7 +186,7 @@ class Client(interceptor: Interceptor) {
             } else {
                 if (!silent) {
                     response.useBody { errorBody ->
-                        showToast(Toast.LENGTH_LONG, "Failed to unfavorite user: $errorBody")
+                        showToast("Failed to unfavorite user: $errorBody", Toast.LENGTH_LONG)
                     }
                 }
             }
@@ -208,10 +208,10 @@ class Client(interceptor: Interceptor) {
                 headers = mapOf("Content-Type" to "application/json; charset=UTF-8")
             )
             if (response.isSuccessful) {
-                showToast(Toast.LENGTH_LONG, "Location updated successfully")
+                showToast("Location updated successfully", Toast.LENGTH_LONG)
             } else {
                 response.useBody { errorBody ->
-                    showToast(Toast.LENGTH_LONG, "Failed to update location: $errorBody")
+                    showToast("Failed to update location: $errorBody", Toast.LENGTH_LONG)
                 }
             }
         }
@@ -241,10 +241,10 @@ class Client(interceptor: Interceptor) {
             )
 
             if (response.isSuccessful) {
-                showToast(Toast.LENGTH_LONG, "User reported successfully")
+                showToast("User reported successfully", Toast.LENGTH_LONG)
             } else {
                 response.useBody { errorBody ->
-                    showToast(Toast.LENGTH_LONG, "Failed to report user: $errorBody")
+                    showToast("Failed to report user: $errorBody", Toast.LENGTH_LONG)
                 }
             }
         }
@@ -387,7 +387,7 @@ class Client(interceptor: Interceptor) {
 
     fun addProfileNote(profileId: String, notes: String, phoneNumber: String, silent: Boolean = false) {
         if (notes.length > 250) {
-            showToast(Toast.LENGTH_LONG, "Notes are too long")
+            showToast("Notes are too long", Toast.LENGTH_LONG)
             return
         }
 
@@ -435,11 +435,11 @@ class Client(interceptor: Interceptor) {
                     Logger.e("Failed to update profile note: ${e.message}")
                     Logger.writeRaw(e.stackTraceToString())
                 }
-                if (!silent) showToast(Toast.LENGTH_LONG, "Note added successfully")
+                if (!silent) showToast("Note added successfully", Toast.LENGTH_LONG)
             } else {
                 if (!silent) {
                     response.useBody { errorBody ->
-                        showToast(Toast.LENGTH_LONG, "Failed to add note: $errorBody")
+                        showToast("Failed to add note: $errorBody", Toast.LENGTH_LONG)
                     }
                 }
             }

@@ -10,6 +10,7 @@ import com.grindrplus.core.logd
 import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import kotlinx.coroutines.CoroutineScope
@@ -185,7 +186,7 @@ class AntiBlock : Hook(
                 GrindrPlus.bridgeClient.logBlockEvent(profileId.toString(), displayName, true,
                     GrindrPlus.packageName)
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Blocked by $displayName")
+                    showToast("Blocked by $displayName", Toast.LENGTH_LONG)
                 } else {
                     GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Blocked by User",
@@ -208,7 +209,7 @@ class AntiBlock : Hook(
                 GrindrPlus.bridgeClient.logBlockEvent(profileId.toString(), displayName, false,
                     GrindrPlus.packageName)
                 if (Config.get("anti_block_use_toasts", false) as Boolean) {
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Unblocked by $displayName")
+                    showToast("Unblocked by $displayName", Toast.LENGTH_LONG)
                 } else {
                     GrindrPlus.bridgeClient.sendNotificationWithMultipleActions(
                         "Unblocked by $displayName",
