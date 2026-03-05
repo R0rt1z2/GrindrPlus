@@ -7,7 +7,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
-import com.scottyab.rootbeer.RootBeer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -141,7 +140,7 @@ object FileOperationHandler {
                 put("version", Build.VERSION.RELEASE)
                 put("sdk_level", Build.VERSION.SDK_INT)
                 put("security_patch", Build.VERSION.SECURITY_PATCH)
-                put("is_rooted", RootBeer(context).isRooted)
+                put("is_lsposed", isLSPosed())
             }
             mainJson.put("android", androidSection)
 

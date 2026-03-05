@@ -76,7 +76,6 @@ class StatusDialog : Hook(
 
                 if (GrindrPlus.bridgeClient.isConnected()) {
                     val isLSPosed = GrindrPlus.bridgeClient.isLSPosed()
-                    val isRooted = GrindrPlus.bridgeClient.isRooted()
                 }
 
                 val message = buildString {
@@ -92,7 +91,6 @@ class StatusDialog : Hook(
                     appendLine("• Bridge Status: $bridgeStatus")
                     if (GrindrPlus.bridgeClient.isConnected()) {
                         appendLine("• LSPosed: ${GrindrPlus.bridgeClient.isLSPosed()}")
-                        appendLine("• Rooted: ${GrindrPlus.bridgeClient.isRooted()}")
                     }
                     appendLine()
                     appendLine("Device Information:")

@@ -53,7 +53,6 @@ import com.grindrplus.manager.ui.components.MessageBanner
 import com.grindrplus.manager.ui.components.VersionSelector
 import com.grindrplus.manager.utils.ErrorHandler
 import com.grindrplus.manager.utils.StorageUtils
-import com.scottyab.rootbeer.RootBeer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,11 +75,11 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
     var isInstalling by remember { mutableStateOf(false) }
     var isCloning by remember { mutableStateOf(false) }
     var installationSuccessful by remember { mutableStateOf(false) }
-    val isRooted = remember { RootBeer(context).isRooted }
+    val isLSPosed = remember { isLSPosed() }
     var showCloneDialog by remember { mutableStateOf(false) }
     var installation by remember { mutableStateOf<Installation?>(null) }
     var warningBannerVisible by remember { mutableStateOf(true) }
-    var rootedBannerVisible by remember { mutableStateOf(isRooted) }
+    var lsposedBannerVisible by remember { mutableStateOf(isLSPosed) }
     var showCustomFileDialog by remember { mutableStateOf(false) }
     var useCustomFiles by remember { mutableStateOf(false) }
     var customVersionName by remember { mutableStateOf("custom") }
@@ -240,14 +239,14 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 onDismiss = { warningBannerVisible = false }
             )
 
-            if (isLSPosed()) {
+            if (isLSPosed) {
                 MessageBanner(
                     text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
-                    isVisible = rootedBannerVisible,
+                    isVisible = lsposedBannerVisible,
                     isPulsating = true,
                     modifier = Modifier.fillMaxWidth(),
                     type = BannerType.ERROR,
-                    onDismiss = { rootedBannerVisible = false }
+                    onDismiss = { lsposedBannerVisible = false }
                 )
             }
 
