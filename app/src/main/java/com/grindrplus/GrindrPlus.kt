@@ -28,7 +28,6 @@ import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hookConstructor
-import dalvik.system.DexClassLoader
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.callMethod
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +42,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
@@ -127,7 +125,7 @@ object GrindrPlus {
 
     val serverNotifications = EventManager.serverNotifications
 
-    fun init(modulePath: String, application: Application,
+    fun init(application: Application,
              versionCodes: IntArray, versionNames: Array<String>) {
 
         if (isInitialized) {
@@ -161,12 +159,12 @@ object GrindrPlus {
         }
 
         Config.initialize(application.packageName)
-        val newModule = File(context.filesDir, "grindrplus.dex")
-        File(modulePath).copyTo(newModule, true)
-        newModule.setReadOnly()
 
-        this.classLoader =
-            DexClassLoader(newModule.absolutePath, null, null, context.classLoader)
+        // Legacy cleanup: remove the grindrplus.dex file that was unnecessarily copied on every launch.
+        // This line can be removed in a future version once all users have updated.
+        context.filesDir.resolve("grindrplus.dex").delete()
+
+        this.classLoader = context.classLoader
         this.database = GPDatabase.create(context)
         this.hookManager = HookManager()
         this.instanceManager = InstanceManager(classLoader)
