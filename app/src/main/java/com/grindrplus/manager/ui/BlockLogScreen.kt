@@ -25,7 +25,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -263,12 +265,17 @@ fun BlockEventItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Block,
+                    imageVector = when (event.eventType) {
+                        "block" -> Icons.Default.Block
+                        "unblock" -> Icons.Default.Circle
+                        "profile_delete" -> Icons.Default.Delete
+                        else -> Icons.Default.QuestionMark
+                    },
                     contentDescription = null,
-                    tint = if (event.eventType == "block")
-                        MaterialTheme.colorScheme.error
-                    else
-                        MaterialTheme.colorScheme.primary,
+                    tint = when (event.eventType) {
+                        "block" -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
+                    },
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -285,10 +292,12 @@ fun BlockEventItem(
                     )
 
                     Text(
-                        text = if (event.eventType == "block")
-                            "Blocked you"
-                        else
-                            "Unblocked you",
+                        text = when (event.eventType) {
+                            "block" -> "Blocked you"
+                            "unblock" -> "Unblocked you"
+                            "profile_delete" -> "Deleted their profile"
+                            else -> "did something"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
