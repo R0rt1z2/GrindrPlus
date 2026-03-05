@@ -1,7 +1,9 @@
 package com.grindrplus.commands
 
 import android.app.AlertDialog
-import android.net.Uri
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.packageName
@@ -14,10 +16,8 @@ import de.robv.android.xposed.XposedHelpers.getObjectField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONArray
 
 class Location(recipient: String, sender: String) : CommandModule("Location", recipient, sender) {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
@@ -96,10 +96,10 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                         teleportToCoordinates(location.first, location.second)
                     } else {
                         /**
-                         * No valid saved location was found, try to get the actual location. This
-                         * is done by using Nominatim's API to get the latitude and longitude.
+                         * No valid saved location was found, try to get the actual location
+                         * using Android's native Geocoder.
                          */
-                        val apiLocation = getLocationFromNominatimAsync(args.joinToString(" "))
+                        val apiLocation = getLocationFromGeocoder(args.joinToString(" "))
                         if (apiLocation != null) {
                             teleportToCoordinates(apiLocation.first, apiLocation.second)
                         } else {
@@ -133,11 +133,11 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                             args[1].toDoubleOrNull() != null &&
                             args[2].toDoubleOrNull() != null -> "${args[1]},${args[2]}"
                     args.size > 1 ->
-                        getLocationFromNominatimAsync(args.drop(1).joinToString(" "))?.let {
+                        getLocationFromGeocoder(args.drop(1).joinToString(" "))?.let {
                             "${it.first},${it.second}"
                         }
                     else -> ""
-                }
+                   }
 
             if (!location.isNullOrEmpty()) {
                 val coordinates = location.split(",")
@@ -223,40 +223,47 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
             val locationDao = GrindrPlus.database.teleportLocationDao()
             locationDao.deleteLocation(name)
         }
-
-    private suspend fun getLocationFromNominatimAsync(location: String): Pair<Double, Double>? =
-        withContext(Dispatchers.IO) {
-            val url =
-                "https://nominatim.openstreetmap.org/search?q=${Uri.encode(location)}&format=json"
-
-            val randomUserAgent = getUserAgent()
-            val request =
-                Request.Builder().url(url).header("User-Agent", randomUserAgent).build()
-
-            return@withContext try {
-                OkHttpClient().newCall(request).execute().use { response ->
-                    val body = response.body?.string()
-                    if (body.isNullOrEmpty()) return@withContext null
-
-                    val json = JSONArray(body)
-                    if (json.length() == 0) return@withContext null
-
-                    val obj = json.getJSONObject(0)
-                    val lat = obj.getDouble("lat")
-                    val lon = obj.getDouble("lon")
-                    Pair(lat, lon)
+    
+    private suspend fun getLocationFromGeocoder(location: String): Pair<Double, Double>? {
+        if (!Geocoder.isPresent()) return null
+        val geocoder = Geocoder(GrindrPlus.context)
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                suspendCancellableCoroutine { cont ->
+                    geocoder.getFromLocationName(location, 1,
+                        object : Geocoder.GeocodeListener {
+                            override fun onGeocode(addresses: MutableList<Address>) {
+                                if (addresses.isEmpty()) cont.resumeWith(Result.success(null))
+                                else cont.resumeWith(
+                                    Result.success(
+                                        Pair(addresses[0].latitude, addresses[0].longitude)
+                                    )
+                                )
+                            }
+                            override fun onError(errorMessage: String?) {
+                                cont.resumeWith(Result.success(null))
+                            }
+                        })
                 }
-            } catch (e: Exception) {
-                val message =
-                    "An error occurred while getting the location: ${e.message ?: "Unknown error"}"
-                withContext(Dispatchers.Main) { GrindrPlus.showToast(Toast.LENGTH_LONG, message) }
-                Logger.apply {
-                    e(message)
-                    writeRaw(e.stackTraceToString())
+            } else {
+                @Suppress("DEPRECATION")
+                withContext(Dispatchers.IO) {
+                    val addresses = geocoder.getFromLocationName(location, 1)
+                    if (addresses.isNullOrEmpty()) null
+                    else Pair(addresses[0].latitude, addresses[0].longitude)
                 }
-                null
             }
+        } catch (e: Exception) {
+            val message =
+                "An error occurred while geocoding: ${e.message ?: "Unknown error"}"
+            withContext(Dispatchers.Main) { GrindrPlus.showToast(Toast.LENGTH_LONG, message) }
+            Logger.apply {
+                e(message)
+                writeRaw(e.stackTraceToString())
+            }
+            null
         }
+    }
 
     private fun getGpsLocation(): String? {
         try {
@@ -269,7 +276,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
 
             return "$latitude,$longitude"
         } catch (e: Exception) {
-            Logger.e("Error getting gps location: ${e.message}")
+            Logger.e("Error getting GPS location: ${e.message}")
             return null
         }
     }
@@ -288,49 +295,5 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
 
         if (!silent)
             GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $lat, $lon")
-    }
-
-    private fun getUserAgent(): String {
-        val chromeVersions = listOf("120.0.0.0", "119.0.0.0", "118.0.0.0", "117.0.0.0", "116.0.0.0")
-        val firefoxVersions = listOf("121.0", "120.0", "119.0", "118.0", "117.0")
-        val safariVersions = listOf("17.2", "17.1", "17.0", "16.6", "16.5")
-        val edgeVersions = listOf("120.0.0.0", "119.0.0.0", "118.0.0.0", "117.0.0.0")
-
-        val windowsVersions = listOf("10.0", "11.0")
-        val macVersions = listOf("10_15_7", "11_7_10", "12_7_2", "13_6_3", "14_2_1")
-
-        return when ((1..5).random()) {
-            1 -> {
-                val version = chromeVersions.random()
-                val winVer = windowsVersions.random()
-                "Mozilla/5.0 (Windows NT $winVer; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36"
-            }
-            2 -> {
-                val version = chromeVersions.random()
-                val macVer = macVersions.random()
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X $macVer) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36"
-            }
-            3 -> {
-                val version = firefoxVersions.random()
-                val platform = if ((1..2).random() == 1) {
-                    "Windows NT ${windowsVersions.random()}; Win64; x64"
-                } else {
-                    "Macintosh; Intel Mac OS X ${macVersions.random().replace("_", ".")}"
-                }
-                "Mozilla/5.0 ($platform; rv:$version) Gecko/20100101 Firefox/$version"
-            }
-            4 -> {
-                val safariVer = safariVersions.random()
-                val macVer = macVersions.random()
-                val webkitVer = "605.1.${(10..20).random()}"
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X $macVer) AppleWebKit/$webkitVer (KHTML, like Gecko) Version/$safariVer Safari/$webkitVer"
-            }
-            5 -> {
-                val version = edgeVersions.random()
-                val winVer = windowsVersions.random()
-                "Mozilla/5.0 (Windows NT $winVer; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version Safari/537.36 Edg/$version"
-            }
-            else -> chromeVersions.random()
-        }
     }
 }
