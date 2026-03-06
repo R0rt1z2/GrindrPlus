@@ -1,6 +1,5 @@
 package com.grindrplus.commands
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -8,6 +7,9 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.DatabaseHelper
 import com.grindrplus.ui.Utils.copyToClipboard
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
+import com.grindrplus.utils.UiHelper.showToast
 
 class Database(
     recipient: String,
@@ -47,27 +49,25 @@ class Database(
 
                 dialogView.addView(textView)
 
-                AlertDialog.Builder(activity)
-                    .setTitle("Database Tables")
-                    .setView(dialogView)
-                    .setPositiveButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("Copy") { _, _ ->
-                        copyToClipboard("Database Tables", tableList)
-                    }
-                    .create()
-                    .show()
+                showAlertDialog {
+                    title = "Database Tables"
+                    view = dialogView
+                    positiveButton = DialogButton(
+                        text = "Copy",
+                        onClick = { copyToClipboard("Database Tables", tableList) }
+                    )
+                    negativeButton = DialogButton("Close")
+                }
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 
     @Command("list_table", aliases = ["lt"], help = "List all rows from a specific table")
     fun listTable(args: List<String>) {
         if (args.isEmpty()) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a table name.")
+            showToast("Please provide a table name.", Toast.LENGTH_LONG)
             return
         }
 
@@ -109,20 +109,18 @@ class Database(
 
                 dialogView.addView(textView)
 
-                AlertDialog.Builder(activity)
-                    .setTitle("Table Content: $tableName")
-                    .setView(dialogView)
-                    .setPositiveButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("Copy") { _, _ ->
-                        copyToClipboard("Table Content: $tableName", tableContent)
-                    }
-                    .create()
-                    .show()
+                showAlertDialog {
+                    title = "Table Content: $tableName"
+                    view = dialogView
+                    positiveButton = DialogButton(
+                        text = "Copy",
+                        onClick = { copyToClipboard("Table Content: $tableName", tableContent) }
+                    )
+                    negativeButton = DialogButton("Close")
+                }
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 
@@ -159,20 +157,18 @@ class Database(
 
                 dialogView.addView(textView)
 
-                AlertDialog.Builder(activity)
-                    .setTitle("Database Files")
-                    .setView(dialogView)
-                    .setPositiveButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("Copy") { _, _ ->
-                        copyToClipboard("Database Files", dbList)
-                    }
-                    .create()
-                    .show()
+                showAlertDialog {
+                    title = "Database Files"
+                    view = dialogView
+                    positiveButton = DialogButton(
+                        text = "Copy",
+                        onClick = { copyToClipboard("Database Files", dbList) }
+                    )
+                    negativeButton = DialogButton("Close")
+                }
             }
         } catch (e: Exception) {
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+            showToast("Error: ${e.message}", Toast.LENGTH_LONG)
         }
     }
 }

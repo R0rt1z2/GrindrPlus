@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import android.util.Log
 import android.widget.Toast
 import androidx.room.withTransaction
 import com.grindrplus.GrindrPlus
@@ -27,6 +26,7 @@ import com.grindrplus.utils.RetrofitUtils.isFail
 import com.grindrplus.utils.RetrofitUtils.isGET
 import com.grindrplus.utils.RetrofitUtils.isPUT
 import com.grindrplus.utils.RetrofitUtils.isSuccess
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
@@ -235,7 +235,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
         } catch (e: Exception) {
             loge("Failed to fetch album $albumId: ${e.message}")
             Logger.writeRaw(e.stackTraceToString())
-            GrindrPlus.showToast(Toast.LENGTH_LONG, "Failed to load album")
+            showToast("Failed to load album", Toast.LENGTH_LONG)
             val modifiedResult = fetchAlbumFromDatabase(albumId, result)
             return modifiedResult
         }

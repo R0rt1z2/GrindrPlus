@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.BlendMode
@@ -31,6 +30,9 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers
@@ -291,13 +293,13 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
                     val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
                     Config.put("current_location", coordinates)
-                    GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $coordinates")
+                    showToast("Teleported to $coordinates", Toast.LENGTH_LONG)
                 }
             }
 
@@ -310,7 +312,7 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
@@ -328,7 +330,7 @@ class LocationSpoofer : Hook(
                     val location = getSelectedLocation()
 
                     if (location == null) {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+                        showToast("No location selected", Toast.LENGTH_SHORT)
                         return@setOnClickListener
                     }
 
@@ -368,22 +370,21 @@ class LocationSpoofer : Hook(
                 if (location == null) {
                     Config.put("current_location", "")
                     Config.put("current_location_name", "")
-                    GrindrPlus.showToast(Toast.LENGTH_SHORT, "Teleporting stopped")
+                    showToast("Teleporting stopped", Toast.LENGTH_SHORT)
                     return
                 }
 
                 val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
                 Config.put("current_location", coordinates)
                 Config.put("current_location_name", location.name)
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.name}")
+                showToast("Teleported to ${location.name}", Toast.LENGTH_LONG)
             }
 
-            AlertDialog.Builder(context).apply {
-                setTitle("Teleport Locations")
-                setView(locationDialogView)
-                setPositiveButton("OK") { dialog, _ -> teleport() }
-                setNegativeButton("Close", null)
-                show()
+            showAlertDialog {
+                title = "Teleport Locations"
+                view = locationDialogView
+                positiveButton = DialogButton(text = "OK", onClick = { teleport() })
+                negativeButton = DialogButton("Close")
             }
         }
     }
@@ -458,7 +459,7 @@ class LocationSpoofer : Hook(
             }
             setOnClickListener {
                 if (gpsLocationLatitude == 0.0 || gpsLocationLongitude == 0.0) {
-                    GrindrPlus.showToast(Toast.LENGTH_SHORT, "Unable to load GPS location")
+                    showToast("Unable to load GPS location", Toast.LENGTH_SHORT)
                     return@setOnClickListener
                 }
 
@@ -498,7 +499,7 @@ class LocationSpoofer : Hook(
             val lon = inputLongitude.text.toString().toDoubleOrNull()
 
             if (lat == null || lon == null || name.isEmpty()) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "All fields are required")
+                showToast("All fields are required", Toast.LENGTH_SHORT)
                 return false
             }
 
@@ -506,7 +507,7 @@ class LocationSpoofer : Hook(
             val locationNames = locations.map { it.name }
 
             if (locationNames.contains(name)) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "Location with this name already exists")
+                showToast("Location with this name already exists", Toast.LENGTH_SHORT)
                 return false
             }
 
@@ -516,21 +517,19 @@ class LocationSpoofer : Hook(
             return true
         }
 
-        AlertDialog.Builder(context).apply {
-            setTitle("Add Location")
-            setView(container)
-            setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
-            setPositiveButton("Save", null)
-
-            val dialog = show()
-            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
-            // setPositiveButton listener always closes it
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                coroutineScope.launch {
-                    if (saveLocation())
-                        dialog.dismiss()
+        showAlertDialog {
+            title = "Add Location"
+            view = container
+            positiveButton = DialogButton(
+                text = "Save",
+                onPreventDismiss = { dialog ->
+                    coroutineScope.launch {
+                        if (saveLocation())
+                            dialog.dismiss()
+                    }
                 }
-            }
+            )
+            negativeButton = DialogButton("Cancel")
         }
     }
 
@@ -621,31 +620,26 @@ class LocationSpoofer : Hook(
         callMethod(mapView, "getMapAsync", onMapReadyListener)
 
 
-        AlertDialog.Builder(context).apply {
-            setTitle("Pick Location")
-            setView(container)
-            setNegativeButton("Cancel", null)
-            setPositiveButton("OK", null)
-
-            val dialog = show()
-            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
-            // setPositiveButton listener always closes it
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                coroutineScope.launch {
-                    if (selectedLatLng != null) {
-                        val latitude = getObjectField(selectedLatLng, "latitude") as Double
-                        val longitude = getObjectField(selectedLatLng, "longitude") as Double
-
-                        val location = TeleportLocationEntity("maps-pick", latitude, longitude)
-                        onLocationPicked(location)
-
-                        dialog.dismiss()
-
-                    } else {
-                        GrindrPlus.showToast(Toast.LENGTH_SHORT, "No location selected")
+        showAlertDialog {
+            title = "Pick Location"
+            view = container
+            positiveButton = DialogButton(
+                text = "OK",
+                onPreventDismiss = { dialog ->
+                    coroutineScope.launch {
+                        if (selectedLatLng != null) {
+                            val latitude = getObjectField(selectedLatLng, "latitude") as Double
+                            val longitude = getObjectField(selectedLatLng, "longitude") as Double
+                            val location = TeleportLocationEntity("maps-pick", latitude, longitude)
+                            onLocationPicked(location)
+                            dialog.dismiss()
+                        } else {
+                            showToast("No location selected", Toast.LENGTH_SHORT)
+                        }
                     }
                 }
-            }
+            )
+            negativeButton = DialogButton(text = "Cancel")
         }
 
     }

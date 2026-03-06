@@ -10,6 +10,7 @@ import android.os.Looper
 import android.widget.Toast
 import com.grindrplus.core.Logger
 import com.grindrplus.core.LogSource
+import com.grindrplus.utils.UiHelper.showToast
 
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -24,8 +25,8 @@ class NotificationActionReceiver : BroadcastReceiver() {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("Grindr+ Data", data)
                         clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, "Copied to clipboard: $data", Toast.LENGTH_SHORT).show()
                     }
+                    showToast("Copied to clipboard: $data", Toast.LENGTH_SHORT)
                 }
 
                 "com.grindrplus.VIEW_PROFILE_ACTION" -> {
@@ -44,16 +45,12 @@ class NotificationActionReceiver : BroadcastReceiver() {
 
                 "com.grindrplus.CUSTOM_ACTION" -> {
                     val data = intent.getStringExtra("data") ?: return
-                    Handler(Looper.getMainLooper()).post {
-                        Toast.makeText(context, "Custom action: $data", Toast.LENGTH_SHORT).show()
-                    }
+                    showToast("Custom action: $data", Toast.LENGTH_SHORT)
                 }
 
                 "com.grindrplus.DEFAULT_ACTION" -> {
                     val data = intent.getStringExtra("data") ?: return
-                    Handler(Looper.getMainLooper()).post {
-                        Toast.makeText(context, "Action performed", Toast.LENGTH_SHORT).show()
-                    }
+                    showToast("Action performed", Toast.LENGTH_SHORT)
                 }
             }
         } catch (e: Exception) {

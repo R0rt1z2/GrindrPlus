@@ -6,7 +6,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
-import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils
 import com.grindrplus.core.Utils.calculateBMI
 import com.grindrplus.core.Utils.h2n
@@ -16,6 +15,9 @@ import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
+import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -77,7 +79,7 @@ class ProfileDetails : Hook(
                 else text
 
                 copyToClipboard("Profile ID", profileId)
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                showToast("Profile ID: $profileId", Toast.LENGTH_LONG)
                 true
             }
         }
@@ -101,7 +103,7 @@ class ProfileDetails : Hook(
             val displayNameTextView = getObjectField(viewBinding, "c") as TextView
 
             displayNameTextView.setOnLongClickListener {
-                GrindrPlus.showToast(Toast.LENGTH_LONG, "Profile ID: $profileId")
+                showToast("Profile ID: $profileId", Toast.LENGTH_LONG)
                 copyToClipboard("Profile ID", profileId)
                 true
             }
@@ -139,25 +141,22 @@ class ProfileDetails : Hook(
 
                 val detailsText = properties.map { (key, value) -> "• $key: $value" }.joinToString("\n")
 
-                val dialog =
-                    AlertDialog.Builder(it.context)
-                        .setTitle("Hidden profile details")
-                        .setMessage(detailsText)
-                        .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                        .setNeutralButton("Copy Details") { dialog, _ ->
+                showAlertDialog {
+                    title = "Hidden profile details"
+                    message = detailsText
+                    neutralButton = DialogButton(
+                        text = "Copy Details",
+                        onClick = {
                             copyToClipboard("Profile Details", detailsText)
-                            GrindrPlus.showToast(Toast.LENGTH_SHORT, "Profile details copied to clipboard")
-                            dialog.dismiss()
+                            showToast("Profile details copied to clipboard", Toast.LENGTH_SHORT)
                         }
-                        .create()
-
-                dialog.setOnShowListener {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(android.graphics.Color.WHITE)
-                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(android.graphics.Color.WHITE)
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(android.graphics.Color.WHITE)
+                    )
+                    onShow = { d ->
+                        d.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(android.graphics.Color.WHITE)
+                        d.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(android.graphics.Color.WHITE)
+                        d.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(android.graphics.Color.WHITE)
+                    }
                 }
-
-                dialog.show()
             }
         }
 

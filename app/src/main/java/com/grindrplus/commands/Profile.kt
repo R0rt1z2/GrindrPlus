@@ -1,7 +1,6 @@
 package com.grindrplus.commands
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.graphics.Color
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -12,6 +11,9 @@ import com.grindrplus.core.Utils.openChat
 import com.grindrplus.core.Utils.openProfile
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
+import com.grindrplus.utils.UiHelper.showToast
 
 class Profile(
     recipient: String,
@@ -22,9 +24,9 @@ class Profile(
         if (args.isNotEmpty()) {
             return openProfile(args[0])
         } else {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
+            showToast(
+                "Please provide valid ID",
+                Toast.LENGTH_LONG
             )
         }
     }
@@ -65,9 +67,9 @@ class Profile(
         if (args.isNotEmpty()) {
             return openChat("$recipient:${args[0]}")
         } else {
-            GrindrPlus.showToast(
-                Toast.LENGTH_LONG,
-                "Please provide valid ID"
+            showToast(
+                "Please provide valid ID",
+                Toast.LENGTH_LONG
             )
         }
     }
@@ -121,25 +123,28 @@ class Profile(
 
                 dialogView.addView(textView)
 
-                AlertDialog.Builder(activity)
-                    .setTitle("Blocked users")
-                    .setView(dialogView)
-                    .setPositiveButton("Copy") { _, _ ->
-                        copyToClipboard("Blocked users", blocks.joinToString("\n") { it })
-                    }
-                    .setNegativeButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setNeutralButton("Export") { _, _ ->
-                        val file = GrindrPlus.context.getFileStreamPath("blocks.txt")
-                        file.writeText(blocks.joinToString("\n") { it })
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Exported blocked users. Use Mod Settings to access the file!"
-                        )
-                    }
-                    .create()
-                    .show()
+                showAlertDialog {
+                    title = "Blocked users"
+                    view = dialogView
+                    positiveButton = DialogButton(
+                        text = "Copy",
+                        onClick = {
+                            copyToClipboard("Blocked users", blocks.joinToString("\n") { it })
+                        }
+                    )
+                    negativeButton = DialogButton("Close")
+                    neutralButton = DialogButton(
+                        text = "Export",
+                        onClick = {
+                            val file = GrindrPlus.context.getFileStreamPath("blocks.txt")
+                            file.writeText(blocks.joinToString("\n") { it })
+                            showToast(
+                                "Exported blocked users. Use Mod Settings to access the file!",
+                                Toast.LENGTH_LONG
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -181,25 +186,26 @@ class Profile(
 
                 dialogView.addView(textView)
 
-                AlertDialog.Builder(activity)
-                    .setTitle("Favorited users")
-                    .setView(dialogView)
-                    .setPositiveButton("Copy") { _, _ ->
-                        copyToClipboard("Favorited users", favoriteList)
-                    }
-                    .setNegativeButton("Close") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .setNeutralButton("Export") { _, _ ->
-                        val file = GrindrPlus.context.getFileStreamPath("favorites.txt")
-                        file.writeText(favoriteListExport)
-                        GrindrPlus.showToast(
-                            Toast.LENGTH_LONG,
-                            "Exported favorited users. Use Mod Settings to access the file!"
-                        )
-                    }
-                    .create()
-                    .show()
+                showAlertDialog {
+                    title = "Favorited users"
+                    view = dialogView
+                    positiveButton = DialogButton(
+                        text = "Copy",
+                        onClick = { copyToClipboard("Favorited users", favoriteList) }
+                    )
+                    negativeButton = DialogButton("Close")
+                    neutralButton = DialogButton(
+                        text = "Export",
+                        onClick = {
+                            val file = GrindrPlus.context.getFileStreamPath("favorites.txt")
+                            file.writeText(favoriteListExport)
+                            showToast(
+                                "Exported favorited users. Use Mod Settings to access the file!",
+                                Toast.LENGTH_LONG
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -240,33 +246,27 @@ class Profile(
 
             dialogView.addView(textView)
 
-            AlertDialog.Builder(activity)
-                .setTitle("Profile IDs")
-                .setView(dialogView)
-                .setPositiveButton("Copy my ID") { _, _ ->
-                    copyToClipboard("Your ID", recipient)
-                }
-                .setNegativeButton("Copy profile ID") { _, _ ->
-                    copyToClipboard("Profile ID", sender)
-                }
-                .setNeutralButton("Close") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-                .also { alertDialog ->
-                    alertDialog.show()
-                    alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnLongClickListener {
+            showAlertDialog {
+                title = "Profile IDs"
+                view = dialogView
+                positiveButton = DialogButton(
+                    text = "Copy my ID",
+                    onClick = { copyToClipboard("Your ID", recipient) },
+                    onLongClick = { dialog ->
                         copyToClipboard("Your ID", " $recipient")
-                        alertDialog.dismiss()
-                        true
+                        dialog.dismiss()
                     }
-
-                    alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnLongClickListener {
+                )
+                negativeButton = DialogButton(
+                    text = "Copy profile ID",
+                    onClick = { copyToClipboard("Profile ID", sender) },
+                    onLongClick = { dialog ->
                         copyToClipboard("Profile ID", " $sender")
-                        alertDialog.dismiss()
-                        true
+                        dialog.dismiss()
                     }
-                }
+                )
+                neutralButton = DialogButton("Close")
+            }
         }
     }
 }

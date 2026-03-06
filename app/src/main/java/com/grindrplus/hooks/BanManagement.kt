@@ -5,7 +5,6 @@ import android.content.Context
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
-import com.grindrplus.GrindrPlus
 import com.grindrplus.GrindrPlus.loadClass
 import com.grindrplus.GrindrPlus.restartGrindr
 import com.grindrplus.core.Config
@@ -22,6 +21,9 @@ import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
 import com.grindrplus.utils.RetrofitUtils.getFailValue
 import com.grindrplus.utils.RetrofitUtils.isFail
+import com.grindrplus.utils.UiHelper.showToast
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers
@@ -131,7 +133,7 @@ class BanManagement : Hook(
 
                         safeCallMethod(newButton, "setOnClickListener", View.OnClickListener {
                             if (bannedInfo.length() == 0) {
-                                Toast.makeText(context, "No ban details available", Toast.LENGTH_SHORT).show()
+                                showToast("No ban details available", Toast.LENGTH_SHORT)
                             } else {
                                 createBanDetailsDialog(context, bannedInfo)
                             }
@@ -162,8 +164,8 @@ class BanManagement : Hook(
     }
 
     private fun createBanDetailsDialog(context: Context, bannedInfo: JSONObject) {
-        val message = StringBuilder()
-        message.append("Your account has been banned from " +
+        val dialogMessage = StringBuilder()
+        dialogMessage.append("Your account has been banned from " +
                 "Grindr and the server replied with the following information:\n\n")
 
         val mappings = mapOf(
@@ -197,42 +199,39 @@ class BanManagement : Hook(
                 }
 
                 if (value != null && value.isNotEmpty() && value != "null") {
-                    message.append("• $label: $value\n")
+                    dialogMessage.append("• $label: $value\n")
                 }
             }
         }
 
         if (isDeviceBan) {
-            message.append("\nYour device has been banned rather than just your account. " +
+            dialogMessage.append("\nYour device has been banned rather than just your account. " +
                     "This may or may not mean your account is also banned. " +
                     "You can bypass this restriction by generating different device information.")
         }
 
-        val dialog = android.app.AlertDialog.Builder(GrindrPlus.currentActivity)
-            .setTitle("Ban Details")
-            .setMessage(message.toString())
-            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-
-        if (isDeviceBan) {
-            dialog.setNeutralButton("Generate New Device ID") { _, _ ->
-                val uuid = java.util.UUID.randomUUID()
-                val newDeviceId = uuid.toString().replace("-", "")
-                Config.put("android_device_id", newDeviceId)
-                restartGrindr(1500, "New device ID generated. Grindr will restart now.")
+        showAlertDialog {
+            title = "Ban Details"
+            message = dialogMessage.toString()
+            neutralButton = if (isDeviceBan) {
+                DialogButton(
+                    text = "Generate New Device ID",
+                    onClick = {
+                        val newDeviceId = java.util.UUID.randomUUID()
+                            .toString().replace("-", "")
+                        Config.put("android_device_id", newDeviceId)
+                        restartGrindr(1500, "New device ID generated. Grindr will restart now.")
+                    }
+                )
+            } else {
+                DialogButton(
+                    text = "Copy JSON",
+                    onClick = {
+                        copyToClipboard("Ban Details", bannedInfo.toString(2))
+                        showToast("Ban details copied to clipboard", Toast.LENGTH_SHORT)
+                    }
+                )
             }
-        } else {
-            dialog.setNeutralButton("Copy JSON") { _, _ ->
-                copyToClipboard("Ban Details", bannedInfo.toString(2))
-                Toast.makeText(
-                    GrindrPlus.currentActivity,
-                    "Ban details copied to clipboard",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
-        GrindrPlus.currentActivity?.runOnUiThread {
-            dialog.create().show()
         }
     }
 
