@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import android.app.AlertDialog
 import android.content.Context
 import android.os.Build
 import android.view.View
@@ -15,6 +14,9 @@ import com.grindrplus.core.logi
 import com.grindrplus.core.logw
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.Icon
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hookConstructor
 import java.io.File
@@ -79,7 +81,7 @@ class StatusDialog : Hook(
                     val isLSPosed = GrindrPlus.bridgeClient.isLSPosed()
                 }
 
-                val message = buildString {
+                val dialogMessage = buildString {
                     appendLine("GrindrPlus is active and running")
                     appendLine()
                     appendLine("App Information:")
@@ -101,23 +103,21 @@ class StatusDialog : Hook(
                     appendLine("Long press this tab to show this dialog")
                 }
 
-                AlertDialog.Builder(context)
-                    .setTitle("GrindrPlus")
-                    .setMessage(message)
-                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .setNegativeButton("Restart") { dialog, _ ->
-                        dialog.dismiss()
-                        performCacheClearOperation(context)
-                    }
-                    .setIcon(android.R.drawable.ic_dialog_info)
-                    .show()
+                showAlertDialog {
+                    title = "GrindrPlus"
+                    message = dialogMessage
+                    negativeButton = DialogButton(
+                        text = "Restart",
+                        onClick = { performCacheClearOperation(context) }
+                    )
+                    icon = Icon.ResId(android.R.drawable.ic_dialog_info)
+                }
 
             } catch (e: Exception) {
-                AlertDialog.Builder(context)
-                    .setTitle("GrindrPlus")
-                    .setMessage("GrindrPlus is active and running\n\nError retrieving details: ${e.message}")
-                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .show()
+                showAlertDialog {
+                    title = "GrindrPlus"
+                    message = "GrindrPlus is active and running\n\nError retrieving details: ${e.message}"
+                }
             }
         }
     }

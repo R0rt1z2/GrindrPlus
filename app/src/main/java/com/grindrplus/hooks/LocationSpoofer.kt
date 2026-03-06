@@ -1,6 +1,5 @@
 package com.grindrplus.hooks
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.BlendMode
@@ -31,6 +30,8 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
@@ -379,12 +380,11 @@ class LocationSpoofer : Hook(
                 showToast("Teleported to ${location.name}", Toast.LENGTH_LONG)
             }
 
-            AlertDialog.Builder(context).apply {
-                setTitle("Teleport Locations")
-                setView(locationDialogView)
-                setPositiveButton("OK") { dialog, _ -> teleport() }
-                setNegativeButton("Close", null)
-                show()
+            showAlertDialog {
+                title = "Teleport Locations"
+                view = locationDialogView
+                positiveButton = DialogButton(text = "OK", onClick = { teleport() })
+                negativeButton = DialogButton("Close")
             }
         }
     }
@@ -517,21 +517,19 @@ class LocationSpoofer : Hook(
             return true
         }
 
-        AlertDialog.Builder(context).apply {
-            setTitle("Add Location")
-            setView(container)
-            setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
-            setPositiveButton("Save", null)
-
-            val dialog = show()
-            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
-            // setPositiveButton listener always closes it
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                coroutineScope.launch {
-                    if (saveLocation())
-                        dialog.dismiss()
+        showAlertDialog {
+            title = "Add Location"
+            view = container
+            positiveButton = DialogButton(
+                text = "Save",
+                onPreventDismiss = { dialog ->
+                    coroutineScope.launch {
+                        if (saveLocation())
+                            dialog.dismiss()
+                    }
                 }
-            }
+            )
+            negativeButton = DialogButton("Cancel")
         }
     }
 
@@ -622,31 +620,26 @@ class LocationSpoofer : Hook(
         callMethod(mapView, "getMapAsync", onMapReadyListener)
 
 
-        AlertDialog.Builder(context).apply {
-            setTitle("Pick Location")
-            setView(container)
-            setNegativeButton("Cancel", null)
-            setPositiveButton("OK", null)
-
-            val dialog = show()
-            // set listener here instead of in setPositiveButton to be able to prevent the dialog from closing
-            // setPositiveButton listener always closes it
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                coroutineScope.launch {
-                    if (selectedLatLng != null) {
-                        val latitude = getObjectField(selectedLatLng, "latitude") as Double
-                        val longitude = getObjectField(selectedLatLng, "longitude") as Double
-
-                        val location = TeleportLocationEntity("maps-pick", latitude, longitude)
-                        onLocationPicked(location)
-
-                        dialog.dismiss()
-
-                    } else {
-                        showToast("No location selected", Toast.LENGTH_SHORT)
+        showAlertDialog {
+            title = "Pick Location"
+            view = container
+            positiveButton = DialogButton(
+                text = "OK",
+                onPreventDismiss = { dialog ->
+                    coroutineScope.launch {
+                        if (selectedLatLng != null) {
+                            val latitude = getObjectField(selectedLatLng, "latitude") as Double
+                            val longitude = getObjectField(selectedLatLng, "longitude") as Double
+                            val location = TeleportLocationEntity("maps-pick", latitude, longitude)
+                            onLocationPicked(location)
+                            dialog.dismiss()
+                        } else {
+                            showToast("No location selected", Toast.LENGTH_SHORT)
+                        }
                     }
                 }
-            }
+            )
+            negativeButton = DialogButton(text = "Cancel")
         }
 
     }

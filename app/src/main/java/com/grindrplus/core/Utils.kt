@@ -16,7 +16,10 @@ import com.grindrplus.GrindrPlus.httpClient
 import com.grindrplus.GrindrPlus.isImportingSomething
 import com.grindrplus.GrindrPlus.shouldTriggerAntiblock
 import com.grindrplus.core.Constants.NEWLINE
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -154,7 +157,7 @@ object Utils {
         successMessage: String = "All blocks have been imported!",
         failureMessage: String = "Something went wrong. Please try again."
     ) {
-        lateinit var dialog: AlertDialog
+        val dialogDeferred = CompletableDeferred<AlertDialog>()
 
         val progressBar = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
             isIndeterminate = false
@@ -168,20 +171,8 @@ object Utils {
             setPadding(20, 20, 20, 20)
         }
 
-        val cancelButton = Button(context).apply {
-            text = "Cancel"
-            setOnClickListener {
-                onCancel()
-                dialog.dismiss()
-            }
-        }
-
-        val backgroundButton = Button(context).apply {
-            text = "Run in Background"
-            setOnClickListener {
-                dialog.dismiss()
-            }
-        }
+        val cancelButton = Button(context).apply { text = "Cancel" }
+        val backgroundButton = Button(context).apply { text = "Run in Background" }
 
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -192,12 +183,22 @@ object Utils {
             addView(backgroundButton)
         }
 
-        dialog = AlertDialog.Builder(context)
-            .setCancelable(false)
-            .setView(container)
-            .create()
-
-        dialog.show()
+        showAlertDialog {
+            view = container
+            cancellable = false
+            positiveButton = null
+            this.activity = context as? Activity
+            onShow = { d ->
+                dialogDeferred.complete(d)
+                cancelButton.setOnClickListener {
+                    onCancel()
+                    d.dismiss()
+                }
+                backgroundButton.setOnClickListener {
+                    d.dismiss()
+                }
+            }
+        }
 
         onRunInBackground({ progress ->
             progressBar.progress = progress
@@ -222,7 +223,10 @@ object Utils {
             val closeButton = Button(context).apply {
                 text = "Close"
                 setOnClickListener {
-                    dialog.dismiss()
+                    GrindrPlus.executeAsync {
+                        val d = dialogDeferred.await()
+                        GrindrPlus.runOnMainThread { d.dismiss() }
+                    }
                 }
             }
 
@@ -235,18 +239,14 @@ object Utils {
     }
 
     fun showWarningDialog(context: Context, message: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
-        AlertDialog.Builder(context)
-            .setTitle("Warning")
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton("Proceed") { _, _ ->
-                onConfirm()
-            }
-            .setNegativeButton("Cancel") { _, _ ->
-                onCancel()
-            }
-            .create()
-            .show()
+        showAlertDialog {
+            title = "Warning"
+            this.message = message
+            cancellable = false
+            positiveButton = DialogButton(text = "Proceed", onClick = onConfirm)
+            negativeButton = DialogButton(text = "Cancel", onClick = onCancel)
+            activity = context as? Activity
+        }
     }
 
     fun handleImports(activity: Activity) {

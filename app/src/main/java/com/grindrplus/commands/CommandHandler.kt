@@ -1,7 +1,6 @@
 package com.grindrplus.commands
 
-import android.app.AlertDialog
-import com.grindrplus.GrindrPlus
+import com.grindrplus.utils.UiHelper.showAlertDialog
 
 class CommandHandler(
     recipient: String,
@@ -21,13 +20,9 @@ class CommandHandler(
         val command = args.firstOrNull() ?: return
 
         if (command == "help") {
-            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-                AlertDialog.Builder(activity)
-                    .setTitle("Help")
-                    .setMessage(commandModules.joinToString("\n\n") { it.getHelp() })
-                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .create()
-                    .show()
+            showAlertDialog {
+                title = "Help"
+                message = commandModules.joinToString("\n\n") { it.getHelp() }
             }
         }
 

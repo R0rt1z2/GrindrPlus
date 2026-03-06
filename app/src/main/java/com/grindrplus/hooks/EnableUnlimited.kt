@@ -11,6 +11,9 @@ import com.grindrplus.core.logi
 import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.Icon
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -130,23 +133,19 @@ class EnableUnlimited : Hook(
             val stackTrace = Thread.currentThread().stackTrace.dropWhile {
                 !it.toString().contains("LSPHooker") }.drop(1).joinToString("\n")
 
-            android.app.AlertDialog.Builder(GrindrPlus.currentActivity)
-                .setTitle("Paywalled Feature Detected")
-                .setMessage(
+            showAlertDialog {
+                title = "Paywalled Feature Detected"
+                message =
                     "This feature is server-enforced and cannot be bypassed in this version.\n\n" +
                             "If you think this is a mistake, please report it to the developer. " +
                             "You can copy the stack trace below to help with troubleshooting."
+                icon = Icon.ResId(android.R.drawable.ic_dialog_alert)
+                cancellable = false
+                negativeButton = DialogButton(
+                    text = "Copy Stack Trace",
+                    onClick = { copyToClipboard("Stack trace", stackTrace) }
                 )
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setCancelable(false)
-                .setNegativeButton("Copy Stack Trace") { _, _ ->
-                    copyToClipboard(
-                        "Stack trace",
-                        stackTrace
-                    )
-                }
-                .setPositiveButton("Ok", null)
-                .show()
+            }
 
             param.setResult(null)
         }

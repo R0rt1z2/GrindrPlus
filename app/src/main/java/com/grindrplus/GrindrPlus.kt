@@ -2,7 +2,6 @@ package com.grindrplus
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
@@ -45,6 +44,9 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import kotlin.system.measureTimeMillis
 import androidx.core.net.toUri
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.Icon
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
 import timber.log.Timber
 
@@ -429,7 +431,7 @@ object GrindrPlus {
     }
 
     private fun showVersionMismatchDialog(activity: Activity) {
-        try {
+        runCatching {
             val pkgInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             val versionCode: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 pkgInfo.longVersionCode
@@ -442,19 +444,18 @@ object GrindrPlus {
             val expectedInfo = "${BuildConfig.TARGET_GRINDR_VERSION_NAMES.joinToString(", ")} " +
                     "(code: ${BuildConfig.TARGET_GRINDR_VERSION_CODES.joinToString(", ")})"
 
-            val dialog = android.app.AlertDialog.Builder(activity)
-                .setTitle("GrindrPlus: Version Mismatch")
-                .setMessage("Incompatible Grindr version detected.\n\n" +
+            showAlertDialog {
+                title = "GrindrPlus: Version Mismatch"
+                message = "Incompatible Grindr version detected.\n\n" +
                         "• Installed: $installedInfo\n" +
                         "• Required: $expectedInfo\n\n" +
-                        "GrindrPlus has been disabled. Please install a compatible Grindr version.")
-                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setCancelable(false)
-                .create()
-            dialog.show()
+                        "GrindrPlus has been disabled. Please install a compatible Grindr version."
+                icon = Icon.ResId(android.R.drawable.ic_dialog_alert)
+                cancellable = false
+                this.activity = activity
+            }
             Logger.i("Version mismatch dialog shown", LogSource.MODULE)
-        } catch (e: Exception) {
+        }.onFailure { e ->
             Logger.e("Failed to show version mismatch dialog: ${e.message}", LogSource.MODULE)
             showToast(
                 "Version mismatch detected. Please install a compatible Grindr version.",
@@ -464,121 +465,94 @@ object GrindrPlus {
     }
 
     private fun showBridgeConnectionError(activity: Activity? = null) {
-        try {
-            val targetActivity = activity ?: currentActivity
-
-            if (targetActivity != null) {
-                val dialog = android.app.AlertDialog.Builder(targetActivity)
-                    .setTitle("Bridge Connection Failed")
-                    .setMessage("Failed to connect to the bridge service. The module will not work properly.\n\n" +
-                            "This may be caused by:\n" +
-                            "• Battery optimization settings\n" +
-                            "• System killing background processes\n" +
-                            "• App being force stopped\n\n" +
-                            "Try restarting the app or reinstalling the module.")
-                    .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setCancelable(false)
-                    .create()
-
-                targetActivity.runOnUiThread {
-                    dialog.show()
-                }
-
-                Logger.i("Bridge connection error dialog shown", LogSource.MODULE)
-            } else {
-                showToast(
-                    "Bridge service connection failed - module features unavailable",
-                    Toast.LENGTH_LONG
-                )
-            }
-        } catch (e: Exception) {
-            Logger.e("Failed to show bridge error dialog: ${e.message}", LogSource.MODULE)
+        val targetActivity = activity ?: currentActivity
+        if (targetActivity == null) {
             showToast(
                 "Bridge service connection failed - module features unavailable",
                 Toast.LENGTH_LONG
             )
+            return
         }
+
+        showAlertDialog {
+            title = "Bridge Connection Failed"
+            message = "Failed to connect to the bridge service. The module will not work properly.\n\n" +
+                    "This may be caused by:\n" +
+                    "• Battery optimization settings\n" +
+                    "• System killing background processes\n" +
+                    "• App being force stopped\n\n" +
+                    "Try restarting the app or reinstalling the module."
+            icon = Icon.ResId(android.R.drawable.ic_dialog_alert)
+            cancellable = false
+            this.activity = targetActivity
+        }
+        Logger.i("Bridge connection error dialog shown", LogSource.MODULE)
     }
 
     private fun showAgeVerificationComplianceDialog(activity: Activity) {
-        try {
-            val dialog = AlertDialog.Builder(activity)
-                .setTitle("Age Verification Required")
-                .setMessage("You are accessing Grindr from a country where age verification is legally mandated.\n\n" +
-                        "LEGAL COMPLIANCE NOTICE:\n" +
-                        "GrindrPlus does NOT bypass, disable, or interfere with age verification systems. Any attempt to circumvent age verification requirements may be illegal\n\n" +
-                        "MANDATORY REQUIREMENTS:\n" +
-                        "1. Complete age verification using the official Grindr application\n" +
-                        "2. Comply with all legally required verification processes\n" +
-                        "3. Install GrindrPlus only after successful verification through official channels\n\n" +
-                        "WARNING:\n" +
-                        "The developers of this module are not responsible for any legal consequences resulting from non-compliance with age verification requirements.")
-                .setPositiveButton("I Understand") { dialog, _ ->
+        showAlertDialog {
+            title = "Age Verification Required"
+            message = "You are accessing Grindr from a country where age verification is legally mandated.\n\n" +
+                    "LEGAL COMPLIANCE NOTICE:\n" +
+                    "GrindrPlus does NOT bypass, disable, or interfere with age verification systems. Any attempt to circumvent age verification requirements may be illegal\n\n" +
+                    "MANDATORY REQUIREMENTS:\n" +
+                    "1. Complete age verification using the official Grindr application\n" +
+                    "2. Comply with all legally required verification processes\n" +
+                    "3. Install GrindrPlus only after successful verification through official channels\n\n" +
+                    "WARNING:\n" +
+                    "The developers of this module are not responsible for any legal consequences resulting from non-compliance with age verification requirements."
+            positiveButton = DialogButton(
+                text = "I Understand",
+                onClick = {
                     activity.finish()
-                    dialog.dismiss()
                     showToast(
                         "Please complete age verification in the official Grindr app first, then reinstall GrindrPlus",
                         Toast.LENGTH_LONG
                     )
                 }
-                .setNegativeButton("Exit App") { dialog, _ ->
-                    dialog.dismiss()
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                }
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setCancelable(false)
-                .create()
-
-            dialog.show()
-            Logger.i("Age verification compliance dialog shown", LogSource.MODULE)
-
-        } catch (e: Exception) {
-            Logger.e("Failed to show age verification dialog: ${e.message}", LogSource.MODULE)
-            showToast(
-                "Age verification required. Please use official Grindr app to verify, then reinstall GrindrPlus.",
-                Toast.LENGTH_LONG
             )
-            activity.finish()
+            negativeButton = DialogButton(
+                text = "Exit App",
+                onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }
+            )
+            icon = Icon.ResId(android.R.drawable.ic_dialog_alert)
+            cancellable = false
+            this.activity = activity
         }
+        Logger.i("Age verification compliance dialog shown", LogSource.MODULE)
     }
 
     private fun showMapsApiKeyDialog(context: Context) {
-        try {
-            AlertDialog.Builder(context)
-                .setTitle("Maps API Key Required")
-                .setMessage("Maps functionality requires a Google Maps API key for LSPatch users due to signature validation issues.\n\n" +
-                        "Quick Setup:\n" +
-                        "1. Create a Google Cloud project at console.cloud.google.com\n" +
-                        "2. Enable: Maps SDK for Android, Geocoding API, Maps JavaScript API\n" +
-                        "3. Create API key with NO restrictions\n" +
-                        "4. Add key to GrindrPlus settings\n" +
-                        "5. REINSTALL GrindrPlus (restart won't work)\n\n" +
-                        "Note: Google may request credit card for free tier.")
-                .setPositiveButton("Open Console") { dialog, _ ->
-                    dialog.dismiss()
-                    try {
+        showAlertDialog {
+            title = "Maps API Key Required"
+            message = "Maps functionality requires a Google Maps API key for LSPatch users due to signature validation issues.\n\n" +
+                    "Quick Setup:\n" +
+                    "1. Create a Google Cloud project at console.cloud.google.com\n" +
+                    "2. Enable: Maps SDK for Android, Geocoding API, Maps JavaScript API\n" +
+                    "3. Create API key with NO restrictions\n" +
+                    "4. Add key to GrindrPlus settings\n" +
+                    "5. REINSTALL GrindrPlus (restart won't work)\n\n" +
+                    "Note: Google may request credit card for free tier."
+            positiveButton = DialogButton(
+                text = "Open Console",
+                onClick = {
+                    runCatching {
                         val intent = Intent(Intent.ACTION_VIEW).apply {
                             data = "https://console.cloud.google.com/".toUri()
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-
-                        val appContext = context.applicationContext
-                        appContext.startActivity(intent)
-
-                    } catch (e: Exception) {
+                        context.applicationContext.startActivity(intent)
+                    }.onFailure {
                         showToast(
                             "Unable to open browser. Please visit console.cloud.google.com manually",
                             Toast.LENGTH_LONG
                         )
                     }
                 }
-                .setNegativeButton("Dismiss") { dialog, _ -> dialog.dismiss() }
-                .setIcon(android.R.drawable.ic_dialog_info)
-                .setCancelable(true)
-                .show()
-        } catch (e: Exception) {
-            Logger.e("Maps API key dialog error: ${e.message}")
+            )
+            negativeButton = DialogButton("Dismiss")
+            icon = Icon.ResId(android.R.drawable.ic_dialog_info)
+            this.activity = context as? Activity
         }
     }
 

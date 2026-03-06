@@ -15,6 +15,8 @@ import com.grindrplus.ui.Utils.copyToClipboard
 import com.grindrplus.ui.Utils.formatEpochSeconds
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
@@ -139,25 +141,22 @@ class ProfileDetails : Hook(
 
                 val detailsText = properties.map { (key, value) -> "• $key: $value" }.joinToString("\n")
 
-                val dialog =
-                    AlertDialog.Builder(it.context)
-                        .setTitle("Hidden profile details")
-                        .setMessage(detailsText)
-                        .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-                        .setNeutralButton("Copy Details") { dialog, _ ->
+                showAlertDialog {
+                    title = "Hidden profile details"
+                    message = detailsText
+                    neutralButton = DialogButton(
+                        text = "Copy Details",
+                        onClick = {
                             copyToClipboard("Profile Details", detailsText)
                             showToast("Profile details copied to clipboard", Toast.LENGTH_SHORT)
-                            dialog.dismiss()
                         }
-                        .create()
-
-                dialog.setOnShowListener {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(android.graphics.Color.WHITE)
-                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(android.graphics.Color.WHITE)
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(android.graphics.Color.WHITE)
+                    )
+                    onShow = { d ->
+                        d.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(android.graphics.Color.WHITE)
+                        d.getButton(AlertDialog.BUTTON_NEUTRAL)?.setTextColor(android.graphics.Color.WHITE)
+                        d.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(android.graphics.Color.WHITE)
+                    }
                 }
-
-                dialog.show()
             }
         }
 

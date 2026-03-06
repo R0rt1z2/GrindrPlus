@@ -1,6 +1,5 @@
 package com.grindrplus.commands
 
-import android.app.AlertDialog
 import android.net.Uri
 import android.widget.Toast
 import com.grindrplus.GrindrPlus
@@ -9,6 +8,8 @@ import com.grindrplus.core.Config
 import com.grindrplus.core.Logger
 import com.grindrplus.core.Utils.coordsToGeoHash
 import com.grindrplus.persistence.model.TeleportLocationEntity
+import com.grindrplus.utils.UiHelper.DialogButton
+import com.grindrplus.utils.UiHelper.showAlertDialog
 import com.grindrplus.utils.UiHelper.showToast
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.getObjectField
@@ -29,15 +30,12 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
          * If the user is currently used forced coordinates, don't allow teleportation.
          */
         if (Config.get("forced_coordinates", "") as String != "") {
-            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
-                AlertDialog.Builder(activity)
-                    .setTitle("Teleportation disabled")
-                    .setMessage(
-                        "GrindrPlus is currently using forced coordinates. " +
-                                "Please disable it to use teleportation."
-                    )
-                    .setPositiveButton("OK", null)
-                    .setNegativeButton("Disable") { _, _ ->
+            showAlertDialog {
+                title = "Teleportation disabled"
+                message = "GrindrPlus is currently using forced coordinates. " + "Please disable it to use teleportation."
+                negativeButton = DialogButton(
+                    text = "Disable",
+                    onClick = {
                         Config.put("forced_coordinates", "")
                         GrindrPlus.bridgeClient.deleteForcedLocation(packageName)
                         showToast(
@@ -45,7 +43,7 @@ class Location(recipient: String, sender: String) : CommandModule("Location", re
                             Toast.LENGTH_LONG
                         )
                     }
-                    .show()
+                )
             }
 
             return;
