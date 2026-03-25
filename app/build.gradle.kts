@@ -116,7 +116,6 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.fetch2)
     implementation(libs.fetch2okhttp)
-    implementation(libs.rootbeer.lib)
     implementation(libs.zip.android) {
         artifact {
             type = "aar"

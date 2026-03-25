@@ -8,18 +8,11 @@ import com.grindrplus.hooks.sslUnpinning
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import de.robv.android.xposed.IXposedHookLoadPackage
-import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
-class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
-    private lateinit var modulePath: String
-
-    override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
-        modulePath = startupParam.modulePath
-    }
-
+class XposedLoader : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName.startsWith("com.grindrplus")) {
             findAndHookMethod(
@@ -39,7 +32,7 @@ class XposedLoader : IXposedHookZygoteInit, IXposedHookLoadPackage {
 
         Application::class.java.hook("attach", HookStage.AFTER) {
             val application = it.thisObject()
-            GrindrPlus.init(modulePath, application,
+            GrindrPlus.init(application,
                 BuildConfig.TARGET_GRINDR_VERSION_CODES,
                 BuildConfig.TARGET_GRINDR_VERSION_NAMES)
         }
