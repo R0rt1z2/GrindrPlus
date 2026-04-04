@@ -1,3 +1,8 @@
+>[!WARNING]
+> Grindr has started using PairIP for their latest versions of the app. **This effectively marks the end of this module, and no further updates will be released**.
+>
+> Enjoy it while it lasts, as you’ll eventually be required to update to the latest version.
+
 <p align="center" style="border-radius: 50%;">
   <img src="gplus_icon.svg" alt="Grindr Plus Icon" width="150" height="150">
 </p>
@@ -20,7 +25,7 @@ This repository contains a completely rewritten version of [ElJaviLuki's origina
 
 As the title of the repo suggests, this mod is designed to enhance the user experience, but please note that it’s under active development, so stability is not always guaranteed.
 
-Neither I ([@R0rt1z2](https://github.com/R0rt1z2)) nor any contributors listed here are affiliated with Grindr LLC. For any important inquiries related to this repository, feel free to reach out to me directly at hello@r0rt1z2.com.
+Neither I ([@R0rt1z2](https://github.com/R0rt1z2)) nor any contributors listed here are affiliated with Grindr LLC.
 
 Use this mod at your own discretion, and be aware that future updates may introduce changes or require further adjustments.
 
