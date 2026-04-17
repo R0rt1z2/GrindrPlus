@@ -21,16 +21,16 @@
             "description": "Desactivar análisis de Grindr (recolección de datos)"
         },
         "disable_boosting": {
-            "name": "Disable boosting",
-            "description": "Get rid of all upsells related to boosting"
+            "name": "Desactivar potenciador",
+            "description": "Deshazte de todas las ventas relacionadas con el potenciador"
         },
         "disable_updates": {
             "name": "Desactivar actualizaciones",
             "description": "Desactivar actualizaciones forzadas"
         },
         "enable_unlimited": {
-            "name": "Enable unlimited",
-            "description": "Enable Grindr Unlimited features"
+            "name": "Habilitar ilimitado",
+            "description": "Habilitar funciones ilimitadas de Grindr"
         },
         "expiring_photos": {
             "name": "Fotos que expiran",
@@ -50,7 +50,7 @@
         },
         "location_spoofer": {
             "name": "Location spoofer",
-            "description": "Spoof your location"
+            "description": "Explora tu ubicación"
         },
         "mod_settings": {
             "name": "Ajustes del mod",
@@ -58,39 +58,39 @@
         },
         "online_indicator": {
             "name": "",
-            "description": "More accurate online status indicator"
+            "description": "Indicador de estado de conexión más preciso"
         },
         "profile_details": {
             "name": "Detalles del perfil",
-            "description": "Add extra fields and details to profiles",
+            "description": "Añadir campos y detalles adicionales a los perfiles",
             "profile_id": "ID del perfil",
             "approximate_distance": "Distancia Aproximada",
             "found_via_teleport": "Found via teleport",
             "favorite": "Favorito",
-            "from_viewed_me": "From viewed me",
+            "from_viewed_me": "Visto por mi",
             "innaccessible_profile": "Perfil inaccesible",
             "jwt_boosting": "JWT boosting",
-            "new": "New",
+            "new": "Nuevo",
             "teleporting": "Teleporting",
             "online_now": "En línea ahora",
-            "hidden_profile_details": "Hidden profile details",
+            "hidden_profile_details": "Detalles de perfil ocultos",
             "ok": "Aceptar",
-            "underweight": "Underweight",
+            "underweight": "Bajo peso",
             "normal_weight": "Peso normal",
             "overweight": "Sobrepeso",
             "obese": "Obeso"
         },
         "profile_views": {
-            "name": "Profile views",
-            "description": "Control whether others can see you've viewed their profile"
+            "name": "Vistas del perfil",
+            "description": "Controla si otros pueden ver que has visto su perfil"
         },
         "removable_messages": {
-            "name": "Removable messages",
-            "description": "Remove messages for both parties"
+            "name": "Mensajes eliminables",
+            "description": "Eliminar mensajes para ambas partes"
         },
         "signature_spoofer": {
-            "title": "Signature spoofer",
-            "description": "Allow logging in with Google while using LSPatch"
+            "title": "Firma falsificadora",
+            "description": "Permitir iniciar sesión con Google mientras se utiliza LSPatch"
         },
         "unlimited_albums": {
             "name": "Álbumes ilimitados",
@@ -98,7 +98,7 @@
         },
         "unlimited_profiles": {
             "name": "Perfiles ilimitados",
-            "description": "View unlimited profiles in cascade"
+            "description": "Ver perfiles ilimitados en cascada"
         }
     },
     "commands": {
@@ -108,16 +108,16 @@
             "teleported_to_coords": "Teleported to {lat}, {lon}",
             "location_not_found": "Ubicación no encontrada",
             "save_current_location": "Guardar la ubicación actual",
-            "provide_name_for_location": "Please provide a name for the location",
+            "provide_name_for_location": "Por favor, proporcione un nombre para la ubicación",
             "successfully_updated_location": "¡{name} actualizado con éxito!",
             "successfully_saved_location": "¡{name} guardado con éxito!",
             "delete_saved_location": "Eliminar una ubicación guardada",
             "successfully_deleted_location": "¡{name} eliminado con éxito!"
         },
         "profile": {
-            "open_user_profile": "Open a user profile",
+            "open_user_profile": "Abrir un perfil de usuario",
             "provide_user_id": "Por favor, proporciona un ID válido",
-            "get_and_copy_id": "Get and copy profile IDs",
+            "get_and_copy_id": "Obtener y copiar ID de perfil",
             "your_id": "Tu ID",
             "profile_id": "ID del perfil",
             "profile_ids": "IDs de los perfiles",
