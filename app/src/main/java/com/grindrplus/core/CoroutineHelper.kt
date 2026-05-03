@@ -6,19 +6,21 @@ import java.lang.reflect.Proxy
 
 object CoroutineHelper {
 
-    private val BuildersKt = XposedHelpers.findClass(
-        "kotlinx.coroutines.BuildersKt",
-        GrindrPlus.classLoader
-    )
-    private val Function2 = XposedHelpers.findClass(
-        "kotlin.jvm.functions.Function2",
-        GrindrPlus.classLoader
-    )
-    private val EmptyCoroutineContextInstance = let {
-        val emptyCoroutineContext = XposedHelpers.findClass(
+    // lazy: defers class lookup until first use so a missing class throws at call-site
+    // (object init failures produce ExceptionInInitializerError which is non-recoverable)
+    private val BuildersKt: Class<*> by lazy {
+        XposedHelpers.findClassIfExists("kotlinx.coroutines.BuildersKt", GrindrPlus.classLoader)
+            ?: error("CoroutineHelper: kotlinx.coroutines.BuildersKt not found in classLoader")
+    }
+    private val Function2: Class<*> by lazy {
+        XposedHelpers.findClassIfExists("kotlin.jvm.functions.Function2", GrindrPlus.classLoader)
+            ?: error("CoroutineHelper: kotlin.jvm.functions.Function2 not found in classLoader")
+    }
+    private val EmptyCoroutineContextInstance: Any by lazy {
+        val emptyCoroutineContext = XposedHelpers.findClassIfExists(
             "kotlin.coroutines.EmptyCoroutineContext",
             GrindrPlus.classLoader
-        )
+        ) ?: error("CoroutineHelper: kotlin.coroutines.EmptyCoroutineContext not found in classLoader")
         XposedHelpers.getStaticObjectField(emptyCoroutineContext, "INSTANCE")
     }
 

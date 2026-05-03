@@ -64,19 +64,7 @@ class SessionInstaller {
         }
 
         val packageInstaller = context.packageManager.packageInstaller
-
-        // Create installation session
-        val params =
-            PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-                setInstallReason(PackageManager.INSTALL_REASON_USER)
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setInstallScenario(PackageManager.INSTALL_SCENARIO_FAST)
-                    if (silent) {
-                        setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-                    }
-                }
-            }
+        val params = createSessionParams(silent)
 
         // Create the session
         val sessionId = try {
@@ -205,18 +193,7 @@ class SessionInstaller {
             val pendingIntent = PendingIntent.getBroadcast(context, sessionId, intent, flags)
 
             packageInstaller.openSession(sessionId).use { session ->
-                for (apk in apks) {
-                    Timber.Forest.tag(TAG)
-                        .d("Writing APK to session: ${apk.name} (${apk.length()} bytes)")
-
-                    apk.inputStream().use { inputStream ->
-                        session.openWrite(apk.name, 0, apk.length()).use { outputStream ->
-                            inputStream.copyTo(outputStream, DEFAULT_BUFFER_SIZE)
-                            session.fsync(outputStream)
-                        }
-                    }
-                }
-
+                writeApksToSession(session, apks)
                 Timber.Forest.tag(TAG).d("Committing installation session...")
                 session.commit(pendingIntent.intentSender)
             }
@@ -235,6 +212,29 @@ class SessionInstaller {
             Timber.Forest.tag(TAG).e(e, message)
             callback?.invoke(false, message)
             continuation.resumeWithException(e)
+        }
+    }
+
+    private fun createSessionParams(silent: Boolean): PackageInstaller.SessionParams =
+        PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            setInstallReason(PackageManager.INSTALL_REASON_USER)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                setInstallScenario(PackageManager.INSTALL_SCENARIO_FAST)
+                if (silent) {
+                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+                }
+            }
+        }
+
+    private fun writeApksToSession(session: PackageInstaller.Session, apks: List<File>) {
+        for (apk in apks) {
+            Timber.Forest.tag(TAG).d("Writing APK to session: ${apk.name} (${apk.length()} bytes)")
+            apk.inputStream().use { inputStream ->
+                session.openWrite(apk.name, 0, apk.length()).use { outputStream ->
+                    inputStream.copyTo(outputStream, DEFAULT_BUFFER_SIZE)
+                    session.fsync(outputStream)
+                }
+            }
         }
     }
 }

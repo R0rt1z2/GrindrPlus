@@ -1,12 +1,14 @@
 package com.grindrplus.core
 
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class TaskScheduler(private val scope: CoroutineScope) {
-    private val runningJobs = mutableMapOf<String, Job>()
+    private val runningJobs = ConcurrentHashMap<String, Job>()
 
     fun periodic(
         name: String,
@@ -14,10 +16,12 @@ class TaskScheduler(private val scope: CoroutineScope) {
         action: suspend () -> Unit
     ): Job {
         val job = scope.launch {
-            while (true) {
+            while (isActive) {
                 try {
                     action()
                     delay(intervalMs)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Logger.e("$name failed: ${e.message}", LogSource.MODULE)
                     Logger.writeRaw(e.stackTraceToString())
@@ -33,6 +37,8 @@ class TaskScheduler(private val scope: CoroutineScope) {
         val job = scope.launch {
             try {
                 action()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Logger.e("$name failed: ${e.message}", LogSource.MODULE)
                 Logger.writeRaw(e.stackTraceToString())
@@ -56,6 +62,8 @@ class TaskScheduler(private val scope: CoroutineScope) {
                     try {
                         action()
                         return@launch
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         if (attempt == retries - 1) {
                             Logger.e("$name failed after $retries attempts", LogSource.MODULE)

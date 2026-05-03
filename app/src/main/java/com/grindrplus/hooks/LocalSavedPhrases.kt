@@ -73,16 +73,33 @@ class LocalSavedPhrases : Hook(
         ) { proxy, method, args ->
             when {
                 method.isPOST("v3/me/prefs/phrases") -> {
-                    val phrase = getObjectField(args[0], "phrase") as String
-                    logi("Adding new local phrase: \"$phrase\"")
+                    val phrase = getObjectField(args[0], "phrase") as? String
+                    when {
+                        phrase == null -> {
+                            loge("LocalSavedPhrases: 'phrase' field was null or not a String, skipping")
+                            null
+                        }
+                        phrase.isBlank() -> {
+                            loge("LocalSavedPhrases: refusing to save blank phrase")
+                            null
+                        }
+                        else -> {
+                            val trimmedPhrase = phrase.take(1000)
+                            if (phrase.length > 1000) {
+                                loge("LocalSavedPhrases: phrase too long (${phrase.length} chars), truncating to 1000")
+                            }
+                            logi("Adding new local phrase: \"$trimmedPhrase\"")
+                            // InvocationHandler.invoke() is synchronous — runBlocking is required here.
+                            // Dispatchers.IO ensures we don't block any coroutine-internal thread pool.
+                            runBlocking(Dispatchers.IO) {
+                                val index = getCurrentPhraseIndex() + 1
+                                addPhrase(index, trimmedPhrase, 0, System.currentTimeMillis())
+                                logs("Phrase saved locally with ID: $index")
 
-                    runBlocking {
-                        val index = getCurrentPhraseIndex() + 1
-                        addPhrase(index, phrase, 0, System.currentTimeMillis())
-                        logs("Phrase saved locally with ID: $index")
-
-                        val response = savedPhraseConstructor?.newInstance(index.toString())
-                        createSuccess.newInstance(response)
+                                val response = savedPhraseConstructor?.newInstance(index.toString())
+                                createSuccess.newInstance(response)
+                            }
+                        }
                     }
                 }
 
@@ -90,7 +107,7 @@ class LocalSavedPhrases : Hook(
                     val id = args[0] as? String ?: "unknown"
                     logi("Deleting local phrase ID: $id")
 
-                    runBlocking {
+                    runBlocking(Dispatchers.IO) {
                         val index = id.toLongOrNull() ?: getCurrentPhraseIndex()
                         deletePhrase(index)
                         logs("Deleted local phrase ID: $index")
@@ -102,7 +119,7 @@ class LocalSavedPhrases : Hook(
                     val id = args[0] as? String ?: "0"
                     logd("Incrementing usage frequency for ID: $id")
 
-                    runBlocking {
+                    runBlocking(Dispatchers.IO) {
                         val index = id.toLongOrNull() ?: 0L
                         val phrase = getPhrase(index)
                         if (phrase != null) {
@@ -138,7 +155,7 @@ class LocalSavedPhrases : Hook(
             when {
                 method.isGET("v3/me/prefs") -> {
                     logd("Intercepted GET v3/me/prefs - pulling from local database")
-                    runBlocking {
+                    runBlocking(Dispatchers.IO) {
                         val currentPhrases = getPhraseList()
                         logd("Loaded ${currentPhrases.size} local phrases")
 

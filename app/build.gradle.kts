@@ -125,13 +125,30 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.arsclib)
     compileOnly(libs.bcprov.jdk18on)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
 }
 
+// Run with -PlspatchForce=true to re-download even when the committed jar is present.
 tasks.register("setupLSPatch") {
     doLast {
-        val jarUrl = Regex("https:\\/\\/nightly\\.link\\/JingMatrix\\/LSPatch\\/workflows\\/main\\/master\\/lspatch-debug-[^.]+\\.zip").find(
+        val existingJar = File("${project.projectDir}/libs/lspatch.jar")
+        val forceUpdate = project.findProperty("lspatchForce")?.toString()?.toBoolean() ?: false
+
+        if (existingJar.exists() && !forceUpdate) {
+            println("setupLSPatch: lspatch.jar already present in libs/ — skipping download.")
+            println("  To force a re-download: ./gradlew setupLSPatch -PlspatchForce=true")
+            return@doLast
+        }
+
+        println("setupLSPatch: downloading latest nightly LSPatch build...")
+
+        val jarUrl = Regex("https://nightly\\.link/JingMatrix/LSPatch/workflows/main/master/lspatch-debug-[^.]+\\.zip").find(
             URI("https://nightly.link/JingMatrix/LSPatch/workflows/main/master?preview").toURL().readText()
-        )!!.value
+        )?.value ?: error("setupLSPatch: could not locate download URL on nightly.link — page format may have changed")
 
         providers.exec {
             commandLine("mkdir", "-p", "/tmp/lspatch")
@@ -146,6 +163,7 @@ tasks.register("setupLSPatch") {
         }.result.get()
 
         val jarPath = File("/tmp/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
+            ?: error("setupLSPatch: jar not found inside downloaded zip — zip structure may have changed")
 
         providers.exec {
             commandLine("unzip", "-o", jarPath, "assets/lspatch/so*", "-d", "${project.projectDir}/src/main/")
@@ -162,6 +180,8 @@ tasks.register("setupLSPatch") {
         providers.exec {
             commandLine("zip", "-d", "${project.projectDir}/libs/lspatch.jar", "com/google/errorprone/annotations/*")
         }.result.get()
+
+        println("setupLSPatch: done — lspatch.jar updated in libs/")
     }
 }
 

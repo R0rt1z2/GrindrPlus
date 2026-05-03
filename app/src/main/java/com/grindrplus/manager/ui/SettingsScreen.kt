@@ -576,6 +576,88 @@ fun ImprovedSwitchSetting(
     }
 }
 
+@Composable
+private fun SettingTextField(
+    text: String,
+    errorMessage: String?,
+    keyboardType: KeyboardType,
+    onTextChange: (String) -> Unit,
+    onSave: () -> Unit,
+) {
+    OutlinedTextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = Modifier.fillMaxWidth(),
+        isError = errorMessage != null,
+        supportingText = {
+            if (errorMessage != null) {
+                Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+            }
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = when (keyboardType) {
+                KeyboardType.Number -> androidx.compose.ui.text.input.KeyboardType.Number
+                KeyboardType.Email -> androidx.compose.ui.text.input.KeyboardType.Email
+                KeyboardType.Password -> androidx.compose.ui.text.input.KeyboardType.Password
+                KeyboardType.Phone -> androidx.compose.ui.text.input.KeyboardType.Phone
+                else -> androidx.compose.ui.text.input.KeyboardType.Text
+            },
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onDone = { onSave() }),
+        singleLine = true,
+        shape = MaterialTheme.shapes.small,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        trailingIcon = {
+            IconButton(onClick = onSave, enabled = errorMessage == null) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Save",
+                    tint = if (errorMessage == null)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun CancelSaveButtons(
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
+    saveEnabled: Boolean,
+) {
+    Button(
+        onClick = onCancel,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        modifier = Modifier.padding(end = 8.dp)
+    ) {
+        Text("Cancel")
+    }
+    Button(
+        onClick = onSave,
+        enabled = saveEnabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+        )
+    ) {
+        Text("Save")
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImprovedTextSetting(
@@ -653,68 +735,19 @@ fun ImprovedTextSetting(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { value ->
+                SettingTextField(
+                    text = text,
+                    errorMessage = errorMessage,
+                    keyboardType = setting.keyboardType,
+                    onTextChange = { value ->
                         text = value
                         errorMessage = setting.validator?.invoke(value)
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = errorMessage != null,
-                    supportingText = {
-                        if (errorMessage != null) {
-                            Text(
-                                text = errorMessage!!,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = when (setting.keyboardType) {
-                            KeyboardType.Number -> androidx.compose.ui.text.input.KeyboardType.Number
-                            KeyboardType.Email -> androidx.compose.ui.text.input.KeyboardType.Email
-                            KeyboardType.Password -> androidx.compose.ui.text.input.KeyboardType.Password
-                            KeyboardType.Phone -> androidx.compose.ui.text.input.KeyboardType.Phone
-                            else -> androidx.compose.ui.text.input.KeyboardType.Text
-                        },
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            if (errorMessage == null) {
-                                setting.onValueChange(text)
-                                isExpanded = false
-                                onChanged()
-                            }
-                        }
-                    ),
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.small,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                if (errorMessage == null) {
-                                    setting.onValueChange(text)
-                                    isExpanded = false
-                                    onChanged()
-                                }
-                            },
-                            enabled = errorMessage == null
-                        ) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = "Save",
-                                tint = if (errorMessage == null)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            )
+                    onSave = {
+                        if (errorMessage == null) {
+                            setting.onValueChange(text)
+                            isExpanded = false
+                            onChanged()
                         }
                     }
                 )
@@ -725,37 +758,17 @@ fun ImprovedTextSetting(
                         .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(
-                        onClick = {
-                            isExpanded = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Text("Cancel")
-                    }
-
-                    Button(
-                        onClick = {
+                    CancelSaveButtons(
+                        onCancel = { isExpanded = false },
+                        onSave = {
                             if (errorMessage == null) {
                                 setting.onValueChange(text)
                                 isExpanded = false
                                 onChanged()
                             }
                         },
-                        enabled = errorMessage == null,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                        )
-                    ) {
-                        Text("Save")
-                    }
+                        saveEnabled = errorMessage == null
+                    )
                 }
             }
         }
@@ -839,68 +852,19 @@ fun ImprovedTextSettingWithButtons(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { value ->
+                SettingTextField(
+                    text = text,
+                    errorMessage = errorMessage,
+                    keyboardType = setting.keyboardType,
+                    onTextChange = { value ->
                         text = value
                         errorMessage = setting.validator?.invoke(value)
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = errorMessage != null,
-                    supportingText = {
-                        if (errorMessage != null) {
-                            Text(
-                                text = errorMessage!!,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = when (setting.keyboardType) {
-                            KeyboardType.Number -> androidx.compose.ui.text.input.KeyboardType.Number
-                            KeyboardType.Email -> androidx.compose.ui.text.input.KeyboardType.Email
-                            KeyboardType.Password -> androidx.compose.ui.text.input.KeyboardType.Password
-                            KeyboardType.Phone -> androidx.compose.ui.text.input.KeyboardType.Phone
-                            else -> androidx.compose.ui.text.input.KeyboardType.Text
-                        },
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            if (errorMessage == null) {
-                                setting.onValueChange(text)
-                                isExpanded = false
-                                onChanged()
-                            }
-                        }
-                    ),
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.small,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    ),
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                if (errorMessage == null) {
-                                    setting.onValueChange(text)
-                                    isExpanded = false
-                                    onChanged()
-                                }
-                            },
-                            enabled = errorMessage == null
-                        ) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = "Save",
-                                tint = if (errorMessage == null)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            )
+                    onSave = {
+                        if (errorMessage == null) {
+                            setting.onValueChange(text)
+                            isExpanded = false
+                            onChanged()
                         }
                     }
                 )
@@ -931,40 +895,18 @@ fun ImprovedTextSettingWithButtons(
                         }
                     }
 
-                    Row(
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Button(
-                            onClick = {
-                                isExpanded = false
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Text("Cancel")
-                        }
-
-                        Button(
-                            onClick = {
+                    Row(horizontalArrangement = Arrangement.End) {
+                        CancelSaveButtons(
+                            onCancel = { isExpanded = false },
+                            onSave = {
                                 if (errorMessage == null) {
                                     setting.onValueChange(text)
                                     isExpanded = false
                                     onChanged()
                                 }
                             },
-                            enabled = errorMessage == null,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                            )
-                        ) {
-                            Text("Save")
-                        }
+                            saveEnabled = errorMessage == null
+                        )
                     }
                 }
             }

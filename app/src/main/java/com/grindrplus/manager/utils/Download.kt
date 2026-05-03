@@ -65,28 +65,7 @@ suspend fun download(
         var lastBytesDownloaded = 0L
         var averageSpeed = 0.0
 
-        if (_fetch == null || _fetch?.isClosed == true) {
-            _fetch = Fetch.Impl.getInstance(
-                FetchConfiguration.Builder(context)
-                    .setDownloadConcurrentLimit(10)
-                    .setAutoRetryMaxAttempts(3)
-                    .enableLogging(true)
-                    .enableAutoStart(true)
-                    .enableRetryOnNetworkGain(true)
-                    .setHttpDownloader(
-                        OkHttpDownloader(
-                            getCustomTrustedOkHttpClient(context),
-                            Downloader.FileDownloaderType.PARALLEL
-                        )
-                    )
-                    .setNotificationManager(
-                        object : DefaultFetchNotificationManager(context) {
-                            override fun getFetchInstanceForNamespace(namespace: String) = fetch
-                        }
-                    )
-                    .build()
-            )
-        }
+        initFetchIfNeeded(context)
 
         val request = Request(url, out.absolutePath).apply {
             priority = Priority.HIGH
@@ -116,26 +95,14 @@ suspend fun download(
                         val bytesDelta = download.downloaded - lastBytesDownloaded
                         val currentSpeed = bytesDelta.toDouble() / timeDelta / 1024 / 1024
                         averageSpeed = if (averageSpeed == 0.0) currentSpeed
-                        else (averageSpeed * 0.7 + currentSpeed * 0.3)
+                        else averageSpeed * 0.7 + currentSpeed * 0.3
                         val percentage = download.progress
-
-                        val speedText = when {
-                            averageSpeed >= 1.0 -> String.format("%.2f Mb/s", averageSpeed * 8)
-                            averageSpeed >= 0.001 -> String.format(
-                                "%.2f Kb/s",
-                                averageSpeed * 1024 * 8
-                            )
-
-                            else -> String.format("%.2f b/s", averageSpeed * 1024 * 1024 * 8)
-                        }
 
                         printConsole(
                             "Download status<>: " +
-                                    "$percentage% $speedText " +
+                                    "$percentage% ${formatSpeedText(averageSpeed)} " +
                                     "(ETA:${etaInMilliSeconds.div(60000)}m${
-                                        (etaInMilliSeconds.rem(
-                                            60000
-                                        )).div(1000)
+                                        etaInMilliSeconds.rem(60000).div(1000)
                                     }s)<progressBar:${(percentage / 100f).coerceIn(0f, 1f)}:>"
                         )
 
@@ -201,6 +168,38 @@ suspend fun download(
     } catch (e: Exception) {
         if (out.exists()) out.delete()
         return@withContext DownloadResult.failure(e.message ?: "Unknown error")
+    }
+}
+
+@SuppressLint("DefaultLocale")
+private fun formatSpeedText(averageSpeed: Double): String = when {
+    averageSpeed >= 1.0 -> String.format("%.2f Mb/s", averageSpeed * 8)
+    averageSpeed >= 0.001 -> String.format("%.2f Kb/s", averageSpeed * 1024 * 8)
+    else -> String.format("%.2f b/s", averageSpeed * 1024 * 1024 * 8)
+}
+
+private fun initFetchIfNeeded(context: Context) {
+    if (_fetch == null || _fetch?.isClosed == true) {
+        _fetch = Fetch.Impl.getInstance(
+            FetchConfiguration.Builder(context)
+                .setDownloadConcurrentLimit(10)
+                .setAutoRetryMaxAttempts(3)
+                .enableLogging(true)
+                .enableAutoStart(true)
+                .enableRetryOnNetworkGain(true)
+                .setHttpDownloader(
+                    OkHttpDownloader(
+                        getCustomTrustedOkHttpClient(context),
+                        Downloader.FileDownloaderType.PARALLEL
+                    )
+                )
+                .setNotificationManager(
+                    object : DefaultFetchNotificationManager(context) {
+                        override fun getFetchInstanceForNamespace(namespace: String) = fetch
+                    }
+                )
+                .build()
+        )
     }
 }
 

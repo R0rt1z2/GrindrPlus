@@ -31,100 +31,97 @@ class PatchApkStep(
         print("Cleaning output directory...")
         outputDir.listFiles()?.forEach { it.delete() }
 
-        val apkFiles = unzipFolder.listFiles()?.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
+        val apkFiles = unzipFolder.listFiles()
+            ?.filter { it.name.endsWith(".apk") && it.exists() && it.length() > 0 }
 
         if (apkFiles.isNullOrEmpty()) {
             throw IOException("No valid APK files found to patch")
         }
 
-        try {
-            if (customMapsApiKey != null) {
-                print("Attempting to apply custom Maps API key...")
-                val baseApk = apkFiles.find {
-                    it.name == "base.apk" || it.name.startsWith("base.apk-")
-                } ?: apkFiles.first()
-
-                print("Using ${baseApk.name} for Maps API key modification")
-                val apkModule = ApkModule.loadApkFile(baseApk)
-
-                val metaElements = apkModule.androidManifest.applicationElement.getElements { element ->
-                    element.name == "meta-data"
-                }
-
-                var found = false
-                while (metaElements.hasNext() && !found) {
-                    val element = metaElements.next()
-                    val nameAttr = element.searchAttributeByName("name")
-
-                    if (nameAttr != null && nameAttr.valueString == MAPS_API_KEY_NAME) {
-                        val valueAttr = element.searchAttributeByName("value")
-                        if (valueAttr != null) {
-                            print("Found Maps API key element, replacing with custom key")
-                            valueAttr.setValueAsString(StyleDocument.parseStyledString(customMapsApiKey))
-                            found = true
-                        }
-                    }
-                }
-
-                if (found) {
-                    print("Successfully replaced Maps API key, saving APK")
-                    apkModule.writeApk(baseApk)
-                } else {
-                    print("Maps API key element not found in manifest, skipping replacement")
-                }
-            }
-        } catch (e: Exception) {
-            print("Error applying Maps API key: ${e.message}")
+        if (customMapsApiKey != null) {
+            injectMapsApiKey(apkFiles, customMapsApiKey, print)
         }
 
         if (!embedLSPatch) {
-            print("Skipping LSPatch as embedLSPatch is disabled")
-
-            apkFiles.forEach { apkFile ->
-                val outputFile = File(outputDir, apkFile.name)
-                apkFile.copyTo(outputFile, overwrite = true)
-                print("Copied ${apkFile.name} to output directory")
-            }
-
-            val copiedFiles = outputDir.listFiles()
-            if (copiedFiles.isNullOrEmpty()) {
-                throw IOException("Copying APKs failed - no output files generated")
-            }
-
-            print("Copying completed successfully")
-            print("Copied ${copiedFiles.size} files")
-
-            copiedFiles.forEachIndexed { index, file ->
-                print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")
-            }
-
+            copyApksToOutput(apkFiles, print)
             return
         }
 
-        print("Starting LSPatch process with ${apkFiles.size} APK files")
+        runLSPatch(apkFiles, print)
+    }
 
-        val apkFilePaths = apkFiles.map { it.absolutePath }.toTypedArray()
+    private fun injectMapsApiKey(apkFiles: List<File>, apiKey: String, print: Print) {
+        try {
+            print("Attempting to apply custom Maps API key...")
+            val baseApk = apkFiles.find {
+                it.name == "base.apk" || it.name.startsWith("base.apk-")
+            } ?: apkFiles.first()
 
-        val logger = object : Logger() {
-            override fun d(message: String?) {
-                message?.let { print("DEBUG: $it") }
+            print("Using ${baseApk.name} for Maps API key modification")
+            val apkModule = ApkModule.loadApkFile(baseApk)
+
+            if (replaceApiKeyInManifest(apkModule, apiKey, print)) {
+                print("Successfully replaced Maps API key, saving APK")
+                apkModule.writeApk(baseApk)
+            } else {
+                throw IOException(
+                    "Maps API key element ($MAPS_API_KEY_NAME) not found in manifest. " +
+                    "In-app Maps will not work. Check that the base APK is unmodified " +
+                    "or leave the Maps API key field blank to skip injection."
+                )
             }
+        } catch (e: IOException) {
+            throw e
+        } catch (e: Exception) {
+            print("Error applying Maps API key: ${e.message}")
+        }
+    }
 
-            override fun i(message: String?) {
-                message?.let { print("INFO: $it") }
-            }
-
-            override fun e(message: String?) {
-                message?.let { print("ERROR: $it") }
-            }
+    private fun replaceApiKeyInManifest(apkModule: ApkModule, apiKey: String, print: Print): Boolean {
+        val metaElements = apkModule.androidManifest.applicationElement.getElements { element ->
+            element.name == "meta-data"
         }
 
+        while (metaElements.hasNext()) {
+            val element = metaElements.next()
+            val nameAttr = element.searchAttributeByName("name") ?: continue
+            if (nameAttr.valueString != MAPS_API_KEY_NAME) continue
+
+            val valueAttr = element.searchAttributeByName("value") ?: continue
+            print("Found Maps API key element, replacing with custom key")
+            valueAttr.setValueAsString(StyleDocument.parseStyledString(apiKey))
+            return true
+        }
+        return false
+    }
+
+    private fun copyApksToOutput(apkFiles: List<File>, print: Print) {
+        print("Skipping LSPatch as embedLSPatch is disabled")
+
+        apkFiles.forEach { apkFile ->
+            apkFile.copyTo(File(outputDir, apkFile.name), overwrite = true)
+            print("Copied ${apkFile.name} to output directory")
+        }
+
+        val copiedFiles = outputDir.listFiles()
+        if (copiedFiles.isNullOrEmpty()) {
+            throw IOException("Copying APKs failed - no output files generated")
+        }
+
+        print("Copying completed successfully")
+        reportFiles(copiedFiles, print)
+    }
+
+    private suspend fun runLSPatch(apkFiles: List<File>, print: Print) {
+        print("Starting LSPatch process with ${apkFiles.size} APK files")
         print("Using mod file: ${modFile.absolutePath}")
         print("Using keystore: ${keyStore.absolutePath}")
 
+        val apkFilePaths = apkFiles.map { it.absolutePath }.toTypedArray()
+
         withContext(Dispatchers.IO) {
             LSPatch(
-                logger,
+                buildPrintLogger(print),
                 *apkFilePaths,
                 "-o", outputDir.absolutePath,
                 "-l", "2",
@@ -144,9 +141,18 @@ class PatchApkStep(
         }
 
         print("Patching completed successfully")
-        print("Generated ${patchedFiles.size} patched files")
+        reportFiles(patchedFiles, print)
+    }
 
-        patchedFiles.forEachIndexed { index, file ->
+    private fun buildPrintLogger(print: Print): Logger = object : Logger() {
+        override fun d(message: String?) { message?.let { print("DEBUG: $it") } }
+        override fun i(message: String?) { message?.let { print("INFO: $it") } }
+        override fun e(message: String?) { message?.let { print("ERROR: $it") } }
+    }
+
+    private fun reportFiles(files: Array<File>, print: Print) {
+        print("Generated ${files.size} files")
+        files.forEachIndexed { index, file ->
             print("  ${index + 1}. ${file.name} (${file.length() / 1024}KB)")
         }
     }

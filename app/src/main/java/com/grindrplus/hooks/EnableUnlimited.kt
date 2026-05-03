@@ -115,7 +115,6 @@ class EnableUnlimited : Hook(
         findClass(persistentAdBannerContainer).hook("a", HookStage.BEFORE) { param ->
             if (param.args().isNotEmpty()) {
                 val rootView = param.arg<View>(0)
-				// TODO validate change from persistent_banner_ad_container to persistent_banner_ad_compose_view
                 hideViews(rootView, listOf("persistent_banner_ad_compose_view"))
             }
         }

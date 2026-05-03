@@ -1,7 +1,6 @@
 package com.grindrplus.manager.utils
 
 import android.Manifest
-import com.grindrplus.core.Constants
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import pxb.android.axml.AxmlReader
 import pxb.android.axml.AxmlVisitor
@@ -47,191 +46,20 @@ object ManifestPatcher {
 
                         // Add MANAGE_EXTERNAL_STORAGE when necessary
                         if (addExternalStoragePerm) {
-                            super
-                                .child(null, "uses-permission")
-                                .attr(
-                                    ANDROID_NAMESPACE,
-                                    "name",
-                                    android.R.attr.name,
-                                    TYPE_STRING,
-                                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                                )
+                            super.child(null, "uses-permission").attr(
+                                ANDROID_NAMESPACE, "name", android.R.attr.name,
+                                TYPE_STRING, Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                            )
                             addExternalStoragePerm = false
                         }
 
                         return when (name) {
-                            "permission" -> object : NodeVisitor(nv) {
-                                override fun attr(
-                                    ns: String?,
-                                    name: String?,
-                                    resourceId: Int,
-                                    type: Int,
-                                    value: Any?,
-                                ) {
-                                    if (name == "name" && value == GRINDR_DRNE_PERMISSION) {
-                                        super.attr(
-                                            ns,
-                                            name,
-                                            resourceId,
-                                            type,
-                                            "$packageName.$DRNE_PERMISSION"
-                                        )
-                                    } else if (name == "name" && value == GRINDR_PACKAGE_NAME) {
-                                        super.attr(
-                                            ns,
-                                            name,
-                                            resourceId,
-                                            type,
-                                            packageName
-                                        )
-                                    } else {
-                                        super.attr(ns, name, resourceId, type, value)
-                                    }
-                                }
+                            "permission" -> PermissionNodeVisitor(nv, packageName)
+                            "uses-permission" -> UsesPermissionNodeVisitor(nv, packageName) {
+                                // Set after WRITE_EXTERNAL_STORAGE (which follows READ_EXTERNAL_STORAGE)
+                                addExternalStoragePerm = true
                             }
-
-                            "uses-permission" -> object : NodeVisitor(nv) {
-                                override fun attr(
-                                    ns: String?,
-                                    name: String?,
-                                    resourceId: Int,
-                                    type: Int,
-                                    value: Any?,
-                                ) {
-                                    if (name == "name" && value == GRINDR_DRNE_PERMISSION) {
-                                        super.attr(
-                                            ns,
-                                            name,
-                                            resourceId,
-                                            type,
-                                            "$packageName.$DRNE_PERMISSION"
-                                        )
-                                    }
-
-                                    if (name == "name" && value == GRINDR_PACKAGE_NAME) {
-                                        super.attr(
-                                            ns,
-                                            name,
-                                            resourceId,
-                                            type,
-                                            packageName
-                                        )
-                                    }
-
-                                    if (name != "maxSdkVersion") {
-                                        super.attr(ns, name, resourceId, type, value)
-                                    }
-
-                                    // Set the add external storage permission to be added after WRITE_EXTERNAL_STORAGE (which is after read)
-                                    if (name == "name" && value == Manifest.permission.READ_EXTERNAL_STORAGE) {
-                                        addExternalStoragePerm = true
-                                    }
-                                }
-                            }
-
-                            "application" -> object : ReplaceAttrsVisitor(
-                                nv,
-                                mapOf(
-                                    LABEL to appName,
-                                    DEBUGGABLE to debuggable,
-                                    USES_CLEARTEXT_TRAFFIC to true,
-                                    REQUEST_LEGACY_EXTERNAL_STORAGE to true
-                                )
-                            ) {
-                                private var addDebuggable = debuggable
-                                private var addLegacyStorage = true
-                                private var addUseClearTextTraffic = true
-
-                                override fun attr(
-                                    ns: String?,
-                                    name: String,
-                                    resourceId: Int,
-                                    type: Int,
-                                    value: Any?,
-                                ) {
-                                    super.attr(ns, name, resourceId, type, value)
-                                    if (name == REQUEST_LEGACY_EXTERNAL_STORAGE) addLegacyStorage =
-                                        false
-                                    if (name == DEBUGGABLE) addDebuggable = false
-                                    if (name == USES_CLEARTEXT_TRAFFIC) addUseClearTextTraffic =
-                                        false
-                                }
-
-                                override fun child(ns: String?, name: String): NodeVisitor {
-                                    val visitor = super.child(ns, name)
-
-                                    return when (name) {
-                                        "activity-alias" -> object : NodeVisitor(visitor) {
-                                            override fun attr(
-                                                ns: String?,
-                                                name: String?,
-                                                resourceId: Int,
-                                                type: Int,
-                                                value: Any?,
-                                            ) {
-                                                if (name == "label") {
-                                                    super.attr(ns, name, resourceId, TYPE_STRING, appName)
-                                                } else {
-                                                    super.attr(ns, name, resourceId, type, value)
-                                                }
-                                            }
-                                        }
-
-                                        "provider" -> object : NodeVisitor(visitor) {
-                                            override fun attr(
-                                                ns: String?,
-                                                name: String,
-                                                resourceId: Int,
-                                                type: Int,
-                                                value: Any?,
-                                            ) {
-                                                super.attr(
-                                                    ns,
-                                                    name,
-                                                    resourceId,
-                                                    type,
-                                                    if (name == "authorities") {
-                                                        (value as String).replace(
-                                                            GRINDR_PACKAGE_NAME,
-                                                            packageName
-                                                        )
-                                                    } else {
-                                                        value
-                                                    }
-                                                )
-                                            }
-                                        }
-
-                                        else -> visitor
-                                    }
-                                }
-
-                                override fun end() {
-                                    if (addLegacyStorage) super.attr(
-                                        ANDROID_NAMESPACE,
-                                        REQUEST_LEGACY_EXTERNAL_STORAGE,
-                                        -1,
-                                        TYPE_INT_BOOLEAN,
-                                        1
-                                    )
-                                    if (addDebuggable) super.attr(
-                                        ANDROID_NAMESPACE,
-                                        DEBUGGABLE,
-                                        -1,
-                                        TYPE_INT_BOOLEAN,
-                                        1
-                                    )
-                                    if (addUseClearTextTraffic) super.attr(
-                                        ANDROID_NAMESPACE,
-                                        USES_CLEARTEXT_TRAFFIC,
-                                        -1,
-                                        TYPE_INT_BOOLEAN,
-                                        1
-                                    )
-                                    super.end()
-                                }
-                            }
-
+                            "application" -> ApplicationNodeVisitor(nv, packageName, appName, debuggable)
                             else -> nv
                         }
                     }
@@ -263,6 +91,112 @@ object ManifestPatcher {
         )
 
         return writer.toByteArray()
+    }
+
+    private class PermissionNodeVisitor(
+        nv: NodeVisitor,
+        private val packageName: String,
+    ) : NodeVisitor(nv) {
+        override fun attr(ns: String?, name: String?, resourceId: Int, type: Int, value: Any?) {
+            when {
+                name == "name" && value == GRINDR_DRNE_PERMISSION ->
+                    super.attr(ns, name, resourceId, type, "$packageName.$DRNE_PERMISSION")
+                name == "name" && value == GRINDR_PACKAGE_NAME ->
+                    super.attr(ns, name, resourceId, type, packageName)
+                else ->
+                    super.attr(ns, name, resourceId, type, value)
+            }
+        }
+    }
+
+    private class UsesPermissionNodeVisitor(
+        nv: NodeVisitor,
+        private val packageName: String,
+        private val onExternalStoragePerm: () -> Unit,
+    ) : NodeVisitor(nv) {
+        override fun attr(ns: String?, name: String?, resourceId: Int, type: Int, value: Any?) {
+            if (name == "name" && value == GRINDR_DRNE_PERMISSION) {
+                super.attr(ns, name, resourceId, type, "$packageName.$DRNE_PERMISSION")
+            }
+            if (name == "name" && value == GRINDR_PACKAGE_NAME) {
+                super.attr(ns, name, resourceId, type, packageName)
+            }
+            if (name != "maxSdkVersion") {
+                super.attr(ns, name, resourceId, type, value)
+            }
+            // Signal to add MANAGE_EXTERNAL_STORAGE after READ_EXTERNAL_STORAGE
+            if (name == "name" && value == Manifest.permission.READ_EXTERNAL_STORAGE) {
+                onExternalStoragePerm()
+            }
+        }
+    }
+
+    private class ApplicationNodeVisitor(
+        nv: NodeVisitor,
+        private val packageName: String,
+        private val appName: String,
+        debuggable: Boolean,
+    ) : ReplaceAttrsVisitor(
+        nv,
+        mapOf(
+            LABEL to appName,
+            DEBUGGABLE to debuggable,
+            USES_CLEARTEXT_TRAFFIC to true,
+            REQUEST_LEGACY_EXTERNAL_STORAGE to true
+        )
+    ) {
+        private var addDebuggable = debuggable
+        private var addLegacyStorage = true
+        private var addUseClearTextTraffic = true
+
+        override fun attr(ns: String?, name: String, resourceId: Int, type: Int, value: Any?) {
+            super.attr(ns, name, resourceId, type, value)
+            if (name == REQUEST_LEGACY_EXTERNAL_STORAGE) addLegacyStorage = false
+            if (name == DEBUGGABLE) addDebuggable = false
+            if (name == USES_CLEARTEXT_TRAFFIC) addUseClearTextTraffic = false
+        }
+
+        override fun child(ns: String?, name: String): NodeVisitor {
+            val visitor = super.child(ns, name)
+            return when (name) {
+                "activity-alias" -> ActivityAliasNodeVisitor(visitor, appName)
+                "provider" -> ProviderNodeVisitor(visitor, packageName)
+                else -> visitor
+            }
+        }
+
+        override fun end() {
+            if (addLegacyStorage) super.attr(ANDROID_NAMESPACE, REQUEST_LEGACY_EXTERNAL_STORAGE, -1, TYPE_INT_BOOLEAN, 1)
+            if (addDebuggable) super.attr(ANDROID_NAMESPACE, DEBUGGABLE, -1, TYPE_INT_BOOLEAN, 1)
+            if (addUseClearTextTraffic) super.attr(ANDROID_NAMESPACE, USES_CLEARTEXT_TRAFFIC, -1, TYPE_INT_BOOLEAN, 1)
+            super.end()
+        }
+    }
+
+    private class ActivityAliasNodeVisitor(
+        nv: NodeVisitor,
+        private val appName: String,
+    ) : NodeVisitor(nv) {
+        override fun attr(ns: String?, name: String?, resourceId: Int, type: Int, value: Any?) {
+            if (name == "label") {
+                super.attr(ns, name, resourceId, TYPE_STRING, appName)
+            } else {
+                super.attr(ns, name, resourceId, type, value)
+            }
+        }
+    }
+
+    private class ProviderNodeVisitor(
+        nv: NodeVisitor,
+        private val packageName: String,
+    ) : NodeVisitor(nv) {
+        override fun attr(ns: String?, name: String, resourceId: Int, type: Int, value: Any?) {
+            super.attr(
+                ns, name, resourceId, type,
+                if (name == "authorities") (value as String).replace(GRINDR_PACKAGE_NAME, packageName)
+                else value
+            )
+        }
     }
 
     private open class ReplaceAttrsVisitor(

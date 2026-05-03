@@ -26,7 +26,9 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.CoordinateValidationResult
 import com.grindrplus.core.logw
+import com.grindrplus.core.validateCoordinates
 import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
@@ -75,8 +77,9 @@ class LocationSpoofer : Hook(
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
             val gpsLatitude = param.getResult() as Double?
-            if (gpsLatitude != null)
-                gpsLocationLatitude = gpsLatitude;
+            if (gpsLatitude != null) {
+                gpsLocationLatitude = gpsLatitude
+            }
 
             (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()
@@ -88,8 +91,9 @@ class LocationSpoofer : Hook(
 
         locationClass.hook("getLongitude", HookStage.AFTER) { param ->
             val gpsLongitude = param.getResult() as Double?
-            if (gpsLongitude != null)
-                gpsLocationLongitude = gpsLongitude;
+            if (gpsLongitude != null) {
+                gpsLocationLongitude = gpsLongitude
+            }
 
             (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()
@@ -105,11 +109,10 @@ class LocationSpoofer : Hook(
 
             var locationButtonExists = false
             if (Config.get("do_gui_safety_checks", true) as Boolean) {
+                // Only check the tag — contentDescription "Teleport" can collide with Grindr's
+                // own buttons in some locales, causing the button to be silently skipped on clones.
                 locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
-                    if (view is ImageButton) {
-                        view.tag == "custom_location_button" ||
-                                view.contentDescription == "Teleport"
-                    } else false
+                    view is ImageButton && view.tag == "custom_location_button"
                 }
             }
 
@@ -493,12 +496,13 @@ class LocationSpoofer : Hook(
         container.addView(buttonPickOnMap)
 
         suspend fun saveLocation(): Boolean {
-            val name = inputName.text.toString()
+            val name = inputName.text.toString().trim()
             val lat = inputLatitude.text.toString().toDoubleOrNull()
             val lon = inputLongitude.text.toString().toDoubleOrNull()
 
-            if (lat == null || lon == null || name.isEmpty()) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "All fields are required")
+            val validation = validateCoordinates(lat, lon, name)
+            if (validation is CoordinateValidationResult.Invalid) {
+                GrindrPlus.showToast(Toast.LENGTH_SHORT, validation.reason)
                 return false
             }
 

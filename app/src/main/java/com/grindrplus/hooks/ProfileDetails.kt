@@ -42,6 +42,15 @@ class ProfileDetails : Hook(
 
     @SuppressLint("DefaultLocale")
     override fun init() {
+        hookBoostedProfiles()
+        hookBlockedProfilesObserver()
+        hookProfileViewHolder()
+        hookProfileBarView()
+        hookDistanceUtils()
+        hookProfileViewStateWeight()
+    }
+
+    private fun hookBoostedProfiles() {
         findClass(serverDrivenCascadeCachedState).hook("getItems", HookStage.AFTER) { param ->
             (param.getResult() as List<*>)
                 .filter { (it?.javaClass?.name ?: "") == serverDrivenCascadeCachedProfile }
@@ -51,7 +60,9 @@ class ProfileDetails : Hook(
                     }
                 }
         }
+    }
 
+    private fun hookBlockedProfilesObserver() {
         findClass(blockedProfilesObserver).hook("onChanged", HookStage.AFTER) { param ->
             val obj = getObjectField(param.thisObject(), "a")
             val profileList = getObjectField(obj, "o") as ArrayList<*>
@@ -65,10 +76,11 @@ class ProfileDetails : Hook(
                 setObjectField(profile, "displayName", displayName)
             }
         }
+    }
 
+    private fun hookProfileViewHolder() {
         findClass(profileViewHolder).hookConstructor(HookStage.AFTER) { param ->
-            val textView =
-                getObjectField(param.thisObject(), "b") as TextView
+            val textView = getObjectField(param.thisObject(), "b") as TextView
 
             textView.setOnLongClickListener {
                 val text = textView.text.toString()
@@ -81,7 +93,10 @@ class ProfileDetails : Hook(
                 true
             }
         }
+    }
 
+    @SuppressLint("DefaultLocale")
+    private fun hookProfileBarView() {
         findClass(profileBarView).hook("setProfile", HookStage.BEFORE) { param ->
             val profileId = getObjectField(param.arg(0), "profileId") as String
             val accountCreationTime =
@@ -160,10 +175,12 @@ class ProfileDetails : Hook(
                 dialog.show()
             }
         }
+    }
 
+    @SuppressLint("DefaultLocale")
+    private fun hookDistanceUtils() {
         findClass(distanceUtils).hook("c", HookStage.AFTER) { param ->
             val distance = param.arg<Double>(1)
-            // val isAbbreviated = param.arg<Boolean>(3)
             val isFeet = param.arg<Boolean>(0)
 
             param.setResult(
@@ -184,7 +201,9 @@ class ProfileDetails : Hook(
                 }
             )
         }
+    }
 
+    private fun hookProfileViewStateWeight() {
         findClass(profileViewState).hook("getWeight", HookStage.AFTER) { param ->
             if (Config.get("show_bmi_in_profile", true) as Boolean) {
                 val weight = param.getResult()

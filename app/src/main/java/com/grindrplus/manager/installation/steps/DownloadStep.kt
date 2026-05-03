@@ -36,7 +36,7 @@ class DownloadStep(
             throw IOException("Failed to download $fileType, reason ${result.reason}")
         }
 
-        val sizeMB = file.length() / 1024 / (if (fileType == "mod") 1 else 1024)
+        val sizeMB = file.length() / 1024 / if (fileType == "mod") 1 else 1024
         print("$fileType download completed (${sizeMB}${if (fileType == "mod") "KB" else "MB"})")
     }
 }

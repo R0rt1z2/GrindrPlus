@@ -52,7 +52,7 @@ class CloneGrindrStep(
                 print("Deleting old AndroidManifest.xml in ${file.name}")
                 zip.deleteEntry(
                     "AndroidManifest.xml",
-                    /* fillVoid = */ true //TODO: maybe
+                    /* fillVoid = */ true
                 ) // Preserve alignment in libs apk
 
                 print("Adding patched AndroidManifest.xml in ${file.name}")

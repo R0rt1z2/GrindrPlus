@@ -34,43 +34,36 @@ object StorageUtils {
             val folder = context.getExternalFilesDir(null) ?: return
             val threeDaysAgo = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000)
 
-            val splitApksDir = File(folder, "splitApks/")
-            if (splitApksDir.exists() && splitApksDir.isDirectory) {
-                if (splitApksDir.lastModified() < threeDaysAgo) {
-                    splitApksDir.deleteRecursively()
-                }
-            }
-
-            val outputDir = File(folder, "LSPatchOutput/")
-            if (outputDir.exists() && outputDir.isDirectory) {
-                if (outputDir.lastModified() < threeDaysAgo) {
-                    outputDir.deleteRecursively()
-                }
-            }
-
-            folder.listFiles()?.forEach { file ->
-                if (file.name.startsWith("grindr-") && file.name.endsWith(".xapk")) {
-                    val version = file.name.removePrefix("grindr-").removeSuffix(".xapk")
-                    if (!keepLatestVersion || version != latestVersion) {
-                        if (file.lastModified() < threeDaysAgo) {
-                            file.delete()
-                        }
-                    }
-                }
-            }
-
-            folder.listFiles()?.forEach { file ->
-                if (file.name.startsWith("mod-") && file.name.endsWith(".zip")) {
-                    val version = file.name.removePrefix("mod-").removeSuffix(".zip")
-                    if (!keepLatestVersion || version != latestVersion) {
-                        if (file.lastModified() < threeDaysAgo) {
-                            file.delete()
-                        }
-                    }
-                }
-            }
+            deleteOldDirectory(File(folder, "splitApks/"), threeDaysAgo)
+            deleteOldDirectory(File(folder, "LSPatchOutput/"), threeDaysAgo)
+            deleteVersionedFiles(folder, "grindr-", ".xapk", keepLatestVersion, latestVersion, threeDaysAgo)
+            deleteVersionedFiles(folder, "mod-", ".zip", keepLatestVersion, latestVersion, threeDaysAgo)
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error during cleanup")
+        }
+    }
+
+    private fun deleteOldDirectory(dir: File, olderThan: Long) {
+        if (dir.exists() && dir.isDirectory && dir.lastModified() < olderThan) {
+            dir.deleteRecursively()
+        }
+    }
+
+    private fun deleteVersionedFiles(
+        folder: File,
+        prefix: String,
+        suffix: String,
+        keepLatestVersion: Boolean,
+        latestVersion: String?,
+        olderThan: Long,
+    ) {
+        folder.listFiles()?.forEach { file ->
+            if (file.name.startsWith(prefix) && file.name.endsWith(suffix)) {
+                val version = file.name.removePrefix(prefix).removeSuffix(suffix)
+                if ((!keepLatestVersion || version != latestVersion) && file.lastModified() < olderThan) {
+                    file.delete()
+                }
+            }
         }
     }
 }

@@ -50,6 +50,7 @@ import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
+    // applicationContext — process-scoped, safe to hold as a singleton (no leak risk)
     lateinit var context: Context
         private set
     lateinit var classLoader: ClassLoader
@@ -343,7 +344,7 @@ object GrindrPlus {
 
         Logger.i("Initializing GrindrPlus core...", LogSource.MODULE)
 
-        if ((Config.get("reset_database", false) as Boolean)) {
+        if (Config.get("reset_database", false) as Boolean) {
             Logger.i("Resetting database...", LogSource.MODULE)
             database.clearAllTables()
             Config.put("reset_database", false)

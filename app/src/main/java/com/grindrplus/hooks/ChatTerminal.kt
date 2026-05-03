@@ -24,7 +24,7 @@ class ChatTerminal : Hook(
             if (!messageBody.has("text")) return@hook // Ignore non-text messages
             val text = messageBody.getString("text")
 
-            val commandPrefix = (Config.get("command_prefix", "/") as String)
+            val commandPrefix = Config.get("command_prefix", "/") as String
             if (text.startsWith(commandPrefix)) {
                 param.setResult(null) // Don't send the command to the chat
                 CommandHandler(sender, recipient).handle(text.substring(1))

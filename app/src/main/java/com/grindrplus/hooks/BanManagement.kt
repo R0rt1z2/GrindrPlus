@@ -48,8 +48,8 @@ class BanManagement : Hook(
         ) { originalHandler, proxy, method, args ->
             val result = originalHandler.invoke(proxy, method, args)
 
-            val isLogin = args.size > 1 && args[1] != null &&
-                    args[1]!!::class.java.name.contains("LoginEmailRequest")
+            val arg1 = args.getOrNull(1)
+            val isLogin = arg1 != null && arg1::class.java.name.contains("LoginEmailRequest")
             when {
                 isLogin -> {
                    return@hookService RetrofitUtils.invokeAndReplaceResult(originalHandler, proxy, method, args) { result ->

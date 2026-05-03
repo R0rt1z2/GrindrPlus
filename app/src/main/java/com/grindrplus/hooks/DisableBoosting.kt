@@ -68,17 +68,27 @@ class DisableBoosting : Hook(
 			param.setArg(2, newRouteList)
 		}
 
-        // the two anonymous functions that get called to invoke the annoying tooltip
-        // respectively: showRadarTooltip.<anonymous> and showTapsAndViewedMePopup
-        // search for:
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity$showTapsAndViewedMePopup$1$1'
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
-        //   ???     - 'com.grindrapp.android.ui.home.HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
-		//   "Il.w0" - 'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
-		// TODO find the showTapsAndViewedMePopup in 25.20.0
-        listOf("cd0.j2").forEach {
-            findClass(it).hook("invoke", HookStage.BEFORE) { param ->
-                param.setResult(null)
+        // Anonymous functions that invoke the boost/taps tooltip popups.
+        // Obfuscated names change every Grindr release — to find the new names open the APK in
+        // jadx and search smali for the string literals listed below; the containing class is the target.
+        //   showTapsAndViewedMePopup lambdas:
+        //     search → 'com.grindrapp.android.ui.home.HomeActivity$showTapsAndViewedMePopup$1$1'
+        //     search → 'HomeActivity.showTapsAndViewedMePopup.<anonymous> (HomeActivity.kt'
+        //     search → 'HomeActivity.showTapsAndViewedMePopup.<anonymous>.<anonymous> (HomeActivity.kt'
+        //   subscribeForBoostRedeem lambda:
+        //     search → 'com.grindrapp.android.ui.home.HomeActivity$subscribeForBoostRedeem$1'
+        //   Last known obfuscated names: "cd0.j2" (pre-25.20.0), "Il.w0" (subscribeForBoostRedeem)
+        //   Update this list after each Grindr version bump.
+        listOf("cd0.j2", "Il.w0").forEach { className ->
+            runCatching {
+                findClass(className).hook("invoke", HookStage.BEFORE) { param ->
+                    param.setResult(null)
+                }
+            }.onFailure {
+                com.grindrplus.core.Logger.w(
+                    "DisableBoosting: tooltip class '$className' not found — needs class name update for this Grindr version",
+                    com.grindrplus.core.LogSource.MODULE
+                )
             }
         }
     }

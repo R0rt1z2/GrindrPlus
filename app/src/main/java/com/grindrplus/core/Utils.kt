@@ -368,7 +368,7 @@ object Utils {
                                     )
                                 }
                                 favoritesFile.writeText(favorites.drop(index + 1).joinToString("\n"))
-                                val progress = ((index + 1) * 100) / favorites.size
+                                val progress = (index + 1) * 100 / favorites.size
                                 updateProgress(progress)
                                 Thread.sleep(threshold.toLong())
                             }
@@ -431,7 +431,7 @@ object Utils {
                                     reflectInDb = false
                                 )
                                 blocksFile.writeText(blocks.drop(index + 1).joinToString("\n"))
-                                val progress = ((index + 1) * 100) / blocks.size
+                                val progress = (index + 1) * 100 / blocks.size
                                 updateProgress(progress)
                                 Thread.sleep(threshold.toLong())
                             }
