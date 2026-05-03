@@ -44,7 +44,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -243,7 +242,7 @@ class MainActivity : ComponentActivity() {
         Config.getCurrentPackageConfig().optJSONObject("hooks")?.let {
             val keyToEnabled = mutableMapOf<String, Any>()
             for (key in it.keys()) {
-                keyToEnabled[key] = it.getJSONObject(key).optBoolean("enabled", false) as Any
+                keyToEnabled[key] = it.optJSONObject(key)?.optBoolean("enabled", false) ?: false
             }
             keyToEnabled
         } ?: mutableMapOf()
@@ -365,14 +364,9 @@ class MainActivity : ComponentActivity() {
                 },
                 bottomBar = {
                     BottomAppBar(modifier = Modifier) {
-                        var selectedItem by remember { mutableIntStateOf(0) }
-                        var currentRoute =
-                            navController.currentBackStackEntryAsState().value?.destination?.route
-                                ?: Home.toString()
-
-                        MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
-                            if (navigationItem.toString() == currentRoute) selectedItem = index
-                        }
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackStackEntry?.destination?.route ?: Home.toString()
+                        val selectedItem = MainNavItem.VALUES.indexOfFirst { it.toString() == currentRoute }.coerceAtLeast(0)
 
                         NavigationBar {
                             MainNavItem.VALUES.forEachIndexed { index, item ->
@@ -381,11 +375,7 @@ class MainActivity : ComponentActivity() {
                                     icon = { Icon(item.icon!!, contentDescription = item.title) },
                                     label = { Text(item.title) },
                                     selected = selectedItem == index,
-                                    onClick = {
-                                        selectedItem = index
-                                        currentRoute = item.toString()
-                                        navController.navigateItem(item)
-                                    }
+                                    onClick = { navController.navigateItem(item) }
                                 )
                             }
                         }

@@ -710,16 +710,14 @@ private fun SettingHeaderRow(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        IconButton(onClick = onToggle) {
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Edit setting",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.rotate(if (isExpanded) 90f else 0f)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(12.dp)
+                .rotate(if (isExpanded) 90f else 0f)
+        )
     }
 }
 
