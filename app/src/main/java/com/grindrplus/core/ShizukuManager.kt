@@ -116,7 +116,7 @@ object ShizukuManager {
 
     // Uses shell command to get version code; avoids needing AIDL stubs for IPackageManager.
     private fun getVersionCodePrivileged(packageName: String): Long? {
-        val process = Runtime.getRuntime().exec(arrayOf("dumpsys", "package", packageName))
+        val process = Shizuku.newProcess(arrayOf("dumpsys", "package", packageName), null, null)
         val output = process.inputStream.bufferedReader().readText()
         process.waitFor()
         return VERSION_CODE_REGEX.find(output)?.groupValues?.getOrNull(1)?.toLongOrNull()
