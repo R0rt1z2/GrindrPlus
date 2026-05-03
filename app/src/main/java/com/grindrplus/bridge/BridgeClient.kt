@@ -242,7 +242,13 @@ class BridgeClient(private val context: Context) {
                     withTimeout(CONNECTION_TIMEOUT_MS) {
                         deferred.await()
                     }
-                } catch (_: Exception) {
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Logger.w("Timed out waiting for existing connection deferred", LogSource.BRIDGE)
+                    false
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Logger.w("Error awaiting connection deferred: ${e.message}", LogSource.BRIDGE)
                     false
                 }
 
@@ -268,8 +274,11 @@ class BridgeClient(private val context: Context) {
                 withTimeout(timeoutMs) {
                     connect()
                 }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Logger.w("Connection timeout in blocking mode (${timeoutMs}ms)", LogSource.BRIDGE)
+                false
             } catch (e: Exception) {
-                Logger.w("Connection timeout in blocking mode", LogSource.BRIDGE)
+                Logger.w("Unexpected error in connectBlocking: ${e.message}", LogSource.BRIDGE)
                 false
             }
         }

@@ -33,47 +33,60 @@ class ExpiringMedia : Hook(
     private val filePathCache = mutableMapOf<Long, String>()
 
     override fun init() {
-        findClass(classMap["expiringImageBodyUiData"]!!)
+        val expiringImageBodyUiData = requireNotNull(classMap["expiringImageBodyUiData"]) {
+            "ExpiringMedia: missing classMap key 'expiringImageBodyUiData' — Grindr version mismatch?"
+        }
+        val expiringImageBody = requireNotNull(classMap["expiringImageBody"]) {
+            "ExpiringMedia: missing classMap key 'expiringImageBody' — Grindr version mismatch?"
+        }
+        val expiringVideoBody = requireNotNull(classMap["expiringVideoBody"]) {
+            "ExpiringMedia: missing classMap key 'expiringVideoBody' — Grindr version mismatch?"
+        }
+        val expiringStatusResponse = requireNotNull(classMap["expiringStatusResponse"]) {
+            "ExpiringMedia: missing classMap key 'expiringStatusResponse' — Grindr version mismatch?"
+        }
+
+        findClass(expiringImageBodyUiData)
             .hook("hasViewsRemaining", HookStage.BEFORE) { param ->
                 param.setResult(true)
             }
 
-        findClass(classMap["expiringImageBody"]!!)
+        findClass(expiringImageBody)
             .hook("getDuration", HookStage.BEFORE) { param ->
                 param.setResult(Long.MAX_VALUE)
             }
 
-        findClass(classMap["expiringImageBody"]!!)
+        findClass(expiringImageBody)
             .hook("getViewsRemaining", HookStage.BEFORE) { param ->
                 param.setResult(Int.MAX_VALUE)
             }
 
-        findClass(classMap["expiringVideoBody"]!!)
+        findClass(expiringVideoBody)
             .hook("getMaxViews", HookStage.BEFORE) { param ->
                 param.setResult(Int.MAX_VALUE)
             }
 
-        findClass(classMap["expiringVideoBody"]!!)
+        findClass(expiringVideoBody)
             .hook("getViewsRemaining", HookStage.BEFORE) { param ->
                 param.setResult(Int.MAX_VALUE)
             }
 
-        findClass(classMap["expiringStatusResponse"]!!)
+        findClass(expiringStatusResponse)
             .hook("getAvailable", HookStage.BEFORE) { param ->
                 param.setResult(Int.MAX_VALUE)
             }
 
-        findClass(classMap["expiringStatusResponse"]!!)
+        findClass(expiringStatusResponse)
             .hook("getTotal", HookStage.BEFORE) { param ->
                 param.setResult(Int.MAX_VALUE)
             }
 
-        findClass(classMap["expiringImageBody"]!!)
+        findClass(expiringImageBody)
             .hook("getUrl", HookStage.AFTER) { param ->
                 handleGetUrl(param, MediaType.IMAGE)
             }
 
-        findClass(classMap["expiringVideoBody"]!!)
+        findClass(expiringVideoBody)
             .hook("getUrl", HookStage.AFTER) { param ->
                 handleGetUrl(param, MediaType.VIDEO)
             }

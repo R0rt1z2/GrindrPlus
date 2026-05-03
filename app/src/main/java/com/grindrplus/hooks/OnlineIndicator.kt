@@ -25,8 +25,8 @@ class OnlineIndicator : Hook(
 
         findClass(isFeatureFlagEnabled)
             .hook("a", HookStage.BEFORE) { param ->
-                val a = param.args()[0]
-                val flagKey = a!!.javaClass.getMethod("getKey").invoke(a)
+                val a = param.args()[0] ?: return@hook
+                val flagKey = a.javaClass.getMethod("getKey").invoke(a)
 
                 if (flagKey == "online-until-updates")
                     param.setResult(false)

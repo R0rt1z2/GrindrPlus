@@ -26,7 +26,9 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.children
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.CoordinateValidationResult
 import com.grindrplus.core.logw
+import com.grindrplus.core.validateCoordinates
 import com.grindrplus.persistence.model.TeleportLocationEntity
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Hook
@@ -493,12 +495,13 @@ class LocationSpoofer : Hook(
         container.addView(buttonPickOnMap)
 
         suspend fun saveLocation(): Boolean {
-            val name = inputName.text.toString()
+            val name = inputName.text.toString().trim()
             val lat = inputLatitude.text.toString().toDoubleOrNull()
             val lon = inputLongitude.text.toString().toDoubleOrNull()
 
-            if (lat == null || lon == null || name.isEmpty()) {
-                GrindrPlus.showToast(Toast.LENGTH_SHORT, "All fields are required")
+            val validation = validateCoordinates(lat, lon, name)
+            if (validation is CoordinateValidationResult.Invalid) {
+                GrindrPlus.showToast(Toast.LENGTH_SHORT, validation.reason)
                 return false
             }
 

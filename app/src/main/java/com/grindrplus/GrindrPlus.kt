@@ -50,6 +50,7 @@ import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
+    // applicationContext — process-scoped, safe to hold as a singleton (no leak risk)
     lateinit var context: Context
         private set
     lateinit var classLoader: ClassLoader

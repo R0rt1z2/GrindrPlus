@@ -160,6 +160,10 @@ class StatusDialog : Hook(
     }
 
     private fun clearDirectoryContents(directory: File): ClearOperationResult {
+        return clearDirectoryContentsInternal(directory, directory.canonicalPath)
+    }
+
+    private fun clearDirectoryContentsInternal(directory: File, rootCanonical: String): ClearOperationResult {
         val result = ClearOperationResult()
 
         if (!directory.exists() || !directory.isDirectory) {
@@ -168,10 +172,16 @@ class StatusDialog : Hook(
 
         try {
             directory.listFiles()?.forEach { file ->
+                // Guard against symlinks pointing outside the root directory
+                if (!file.canonicalPath.startsWith(rootCanonical)) {
+                    logw("Skipping potential path traversal: ${file.canonicalPath}")
+                    return@forEach
+                }
+
                 val fileSize = if (file.isFile) file.length() else 0L
 
                 val deleted = if (file.isDirectory) {
-                    val subResult = clearDirectoryContents(file)
+                    val subResult = clearDirectoryContentsInternal(file, rootCanonical)
                     result.addSubResult(subResult)
                     file.delete()
                 } else {

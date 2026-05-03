@@ -25,6 +25,10 @@ abstract class Hook(
         return GrindrPlus.loadClass(name)
     }
 
+    protected fun findClassOrNull(name: String): Class<*>? {
+        return runCatching { GrindrPlus.loadClass(name) }.getOrNull()
+    }
+
     protected fun getResource(name: String, type: String): Int {
         return GrindrPlus.context.resources.getIdentifier(
             name, type, GrindrPlus.context.packageName

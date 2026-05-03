@@ -25,9 +25,19 @@ class XposedLoader : IXposedHookLoadPackage {
 
         if (!lpparam.packageName.contains(GRINDR_PACKAGE_NAME)) return
 
-        spoofSignatures(lpparam)
+        // XposedHelpers.ClassNotFoundError extends Error (not Exception) — must catch Throwable.
+        // A failure here should disable the feature without aborting the entire module.
+        try {
+            spoofSignatures(lpparam)
+        } catch (e: Throwable) {
+            Log.e("GrindrPlus", "spoofSignatures failed: ${e.message}", e)
+        }
         if (BuildConfig.DEBUG) {
-            sslUnpinning(lpparam)
+            try {
+                sslUnpinning(lpparam)
+            } catch (e: Throwable) {
+                Log.e("GrindrPlus", "sslUnpinning failed: ${e.message}", e)
+            }
         }
 
         Application::class.java.hook("attach", HookStage.AFTER) {
