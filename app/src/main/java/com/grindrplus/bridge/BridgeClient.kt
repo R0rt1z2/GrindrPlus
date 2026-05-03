@@ -24,7 +24,6 @@ import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
@@ -36,7 +35,7 @@ class BridgeClient(private val context: Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val serviceWatchdog = Handler(Looper.getMainLooper())
     private var lastConnectionAttempt = 0L
-    private var connectionDeferreds = mutableMapOf<String, CompletableDeferred<Boolean>>()
+    private val connectionDeferreds = java.util.concurrent.ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
     private val bindingExecutor = Executors.newSingleThreadExecutor()
 
     companion object {
@@ -164,8 +163,15 @@ class BridgeClient(private val context: Context) {
                 return withTimeout(CONNECTION_TIMEOUT_MS) {
                     deferred.await()
                 }
-            } catch (e: Exception) {
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 Logger.w("Timeout waiting for existing connection", LogSource.BRIDGE)
+                connectionDeferreds.remove(connectionKey)
+                return false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                connectionDeferreds.remove(connectionKey)
+                throw e
+            } catch (e: Exception) {
+                Logger.w("Error waiting for existing connection: ${e.message}", LogSource.BRIDGE)
                 connectionDeferreds.remove(connectionKey)
                 return false
             }
@@ -609,19 +615,7 @@ class BridgeClient(private val context: Context) {
     }
 }
 
-private fun <T> runBlocking(block: suspend () -> T): T {
-    return java.util.concurrent.CompletableFuture<T>().let { future ->
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                future.complete(block())
-            } catch (e: Exception) {
-                future.completeExceptionally(e)
-            }
-        }
-        try {
-            future.get(BridgeClient.CONNECTION_TIMEOUT_MS + 1000, TimeUnit.MILLISECONDS)
-        } catch (e: Exception) {
-            throw e.cause ?: e
-        }
-    }
-}
+// Thin wrapper so call sites don't need to import kotlinx.coroutines.runBlocking explicitly.
+// Uses the standard implementation — no scope leak, correct CancellationException propagation.
+private fun <T> runBlocking(block: suspend () -> T): T =
+    kotlinx.coroutines.runBlocking(block = block)
