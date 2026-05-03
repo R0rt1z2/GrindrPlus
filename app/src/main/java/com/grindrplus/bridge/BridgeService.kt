@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.Process
@@ -147,6 +148,7 @@ class BridgeService : Service() {
 
     private val binder = object : IBridgeService.Stub() {
         override fun getConfig(): String {
+            checkCaller()
             Logger.d("getConfig() called")
             return try {
                 if (!configFile.exists()) {
@@ -163,6 +165,7 @@ class BridgeService : Service() {
         }
 
         override fun setConfig(config: String?) {
+            checkCaller()
             Logger.d("setConfig() called")
             try {
                 if (!configFile.exists()) {
@@ -202,6 +205,7 @@ class BridgeService : Service() {
         }
 
         override fun clearLogs() {
+            checkCaller()
             Logger.d("clearLogs() called")
             try {
                 logLock.withLock {
@@ -224,6 +228,7 @@ class BridgeService : Service() {
             channelName: String,
             channelDescription: String
         ) {
+            checkCaller()
             Logger.d("sendNotification() called")
             try {
                 createNotificationChannel(channelId, channelName, channelDescription)
@@ -255,6 +260,7 @@ class BridgeService : Service() {
             actionIntents: Array<String>,
             actionData: Array<String>
         ) {
+            checkCaller()
             Logger.d("sendNotificationWithActions() called")
             try {
                 createNotificationChannel(channelId, channelName, channelDescription)
@@ -330,6 +336,7 @@ class BridgeService : Service() {
         }
 
         override fun getBlockEvents(): String {
+            checkCaller()
             return try {
                 if (!blockEventsFile.exists()) {
                     blockEventsFile.createNewFile()
@@ -345,6 +352,7 @@ class BridgeService : Service() {
         }
 
         override fun clearBlockEvents() {
+            checkCaller()
             blockEventsLock.withLock {
                 try {
                     if (blockEventsFile.exists()) {
@@ -378,6 +386,7 @@ class BridgeService : Service() {
         }
 
         override fun deleteForcedLocation(packageName: String) {
+            checkCaller()
             val coordinatesFile = File(getExternalFilesDir(null), "$packageName.location")
             if (coordinatesFile.exists()) {
                 coordinatesFile.delete()
@@ -386,6 +395,27 @@ class BridgeService : Service() {
 
         override fun isLSPosed(): Boolean {
             return com.grindrplus.manager.utils.isLSPosed()
+        }
+    }
+
+    /**
+     * Verifies that the Binder caller is either this process (manager) or the Grindr app.
+     * Rejects any other caller to prevent unauthorized config reads/writes.
+     * Fast-path: same-UID calls (manager calling locally) skip the package lookup entirely.
+     */
+    private fun checkCaller() {
+        val callerUid = Binder.getCallingUid()
+        if (callerUid == Process.myUid()) return
+        val callerPackages = packageManager.getPackagesForUid(callerUid) ?: emptyArray()
+        val allowed = callerPackages.any { pkg ->
+            pkg == packageName || pkg.startsWith("com.grindrapp")
+        }
+        if (!allowed) {
+            Logger.w(
+                "BridgeService: rejected IPC from unauthorized UID $callerUid (${callerPackages.joinToString()})",
+                LogSource.BRIDGE
+            )
+            throw SecurityException("GrindrPlus BridgeService: caller UID $callerUid is not authorized")
         }
     }
 

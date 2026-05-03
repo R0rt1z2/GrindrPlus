@@ -4,7 +4,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.grindrplus.BuildConfig
 import com.grindrplus.core.Logger
+import com.grindrplus.core.ShizukuManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -27,6 +29,7 @@ class HomeViewModel : ViewModel() {
     val releases = mutableStateMapOf<String, Release>()
     val isLoading = mutableStateOf(true)
     val errorMessage = mutableStateOf<String?>(null)
+    val compatResult = mutableStateOf<ShizukuManager.CompatResult?>(null)
 
     // Flag to avoid multiple fetches
     private var hasFetched = false
@@ -88,6 +91,18 @@ class HomeViewModel : ViewModel() {
         }
         releases.clear()
         releases.putAll(newReleases)
+    }
+
+    fun checkGrindrCompatibility() {
+        viewModelScope.launch {
+            compatResult.value = ShizukuManager.checkCompatibility(
+                expectedVersionCodes = BuildConfig.TARGET_GRINDR_VERSION_CODES.toList()
+            )
+        }
+    }
+
+    fun requestShizukuPermission() {
+        ShizukuManager.requestPermission()
     }
 
     fun fetchData(forceRefresh: Boolean = false) {

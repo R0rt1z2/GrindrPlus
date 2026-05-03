@@ -78,4 +78,40 @@ class CoordinateValidatorTest {
         val result = validateCoordinates(0.0, null, "Test")
         assertTrue(result is CoordinateValidationResult.Invalid)
     }
+
+    @Test
+    fun `NaN latitude is invalid`() {
+        val result = validateCoordinates(Double.NaN, 0.0, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
+
+    @Test
+    fun `NaN longitude is invalid`() {
+        val result = validateCoordinates(0.0, Double.NaN, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
+
+    @Test
+    fun `positive infinity latitude is invalid`() {
+        val result = validateCoordinates(Double.POSITIVE_INFINITY, 0.0, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
+
+    @Test
+    fun `negative infinity latitude is invalid`() {
+        val result = validateCoordinates(Double.NEGATIVE_INFINITY, 0.0, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
+
+    @Test
+    fun `positive infinity longitude is invalid`() {
+        val result = validateCoordinates(0.0, Double.POSITIVE_INFINITY, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
+
+    @Test
+    fun `negative infinity longitude is invalid`() {
+        val result = validateCoordinates(0.0, Double.NEGATIVE_INFINITY, "Test")
+        assertTrue(result is CoordinateValidationResult.Invalid)
+    }
 }

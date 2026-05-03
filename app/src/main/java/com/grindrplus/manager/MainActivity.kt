@@ -71,6 +71,7 @@ import com.grindrplus.bridge.NotificationActionReceiver
 import com.grindrplus.core.Config
 import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.Logger
+import com.grindrplus.core.ShizukuManager
 import com.grindrplus.manager.MainNavItem.Home
 import com.grindrplus.manager.ui.BlockLogScreen
 import com.grindrplus.manager.ui.CalculatorScreen
@@ -208,6 +209,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(DebugTree())
+        ShizukuManager.init()
         FileOperationHandler.init(this)
         registerNotificationReceiver()
 
@@ -615,6 +617,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        ShizukuManager.release()
         activityScope.cancel()
         try {
             if (::receiver.isInitialized) {

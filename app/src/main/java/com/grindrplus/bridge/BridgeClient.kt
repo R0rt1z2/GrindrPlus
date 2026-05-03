@@ -12,6 +12,7 @@ import android.os.Looper
 import com.grindrplus.BuildConfig
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -149,33 +150,8 @@ class BridgeClient(private val context: Context) {
     }
 
     suspend fun connect(): Boolean {
-        if (isBound.get()) {
-            return true
-        }
-
-        if (isConnecting.getAndSet(true)) {
-            Logger.d("Connection already in progress, waiting...", LogSource.BRIDGE)
-            val connectionKey = "connect-${System.currentTimeMillis()}"
-            val deferred = CompletableDeferred<Boolean>()
-            connectionDeferreds[connectionKey] = deferred
-
-            try {
-                return withTimeout(CONNECTION_TIMEOUT_MS) {
-                    deferred.await()
-                }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                Logger.w("Timeout waiting for existing connection", LogSource.BRIDGE)
-                connectionDeferreds.remove(connectionKey)
-                return false
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                connectionDeferreds.remove(connectionKey)
-                throw e
-            } catch (e: Exception) {
-                Logger.w("Error waiting for existing connection: ${e.message}", LogSource.BRIDGE)
-                connectionDeferreds.remove(connectionKey)
-                return false
-            }
-        }
+        if (isBound.get()) return true
+        if (isConnecting.getAndSet(true)) return awaitExistingConnection()
 
         lastConnectionAttempt = System.currentTimeMillis()
 
@@ -188,10 +164,7 @@ class BridgeClient(private val context: Context) {
         }
 
         val intent = Intent().apply {
-            setClassName(
-                BuildConfig.APPLICATION_ID,
-                BridgeService::class.java.name
-            )
+            setClassName(BuildConfig.APPLICATION_ID, BridgeService::class.java.name)
         }
 
         return suspendCancellableCoroutine { continuation ->
@@ -211,31 +184,14 @@ class BridgeClient(private val context: Context) {
                 return@suspendCancellableCoroutine
             }
 
-            val timeoutHandler = Handler(Looper.getMainLooper())
             val timeoutOccurred = AtomicBoolean(false)
-
-            val timeoutRunnable = Runnable {
-                if (continuation.isActive && !timeoutOccurred.getAndSet(true)) {
-                    Logger.w("Connection timeout", LogSource.BRIDGE)
-                    try {
-                        context.unbindService(connection)
-                    } catch (e: Exception) {
-                        Logger.e("Error unbinding service after timeout: ${e.message}", LogSource.BRIDGE)
-                    }
-                    isConnecting.set(false)
-                    continuation.resume(false)
-                }
-            }
-
+            val (timeoutHandler, timeoutRunnable) = setupBindTimeout(continuation, timeoutOccurred)
             timeoutHandler.postDelayed(timeoutRunnable, CONNECTION_TIMEOUT_MS)
 
             continuation.invokeOnCancellation {
                 timeoutHandler.removeCallbacks(timeoutRunnable)
-                try {
-                    context.unbindService(connection)
-                } catch (e: Exception) {
-                    Logger.e("Error unbinding service on cancellation: ${e.message}", LogSource.BRIDGE)
-                }
+                runCatching { context.unbindService(connection) }
+                    .onFailure { Logger.e("Error unbinding on cancellation: ${it.message}", LogSource.BRIDGE) }
                 isConnecting.set(false)
             }
 
@@ -244,27 +200,74 @@ class BridgeClient(private val context: Context) {
             connectionDeferreds[connectionKey] = deferred
 
             coroutineScope.launch {
-                val result = try {
-                    withTimeout(CONNECTION_TIMEOUT_MS) {
-                        deferred.await()
-                    }
-                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                    Logger.w("Timed out waiting for existing connection deferred", LogSource.BRIDGE)
-                    false
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Logger.w("Error awaiting connection deferred: ${e.message}", LogSource.BRIDGE)
-                    false
-                }
-
-                connectionDeferreds.remove(connectionKey)
-                timeoutHandler.removeCallbacks(timeoutRunnable)
-
-                if (continuation.isActive && !timeoutOccurred.get()) {
-                    continuation.resume(result)
-                }
+                awaitConnectionCompletion(connectionKey, deferred, continuation, timeoutHandler, timeoutRunnable, timeoutOccurred)
             }
+        }
+    }
+
+    private suspend fun awaitExistingConnection(): Boolean {
+        Logger.d("Connection already in progress, waiting...", LogSource.BRIDGE)
+        val connectionKey = "connect-${System.currentTimeMillis()}"
+        val deferred = CompletableDeferred<Boolean>()
+        connectionDeferreds[connectionKey] = deferred
+        return try {
+            withTimeout(CONNECTION_TIMEOUT_MS) { deferred.await() }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Logger.w("Timeout waiting for existing connection", LogSource.BRIDGE)
+            connectionDeferreds.remove(connectionKey)
+            false
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            connectionDeferreds.remove(connectionKey)
+            throw e
+        } catch (e: Exception) {
+            Logger.w("Error waiting for existing connection: ${e.message}", LogSource.BRIDGE)
+            connectionDeferreds.remove(connectionKey)
+            false
+        }
+    }
+
+    private fun setupBindTimeout(
+        continuation: CancellableContinuation<Boolean>,
+        timeoutOccurred: AtomicBoolean
+    ): Pair<Handler, Runnable> {
+        val timeoutHandler = Handler(Looper.getMainLooper())
+        val timeoutRunnable = Runnable {
+            if (continuation.isActive && !timeoutOccurred.getAndSet(true)) {
+                Logger.w("Connection timeout", LogSource.BRIDGE)
+                runCatching { context.unbindService(connection) }
+                    .onFailure { Logger.e("Error unbinding after timeout: ${it.message}", LogSource.BRIDGE) }
+                isConnecting.set(false)
+                continuation.resume(false)
+            }
+        }
+        return timeoutHandler to timeoutRunnable
+    }
+
+    private suspend fun awaitConnectionCompletion(
+        connectionKey: String,
+        deferred: CompletableDeferred<Boolean>,
+        continuation: CancellableContinuation<Boolean>,
+        timeoutHandler: Handler,
+        timeoutRunnable: Runnable,
+        timeoutOccurred: AtomicBoolean
+    ) {
+        val result = try {
+            withTimeout(CONNECTION_TIMEOUT_MS) { deferred.await() }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Logger.w("Timed out waiting for connection deferred", LogSource.BRIDGE)
+            false
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Logger.w("Error awaiting connection deferred: ${e.message}", LogSource.BRIDGE)
+            false
+        }
+
+        connectionDeferreds.remove(connectionKey)
+        timeoutHandler.removeCallbacks(timeoutRunnable)
+
+        if (continuation.isActive && !timeoutOccurred.get()) {
+            continuation.resume(result)
         }
     }
 

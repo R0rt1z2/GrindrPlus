@@ -70,9 +70,15 @@ class PatchApkStep(
                     print("Successfully replaced Maps API key, saving APK")
                     apkModule.writeApk(baseApk)
                 } else {
-                    print("Maps API key element not found in manifest, skipping replacement")
+                    throw IOException(
+                        "Maps API key element ($MAPS_API_KEY_NAME) not found in manifest. " +
+                        "In-app Maps will not work. Check that the base APK is unmodified " +
+                        "or leave the Maps API key field blank to skip injection."
+                    )
                 }
             }
+        } catch (e: IOException) {
+            throw e
         } catch (e: Exception) {
             print("Error applying Maps API key: ${e.message}")
         }

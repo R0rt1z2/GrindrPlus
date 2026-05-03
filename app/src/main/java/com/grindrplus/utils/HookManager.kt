@@ -17,8 +17,10 @@ import com.grindrplus.hooks.EmptyCalls
 import com.grindrplus.hooks.EnableUnlimited
 import com.grindrplus.hooks.ExpiringMedia
 import com.grindrplus.hooks.FeatureGranting
+import com.grindrplus.hooks.IntegritySpoofer
 import com.grindrplus.hooks.LocalSavedPhrases
 import com.grindrplus.hooks.LocationSpoofer
+import com.grindrplus.hooks.NativeLibraryGuard
 import com.grindrplus.hooks.NotificationAlerts
 import com.grindrplus.hooks.OnlineIndicator
 import com.grindrplus.hooks.ProfileDetails
@@ -43,6 +45,7 @@ class HookManager {
             AntiBlock(),
             AntiDetection(),
             BanManagement(),
+            IntegritySpoofer(),
             ChatIndicators(),
             ChatTerminal(),
             DisableAnalytics(),
@@ -55,6 +58,7 @@ class HookManager {
             FeatureGranting(),
             LocalSavedPhrases(),
             LocationSpoofer(),
+            NativeLibraryGuard(),
             NotificationAlerts(),
             OnlineIndicator(),
             ProfileDetails(),
@@ -65,7 +69,7 @@ class HookManager {
             UnlimitedProfiles(),
             UnlockExplorer(),
             StatusDialog(),
-//                WebSocketAlive()
+            WebSocketAlive()
         )
 
         hookList.forEach { hook ->

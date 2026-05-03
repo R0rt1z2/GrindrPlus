@@ -68,7 +68,9 @@ class AntiBlock : Hook(
                     // Do we expect another invocation with number > 0 ?
 
                     logd("Request to delete $numberOfChatsToDelete chats")
-                    Thread.sleep((300 * numberOfChatsToDelete).toLong()) // FIXME
+                    // Wait for the block websocket event to arrive before setting the flag.
+                    // Capped at 3 s to avoid blocking the calling thread for mass deletions.
+                    Thread.sleep(minOf(300L * numberOfChatsToDelete, 3000L))
                     GrindrPlus.shouldTriggerAntiblock = true
                     GrindrPlus.blockCaller = ""
                 }

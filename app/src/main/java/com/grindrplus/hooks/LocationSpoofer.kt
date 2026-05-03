@@ -107,11 +107,10 @@ class LocationSpoofer : Hook(
 
             var locationButtonExists = false
             if (Config.get("do_gui_safety_checks", true) as Boolean) {
+                // Only check the tag — contentDescription "Teleport" can collide with Grindr's
+                // own buttons in some locales, causing the button to be silently skipped on clones.
                 locationButtonExists = chatBottomToolbarLinearLayout.children.any { view ->
-                    if (view is ImageButton) {
-                        view.tag == "custom_location_button" ||
-                                view.contentDescription == "Teleport"
-                    } else false
+                    view is ImageButton && view.tag == "custom_location_button"
                 }
             }
 
