@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -79,97 +80,7 @@ class SessionInstaller {
         }
 
         // Process for completion
-        val installCompleteReceiver = object : BroadcastReceiver() {
-            @SuppressLint("UnsafeIntentLaunch")
-            override fun onReceive(context: Context, intent: Intent) {
-                try {
-                    val status = intent.getIntExtra(
-                        PackageInstaller.EXTRA_STATUS,
-                        PackageInstaller.STATUS_FAILURE
-                    )
-
-                    val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
-                        ?: "Unknown status"
-
-                    Timber.Forest.tag(TAG).d("Installation status: $status, message: $message")
-                    log("DEBUG: $message")
-
-                    when (status) {
-                        PackageInstaller.STATUS_SUCCESS -> {
-                            callback?.invoke(true, "Installation successful")
-                            log("Installed!")
-                            context.unregisterReceiver(this)
-                            continuation.resume(true)
-                        }
-
-                        PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                            Timber.Forest.tag(TAG).d("Installation requires user confirmation")
-                            log("DEBUG: Installation requires user confirmation")
-                            val confirmationIntent =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    intent.getParcelableExtra(
-                                        Intent.EXTRA_INTENT,
-                                        Intent::class.java
-                                    )
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    intent.getParcelableExtra(Intent.EXTRA_INTENT)
-                                }
-                            if (confirmationIntent != null) {
-                                confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                try {
-                                    context.startActivity(confirmationIntent)
-                                    // Don't complete the coroutine yet - wait for final result
-                                } catch (e: Exception) {
-                                    val errorMsg =
-                                        "Failed to start installer activity: ${e.message}"
-                                    log("ERROR: $errorMsg")
-                                    Timber.Forest.tag(TAG).e(e, errorMsg)
-                                    context.unregisterReceiver(this)
-                                    callback?.invoke(false, errorMsg)
-                                    continuation.resumeWithException(IOException(errorMsg))
-                                }
-                            } else {
-                                val errorMsg = "Missing confirmation intent"
-                                log("ERROR: $errorMsg")
-                                Timber.Forest.tag(TAG).e(errorMsg)
-                                context.unregisterReceiver(this)
-                                callback?.invoke(false, errorMsg)
-                                continuation.resumeWithException(IOException(errorMsg))
-                            }
-                        }
-
-                        PackageInstaller.STATUS_FAILURE,
-                        PackageInstaller.STATUS_FAILURE_ABORTED,
-                        PackageInstaller.STATUS_FAILURE_BLOCKED,
-                        PackageInstaller.STATUS_FAILURE_CONFLICT,
-                        PackageInstaller.STATUS_FAILURE_INCOMPATIBLE,
-                        PackageInstaller.STATUS_FAILURE_INVALID,
-                        PackageInstaller.STATUS_FAILURE_STORAGE,
-                            -> {
-                            val errorMsg = "Installation failed: $message (code: $status)"
-                            Timber.Forest.tag(TAG).e(errorMsg)
-                            context.unregisterReceiver(this)
-                            callback?.invoke(false, errorMsg)
-                            continuation.resumeWithException(IOException(errorMsg))
-                        }
-
-                        else -> {
-                            val errorMsg = "Unknown status code: $status - $message"
-                            Timber.Forest.tag(TAG).e(errorMsg)
-                            context.unregisterReceiver(this)
-                            callback?.invoke(false, errorMsg)
-                            continuation.resumeWithException(IOException(errorMsg))
-                        }
-                    }
-                } catch (e: Exception) {
-                    Timber.Forest.tag(TAG).e(e, "Error in broadcast receiver")
-                    context.unregisterReceiver(this)
-                    callback?.invoke(false, "Error processing installation result: ${e.message}")
-                    continuation.resumeWithException(e)
-                }
-            }
-        }
+        val installCompleteReceiver = InstallReceiver(callback, log, continuation)
 
         try {
             val intent = Intent(ACTION_INSTALL_COMPLETE).apply {
@@ -235,6 +146,93 @@ class SessionInstaller {
                     session.fsync(outputStream)
                 }
             }
+        }
+    }
+
+    private inner class InstallReceiver(
+        private val callback: ((success: Boolean, message: String) -> Unit)?,
+        private val log: (String) -> Unit,
+        private val continuation: Continuation<Boolean>,
+    ) : BroadcastReceiver() {
+        @SuppressLint("UnsafeIntentLaunch")
+        override fun onReceive(context: Context, intent: Intent) {
+            try {
+                val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "Unknown status"
+                Timber.Forest.tag(TAG).d("Installation status: $status, message: $message")
+                log("DEBUG: $message")
+                handleInstallStatus(context, intent, status, message)
+            } catch (e: Exception) {
+                Timber.Forest.tag(TAG).e(e, "Error in broadcast receiver")
+                context.unregisterReceiver(this)
+                callback?.invoke(false, "Error processing installation result: ${e.message}")
+                continuation.resumeWithException(e)
+            }
+        }
+
+        private fun handleInstallStatus(context: Context, intent: Intent, status: Int, message: String) {
+            when (status) {
+                PackageInstaller.STATUS_SUCCESS -> {
+                    callback?.invoke(true, "Installation successful")
+                    log("Installed!")
+                    context.unregisterReceiver(this)
+                    continuation.resume(true)
+                }
+                PackageInstaller.STATUS_PENDING_USER_ACTION -> handlePendingUserAction(context, intent)
+                PackageInstaller.STATUS_FAILURE,
+                PackageInstaller.STATUS_FAILURE_ABORTED,
+                PackageInstaller.STATUS_FAILURE_BLOCKED,
+                PackageInstaller.STATUS_FAILURE_CONFLICT,
+                PackageInstaller.STATUS_FAILURE_INCOMPATIBLE,
+                PackageInstaller.STATUS_FAILURE_INVALID,
+                PackageInstaller.STATUS_FAILURE_STORAGE -> handleFailure(context, message, status)
+                else -> {
+                    val errorMsg = "Unknown status code: $status - $message"
+                    Timber.Forest.tag(TAG).e(errorMsg)
+                    context.unregisterReceiver(this)
+                    callback?.invoke(false, errorMsg)
+                    continuation.resumeWithException(IOException(errorMsg))
+                }
+            }
+        }
+
+        private fun handlePendingUserAction(context: Context, intent: Intent) {
+            Timber.Forest.tag(TAG).d("Installation requires user confirmation")
+            log("DEBUG: Installation requires user confirmation")
+            val confirmationIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_INTENT)
+            }
+            if (confirmationIntent != null) {
+                confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                try {
+                    context.startActivity(confirmationIntent)
+                } catch (e: Exception) {
+                    val errorMsg = "Failed to start installer activity: ${e.message}"
+                    log("ERROR: $errorMsg")
+                    Timber.Forest.tag(TAG).e(e, errorMsg)
+                    context.unregisterReceiver(this)
+                    callback?.invoke(false, errorMsg)
+                    continuation.resumeWithException(IOException(errorMsg))
+                }
+            } else {
+                val errorMsg = "Missing confirmation intent"
+                log("ERROR: $errorMsg")
+                Timber.Forest.tag(TAG).e(errorMsg)
+                context.unregisterReceiver(this)
+                callback?.invoke(false, errorMsg)
+                continuation.resumeWithException(IOException(errorMsg))
+            }
+        }
+
+        private fun handleFailure(context: Context, message: String, status: Int) {
+            val errorMsg = "Installation failed: $message (code: $status)"
+            Timber.Forest.tag(TAG).e(errorMsg)
+            context.unregisterReceiver(this)
+            callback?.invoke(false, errorMsg)
+            continuation.resumeWithException(IOException(errorMsg))
         }
     }
 }

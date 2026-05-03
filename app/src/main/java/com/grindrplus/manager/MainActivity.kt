@@ -235,183 +235,163 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            var serviceBound by remember { mutableStateOf(false) }
-            var firstLaunchDialog by remember { mutableStateOf(false) }
-            var patchInfoDialog by remember { mutableStateOf(false) }
-            var showUninstallDialogState by remember { showUninstallDialog }
-            var calculatorScreen = remember { mutableStateOf(false) }
+            AppContent()
+        }
+    }
 
-            LaunchedEffect(Unit) {
-                GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
-                GrindrPlus.bridgeClient.connectAsync { connected ->
-                    Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
-                    Config.initialize()
-                    HookManager().registerHooks(false)
-                    TaskManager().registerTasks(false)
-                    calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
-                    serviceBound = true
+    private fun getHooksForAnalytics(): MutableMap<String, Any> =
+        Config.getCurrentPackageConfig().optJSONObject("hooks")?.let {
+            val keyToEnabled = mutableMapOf<String, Any>()
+            for (key in it.keys()) {
+                keyToEnabled[key] = it.getJSONObject(key).optBoolean("enabled", false) as Any
+            }
+            keyToEnabled
+        } ?: mutableMapOf()
 
-                    if (!(Config.get("disable_permission_checks", false) as Boolean)) {
-                        checkNotificationPermission()
-                        checkUnknownSourcesPermission()
-                    }
+    private fun setupAnalytics() {
+        val config = AndroidResourcePlausibleConfig(this).also {
+            it.domain = "grindrplus.lol"
+            it.host = "https://plausible.gmmz.dev/api/"
+            it.enable = true
+        }
+        plausible = Plausible(config = config, client = NetworkFirstPlausibleClient(config))
+        plausible?.enable(true)
+        plausible?.pageView(
+            "app://grindrplus/home",
+            props = getHooksForAnalytics().apply { put("android_version", Build.VERSION.SDK_INT) }
+        )
+    }
 
-                    if (Config.get("analytics", true) as Boolean) {
-                        val config = AndroidResourcePlausibleConfig(this@MainActivity).also {
-                            it.domain = "grindrplus.lol"
-                            it.host = "https://plausible.gmmz.dev/api/"
-                            it.enable = true
-                        }
+    @Composable
+    private fun AppContent() {
+        var serviceBound by remember { mutableStateOf(false) }
+        var firstLaunchDialog by remember { mutableStateOf(false) }
+        var patchInfoDialog by remember { mutableStateOf(false) }
+        var showUninstallDialogState by remember { showUninstallDialog }
+        var calculatorScreen = remember { mutableStateOf(false) }
 
-                        plausible = Plausible(
-                            config = config,
-                            client = NetworkFirstPlausibleClient(config)
-                        )
+        LaunchedEffect(Unit) {
+            GrindrPlus.bridgeClient = BridgeClient(this@MainActivity)
+            GrindrPlus.bridgeClient.connectAsync { connected ->
+                Logger.initialize(this@MainActivity, GrindrPlus.bridgeClient, false)
+                Config.initialize()
+                HookManager().registerHooks(false)
+                TaskManager().registerTasks(false)
+                calculatorScreen.value = Config.get("discreet_icon", false) as Boolean
+                serviceBound = true
 
-                        fun getHooks() =
-                            Config.getCurrentPackageConfig().optJSONObject("hooks")?.let {
-                                val keyToEnabled = mutableMapOf<String, Any>();
-                                for (key in it.keys()) {
-                                    keyToEnabled.put(
-                                        key,
-                                        it.getJSONObject(key).optBoolean("enabled", false) as Any
-                                    )
-                                }
-                                keyToEnabled
-                            } ?: emptyMap<String, Any>().toMutableMap()
+                if (!(Config.get("disable_permission_checks", false) as Boolean)) {
+                    checkNotificationPermission()
+                    checkUnknownSourcesPermission()
+                }
 
-                        plausible?.enable(true)
-                        plausible?.pageView(
-                            "app://grindrplus/home",
-                            props = getHooks().apply {
-                                put("android_version", Build.VERSION.SDK_INT)
-                            }
-                        )
-                    }
+                if (Config.get("analytics", true) as Boolean) {
+                    setupAnalytics()
+                }
 
-                    if (Config.get("first_launch", true) as Boolean) {
-                        firstLaunchDialog = true
-                        patchInfoDialog = true
-                        plausible?.pageView("app://grindrplus/first_launch")
-                        Config.put("first_launch", false)
-                    }
+                if (Config.get("first_launch", true) as Boolean) {
+                    firstLaunchDialog = true
+                    patchInfoDialog = true
+                    plausible?.pageView("app://grindrplus/first_launch")
+                    Config.put("first_launch", false)
                 }
             }
+        }
 
-            if (!serviceBound) {
-                return@setContent
+        if (!serviceBound) return
+
+        GrindrPlusTheme(dynamicColor = Config.get("material_you", false) as Boolean) {
+            if (calculatorScreen.value) {
+                CalculatorScreen(calculatorScreen)
+                return@GrindrPlusTheme
             }
 
-            GrindrPlusTheme(
-                dynamicColor = Config.get("material_you", false) as Boolean,
-            ) {
-                if (calculatorScreen.value) {
-                    CalculatorScreen(calculatorScreen)
-                    return@GrindrPlusTheme
-                }
+            if (showPermissionDialog) {
+                NotificationPermissionDialog(
+                    onDismiss = { showPermissionDialog = false },
+                    onGrant = {
+                        showPermissionDialog = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                )
+            }
 
-                if (showPermissionDialog) {
-                    NotificationPermissionDialog(
-                        onDismiss = { showPermissionDialog = false },
-                        onGrant = {
-                            showPermissionDialog = false
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            if (firstLaunchDialog) {
+                WelcomeDialog(onDismiss = { firstLaunchDialog = false })
+                return@GrindrPlusTheme
+            }
+
+            if (showUninstallDialogState) {
+                UninstallErrorDialog(
+                    onDismiss = { showUninstallDialogState = false },
+                    onUninstall = {
+                        try {
+                            val intent = Intent(Intent.ACTION_DELETE)
+                            intent.data = "package:$GRINDR_PACKAGE_NAME".toUri()
+                            startActivity(intent)
+                            showUninstallDialogState = false
+                        } catch (e: Exception) {
+                            Toast.makeText(this@MainActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+            if (patchInfoDialog) {
+                PatchInfoDialog(onDismiss = { patchInfoDialog = false })
+            }
+
+            AppNavigation()
+        }
+    }
+
+    @Composable
+    private fun AppNavigation() {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            val navController = rememberNavController()
+
+            Scaffold(
+                topBar = {},
+                content = { innerPadding ->
+                    NavHost(navController, startDestination = Home.toString()) {
+                        for (item in MainNavItem.VALUES) {
+                            composable(item.toString()) {
+                                item.composable(innerPadding, this@MainActivity)
                             }
                         }
-                    )
-                }
+                    }
+                },
+                bottomBar = {
+                    BottomAppBar(modifier = Modifier) {
+                        var selectedItem by remember { mutableIntStateOf(0) }
+                        var currentRoute =
+                            navController.currentBackStackEntryAsState().value?.destination?.route
+                                ?: Home.toString()
 
-                if (firstLaunchDialog) {
-                    WelcomeDialog(onDismiss = { firstLaunchDialog = false })
-                    return@GrindrPlusTheme
-                }
-
-                if (showUninstallDialogState) {
-                    UninstallErrorDialog(
-                        onDismiss = { showUninstallDialogState = false },
-                        onUninstall = {
-                            try {
-                                val intent = Intent(Intent.ACTION_DELETE)
-                                intent.data = "package:$GRINDR_PACKAGE_NAME".toUri()
-                                startActivity(intent)
-                                showUninstallDialogState = false
-                            } catch (e: Exception) {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "Error: ${e.localizedMessage}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                        MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
+                            if (navigationItem.toString() == currentRoute) selectedItem = index
                         }
-                    )
-                }
 
-                if (patchInfoDialog) {
-                    PatchInfoDialog(onDismiss = { patchInfoDialog = false })
-                }
-
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    val navController = rememberNavController()
-
-                    Scaffold(
-                        topBar = {
-                        },
-                        content = { innerPadding ->
-                            NavHost(
-                                navController,
-                                startDestination = Home.toString()
-                            ) {
-                                for (item in MainNavItem.VALUES) {
-                                    composable(item.toString()) {
-                                        item.composable(
-                                            innerPadding,
-                                            this@MainActivity
-                                        )
-                                    }
-                                }
-                            }
-                        },
-                        bottomBar = {
-                            BottomAppBar(modifier = Modifier) {
-                                var selectedItem by remember { mutableIntStateOf(0) }
-                                var currentRoute =
-                                    navController.currentBackStackEntryAsState().value?.destination?.route
-                                        ?: Home.toString()
-
-                                MainNavItem.VALUES.forEachIndexed { index, navigationItem ->
-                                    if (navigationItem.toString() == currentRoute) {
+                        NavigationBar {
+                            MainNavItem.VALUES.forEachIndexed { index, item ->
+                                NavigationBarItem(
+                                    alwaysShowLabel = true,
+                                    icon = { Icon(item.icon!!, contentDescription = item.title) },
+                                    label = { Text(item.title) },
+                                    selected = selectedItem == index,
+                                    onClick = {
                                         selectedItem = index
+                                        currentRoute = item.toString()
+                                        navController.navigateItem(item)
                                     }
-                                }
-
-                                NavigationBar {
-                                    MainNavItem.VALUES.forEachIndexed { index, item ->
-                                        NavigationBarItem(
-                                            alwaysShowLabel = true,
-                                            icon = {
-                                                Icon(
-                                                    item.icon!!,
-                                                    contentDescription = item.title
-                                                )
-                                            },
-                                            label = { Text(item.title) },
-                                            selected = selectedItem == index,
-                                            onClick = {
-                                                selectedItem = index
-                                                currentRoute = item.toString()
-                                                navController.navigateItem(item)
-                                            }
-                                        )
-                                    }
-                                }
+                                )
                             }
                         }
-                    )
+                    }
                 }
-            }
+            )
         }
     }
 
