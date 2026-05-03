@@ -169,51 +169,24 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 onWarningDismiss = { warningBannerVisible = false },
                 onLSPosedDismiss = { lsposedBannerVisible = false },
                 onVersionSelected = { selected ->
-                    if (selected.modVer == customVersionName && useCustomFiles) {
-                    } else if (selected.modVer == "custom") {
-                        showCustomFileDialog = true
-                    } else {
-                        selectedVersion = selected
-                        useCustomFiles = false
-                        addLog("Selected version ${selected.modVer}", LogType.INFO)
-                    }
+                    selectVersion(
+                        selected, customVersionName, useCustomFiles,
+                        onShowCustomFileDialog = { showCustomFileDialog = true },
+                        onSetSelectedVersion = { selectedVersion = it },
+                        onSetUseCustomFiles = { useCustomFiles = it }
+                    )
                 },
                 onCleanUp = {
-                    activityScope.launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                StorageUtils.cleanupOldInstallationFiles(
-                                    context, true, selectedVersion?.modVer
-                                )
-                            }
-                            addLog("Cleaned up old installation files", LogType.SUCCESS)
-                        } catch (e: Exception) {
-                            addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
-                        }
-                    }
+                    cleanUpInstallation(context, selectedVersion?.modVer)
                 },
                 onInstallOrLaunch = {
-                    if (installationSuccessful) {
-                        launchGrindr(context)
-                    } else if (useCustomFiles && customBundleUri != null && customModUri != null) {
-                        startCustomInstallation(
-                            context, customBundleUri, customModUri, customVersionName, print,
-                            onSetInstalling = { isInstalling = it },
-                            onSetInstallSuccessful = { installationSuccessful = it }
-                        )
-                    } else {
-                        if (selectedVersion == null) {
-                            showToast(context, "Please select a version first")
-                            return@InstallPageContent
-                        }
-                        startInstallation(
-                            selectedVersion!!,
-                            onStarted = { isInstalling = true },
-                            onCompleted = { success -> isInstalling = false; installationSuccessful = success },
-                            context,
-                            print
-                        )
-                    }
+                    handleInstallOrLaunch(
+                        context, installationSuccessful, useCustomFiles,
+                        customBundleUri, customModUri, customVersionName,
+                        selectedVersion, print,
+                        onSetInstalling = { isInstalling = it },
+                        onSetInstallSuccessful = { installationSuccessful = it }
+                    )
                 },
                 onShowCloneDialog = { showCloneDialog = true }
             )
@@ -275,6 +248,70 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
             Text("Retry")
         }
     }
+}
+
+private fun selectVersion(
+    selected: Data,
+    customVersionName: String,
+    useCustomFiles: Boolean,
+    onShowCustomFileDialog: () -> Unit,
+    onSetSelectedVersion: (Data) -> Unit,
+    onSetUseCustomFiles: (Boolean) -> Unit,
+) {
+    if (selected.modVer == customVersionName && useCustomFiles) return
+    if (selected.modVer == "custom") {
+        onShowCustomFileDialog()
+    } else {
+        onSetSelectedVersion(selected)
+        onSetUseCustomFiles(false)
+        addLog("Selected version ${selected.modVer}", LogType.INFO)
+    }
+}
+
+private fun cleanUpInstallation(context: Activity, currentVersion: String?) {
+    activityScope.launch {
+        try {
+            withContext(Dispatchers.IO) {
+                StorageUtils.cleanupOldInstallationFiles(context, true, currentVersion)
+            }
+            addLog("Cleaned up old installation files", LogType.SUCCESS)
+        } catch (e: Exception) {
+            addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
+        }
+    }
+}
+
+private fun handleInstallOrLaunch(
+    context: Activity,
+    installationSuccessful: Boolean,
+    useCustomFiles: Boolean,
+    customBundleUri: Uri?,
+    customModUri: Uri?,
+    customVersionName: String,
+    selectedVersion: Data?,
+    print: Print,
+    onSetInstalling: (Boolean) -> Unit,
+    onSetInstallSuccessful: (Boolean) -> Unit,
+) {
+    if (installationSuccessful) {
+        launchGrindr(context)
+        return
+    }
+    if (useCustomFiles && customBundleUri != null && customModUri != null) {
+        startCustomInstallation(context, customBundleUri, customModUri, customVersionName, print, onSetInstalling, onSetInstallSuccessful)
+        return
+    }
+    if (selectedVersion == null) {
+        showToast(context, "Please select a version first")
+        return
+    }
+    startInstallation(
+        selectedVersion,
+        onStarted = { onSetInstalling(true) },
+        onCompleted = { success -> onSetInstalling(false); onSetInstallSuccessful(success) },
+        context,
+        print
+    )
 }
 
 private fun startCustomInstallation(

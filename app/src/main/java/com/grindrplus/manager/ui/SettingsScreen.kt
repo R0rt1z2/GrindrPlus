@@ -723,12 +723,18 @@ private fun SettingHeaderRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImprovedTextSetting(
-    setting: TextSetting,
+private fun TextSettingBase(
+    title: String,
+    description: String?,
+    initialValue: String,
+    keyboardType: KeyboardType,
+    validator: ((String) -> String?)?,
+    onValueChange: (String) -> Unit,
     onChanged: () -> Unit,
+    bottomContent: @Composable (text: String, errorMessage: String?, onCollapse: () -> Unit, onResetText: () -> Unit) -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    var text by remember { mutableStateOf(setting.value) }
+    var text by remember { mutableStateOf(initialValue) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -737,8 +743,8 @@ fun ImprovedTextSetting(
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         SettingHeaderRow(
-            title = setting.title,
-            description = setting.description,
+            title = title,
+            description = description,
             text = text,
             isExpanded = isExpanded,
             onToggle = { isExpanded = !isExpanded }
@@ -753,32 +759,95 @@ fun ImprovedTextSetting(
                 SettingTextField(
                     text = text,
                     errorMessage = errorMessage,
-                    keyboardType = setting.keyboardType,
+                    keyboardType = keyboardType,
                     onTextChange = { value ->
                         text = value
-                        errorMessage = setting.validator?.invoke(value)
+                        errorMessage = validator?.invoke(value)
                     },
                     onSave = {
                         if (errorMessage == null) {
-                            setting.onValueChange(text)
+                            onValueChange(text)
                             isExpanded = false
                             onChanged()
                         }
                     }
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
+                bottomContent(text, errorMessage, { isExpanded = false }, { text = initialValue })
+            }
+        }
+    }
+}
+
+@Composable
+fun ImprovedTextSetting(setting: TextSetting, onChanged: () -> Unit) {
+    TextSettingBase(
+        title = setting.title,
+        description = setting.description,
+        initialValue = setting.value,
+        keyboardType = setting.keyboardType,
+        validator = setting.validator,
+        onValueChange = setting.onValueChange,
+        onChanged = onChanged,
+        bottomContent = { text, errorMessage, onCollapse, _ ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                CancelSaveButtons(
+                    onCancel = onCollapse,
+                    onSave = {
+                        if (errorMessage == null) {
+                            setting.onValueChange(text)
+                            onCollapse()
+                            onChanged()
+                        }
+                    },
+                    saveEnabled = errorMessage == null
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun ImprovedTextSettingWithButtons(setting: TextSettingWithButtons, onChanged: () -> Unit) {
+    TextSettingBase(
+        title = setting.title,
+        description = setting.description,
+        initialValue = setting.value,
+        keyboardType = setting.keyboardType,
+        validator = setting.validator,
+        onValueChange = setting.onValueChange,
+        onChanged = onChanged,
+        bottomContent = { text, errorMessage, onCollapse, onResetText ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (setting.buttons.isNotEmpty()) {
+                    Row(modifier = Modifier.weight(1f)) {
+                        setting.buttons.forEach { buttonAction ->
+                            Button(
+                                onClick = { buttonAction.action(); onResetText() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Text(buttonAction.name)
+                            }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.End) {
                     CancelSaveButtons(
-                        onCancel = { isExpanded = false },
+                        onCancel = onCollapse,
                         onSave = {
                             if (errorMessage == null) {
                                 setting.onValueChange(text)
-                                isExpanded = false
+                                onCollapse()
                                 onChanged()
                             }
                         },
@@ -787,98 +856,7 @@ fun ImprovedTextSetting(
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ImprovedTextSettingWithButtons(
-    setting: TextSettingWithButtons,
-    onChanged: () -> Unit,
-) {
-    var isExpanded by remember { mutableStateOf(false) }
-    var text by remember { mutableStateOf(setting.value) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        SettingHeaderRow(
-            title = setting.title,
-            description = setting.description,
-            text = text,
-            isExpanded = isExpanded,
-            onToggle = { isExpanded = !isExpanded }
-        )
-
-        AnimatedVisibility(visible = isExpanded) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                SettingTextField(
-                    text = text,
-                    errorMessage = errorMessage,
-                    keyboardType = setting.keyboardType,
-                    onTextChange = { value ->
-                        text = value
-                        errorMessage = setting.validator?.invoke(value)
-                    },
-                    onSave = {
-                        if (errorMessage == null) {
-                            setting.onValueChange(text)
-                            isExpanded = false
-                            onChanged()
-                        }
-                    }
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (setting.buttons.isNotEmpty()) {
-                        Row(modifier = Modifier.weight(1f)) {
-                            setting.buttons.forEach { buttonAction ->
-                                Button(
-                                    onClick = {
-                                        buttonAction.action()
-                                        text = setting.value
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary
-                                    ),
-                                    modifier = Modifier.padding(end = 8.dp)
-                                ) {
-                                    Text(buttonAction.name)
-                                }
-                            }
-                        }
-                    }
-
-                    Row(horizontalArrangement = Arrangement.End) {
-                        CancelSaveButtons(
-                            onCancel = { isExpanded = false },
-                            onSave = {
-                                if (errorMessage == null) {
-                                    setting.onValueChange(text)
-                                    isExpanded = false
-                                    onChanged()
-                                }
-                            },
-                            saveEnabled = errorMessage == null
-                        )
-                    }
-                }
-            }
-        }
-    }
+    )
 }
 
 @Composable
