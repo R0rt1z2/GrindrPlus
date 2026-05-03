@@ -28,8 +28,84 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+
+private class DownloadProgressState {
+    var lastUpdateTime: Long = System.currentTimeMillis()
+    var lastBytesDownloaded: Long = 0L
+    var averageSpeed: Double = 0.0
+}
+
+private class DownloadFetchListener(
+    private val out: File,
+    private val printConsole: (String) -> Unit,
+    private val continuation: Continuation<DownloadResult>,
+    private val state: DownloadProgressState,
+) : FetchListener {
+    override fun onStarted(download: Download, downloadBlocks: List<DownloadBlock>, totalBlocks: Int) {
+        printConsole("Starting download...")
+    }
+
+    override fun onProgress(download: Download, etaInMilliSeconds: Long, downloadedBytesPerSecond: Long) {
+        val currentTime = System.currentTimeMillis()
+        val timeDelta = currentTime - state.lastUpdateTime
+
+        if (timeDelta > 0) {
+            val bytesDelta = download.downloaded - state.lastBytesDownloaded
+            val currentSpeed = bytesDelta.toDouble() / timeDelta / 1024 / 1024
+            state.averageSpeed = if (state.averageSpeed == 0.0) currentSpeed
+            else state.averageSpeed * 0.7 + currentSpeed * 0.3
+            val percentage = download.progress
+
+            printConsole(
+                "Download status<>: " +
+                        "$percentage% ${formatSpeedText(state.averageSpeed)} " +
+                        "(ETA:${etaInMilliSeconds.div(60000)}m${
+                            etaInMilliSeconds.rem(60000).div(1000)
+                        }s)<progressBar:${(percentage / 100f).coerceIn(0f, 1f)}:>"
+            )
+
+            state.lastUpdateTime = currentTime
+            state.lastBytesDownloaded = download.downloaded
+        }
+    }
+
+    override fun onError(download: Download, error: Error, throwable: Throwable?) {
+        fetch.removeListener(this)
+        fetch.close()
+        if (out.exists()) out.delete()
+        continuation.resume(DownloadResult.failure(error.name))
+    }
+
+    override fun onCompleted(download: Download) {
+        fetch.removeListener(this)
+        printConsole("Completed download")
+
+        if (validateFile(out)) {
+            continuation.resume(DownloadResult.success())
+        } else {
+            if (out.exists()) out.delete()
+            continuation.resume(DownloadResult.failure("Downloaded file validation failed"))
+        }
+    }
+
+    override fun onCancelled(download: Download) {
+        fetch.removeListener(this)
+        if (out.exists()) out.delete()
+        continuation.resume(DownloadResult.failure("Download cancelled"))
+    }
+
+    override fun onPaused(download: Download) { printConsole("Paused.") }
+    override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
+    override fun onRemoved(download: Download) {}
+    override fun onDeleted(download: Download) {}
+    override fun onResumed(download: Download) {}
+    override fun onWaitingNetwork(download: Download) {}
+    override fun onAdded(download: Download) {}
+    override fun onDownloadBlockUpdated(download: Download, downloadBlock: DownloadBlock, totalBlocks: Int) {}
+}
 
 data class DownloadResult(val success: Boolean, val reason: String?) {
     companion object {
@@ -61,10 +137,6 @@ suspend fun download(
     try {
         out.parentFile?.mkdirs()
 
-        var lastUpdateTime = System.currentTimeMillis()
-        var lastBytesDownloaded = 0L
-        var averageSpeed = 0.0
-
         initFetchIfNeeded(context)
 
         val request = Request(url, out.absolutePath).apply {
@@ -73,86 +145,8 @@ suspend fun download(
         }
 
         return@withContext suspendCoroutine { continuation ->
-            fetch.addListener(object : FetchListener {
-                override fun onStarted(
-                    download: Download,
-                    downloadBlocks: List<DownloadBlock>,
-                    totalBlocks: Int,
-                ) {
-                    printConsole("Starting download...")
-                }
-
-                @SuppressLint("DefaultLocale")
-                override fun onProgress(
-                    download: Download,
-                    etaInMilliSeconds: Long,
-                    downloadedBytesPerSecond: Long,
-                ) {
-                    val currentTime = System.currentTimeMillis()
-                    val timeDelta = currentTime - lastUpdateTime
-
-                    if (timeDelta > 0) {
-                        val bytesDelta = download.downloaded - lastBytesDownloaded
-                        val currentSpeed = bytesDelta.toDouble() / timeDelta / 1024 / 1024
-                        averageSpeed = if (averageSpeed == 0.0) currentSpeed
-                        else averageSpeed * 0.7 + currentSpeed * 0.3
-                        val percentage = download.progress
-
-                        printConsole(
-                            "Download status<>: " +
-                                    "$percentage% ${formatSpeedText(averageSpeed)} " +
-                                    "(ETA:${etaInMilliSeconds.div(60000)}m${
-                                        etaInMilliSeconds.rem(60000).div(1000)
-                                    }s)<progressBar:${(percentage / 100f).coerceIn(0f, 1f)}:>"
-                        )
-
-                        lastUpdateTime = currentTime
-                        lastBytesDownloaded = download.downloaded
-                    }
-                }
-
-                override fun onError(download: Download, error: Error, throwable: Throwable?) {
-                    fetch.removeListener(this)
-                    fetch.close()
-                    if (out.exists()) out.delete()
-                    continuation.resume(DownloadResult.failure(error.name))
-                }
-
-                override fun onCompleted(download: Download) {
-                    fetch.removeListener(this)
-                    printConsole("Completed download")
-
-                    if (validateFile(out)) {
-                        continuation.resume(DownloadResult.success())
-                    } else {
-                        if (out.exists()) out.delete()
-                        continuation.resume(DownloadResult.failure("Downloaded file validation failed"))
-                    }
-                }
-
-                override fun onCancelled(download: Download) {
-                    fetch.removeListener(this)
-                    if (out.exists()) out.delete()
-                    continuation.resume(DownloadResult.failure("Download cancelled"))
-                }
-
-                override fun onPaused(download: Download) {
-                    printConsole("Paused.")
-                }
-
-                override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
-                override fun onRemoved(download: Download) {}
-                override fun onDeleted(download: Download) {}
-                override fun onResumed(download: Download) {}
-                override fun onWaitingNetwork(download: Download) {}
-                override fun onAdded(download: Download) {}
-                override fun onDownloadBlockUpdated(
-                    download: Download,
-                    downloadBlock: DownloadBlock,
-                    totalBlocks: Int,
-                ) {
-                }
-            })
+            val state = DownloadProgressState()
+            fetch.addListener(DownloadFetchListener(out, printConsole, continuation, state))
 
             try {
                 fetch.removeAll()

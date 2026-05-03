@@ -117,105 +117,27 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
     val print: Print = { output ->
         val logType = ConsoleLogger.parseLogType(output)
-        context.runOnUiThread {
-            addLog(output, logType)
+        context.runOnUiThread { addLog(output, logType) }
+    }
+
+    InstallPageDialogs(
+        context = context,
+        showCloneDialog = showCloneDialog,
+        showCustomFileDialog = showCustomFileDialog,
+        installation = installation,
+        print = print,
+        onDismissCloneDialog = { showCloneDialog = false },
+        onCloningStarted = { isCloning = true },
+        onCloningFinished = { isCloning = false },
+        onDismissCustomFileDialog = { showCustomFileDialog = false },
+        onCustomFilesSelected = { versionName, bundleUri, modUri ->
+            customVersionName = versionName
+            customBundleUri = bundleUri
+            customModUri = modUri
+            useCustomFiles = true
+            showCustomFileDialog = false
         }
-    }
-
-    fun startCustomInstallation() {
-        if (customBundleUri == null || customModUri == null) {
-            showToast(context, "Please select both bundle and mod files")
-            return
-        }
-
-        isInstalling = true
-        addLog("Starting custom installation with version name: $customVersionName...", LogType.INFO)
-
-        activityScope.launch {
-            try {
-                val bundleFile = createTempFileFromUri(context, customBundleUri!!, "grindr-$customVersionName.zip")
-                val modFile = createTempFileFromUri(context, customModUri!!, "mod-$customVersionName.zip")
-
-                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-                val customInstallation = Installation(
-                    context,
-                    customVersionName,
-                    modFile.absolutePath,
-                    bundleFile.absolutePath,
-                    mapsApiKey
-                )
-
-                withContext(Dispatchers.IO) {
-                    customInstallation.installCustom(
-                        bundleFile,
-                        modFile,
-                        print
-                    )
-                }
-
-                addLog("Custom installation completed successfully!", LogType.SUCCESS)
-                showToast(context, "Installation complete!")
-                installationSuccessful = true
-            } catch (e: Exception) {
-                handleInstallationError(e, context)
-            } finally {
-                isInstalling = false
-            }
-        }
-    }
-
-    if (showCloneDialog) {
-        CloneDialog(
-            context = context,
-            onDismiss = { showCloneDialog = false },
-            onStartCloning = { packageName, appName, debuggable, embedLSPatch ->
-                showCloneDialog = false
-                isCloning = true
-                activityScope.launch {
-                    addLog("Starting Grindr cloning process...", LogType.INFO)
-                    addLog("Target package: $packageName", LogType.INFO)
-                    addLog("Target app name: $appName", LogType.INFO)
-
-                    val success = try {
-                        installation!!.cloneGrindr(
-                            packageName, appName, debuggable, embedLSPatch,
-                            print
-                        )
-                        true
-                    } catch (e: Exception) {
-                        Logger.i("Cloning failed: ${e.localizedMessage}")
-                        addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
-                        false
-                    }
-
-                    if (success) {
-                        addLog("Grindr clone created successfully!", LogType.SUCCESS)
-                    } else {
-                        addLog("Failed to clone Grindr", LogType.ERROR)
-                    }
-
-                    isCloning = false
-                }
-            }
-        )
-    }
-
-    if (showCustomFileDialog) {
-        FileDialog(
-            context = context,
-            onDismiss = { showCustomFileDialog = false },
-            onSelect = { versionName, bundleUri, modUri ->
-                customVersionName = versionName
-                customBundleUri = bundleUri
-                customModUri = modUri
-                useCustomFiles = true
-                showCustomFileDialog = false
-                addLog("Custom files selected. Version: $versionName", LogType.INFO)
-                addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
-            }
-        )
-    }
+    )
 
     Column(
         modifier = Modifier
@@ -273,26 +195,24 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 onInstallOrLaunch = {
                     if (installationSuccessful) {
                         launchGrindr(context)
+                    } else if (useCustomFiles && customBundleUri != null && customModUri != null) {
+                        startCustomInstallation(
+                            context, customBundleUri, customModUri, customVersionName, print,
+                            onSetInstalling = { isInstalling = it },
+                            onSetInstallSuccessful = { installationSuccessful = it }
+                        )
                     } else {
-                        if (useCustomFiles && customBundleUri != null && customModUri != null) {
-                            startCustomInstallation()
-                        } else {
-                            if (selectedVersion == null) {
-                                showToast(context, "Please select a version first")
-                                return@InstallPageContent
-                            }
-
-                            startInstallation(
-                                selectedVersion!!,
-                                onStarted = { isInstalling = true },
-                                onCompleted = { success ->
-                                    isInstalling = false
-                                    installationSuccessful = success
-                                },
-                                context,
-                                print
-                            )
+                        if (selectedVersion == null) {
+                            showToast(context, "Please select a version first")
+                            return@InstallPageContent
                         }
+                        startInstallation(
+                            selectedVersion!!,
+                            onStarted = { isInstalling = true },
+                            onCompleted = { success -> isInstalling = false; installationSuccessful = success },
+                            context,
+                            print
+                        )
                     }
                 },
                 onShowCloneDialog = { showCloneDialog = true }
@@ -354,6 +274,99 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
         ) {
             Text("Retry")
         }
+    }
+}
+
+private fun startCustomInstallation(
+    context: Activity,
+    customBundleUri: Uri?,
+    customModUri: Uri?,
+    customVersionName: String,
+    print: Print,
+    onSetInstalling: (Boolean) -> Unit,
+    onSetInstallSuccessful: (Boolean) -> Unit,
+) {
+    if (customBundleUri == null || customModUri == null) {
+        showToast(context, "Please select both bundle and mod files")
+        return
+    }
+
+    onSetInstalling(true)
+    addLog("Starting custom installation with version name: $customVersionName...", LogType.INFO)
+
+    activityScope.launch {
+        try {
+            val bundleFile = createTempFileFromUri(context, customBundleUri, "grindr-$customVersionName.zip")
+            val modFile = createTempFileFromUri(context, customModUri, "mod-$customVersionName.zip")
+            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+            val customInstallation = Installation(
+                context, customVersionName, modFile.absolutePath, bundleFile.absolutePath, mapsApiKey
+            )
+            withContext(Dispatchers.IO) { customInstallation.installCustom(bundleFile, modFile, print) }
+            addLog("Custom installation completed successfully!", LogType.SUCCESS)
+            showToast(context, "Installation complete!")
+            onSetInstallSuccessful(true)
+        } catch (e: Exception) {
+            handleInstallationError(e, context)
+        } finally {
+            onSetInstalling(false)
+        }
+    }
+}
+
+@Composable
+private fun InstallPageDialogs(
+    context: Activity,
+    showCloneDialog: Boolean,
+    showCustomFileDialog: Boolean,
+    installation: Installation?,
+    print: Print,
+    onDismissCloneDialog: () -> Unit,
+    onCloningStarted: () -> Unit,
+    onCloningFinished: () -> Unit,
+    onDismissCustomFileDialog: () -> Unit,
+    onCustomFilesSelected: (String, Uri, Uri) -> Unit,
+) {
+    if (showCloneDialog) {
+        CloneDialog(
+            context = context,
+            onDismiss = onDismissCloneDialog,
+            onStartCloning = { packageName, appName, debuggable, embedLSPatch ->
+                onDismissCloneDialog()
+                onCloningStarted()
+                activityScope.launch {
+                    addLog("Starting Grindr cloning process...", LogType.INFO)
+                    addLog("Target package: $packageName", LogType.INFO)
+                    addLog("Target app name: $appName", LogType.INFO)
+
+                    val success = try {
+                        installation!!.cloneGrindr(packageName, appName, debuggable, embedLSPatch, print)
+                        true
+                    } catch (e: Exception) {
+                        Logger.i("Cloning failed: ${e.localizedMessage}")
+                        addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
+                        false
+                    }
+
+                    if (success) addLog("Grindr clone created successfully!", LogType.SUCCESS)
+                    else addLog("Failed to clone Grindr", LogType.ERROR)
+
+                    onCloningFinished()
+                }
+            }
+        )
+    }
+
+    if (showCustomFileDialog) {
+        FileDialog(
+            context = context,
+            onDismiss = onDismissCustomFileDialog,
+            onSelect = { versionName, bundleUri, modUri ->
+                addLog("Custom files selected. Version: $versionName", LogType.INFO)
+                addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
+                onCustomFilesSelected(versionName, bundleUri, modUri)
+            }
+        )
     }
 }
 
