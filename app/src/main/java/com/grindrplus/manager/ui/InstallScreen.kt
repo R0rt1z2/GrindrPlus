@@ -230,186 +230,73 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 viewModel.loadVersionData(manifestUrl.toString())
             }
         } else {
-            MessageBanner(
-                text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
-                isVisible = warningBannerVisible,
-                isPulsating = isInstalling || isCloning,
-                modifier = Modifier.fillMaxWidth(),
-                type = BannerType.WARNING,
-                onDismiss = { warningBannerVisible = false }
-            )
-
-            if (isLSPosed) {
-                MessageBanner(
-                    text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
-                    isVisible = lsposedBannerVisible,
-                    isPulsating = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    type = BannerType.ERROR,
-                    onDismiss = { lsposedBannerVisible = false }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                VersionSelector(
-                    versions = if (useCustomFiles)
-                        listOf(Data(customVersionName, "", "")) + versionData
-                    else
-                        versionData,
-                    selectedVersion = if (useCustomFiles && customBundleUri != null)
-                        Data(customVersionName, "", "")
-                    else
-                        selectedVersion,
-                    onVersionSelected = { selected ->
-                        if (selected.modVer == customVersionName && useCustomFiles) {
-                        } else if (selected.modVer == "custom") {
-                            showCustomFileDialog = true
-                        } else {
-                            selectedVersion = selected
-                            useCustomFiles = false
-                            addLog("Selected version ${selected.modVer}", LogType.INFO)
-                        }
-                    },
-                    isEnabled = !isInstalling && !isCloning,
-                    modifier = Modifier.fillMaxWidth(),
-                    customOption = "Use Custom Files..."
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ConsoleOutput(
-                logEntries = logEntries,
-                modifier = Modifier.weight(0.5f),
-                onClear = {
-                    logEntries.clear()
-                    addLog("Successfully cleared logs!", LogType.SUCCESS)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        activityScope.launch {
-                            try {
-                                withContext(Dispatchers.IO) {
-                                    StorageUtils.cleanupOldInstallationFiles(
-                                        context, true, selectedVersion?.modVer
-                                    )
-                                }
-                                addLog(
-                                    "Cleaned up old installation files",
-                                    LogType.SUCCESS
-                                )
-                            } catch (e: Exception) {
-                                addLog(
-                                    "Failed to clean up: ${e.localizedMessage}",
-                                    LogType.ERROR
+            InstallPageContent(
+                isLSPosed = isLSPosed,
+                isInstalling = isInstalling,
+                isCloning = isCloning,
+                installationSuccessful = installationSuccessful,
+                warningBannerVisible = warningBannerVisible,
+                lsposedBannerVisible = lsposedBannerVisible,
+                versionData = versionData,
+                selectedVersion = selectedVersion,
+                useCustomFiles = useCustomFiles,
+                customVersionName = customVersionName,
+                customBundleUri = customBundleUri,
+                customModUri = customModUri,
+                context = context,
+                onWarningDismiss = { warningBannerVisible = false },
+                onLSPosedDismiss = { lsposedBannerVisible = false },
+                onVersionSelected = { selected ->
+                    if (selected.modVer == customVersionName && useCustomFiles) {
+                    } else if (selected.modVer == "custom") {
+                        showCustomFileDialog = true
+                    } else {
+                        selectedVersion = selected
+                        useCustomFiles = false
+                        addLog("Selected version ${selected.modVer}", LogType.INFO)
+                    }
+                },
+                onCleanUp = {
+                    activityScope.launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                StorageUtils.cleanupOldInstallationFiles(
+                                    context, true, selectedVersion?.modVer
                                 )
                             }
+                            addLog("Cleaned up old installation files", LogType.SUCCESS)
+                        } catch (e: Exception) {
+                            addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
                         }
-                    },
-                    enabled = !isInstalling && !isCloning,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        )
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        "Clean Up",
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Button(
-                    onClick = {
-                        if (installationSuccessful) {
-                            launchGrindr(context)
+                    }
+                },
+                onInstallOrLaunch = {
+                    if (installationSuccessful) {
+                        launchGrindr(context)
+                    } else {
+                        if (useCustomFiles && customBundleUri != null && customModUri != null) {
+                            startCustomInstallation()
                         } else {
-                            if (useCustomFiles && customBundleUri != null && customModUri != null) {
-                                startCustomInstallation()
-                            } else {
-                                if (selectedVersion == null) {
-                                    showToast(context, "Please select a version first")
-                                    return@Button
-                                }
-
-                                startInstallation(
-                                    selectedVersion!!,
-                                    onStarted = { isInstalling = true },
-                                    onCompleted = { success ->
-                                        isInstalling = false
-                                        installationSuccessful = success
-                                    },
-                                    context,
-                                    print
-                                )
+                            if (selectedVersion == null) {
+                                showToast(context, "Please select a version first")
+                                return@InstallPageContent
                             }
+
+                            startInstallation(
+                                selectedVersion!!,
+                                onStarted = { isInstalling = true },
+                                onCompleted = { success ->
+                                    isInstalling = false
+                                    installationSuccessful = success
+                                },
+                                context,
+                                print
+                            )
                         }
-                    },
-                    enabled = ((selectedVersion != null || (useCustomFiles && customBundleUri != null && customModUri != null)) ||
-                            installationSuccessful) && !isInstalling && !isCloning,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.12f
-                        ),
-                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        )
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = if (isInstalling) {
-                            "Installing..."
-                        } else if (installationSuccessful) {
-                            "Open Grindr"
-                        } else {
-                            "Install"
-                        },
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-            }
-
-            if (isGrindrInstalled(context)) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { showCloneDialog = true },
-                    enabled = !isInstalling && !isCloning,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = "Clone",
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = if (isCloning) "Cloning..." else "Clone Grindr",
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-            }
+                    }
+                },
+                onShowCloneDialog = { showCloneDialog = true }
+            )
         }
     }
 }
@@ -587,3 +474,193 @@ data class Data(
     val grindrUrl: String,
     val modUrl: String,
 )
+
+@Composable
+private fun InstallPageContent(
+    isLSPosed: Boolean,
+    isInstalling: Boolean,
+    isCloning: Boolean,
+    installationSuccessful: Boolean,
+    warningBannerVisible: Boolean,
+    lsposedBannerVisible: Boolean,
+    versionData: List<Data>,
+    selectedVersion: Data?,
+    useCustomFiles: Boolean,
+    customVersionName: String,
+    customBundleUri: Uri?,
+    customModUri: Uri?,
+    context: Activity,
+    onWarningDismiss: () -> Unit,
+    onLSPosedDismiss: () -> Unit,
+    onVersionSelected: (Data) -> Unit,
+    onCleanUp: () -> Unit,
+    onInstallOrLaunch: () -> Unit,
+    onShowCloneDialog: () -> Unit,
+) {
+    MessageBanner(
+        text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
+        isVisible = warningBannerVisible,
+        isPulsating = isInstalling || isCloning,
+        modifier = Modifier.fillMaxWidth(),
+        type = BannerType.WARNING,
+        onDismiss = onWarningDismiss
+    )
+
+    if (isLSPosed) {
+        MessageBanner(
+            text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
+            isVisible = lsposedBannerVisible,
+            isPulsating = true,
+            modifier = Modifier.fillMaxWidth(),
+            type = BannerType.ERROR,
+            onDismiss = onLSPosedDismiss
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        VersionSelector(
+            versions = if (useCustomFiles)
+                listOf(Data(customVersionName, "", "")) + versionData
+            else
+                versionData,
+            selectedVersion = if (useCustomFiles && customBundleUri != null)
+                Data(customVersionName, "", "")
+            else
+                selectedVersion,
+            onVersionSelected = onVersionSelected,
+            isEnabled = !isInstalling && !isCloning,
+            modifier = Modifier.fillMaxWidth(),
+            customOption = "Use Custom Files..."
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    ConsoleOutput(
+        logEntries = logEntries,
+        modifier = Modifier.weight(0.5f),
+        onClear = {
+            logEntries.clear()
+            addLog("Successfully cleared logs!", LogType.SUCCESS)
+        }
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    InstallActionButtonsRow(
+        isInstalling = isInstalling,
+        isCloning = isCloning,
+        installationSuccessful = installationSuccessful,
+        selectedVersion = selectedVersion,
+        useCustomFiles = useCustomFiles,
+        customBundleUri = customBundleUri,
+        customModUri = customModUri,
+        onCleanUp = onCleanUp,
+        onInstallOrLaunch = onInstallOrLaunch
+    )
+
+    if (isGrindrInstalled(context)) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CloneGrindrButton(
+            isInstalling = isInstalling,
+            isCloning = isCloning,
+            onShowCloneDialog = onShowCloneDialog
+        )
+    }
+}
+
+@Composable
+private fun InstallActionButtonsRow(
+    isInstalling: Boolean,
+    isCloning: Boolean,
+    installationSuccessful: Boolean,
+    selectedVersion: Data?,
+    useCustomFiles: Boolean,
+    customBundleUri: Uri?,
+    customModUri: Uri?,
+    onCleanUp: () -> Unit,
+    onInstallOrLaunch: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        OutlinedButton(
+            onClick = onCleanUp,
+            enabled = !isInstalling && !isCloning,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.38f
+                )
+            ),
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                "Clean Up",
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Button(
+            onClick = onInstallOrLaunch,
+            enabled = (selectedVersion != null || (useCustomFiles && customBundleUri != null && customModUri != null) ||
+                    installationSuccessful) && !isInstalling && !isCloning,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.12f
+                ),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.38f
+                )
+            ),
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = if (isInstalling) {
+                    "Installing..."
+                } else if (installationSuccessful) {
+                    "Open Grindr"
+                } else {
+                    "Install"
+                },
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CloneGrindrButton(
+    isInstalling: Boolean,
+    isCloning: Boolean,
+    onShowCloneDialog: () -> Unit,
+) {
+    Button(
+        onClick = onShowCloneDialog,
+        enabled = !isInstalling && !isCloning,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = Icons.Default.ContentCopy,
+            contentDescription = "Clone",
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Text(
+            text = if (isCloning) "Cloning..." else "Clone Grindr",
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+    }
+}

@@ -77,8 +77,9 @@ class LocationSpoofer : Hook(
 
         locationClass.hook("getLatitude", HookStage.AFTER) { param ->
             val gpsLatitude = param.getResult() as Double?
-            if (gpsLatitude != null)
-                gpsLocationLatitude = gpsLatitude;
+            if (gpsLatitude != null) {
+                gpsLocationLatitude = gpsLatitude
+            }
 
             (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()
@@ -90,8 +91,9 @@ class LocationSpoofer : Hook(
 
         locationClass.hook("getLongitude", HookStage.AFTER) { param ->
             val gpsLongitude = param.getResult() as Double?
-            if (gpsLongitude != null)
-                gpsLocationLongitude = gpsLongitude;
+            if (gpsLongitude != null) {
+                gpsLocationLongitude = gpsLongitude
+            }
 
             (Config.get("forced_coordinates", Config.get("current_location", "")) as String).takeIf {
                 it.isNotEmpty()

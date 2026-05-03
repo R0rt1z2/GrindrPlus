@@ -344,7 +344,7 @@ object GrindrPlus {
 
         Logger.i("Initializing GrindrPlus core...", LogSource.MODULE)
 
-        if ((Config.get("reset_database", false) as Boolean)) {
+        if (Config.get("reset_database", false) as Boolean) {
             Logger.i("Resetting database...", LogSource.MODULE)
             database.clearAllTables()
             Config.put("reset_database", false)

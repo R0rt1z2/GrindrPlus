@@ -201,51 +201,17 @@ fun DebugLogsScreen(
             )
         },
         topBar = {
-            TopAppBar(
-                title = { Text("Logs") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Back",
-                            modifier = Modifier.rotate(180f)
+            LogsTopAppBar(
+                onBack = onBack,
+                isDebugBuild = isDebugBuild,
+                debugModeEnabled = debugModeEnabled,
+                onToggleDebugMode = { newState ->
+                    debugModeEnabled = newState
+                    Config.put("debug_mode", newState)
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            if (newState) "Verbose logging enabled" else "Verbose logging disabled"
                         )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            if (!isDebugBuild) {
-                                val newState = !debugModeEnabled
-                                debugModeEnabled = newState
-                                Config.put("debug_mode", newState)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (newState) "Verbose logging enabled" else "Verbose logging disabled"
-                                    )
-                                }
-                            }
-                        },
-                        enabled = !isDebugBuild
-                    ) {
-                        Box {
-                            Icon(
-                                imageVector = Icons.Default.Code,
-                                contentDescription = "Toggle Verbose Logging",
-                                tint = if (isDebugBuild || debugModeEnabled)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            if (isDebugBuild) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                        .align(Alignment.TopEnd)
-                                )
-                            }
-                        }
                     }
                 }
             )
@@ -266,46 +232,14 @@ fun DebugLogsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { showExportDialog = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Export Logs")
-                }
-
-                Spacer(modifier = Modifier.padding(horizontal = 8.dp))
-
-                Button(
-                    onClick = {
-                        logs = emptyList()
-                        Logger.clearLogs()
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Text("Clear Logs")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = { showReportDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text("Report an Issue")
-            }
+            LogsActionButtons(
+                onExport = { showExportDialog = true },
+                onClear = {
+                    logs = emptyList()
+                    Logger.clearLogs()
+                },
+                onReport = { showReportDialog = true }
+            )
 
             Spacer(modifier = Modifier.height(90.dp))
         }
@@ -509,5 +443,102 @@ fun ReportIssueDialog(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LogsTopAppBar(
+    onBack: () -> Unit,
+    isDebugBuild: Boolean,
+    debugModeEnabled: Boolean,
+    onToggleDebugMode: (Boolean) -> Unit,
+) {
+    TopAppBar(
+        title = { Text("Logs") },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Back",
+                    modifier = Modifier.rotate(180f)
+                )
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = {
+                    if (!isDebugBuild) {
+                        val newState = !debugModeEnabled
+                        onToggleDebugMode(newState)
+                    }
+                },
+                enabled = !isDebugBuild
+            ) {
+                Box {
+                    Icon(
+                        imageVector = Icons.Default.Code,
+                        contentDescription = "Toggle Verbose Logging",
+                        tint = if (isDebugBuild || debugModeEnabled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    if (isDebugBuild) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                .align(Alignment.TopEnd)
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun LogsActionButtons(
+    onExport: () -> Unit,
+    onClear: () -> Unit,
+    onReport: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Button(
+            onClick = onExport,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Export Logs")
+        }
+
+        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+
+        Button(
+            onClick = onClear,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
+            )
+        ) {
+            Text("Clear Logs")
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Button(
+        onClick = onReport,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    ) {
+        Text("Report an Issue")
     }
 }

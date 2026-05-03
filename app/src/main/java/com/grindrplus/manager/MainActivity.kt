@@ -311,245 +311,44 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showPermissionDialog) {
-                    Dialog(
-                        onDismissRequest = { showPermissionDialog = false }
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Center
-                            ) {
-                                Text(
-                                    text = "Notification Permission",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text = "GrindrPlus needs notification permission to alert you when someone blocks or unblocks you.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { showPermissionDialog = false },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Not now")
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            showPermissionDialog = false
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                            }
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Grant Access")
-                                    }
-                                }
+                    NotificationPermissionDialog(
+                        onDismiss = { showPermissionDialog = false },
+                        onGrant = {
+                            showPermissionDialog = false
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
                         }
-                    }
+                    )
                 }
 
                 if (firstLaunchDialog) {
-                    Dialog(
-                        onDismissRequest = { firstLaunchDialog = false }) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Center
-                            ) {
-                                Text(
-                                    text = "Welcome to GrindrPlus!",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text =
-                                        "We collect totally anonymous data to improve the app.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text =
-                                        "You can disable this in the settings.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text = "Data collected:",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-
-                                Text(
-                                    text = "• App opens\n• Installation success/failure\n• Eventual failure reason\n• Android version",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                Button(
-                                    onClick = { firstLaunchDialog = false },
-                                    modifier = Modifier
-                                        .align(CenterHorizontally)
-                                        .padding(top = 16.dp)
-                                ) {
-                                    Text("Ok, got it")
-                                }
-                            }
-                        }
-                    }
-
+                    WelcomeDialog(onDismiss = { firstLaunchDialog = false })
                     return@GrindrPlusTheme
                 }
 
                 if (showUninstallDialogState) {
-                    Dialog(
-                        onDismissRequest = { showUninstallDialogState = false }
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Center
-                            ) {
-                                Text(
-                                    text = "Installation Error",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text = "The installation failed because the app signatures don't match.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text = "Please uninstall Grindr manually first, then try the installation again.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) {
-                                    Text(
-                                        text = "If you have Grindr installed in the Secure Folder, PLEASE UNINSTALL IT from there as well.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(bottom = 16.dp)
-                                    )
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { showUninstallDialogState = false },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Cancel")
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            try {
-                                                val intent = Intent(Intent.ACTION_DELETE)
-                                                intent.data = "package:$GRINDR_PACKAGE_NAME".toUri()
-                                                startActivity(intent)
-                                                showUninstallDialogState = false
-                                            } catch (e: Exception) {
-                                                Toast.makeText(
-                                                    this@MainActivity,
-                                                    "Error: ${e.localizedMessage}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Uninstall")
-                                    }
-                                }
+                    UninstallErrorDialog(
+                        onDismiss = { showUninstallDialogState = false },
+                        onUninstall = {
+                            try {
+                                val intent = Intent(Intent.ACTION_DELETE)
+                                intent.data = "package:$GRINDR_PACKAGE_NAME".toUri()
+                                startActivity(intent)
+                                showUninstallDialogState = false
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Error: ${e.localizedMessage}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
-                    }
+                    )
                 }
 
                 if (patchInfoDialog) {
-                    Dialog(
-                        onDismissRequest = { patchInfoDialog = false }) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Center
-                            ) {
-                                Text(
-                                    text = "Installation Method",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Text(
-                                    text = "• If you were using LSPatch previously, go to the Install section and install the latest version.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                )
-
-                                Text(
-                                    text = buildAnnotatedString {
-                                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope. ")
-
-                                        withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                                            append("Do not use the Install section if you're using LSPosed.")
-                                        }
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
-
-                                Button(
-                                    onClick = { patchInfoDialog = false },
-                                    modifier = Modifier
-                                        .align(CenterHorizontally)
-                                        .padding(top = 8.dp)
-                                ) {
-                                    Text("Understood")
-                                }
-                            }
-                        }
-                    }
+                    PatchInfoDialog(onDismiss = { patchInfoDialog = false })
                 }
 
                 Surface(
@@ -644,3 +443,228 @@ fun NavController.navigateItem(item: MainNavItem) {
     }
 }
 
+@Composable
+private fun NotificationPermissionDialog(
+    onDismiss: () -> Unit,
+    onGrant: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Center
+            ) {
+                Text(
+                    text = "Notification Permission",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "GrindrPlus needs notification permission to alert you when someone blocks or unblocks you.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Not now")
+                    }
+
+                    Button(
+                        onClick = onGrant,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Grant Access")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Center
+            ) {
+                Text(
+                    text = "Welcome to GrindrPlus!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text =
+                        "We collect totally anonymous data to improve the app.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text =
+                        "You can disable this in the settings.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "Data collected:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = "• App opens\n• Installation success/failure\n• Eventual failure reason\n• Android version",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .align(CenterHorizontally)
+                        .padding(top = 16.dp)
+                ) {
+                    Text("Ok, got it")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UninstallErrorDialog(
+    onDismiss: () -> Unit,
+    onUninstall: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Center
+            ) {
+                Text(
+                    text = "Installation Error",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "The installation failed because the app signatures don't match.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "Please uninstall Grindr manually first, then try the installation again.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) {
+                    Text(
+                        text = "If you have Grindr installed in the Secure Folder, PLEASE UNINSTALL IT from there as well.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = onUninstall,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Uninstall")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PatchInfoDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Center
+            ) {
+                Text(
+                    text = "Installation Method",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "• If you were using LSPatch previously, go to the Install section and install the latest version.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Text(
+                    text = buildAnnotatedString {
+                        append("• If you were using LSPosed, make sure the module is enabled in the LSPosed manager and Grindr app is within its scope. ")
+
+                        withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                            append("Do not use the Install section if you're using LSPosed.")
+                        }
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .align(CenterHorizontally)
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Understood")
+                }
+            }
+        }
+    }
+}

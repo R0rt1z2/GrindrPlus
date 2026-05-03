@@ -196,7 +196,7 @@ class BridgeService : Service() {
             ioExecutor.execute {
                 try {
                     checkAndManageLogSize()
-                    appendToLog(content + (if (!content.endsWith("\n")) "\n" else ""))
+                    appendToLog(content + if (!content.endsWith("\n")) "\n" else "")
                 } catch (e: Exception) {
                     Logger.e("Error writing raw log entry", LogSource.BRIDGE)
                     Logger.writeRaw(e.stackTraceToString())

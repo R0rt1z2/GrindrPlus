@@ -409,38 +409,41 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun handleGetAlbumsShares(args: Array<Any?>, result: Any): Any {
-            logd("Fetching shared albums")
-            if (result.isSuccess()) {
-                try {
-                    runBlocking {
-                        GrindrPlus.database.withTransaction {
-                            val dao = GrindrPlus.database.albumDao()
-                            val albumBriefs =
-                                getObjectField(result.getSuccessValue(), "albums") as? List<Any>
-                            albumBriefs?.forEach { albumBrief ->
-                                try {
-                                    val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
-                                    dao.upsertAlbum(albumEntity)
-
-                                    val grindrAlbumContent = getObjectField(albumBrief, "content")
-                                    if (grindrAlbumContent != null) {
-                                        val dbAlbumContent =
-                                            grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
-                                        dao.upsertAlbumContent(dbAlbumContent)
-                                    }
-                                } catch (e: Exception) {
-                                    loge("Error processing album brief: ${e.message}")
-                                    Logger.writeRaw(e.stackTraceToString())
-                                }
+    private fun saveIncomingAlbumBriefs(result: Any) {
+        if (!result.isSuccess()) return
+        try {
+            runBlocking {
+                GrindrPlus.database.withTransaction {
+                    val dao = GrindrPlus.database.albumDao()
+                    val albumBriefs =
+                        getObjectField(result.getSuccessValue(), "albums") as? List<Any>
+                    albumBriefs?.forEach { albumBrief ->
+                        try {
+                            val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
+                            dao.upsertAlbum(albumEntity)
+                            val grindrAlbumContent = getObjectField(albumBrief, "content")
+                            if (grindrAlbumContent != null) {
+                                val dbAlbumContent =
+                                    grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
+                                dao.upsertAlbumContent(dbAlbumContent)
                             }
+                        } catch (e: Exception) {
+                            loge("Error processing album brief: ${e.message}")
+                            Logger.writeRaw(e.stackTraceToString())
                         }
                     }
-                } catch (e: Exception) {
-                    loge("Error saving album briefs: ${e.message}")
-                    Logger.writeRaw(e.stackTraceToString())
                 }
             }
+        } catch (e: Exception) {
+            loge("Error saving album briefs: ${e.message}")
+            Logger.writeRaw(e.stackTraceToString())
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun handleGetAlbumsShares(args: Array<Any?>, result: Any): Any {
+            logd("Fetching shared albums")
+            saveIncomingAlbumBriefs(result)
 
             try {
                 val albumBriefs = runBlocking {
@@ -485,36 +488,7 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
 
             logd("Fetching shared albums for profile ID $profileId: ${result.javaClass.name}: $result")
 
-            if (result.isSuccess()) {
-                try {
-                    runBlocking {
-                        GrindrPlus.database.withTransaction {
-                            val dao = GrindrPlus.database.albumDao()
-                            val albumBriefs =
-                                getObjectField(result.getSuccessValue(), "albums") as? List<Any>
-                            albumBriefs?.forEach { albumBrief ->
-                                try {
-                                    val albumEntity = albumBrief.asAlbumBriefToAlbumEntity()
-                                    dao.upsertAlbum(albumEntity)
-
-                                    val grindrAlbumContent = getObjectField(albumBrief, "content")
-                                    if (grindrAlbumContent != null) {
-                                        val dbAlbumContent =
-                                            grindrAlbumContent.toAlbumContentEntity(albumEntity.id)
-                                        dao.upsertAlbumContent(dbAlbumContent)
-                                    }
-                                } catch (e: Exception) {
-                                    loge("Error processing album brief: ${e.message}")
-                                    Logger.writeRaw(e.stackTraceToString())
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    loge("Error saving album briefs: ${e.message}")
-                    Logger.writeRaw(e.stackTraceToString())
-                }
-            }
+            saveIncomingAlbumBriefs(result)
 
             try {
                 val albumBriefs = runBlocking {

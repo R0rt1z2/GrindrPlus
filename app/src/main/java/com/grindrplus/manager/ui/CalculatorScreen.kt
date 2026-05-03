@@ -78,169 +78,24 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                 ),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                val formattedDisplay = remember(display) {
-                    if (display.length > 12) {
-                        display.chunked(12).joinToString("\n")
-                    } else {
-                        display
-                    }
-                }
+            CalculatorDisplay(display = display)
 
-                Text(
-                    text = formattedDisplay,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Normal,
-                    maxLines = 3,
-                    textAlign = TextAlign.End,
-                    lineHeight = 52.sp
-                )
-            }
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CalculatorButton("C", ButtonType.FUNCTION, modifier = Modifier.weight(1f)) {
-                        display = "0"
-                        operation = null
-                        firstNumber = null
-                        newNumber = true
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Spacer(modifier = Modifier.weight(1f))
-                    CalculatorButton("÷", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
-                        handleOperation("÷", display) { op, num ->
-                            operation = op; firstNumber = num; newNumber = true
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (number in listOf("7", "8", "9")) {
-                        CalculatorButton(
-                            number,
-                            ButtonType.NUMBER,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            updateDisplay(number, display, newNumber) {
-                                display = it; newNumber = false
-                            }
-                        }
-                    }
-                    CalculatorButton("×", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
-                        handleOperation("×", display) { op, num ->
-                            operation = op; firstNumber = num; newNumber = true
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (number in listOf("4", "5", "6")) {
-                        CalculatorButton(
-                            number,
-                            ButtonType.NUMBER,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            updateDisplay(number, display, newNumber) {
-                                display = it; newNumber = false
-                            }
-                        }
-                    }
-                    CalculatorButton("-", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
-                        handleOperation("-", display) { op, num ->
-                            operation = op; firstNumber = num; newNumber = true
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (number in listOf("1", "2", "3")) {
-                        CalculatorButton(
-                            number,
-                            ButtonType.NUMBER,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            updateDisplay(number, display, newNumber) {
-                                display = it; newNumber = false
-                            }
-                        }
-                    }
-                    CalculatorButton("+", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
-                        handleOperation("+", display) { op, num ->
-                            operation = op; firstNumber = num; newNumber = true
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CalculatorButton("0", ButtonType.NUMBER, modifier = Modifier.weight(2f)) {
-                        updateDisplay("0", display, newNumber) { display = it; newNumber = false }
-                    }
-                    CalculatorButton(".", ButtonType.NUMBER, modifier = Modifier.weight(1f)) {
-                        if (!display.contains(".") && !newNumber) {
-                            display = "$display."
-                        } else if (newNumber) {
-                            display = "0."
-                            newNumber = false
-                        }
-                    }
-                    CalculatorButton("=", ButtonType.EQUALS, modifier = Modifier.weight(1f)) {
-                        if (operation == "×" && firstNumber == 53.0) {
-                            calculatorScreen.value = false
-                            return@CalculatorButton
-                        }
-
-                        if (easterEggs.containsKey(firstNumber?.toInt())) {
-                            selectedEasterEgg = firstNumber!!.toInt()
-                            showEasterEgg = true
-                            return@CalculatorButton
-                        }
-
-                        if (operation != null && firstNumber != null) {
-                            val secondNumber = display.toDoubleOrNull() ?: 0.0
-                            val result = when (operation) {
-                                "+" -> firstNumber!! + secondNumber
-                                "-" -> firstNumber!! - secondNumber
-                                "×" -> firstNumber!! * secondNumber
-                                "÷" -> if (secondNumber != 0.0) firstNumber!! / secondNumber else Double.POSITIVE_INFINITY
-                                else -> secondNumber
-                            }
-                            display = if (result % 1 == 0.0) result.toInt()
-                                .toString() else result.toString()
-                            operation = null
-                            firstNumber = null
-                            newNumber = true
-                        }
-                    }
-                }
-            }
+            CalculatorButtonGrid(
+                display = display,
+                operation = operation,
+                firstNumber = firstNumber,
+                newNumber = newNumber,
+                easterEggs = easterEggs,
+                onDisplayChange = { display = it },
+                onOperationChange = { operation = it },
+                onFirstNumberChange = { firstNumber = it },
+                onNewNumberChange = { newNumber = it },
+                onSelectedEasterEggChange = { selectedEasterEgg = it },
+                onShowEasterEgg = { showEasterEgg = it },
+                onExitCalculator = { calculatorScreen.value = false }
+            )
         }
     }
 }
@@ -418,4 +273,218 @@ private fun handleOperation(
 ) {
     val number = currentDisplay.toDoubleOrNull() ?: 0.0
     onOperation(op, number)
+}
+
+@Composable
+private fun CalculatorDisplay(display: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        val formattedDisplay = remember(display) {
+            if (display.length > 12) {
+                display.chunked(12).joinToString("\n")
+            } else {
+                display
+            }
+        }
+
+        Text(
+            text = formattedDisplay,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Normal,
+            maxLines = 3,
+            textAlign = TextAlign.End,
+            lineHeight = 52.sp
+        )
+    }
+}
+
+@Composable
+private fun CalculatorButtonGrid(
+    display: String,
+    operation: String?,
+    firstNumber: Double?,
+    newNumber: Boolean,
+    easterEggs: Map<Int, String>,
+    onDisplayChange: (String) -> Unit,
+    onOperationChange: (String?) -> Unit,
+    onFirstNumberChange: (Double?) -> Unit,
+    onNewNumberChange: (Boolean) -> Unit,
+    onSelectedEasterEggChange: (Int) -> Unit,
+    onShowEasterEgg: (Boolean) -> Unit,
+    onExitCalculator: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Row 1: C, [empty], [empty], ÷
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CalculatorButton("C", ButtonType.FUNCTION, modifier = Modifier.weight(1f)) {
+                onDisplayChange("0")
+                onOperationChange(null)
+                onFirstNumberChange(null)
+                onNewNumberChange(true)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
+            CalculatorButton("÷", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
+                handleOperation("÷", display) { op, num ->
+                    onOperationChange(op); onFirstNumberChange(num); onNewNumberChange(true)
+                }
+            }
+        }
+
+        // Row 2: 7, 8, 9, ×
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            for (number in listOf("7", "8", "9")) {
+                CalculatorButton(
+                    number,
+                    ButtonType.NUMBER,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    updateDisplay(number, display, newNumber) {
+                        onDisplayChange(it); onNewNumberChange(false)
+                    }
+                }
+            }
+            CalculatorButton("×", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
+                handleOperation("×", display) { op, num ->
+                    onOperationChange(op); onFirstNumberChange(num); onNewNumberChange(true)
+                }
+            }
+        }
+
+        // Row 3: 4, 5, 6, -
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            for (number in listOf("4", "5", "6")) {
+                CalculatorButton(
+                    number,
+                    ButtonType.NUMBER,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    updateDisplay(number, display, newNumber) {
+                        onDisplayChange(it); onNewNumberChange(false)
+                    }
+                }
+            }
+            CalculatorButton("-", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
+                handleOperation("-", display) { op, num ->
+                    onOperationChange(op); onFirstNumberChange(num); onNewNumberChange(true)
+                }
+            }
+        }
+
+        // Row 4: 1, 2, 3, +
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            for (number in listOf("1", "2", "3")) {
+                CalculatorButton(
+                    number,
+                    ButtonType.NUMBER,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    updateDisplay(number, display, newNumber) {
+                        onDisplayChange(it); onNewNumberChange(false)
+                    }
+                }
+            }
+            CalculatorButton("+", ButtonType.OPERATION, modifier = Modifier.weight(1f)) {
+                handleOperation("+", display) { op, num ->
+                    onOperationChange(op); onFirstNumberChange(num); onNewNumberChange(true)
+                }
+            }
+        }
+
+        // Row 5: 0, ., =
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CalculatorButton("0", ButtonType.NUMBER, modifier = Modifier.weight(2f)) {
+                updateDisplay("0", display, newNumber) { onDisplayChange(it); onNewNumberChange(false) }
+            }
+            CalculatorButton(".", ButtonType.NUMBER, modifier = Modifier.weight(1f)) {
+                if (!display.contains(".") && !newNumber) {
+                    onDisplayChange("$display.")
+                } else if (newNumber) {
+                    onDisplayChange("0.")
+                    onNewNumberChange(false)
+                }
+            }
+            CalculatorButton("=", ButtonType.EQUALS, modifier = Modifier.weight(1f)) {
+                handleEqualsPressed(
+                    display = display,
+                    operation = operation,
+                    firstNumber = firstNumber,
+                    easterEggs = easterEggs,
+                    onDisplayChange = onDisplayChange,
+                    onOperationChange = onOperationChange,
+                    onFirstNumberChange = onFirstNumberChange,
+                    onNewNumberChange = onNewNumberChange,
+                    onSelectedEasterEggChange = onSelectedEasterEggChange,
+                    onShowEasterEgg = onShowEasterEgg,
+                    onExitCalculator = onExitCalculator
+                )
+            }
+        }
+    }
+}
+
+private fun handleEqualsPressed(
+    display: String,
+    operation: String?,
+    firstNumber: Double?,
+    easterEggs: Map<Int, String>,
+    onDisplayChange: (String) -> Unit,
+    onOperationChange: (String?) -> Unit,
+    onFirstNumberChange: (Double?) -> Unit,
+    onNewNumberChange: (Boolean) -> Unit,
+    onSelectedEasterEggChange: (Int) -> Unit,
+    onShowEasterEgg: (Boolean) -> Unit,
+    onExitCalculator: () -> Unit,
+) {
+    if (operation == "×" && firstNumber == 53.0) {
+        onExitCalculator()
+        return
+    }
+
+    if (easterEggs.containsKey(firstNumber?.toInt())) {
+        onSelectedEasterEggChange(firstNumber!!.toInt())
+        onShowEasterEgg(true)
+        return
+    }
+
+    if (operation != null && firstNumber != null) {
+        val secondNumber = display.toDoubleOrNull() ?: 0.0
+        val result = when (operation) {
+            "+" -> firstNumber + secondNumber
+            "-" -> firstNumber - secondNumber
+            "×" -> firstNumber * secondNumber
+            "÷" -> if (secondNumber != 0.0) firstNumber / secondNumber else Double.POSITIVE_INFINITY
+            else -> secondNumber
+        }
+        onDisplayChange(if (result % 1 == 0.0) result.toInt().toString() else result.toString())
+        onOperationChange(null)
+        onFirstNumberChange(null)
+        onNewNumberChange(true)
+    }
 }
