@@ -207,7 +207,7 @@ class BridgeClient(private val context: Context) {
 
     private suspend fun awaitExistingConnection(): Boolean {
         Logger.d("Connection already in progress, waiting...", LogSource.BRIDGE)
-        val connectionKey = "connect-${System.currentTimeMillis()}"
+        val connectionKey = "connect-${java.util.UUID.randomUUID()}"
         val deferred = CompletableDeferred<Boolean>()
         connectionDeferreds[connectionKey] = deferred
         return try {

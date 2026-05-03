@@ -408,7 +408,7 @@ class BridgeService : Service() {
         if (callerUid == Process.myUid()) return
         val callerPackages = packageManager.getPackagesForUid(callerUid) ?: emptyArray()
         val allowed = callerPackages.any { pkg ->
-            pkg == packageName || pkg.startsWith("com.grindrapp")
+            pkg == packageName || pkg == "com.grindrapp.android" || pkg.startsWith("com.grindrapp.android.")
         }
         if (!allowed) {
             Logger.w(

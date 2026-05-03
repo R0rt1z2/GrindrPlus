@@ -151,18 +151,18 @@ tasks.register("setupLSPatch") {
         )?.value ?: error("setupLSPatch: could not locate download URL on nightly.link — page format may have changed")
 
         providers.exec {
-            commandLine("mkdir", "-p", "/tmp/lspatch")
+            commandLine("mkdir", "-p", "${System.getProperty("java.io.tmpdir")}/lspatch")
         }.result.get()
 
         providers.exec {
-            commandLine("wget", jarUrl, "-O", "/tmp/lspatch/lspatch.zip")
+            commandLine("wget", jarUrl, "-O", "${System.getProperty("java.io.tmpdir")}/lspatch/lspatch.zip")
         }.result.get()
 
         providers.exec {
-            commandLine("unzip", "-o", "/tmp/lspatch/lspatch.zip", "-d", "/tmp/lspatch")
+            commandLine("unzip", "-o", "${System.getProperty("java.io.tmpdir")}/lspatch/lspatch.zip", "-d", "${System.getProperty("java.io.tmpdir")}/lspatch")
         }.result.get()
 
-        val jarPath = File("/tmp/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
+        val jarPath = File("${System.getProperty("java.io.tmpdir")}/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
             ?: error("setupLSPatch: jar not found inside downloaded zip — zip structure may have changed")
 
         providers.exec {
