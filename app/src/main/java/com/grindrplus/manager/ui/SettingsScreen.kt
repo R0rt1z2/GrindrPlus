@@ -732,17 +732,27 @@ private fun ExpandableTextSetting(
     onValueCommit: (String) -> Unit,
     onChanged: () -> Unit,
     bottomActions: @Composable (
-        setText: (String) -> Unit,
         canSave: Boolean,
         save: () -> Unit,
         cancel: () -> Unit,
     ) -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    var text by remember { mutableStateOf(initialValue) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    // Keying on initialValue: when the underlying setting reloads (e.g. after
+    // a button action triggers loadSettings() in the ViewModel), the field
+    // shows the new value instead of stale local edits.
+    var text by remember(initialValue) { mutableStateOf(initialValue) }
+    var errorMessage by remember(initialValue, validator) {
+        mutableStateOf(validator?.invoke(initialValue))
+    }
 
-    val collapse: () -> Unit = { isExpanded = false }
+    val collapse: () -> Unit = {
+        // Discard in-progress edits when the user cancels so reopening the
+        // setting starts from a clean state.
+        isExpanded = false
+        text = initialValue
+        errorMessage = validator?.invoke(initialValue)
+    }
     val save: () -> Unit = {
         if (errorMessage == null) {
             onValueCommit(text)
@@ -782,7 +792,6 @@ private fun ExpandableTextSetting(
                 )
 
                 bottomActions(
-                    { value -> text = value },
                     errorMessage == null,
                     save,
                     collapse,
@@ -806,7 +815,7 @@ fun ImprovedTextSetting(
         validator = setting.validator,
         onValueCommit = setting.onValueChange,
         onChanged = onChanged,
-    ) { _, canSave, save, cancel ->
+    ) { canSave, save, cancel ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -832,7 +841,7 @@ fun ImprovedTextSettingWithButtons(
         validator = setting.validator,
         onValueCommit = setting.onValueChange,
         onChanged = onChanged,
-    ) { setText, canSave, save, cancel ->
+    ) { canSave, save, cancel ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -843,10 +852,7 @@ fun ImprovedTextSettingWithButtons(
                 Row(modifier = Modifier.weight(1f)) {
                     setting.buttons.forEach { buttonAction ->
                         Button(
-                            onClick = {
-                                buttonAction.action()
-                                setText(setting.value)
-                            },
+                            onClick = { buttonAction.action() },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
