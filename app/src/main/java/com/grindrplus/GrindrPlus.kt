@@ -80,6 +80,7 @@ object GrindrPlus {
     private var isInitialized = false
     private var isMainInitialized = false
     private var isInstanceManagerInitialized = false
+    private var isSQLiteDriverHookInitialized = false
 
     var spline = PCHIP(
         listOf(
@@ -138,10 +139,13 @@ object GrindrPlus {
         setupCrashLogging()
 
         this.context = application
+        this.classLoader = context.classLoader
+        this.packageName = context.packageName
         this.bridgeClient = BridgeClient(context)
 
         Logger.initialize(context, bridgeClient, true)
         Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
+        forceAndroidSQLiteDriver()
 
         checkVersionCodes(versionCodes, versionNames)
         val connected = runBlocking {
@@ -166,11 +170,9 @@ object GrindrPlus {
         // This line can be removed in a future version once all users have updated.
         context.filesDir.resolve("grindrplus.dex").delete()
 
-        this.classLoader = context.classLoader
         this.database = GPDatabase.create(context)
         this.hookManager = HookManager()
         this.instanceManager = InstanceManager(classLoader)
-        this.packageName = context.packageName
 
         if (bridgeClient.shouldRegenAndroidId(packageName)) {
             Logger.i("Generating new Android device ID", LogSource.MODULE)
@@ -351,12 +353,16 @@ object GrindrPlus {
             Config.put("reset_database", false)
         }
 
-        forceAndroidSQLiteDriver()
         hookManager.init()
         isMainInitialized = true
     }
 
     private fun forceAndroidSQLiteDriver() {
+        if (isSQLiteDriverHookInitialized) {
+            Logger.d("RoomDatabase.Builder build hook already installed", LogSource.MODULE)
+            return
+        }
+
         // LSPatch exposes module DEX but not META-INF/services, so ServiceLoader finds
         // Grindr's RequerySQLiteOpenHelperFactory which loads libsqlite3x.so (removed in
         // v26.0.1). Hooking build() and injecting AndroidSQLiteDriver bypasses ServiceLoader.
@@ -438,6 +444,7 @@ object GrindrPlus {
                 Logger.w("RoomDatabase.Builder build candidates: 0 - Builder methods: [$allMethods]", LogSource.MODULE)
             } else {
                 val hookedMethods = buildCandidates.joinToString { it.name }
+                isSQLiteDriverHookInitialized = true
                 Logger.i(
                     "RoomDatabase.Builder build hook installed (${unhooks.size} method(s): $hookedMethods) - AndroidSQLiteDriver forced",
                     LogSource.MODULE
