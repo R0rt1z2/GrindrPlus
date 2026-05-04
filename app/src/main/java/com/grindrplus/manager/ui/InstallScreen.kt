@@ -188,10 +188,10 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
         showCustomFileDialog = state.showCustomFileDialog,
         installation = state.installation,
         print = state.print,
-        onDismissCloneDialog = { state.showCloneDialog = false },
-        onCloningStarted = { state.isCloning = true },
-        onCloningFinished = { state.isCloning = false },
-        onDismissCustomFileDialog = { state.showCustomFileDialog = false },
+        onDismissCloneDialog = state::dismissCloneDialog,
+        onCloningStarted = state::startCloning,
+        onCloningFinished = state::finishCloning,
+        onDismissCustomFileDialog = state::dismissCustomFileDialog,
         onCustomFilesSelected = state::applyCustomFiles,
     )
 
