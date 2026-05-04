@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,67 +64,132 @@ import com.grindrplus.manager.utils.isLSPosed
 
 private val logEntries = mutableStateListOf<LogEntry>()
 
-@Composable
-fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
-    // 1. State from ViewModel
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val versionData = viewModel.versionData
-
-    // 2. UI-Specific State
-    var selectedVersion by remember { mutableStateOf<Data?>(null) }
-    var isInstalling by remember { mutableStateOf(false) }
-    var isCloning by remember { mutableStateOf(false) }
-    var installationSuccessful by remember { mutableStateOf(false) }
-    val isLSPosed = remember { isLSPosed() }
-    var showCloneDialog by remember { mutableStateOf(false) }
-    var installation by remember { mutableStateOf<Installation?>(null) }
-    var warningBannerVisible by remember { mutableStateOf(true) }
-    var lsposedBannerVisible by remember { mutableStateOf(isLSPosed) }
-    var showCustomFileDialog by remember { mutableStateOf(false) }
-    var useCustomFiles by remember { mutableStateOf(false) }
-    var customVersionName by remember { mutableStateOf("custom") }
-    var customBundleUri by remember { mutableStateOf<Uri?>(null) }
-    var customModUri by remember { mutableStateOf<Uri?>(null) }
-
-    // 3. Side Effects
-    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadVersionData(manifestUrl.toString())
-    }
-
-    // Creates a background task to auto-select the latest version
-    LaunchedEffect(versionData.size) {
-        if (selectedVersion == null && versionData.isNotEmpty()) {
-            selectedVersion = versionData.first()
-            addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
-        }
-    }
-
-    LaunchedEffect(selectedVersion) {
-        if (selectedVersion == null) return@LaunchedEffect
-
-        val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-        installation = Installation(
-            context,
-            selectedVersion!!.modVer,
-            selectedVersion!!.modUrl,
-            selectedVersion!!.grindrUrl,
-            mapsApiKey
-        )
-    }
+@Stable
+private class InstallPageState(
+    val context: Activity,
+    val isLSPosed: Boolean,
+) {
+    var selectedVersion by mutableStateOf<Data?>(null)
+    var isInstalling by mutableStateOf(false)
+    var isCloning by mutableStateOf(false)
+    var installationSuccessful by mutableStateOf(false)
+    var showCloneDialog by mutableStateOf(false)
+    var installation by mutableStateOf<Installation?>(null)
+    var warningBannerVisible by mutableStateOf(true)
+    var lsposedBannerVisible by mutableStateOf(isLSPosed)
+    var showCustomFileDialog by mutableStateOf(false)
+    var useCustomFiles by mutableStateOf(false)
+    var customVersionName by mutableStateOf("custom")
+    var customBundleUri by mutableStateOf<Uri?>(null)
+    var customModUri by mutableStateOf<Uri?>(null)
 
     val print: Print = { output ->
         val logType = ConsoleLogger.parseLogType(output)
-        context.runOnUiThread {
-            addLog(output, logType)
+        context.runOnUiThread { addLog(output, logType) }
+    }
+
+    fun selectVersion(selected: Data) {
+        when {
+            // Re-selecting the active custom version: keep current state.
+            selected.modVer == customVersionName && useCustomFiles -> Unit
+            selected.modVer == "custom" -> showCustomFileDialog = true
+            else -> {
+                selectedVersion = selected
+                useCustomFiles = false
+                addLog("Selected version ${selected.modVer}", LogType.INFO)
+            }
         }
     }
 
-    fun startCustomInstallation() {
-        if (customBundleUri == null || customModUri == null) {
+    fun applyCustomFiles(versionName: String, bundleUri: Uri, modUri: Uri) {
+        customVersionName = versionName
+        customBundleUri = bundleUri
+        customModUri = modUri
+        useCustomFiles = true
+        showCustomFileDialog = false
+        addLog("Custom files selected. Version: $versionName", LogType.INFO)
+        addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
+    }
+
+    fun cleanUp() {
+        activityScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    StorageUtils.cleanupOldInstallationFiles(
+                        context, true, selectedVersion?.modVer
+                    )
+                }
+                addLog("Cleaned up old installation files", LogType.SUCCESS)
+            } catch (e: Exception) {
+                addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
+            }
+        }
+    }
+
+    fun requestCloneDialog() { showCloneDialog = true }
+    fun dismissCloneDialog() { showCloneDialog = false }
+    fun dismissCustomFileDialog() { showCustomFileDialog = false }
+    fun dismissWarningBanner() { warningBannerVisible = false }
+    fun dismissLSPosedBanner() { lsposedBannerVisible = false }
+
+    fun performClone(packageName: String, appName: String, debuggable: Boolean, embedLSPatch: Boolean) {
+        showCloneDialog = false
+        isCloning = true
+        activityScope.launch {
+            addLog("Starting Grindr cloning process...", LogType.INFO)
+            addLog("Target package: $packageName", LogType.INFO)
+            addLog("Target app name: $appName", LogType.INFO)
+
+            val success = try {
+                installation!!.cloneGrindr(packageName, appName, debuggable, embedLSPatch, print)
+                true
+            } catch (e: Exception) {
+                Logger.i("Cloning failed: ${e.localizedMessage}")
+                addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
+                false
+            }
+            if (success) addLog("Grindr clone created successfully!", LogType.SUCCESS)
+            else addLog("Failed to clone Grindr", LogType.ERROR)
+            isCloning = false
+        }
+    }
+
+    fun installOrLaunch() {
+        when {
+            installationSuccessful -> launchGrindr(context)
+            useCustomFiles && customBundleUri != null && customModUri != null -> startCustomInstallation()
+            selectedVersion == null -> showToast(context, "Please select a version first")
+            else -> startInstallation(selectedVersion!!)
+        }
+    }
+
+    private fun startInstallation(version: Data) {
+        isInstalling = true
+        addLog("Starting installation for version ${version.modVer}...", LogType.INFO)
+
+        activityScope.launch {
+            try {
+                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+                val install = Installation(
+                    context, version.modVer, version.modUrl, version.grindrUrl, mapsApiKey
+                )
+                withContext(Dispatchers.IO) { install.install(print = print) }
+                addLog("Installation completed successfully!", LogType.SUCCESS)
+                showToast(context, "Installation complete!")
+                installationSuccessful = true
+            } catch (e: Exception) {
+                handleInstallationError(e, context)
+                installationSuccessful = false
+            } finally {
+                isInstalling = false
+            }
+        }
+    }
+
+    private fun startCustomInstallation() {
+        val bundleUri = customBundleUri
+        val modUri = customModUri
+        if (bundleUri == null || modUri == null) {
             showToast(context, "Please select both bundle and mod files")
             return
         }
@@ -133,27 +199,13 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
 
         activityScope.launch {
             try {
-                val bundleFile = createTempFileFromUri(context, customBundleUri!!, "grindr-$customVersionName.zip")
-                val modFile = createTempFileFromUri(context, customModUri!!, "mod-$customVersionName.zip")
-
+                val bundleFile = createTempFileFromUri(context, bundleUri, "grindr-$customVersionName.zip")
+                val modFile = createTempFileFromUri(context, modUri, "mod-$customVersionName.zip")
                 val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-                val customInstallation = Installation(
-                    context,
-                    customVersionName,
-                    modFile.absolutePath,
-                    bundleFile.absolutePath,
-                    mapsApiKey
+                val customInstall = Installation(
+                    context, customVersionName, modFile.absolutePath, bundleFile.absolutePath, mapsApiKey
                 )
-
-                withContext(Dispatchers.IO) {
-                    customInstallation.installCustom(
-                        bundleFile,
-                        modFile,
-                        print
-                    )
-                }
-
+                withContext(Dispatchers.IO) { customInstall.installCustom(bundleFile, modFile, print) }
                 addLog("Custom installation completed successfully!", LogType.SUCCESS)
                 showToast(context, "Installation complete!")
                 installationSuccessful = true
@@ -164,56 +216,54 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             }
         }
     }
+}
 
-    if (showCloneDialog) {
-        CloneDialog(
-            context = context,
-            onDismiss = { showCloneDialog = false },
-            onStartCloning = { packageName, appName, debuggable, embedLSPatch ->
-                showCloneDialog = false
-                isCloning = true
-                activityScope.launch {
-                    addLog("Starting Grindr cloning process...", LogType.INFO)
-                    addLog("Target package: $packageName", LogType.INFO)
-                    addLog("Target app name: $appName", LogType.INFO)
+@Composable
+private fun rememberInstallPageState(context: Activity): InstallPageState {
+    val isLSPosedNow = remember { isLSPosed() }
+    return remember(context) { InstallPageState(context, isLSPosedNow) }
+}
 
-                    val success = try {
-                        installation!!.cloneGrindr(
-                            packageName, appName, debuggable, embedLSPatch,
-                            print
-                        )
-                        true
-                    } catch (e: Exception) {
-                        Logger.i("Cloning failed: ${e.localizedMessage}")
-                        addLog("Cloning failed: ${e.localizedMessage}", LogType.ERROR)
-                        false
-                    }
+@Composable
+fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val versionData = viewModel.versionData
+    val state = rememberInstallPageState(context)
+    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
 
-                    if (success) {
-                        addLog("Grindr clone created successfully!", LogType.SUCCESS)
-                    } else {
-                        addLog("Failed to clone Grindr", LogType.ERROR)
-                    }
+    LaunchedEffect(Unit) {
+        viewModel.loadVersionData(manifestUrl.toString())
+    }
 
-                    isCloning = false
-                }
-            }
+    LaunchedEffect(versionData.size) {
+        if (state.selectedVersion == null && versionData.isNotEmpty()) {
+            state.selectedVersion = versionData.first()
+            addLog("Auto-selected latest version: ${state.selectedVersion?.modVer}", LogType.INFO)
+        }
+    }
+
+    LaunchedEffect(state.selectedVersion) {
+        val version = state.selectedVersion ?: return@LaunchedEffect
+        val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+        state.installation = Installation(
+            context, version.modVer, version.modUrl, version.grindrUrl, mapsApiKey
         )
     }
 
-    if (showCustomFileDialog) {
+    if (state.showCloneDialog) {
+        CloneDialog(
+            context = context,
+            onDismiss = state::dismissCloneDialog,
+            onStartCloning = state::performClone,
+        )
+    }
+
+    if (state.showCustomFileDialog) {
         FileDialog(
             context = context,
-            onDismiss = { showCustomFileDialog = false },
-            onSelect = { versionName, bundleUri, modUri ->
-                customVersionName = versionName
-                customBundleUri = bundleUri
-                customModUri = modUri
-                useCustomFiles = true
-                showCustomFileDialog = false
-                addLog("Custom files selected. Version: $versionName", LogType.INFO)
-                addLog("Bundle: ${bundleUri.lastPathSegment}, Mod: ${modUri.lastPathSegment}", LogType.INFO)
-            }
+            onDismiss = state::dismissCustomFileDialog,
+            onSelect = state::applyCustomFiles,
         )
     }
 
@@ -232,21 +282,21 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
         } else {
             MessageBanner(
                 text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
-                isVisible = warningBannerVisible,
-                isPulsating = isInstalling || isCloning,
+                isVisible = state.warningBannerVisible,
+                isPulsating = state.isInstalling || state.isCloning,
                 modifier = Modifier.fillMaxWidth(),
                 type = BannerType.WARNING,
-                onDismiss = { warningBannerVisible = false }
+                onDismiss = state::dismissWarningBanner
             )
 
-            if (isLSPosed) {
+            if (state.isLSPosed) {
                 MessageBanner(
                     text = "We detected that you are using LSPosed. Only use this screen to create clones, not to install the modded Grindr.",
-                    isVisible = lsposedBannerVisible,
+                    isVisible = state.lsposedBannerVisible,
                     isPulsating = true,
                     modifier = Modifier.fillMaxWidth(),
                     type = BannerType.ERROR,
-                    onDismiss = { lsposedBannerVisible = false }
+                    onDismiss = state::dismissLSPosedBanner
                 )
             }
 
@@ -255,25 +305,16 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 VersionSelector(
-                    versions = if (useCustomFiles)
-                        listOf(Data(customVersionName, "", "")) + versionData
+                    versions = if (state.useCustomFiles)
+                        listOf(Data(state.customVersionName, "", "")) + versionData
                     else
                         versionData,
-                    selectedVersion = if (useCustomFiles && customBundleUri != null)
-                        Data(customVersionName, "", "")
+                    selectedVersion = if (state.useCustomFiles && state.customBundleUri != null)
+                        Data(state.customVersionName, "", "")
                     else
-                        selectedVersion,
-                    onVersionSelected = { selected ->
-                        if (selected.modVer == customVersionName && useCustomFiles) {
-                        } else if (selected.modVer == "custom") {
-                            showCustomFileDialog = true
-                        } else {
-                            selectedVersion = selected
-                            useCustomFiles = false
-                            addLog("Selected version ${selected.modVer}", LogType.INFO)
-                        }
-                    },
-                    isEnabled = !isInstalling && !isCloning,
+                        state.selectedVersion,
+                    onVersionSelected = state::selectVersion,
+                    isEnabled = !state.isInstalling && !state.isCloning,
                     modifier = Modifier.fillMaxWidth(),
                     customOption = "Use Custom Files..."
                 )
@@ -297,90 +338,36 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 OutlinedButton(
-                    onClick = {
-                        activityScope.launch {
-                            try {
-                                withContext(Dispatchers.IO) {
-                                    StorageUtils.cleanupOldInstallationFiles(
-                                        context, true, selectedVersion?.modVer
-                                    )
-                                }
-                                addLog(
-                                    "Cleaned up old installation files",
-                                    LogType.SUCCESS
-                                )
-                            } catch (e: Exception) {
-                                addLog(
-                                    "Failed to clean up: ${e.localizedMessage}",
-                                    LogType.ERROR
-                                )
-                            }
-                        }
-                    },
-                    enabled = !isInstalling && !isCloning,
+                    onClick = state::cleanUp,
+                    enabled = !state.isInstalling && !state.isCloning,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        )
+                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        "Clean Up",
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Text("Clean Up", modifier = Modifier.padding(vertical = 8.dp))
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Button(
-                    onClick = {
-                        if (installationSuccessful) {
-                            launchGrindr(context)
-                        } else {
-                            if (useCustomFiles && customBundleUri != null && customModUri != null) {
-                                startCustomInstallation()
-                            } else {
-                                if (selectedVersion == null) {
-                                    showToast(context, "Please select a version first")
-                                    return@Button
-                                }
-
-                                startInstallation(
-                                    selectedVersion!!,
-                                    onStarted = { isInstalling = true },
-                                    onCompleted = { success ->
-                                        isInstalling = false
-                                        installationSuccessful = success
-                                    },
-                                    context,
-                                    print
-                                )
-                            }
-                        }
-                    },
-                    enabled = ((selectedVersion != null || (useCustomFiles && customBundleUri != null && customModUri != null)) ||
-                            installationSuccessful) && !isInstalling && !isCloning,
+                    onClick = state::installOrLaunch,
+                    enabled = ((state.selectedVersion != null || (state.useCustomFiles && state.customBundleUri != null && state.customModUri != null)) ||
+                            state.installationSuccessful) && !state.isInstalling && !state.isCloning,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.12f
-                        ),
-                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.38f
-                        )
+                        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = if (isInstalling) {
-                            "Installing..."
-                        } else if (installationSuccessful) {
-                            "Open Grindr"
-                        } else {
-                            "Install"
+                        text = when {
+                            state.isInstalling -> "Installing..."
+                            state.installationSuccessful -> "Open Grindr"
+                            else -> "Install"
                         },
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
@@ -391,8 +378,8 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
-                    onClick = { showCloneDialog = true },
-                    enabled = !isInstalling && !isCloning,
+                    onClick = state::requestCloneDialog,
+                    enabled = !state.isInstalling && !state.isCloning,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -405,7 +392,7 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
-                        text = if (isCloning) "Cloning..." else "Clone Grindr",
+                        text = if (state.isCloning) "Cloning..." else "Clone Grindr",
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -466,45 +453,6 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
             )
         ) {
             Text("Retry")
-        }
-    }
-}
-
-private fun startInstallation(
-    version: Data,
-    onStarted: () -> Unit,
-    onCompleted: (Boolean) -> Unit,
-    context: Activity,
-    print: Print
-) {
-    onStarted()
-
-    addLog("Starting installation for version ${version.modVer}...", LogType.INFO)
-
-    activityScope.launch {
-        try {
-            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-            val installation = Installation(
-                context,
-                version.modVer,
-                version.modUrl,
-                version.grindrUrl,
-                mapsApiKey
-            )
-
-            withContext(Dispatchers.IO) {
-                installation.install(
-                    print = print
-                )
-            }
-
-            addLog("Installation completed successfully!", LogType.SUCCESS)
-            showToast(context, "Installation complete!")
-            onCompleted(true)
-        } catch (e: Exception) {
-            handleInstallationError(e, context)
-            onCompleted(false)
         }
     }
 }
