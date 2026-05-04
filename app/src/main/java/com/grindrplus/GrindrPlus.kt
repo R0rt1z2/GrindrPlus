@@ -27,6 +27,7 @@ import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -50,7 +51,7 @@ import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
-    // applicationContext — process-scoped, safe to hold as a singleton (no leak risk)
+    // applicationContext - process-scoped, safe to hold as a singleton (no leak risk)
     lateinit var context: Context
         private set
     lateinit var classLoader: ClassLoader
@@ -79,6 +80,8 @@ object GrindrPlus {
     private var isInitialized = false
     private var isMainInitialized = false
     private var isInstanceManagerInitialized = false
+    private var isSQLiteDriverHookInitialized = false
+    private var sqliteDriverHookStatus = "not attempted"
 
     var spline = PCHIP(
         listOf(
@@ -137,10 +140,13 @@ object GrindrPlus {
         setupCrashLogging()
 
         this.context = application
+        this.classLoader = context.classLoader
+        this.packageName = context.packageName
         this.bridgeClient = BridgeClient(context)
 
         Logger.initialize(context, bridgeClient, true)
         Logger.i("Initializing GrindrPlus...", LogSource.MODULE)
+        forceAndroidSQLiteDriver()
 
         checkVersionCodes(versionCodes, versionNames)
         val connected = runBlocking {
@@ -158,6 +164,7 @@ object GrindrPlus {
             Logger.e("Failed to connect to the bridge service", LogSource.MODULE)
             shouldShowBridgeConnectionError = true
         }
+        Logger.i("SQLite driver hook status: $sqliteDriverHookStatus", LogSource.MODULE)
 
         Config.initialize(application.packageName)
 
@@ -165,11 +172,9 @@ object GrindrPlus {
         // This line can be removed in a future version once all users have updated.
         context.filesDir.resolve("grindrplus.dex").delete()
 
-        this.classLoader = context.classLoader
         this.database = GPDatabase.create(context)
         this.hookManager = HookManager()
         this.instanceManager = InstanceManager(classLoader)
-        this.packageName = context.packageName
 
         if (bridgeClient.shouldRegenAndroidId(packageName)) {
             Logger.i("Generating new Android device ID", LogSource.MODULE)
@@ -352,6 +357,108 @@ object GrindrPlus {
 
         hookManager.init()
         isMainInitialized = true
+    }
+
+    private fun forceAndroidSQLiteDriver() {
+        if (isSQLiteDriverHookInitialized) {
+            Logger.d("RoomDatabase.Builder build hook already installed", LogSource.MODULE)
+            sqliteDriverHookStatus = "already installed"
+            return
+        }
+
+        // LSPatch exposes module DEX but not META-INF/services, so ServiceLoader finds
+        // Grindr's RequerySQLiteOpenHelperFactory which loads libsqlite3x.so (removed in
+        // v26.0.1). Hooking build() and injecting AndroidSQLiteDriver bypasses ServiceLoader.
+        runCatching {
+            @Suppress("UNCHECKED_CAST")
+            val builderClass = loadClass("androidx.room.RoomDatabase\$Builder") as Class<Any>
+
+            val roomDatabaseClass = loadClass("androidx.room.RoomDatabase")
+            val buildCandidates = builderClass.declaredMethods
+                .filter { method ->
+                    method.parameterCount == 0 && roomDatabaseClass.isAssignableFrom(method.returnType)
+                }
+
+            val unhooks = buildCandidates.map { buildMethod ->
+                buildMethod.hook(HookStage.BEFORE) { param ->
+                    // Xposed swallows exceptions in beforeHookedMethod; wrap explicitly so
+                    // failures are visible in our log instead of disappearing silently.
+                    runCatching {
+                        val builder: Any = param.thisObject()
+                        val cl = builder.javaClass.classLoader
+                            ?: Thread.currentThread().contextClassLoader
+                            ?: return@runCatching
+                        val androidDriverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
+
+                        // Prefer the setter by type so R8 member renaming does not matter.
+                        val setDriverMethod = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                            .flatMap { it.declaredMethods.asSequence() }
+                            .firstOrNull {
+                                it.parameterCount == 1 &&
+                                    (it.parameterTypes[0].isAssignableFrom(androidDriverCls) || it.name == "setDriver")
+                            }
+
+                        if (setDriverMethod != null) {
+                            setDriverMethod.isAccessible = true
+                            setDriverMethod.invoke(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            Logger.d(
+                                "AndroidSQLiteDriver set via ${setDriverMethod.name}(SQLiteDriver)",
+                                LogSource.MODULE
+                            )
+                            return@runCatching
+                        }
+
+                        // Fallback: set the Room 2.7.0 backing field directly by type.
+                        val driverField = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                            .flatMap { it.declaredFields.asSequence() }
+                            .firstOrNull {
+                                it.type.isAssignableFrom(androidDriverCls) || it.name == "driver"
+                            }
+                        if (driverField != null) {
+                            driverField.isAccessible = true
+                            driverField.set(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            Logger.d(
+                                "AndroidSQLiteDriver set via ${driverField.name}:SQLiteDriver field",
+                                LogSource.MODULE
+                            )
+                        } else {
+                            // Neither name found. R8 likely renamed both. Dump visible
+                            // members so we can identify real names without jadx.
+                            val methods = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                                .flatMap { it.declaredMethods.asSequence() }
+                                .filter { it.declaringClass.name.startsWith("androidx.room") }
+                                .joinToString { "${it.name}(${it.parameterCount})" }
+                            val fields = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                                .flatMap { it.declaredFields.asSequence() }
+                                .filter { it.declaringClass.name.startsWith("androidx.room") }
+                                .joinToString { "${it.name}:${it.type.name}" }
+                            Logger.w("Builder members - methods: [$methods] fields: [$fields]", LogSource.MODULE)
+                        }
+                    }.onFailure { t ->
+                        Logger.w("setDriver callback: ${t.javaClass.simpleName}: ${t.message}", LogSource.MODULE)
+                    }
+                }
+            }
+
+            if (unhooks.isEmpty()) {
+                val allMethods = builderClass.declaredMethods.joinToString {
+                    "${it.name}(${it.parameterCount}):${it.returnType.name}"
+                }
+                sqliteDriverHookStatus = "no build candidates"
+                Logger.w("RoomDatabase.Builder build candidates: 0 - Builder methods: [$allMethods]", LogSource.MODULE)
+            } else {
+                val hookedMethods = buildCandidates.joinToString { it.name }
+                isSQLiteDriverHookInitialized = true
+                sqliteDriverHookStatus = "installed ${unhooks.size} method(s): $hookedMethods"
+                Logger.i(
+                    "RoomDatabase.Builder build hook installed (${unhooks.size} method(s): $hookedMethods) - AndroidSQLiteDriver forced",
+                    LogSource.MODULE
+                )
+            }
+        }.onFailure {
+            sqliteDriverHookStatus = "failed: ${it.javaClass.simpleName}: ${it.message}"
+            Logger.w("Failed to hook RoomDatabase.Builder.build: ${it.message}", LogSource.MODULE)
+        }
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {

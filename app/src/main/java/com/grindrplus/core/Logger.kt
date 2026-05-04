@@ -1,12 +1,15 @@
 package com.grindrplus.core
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
+import android.os.Build
 import com.grindrplus.BuildConfig
 import com.grindrplus.bridge.BridgeClient
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.Task
 import timber.log.Timber
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,12 +23,14 @@ object Logger {
     private const val TAG = "GrindrPlus"
     private var isModuleContext = false
     private var bridgeClient: BridgeClient? = null
+    private var processName: String = ""
     private val hookPrefixes = ConcurrentHashMap<String, String>()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
     fun initialize(context: Context, bridge: BridgeClient, isModule: Boolean) {
         bridgeClient = bridge
         isModuleContext = isModule
+        processName = resolveProcessName(context.packageName)
 
         if (Timber.forest().isEmpty()) {
             Timber.plant(Timber.DebugTree())
@@ -73,10 +78,11 @@ object Logger {
 
         val timestamp = dateFormat.format(Date())
         val sourceName = source.toString().lowercase()
+        val process = processLabel()
         val conciseMessage = if (subName != null) {
-            "$priorityChar/$timestamp/$sourceName/$subName: $message"
+            "$priorityChar/$timestamp/$sourceName/$subName[$process]: $message"
         } else {
-            "$priorityChar/$timestamp/$sourceName: $message"
+            "$priorityChar/$timestamp/$sourceName[$process]: $message"
         }
 
         val logcatMessage = buildLogcatMessage(source, subName, message, level == LogLevel.SUCCESS)
@@ -99,13 +105,33 @@ object Logger {
 
     private fun buildLogcatMessage(source: LogSource, subName: String?, message: String, isSuccess: Boolean): String {
         val sourceStr = source.toString().lowercase().replaceFirstChar { it.uppercase() }
+        val process = processLabel()
 
         val prefix = when {
             subName != null -> "$sourceStr: ${hookPrefixes[subName] ?: subName}"
             else -> sourceStr
         }
 
-        return "$prefix: $message"
+        return "[$process] $prefix: $message"
+    }
+
+    fun processLabel(): String {
+        val name = processName.ifBlank { resolveProcessName("unknown") }
+        return "$name pid=${android.os.Process.myPid()}"
+    }
+
+    private fun resolveProcessName(defaultName: String): String {
+        val resolved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Application.getProcessName()
+        } else {
+            runCatching {
+                val bytes = File("/proc/self/cmdline").readBytes()
+                val processBytes = bytes.takeWhile { it.toInt() != 0 }.toByteArray()
+                processBytes.toString(Charsets.UTF_8)
+            }.getOrNull()
+        }
+
+        return resolved?.takeIf { it.isNotBlank() } ?: defaultName
     }
 
     fun writeRaw(content: String) {
