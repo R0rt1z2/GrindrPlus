@@ -71,6 +71,12 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // kotlinx-coroutines-test registers ExceptionCollectorAsService in this services
+            // file, but that class is not available in production APKs. The entry causes a
+            // ServiceConfigurationError → NoClassDefFoundError in the coroutine dispatcher
+            // when the module runs inside the LSPatch clone process. Exclude the file entirely
+            // since GrindrPlus does not register any custom CoroutineExceptionHandler.
+            excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
         }
     }
 
