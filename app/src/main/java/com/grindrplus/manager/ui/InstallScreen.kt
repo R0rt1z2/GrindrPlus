@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,80 +64,135 @@ import com.grindrplus.manager.utils.isLSPosed
 
 private val logEntries = mutableStateListOf<LogEntry>()
 
-@Composable
-fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
-    // 1. State from ViewModel
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val versionData = viewModel.versionData
-
-    // 2. UI-Specific State
-    var selectedVersion by remember { mutableStateOf<Data?>(null) }
-    var isInstalling by remember { mutableStateOf(false) }
-    var isCloning by remember { mutableStateOf(false) }
-    var installationSuccessful by remember { mutableStateOf(false) }
-    val isLSPosed = remember { isLSPosed() }
-    var showCloneDialog by remember { mutableStateOf(false) }
-    var installation by remember { mutableStateOf<Installation?>(null) }
-    var warningBannerVisible by remember { mutableStateOf(true) }
-    var lsposedBannerVisible by remember { mutableStateOf(isLSPosed) }
-    var showCustomFileDialog by remember { mutableStateOf(false) }
-    var useCustomFiles by remember { mutableStateOf(false) }
-    var customVersionName by remember { mutableStateOf("custom") }
-    var customBundleUri by remember { mutableStateOf<Uri?>(null) }
-    var customModUri by remember { mutableStateOf<Uri?>(null) }
-
-    // 3. Side Effects
-    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadVersionData(manifestUrl.toString())
-    }
-
-    // Creates a background task to auto-select the latest version
-    LaunchedEffect(versionData.size) {
-        if (selectedVersion == null && versionData.isNotEmpty()) {
-            selectedVersion = versionData.first()
-            addLog("Auto-selected latest version: ${selectedVersion?.modVer}", LogType.INFO)
-        }
-    }
-
-    LaunchedEffect(selectedVersion) {
-        if (selectedVersion == null) return@LaunchedEffect
-
-        val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-        installation = Installation(
-            context,
-            selectedVersion!!.modVer,
-            selectedVersion!!.modUrl,
-            selectedVersion!!.grindrUrl,
-            mapsApiKey
-        )
-    }
+@Stable
+private class InstallPageState(
+    val context: Activity,
+    val isLSPosed: Boolean,
+) {
+    var selectedVersion by mutableStateOf<Data?>(null)
+    var isInstalling by mutableStateOf(false)
+    var isCloning by mutableStateOf(false)
+    var installationSuccessful by mutableStateOf(false)
+    var showCloneDialog by mutableStateOf(false)
+    var installation by mutableStateOf<Installation?>(null)
+    var warningBannerVisible by mutableStateOf(true)
+    var lsposedBannerVisible by mutableStateOf(isLSPosed)
+    var showCustomFileDialog by mutableStateOf(false)
+    var useCustomFiles by mutableStateOf(false)
+    var customVersionName by mutableStateOf("custom")
+    var customBundleUri by mutableStateOf<Uri?>(null)
+    var customModUri by mutableStateOf<Uri?>(null)
 
     val print: Print = { output ->
         val logType = ConsoleLogger.parseLogType(output)
         context.runOnUiThread { addLog(output, logType) }
     }
 
+    fun selectVersion(selected: Data) {
+        when {
+            // Re-selecting the active custom version: keep current state.
+            selected.modVer == customVersionName && useCustomFiles -> Unit
+            selected.modVer == "custom" -> showCustomFileDialog = true
+            else -> {
+                selectedVersion = selected
+                useCustomFiles = false
+                addLog("Selected version ${selected.modVer}", LogType.INFO)
+            }
+        }
+    }
+
+    fun applyCustomFiles(versionName: String, bundleUri: Uri, modUri: Uri) {
+        customVersionName = versionName
+        customBundleUri = bundleUri
+        customModUri = modUri
+        useCustomFiles = true
+        showCustomFileDialog = false
+    }
+
+    fun cleanUp() {
+        activityScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    StorageUtils.cleanupOldInstallationFiles(
+                        context, true, selectedVersion?.modVer
+                    )
+                }
+                addLog("Cleaned up old installation files", LogType.SUCCESS)
+            } catch (e: Exception) {
+                addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
+            }
+        }
+    }
+
+    fun installOrLaunch() {
+        when {
+            installationSuccessful -> launchGrindr(context)
+            useCustomFiles && customBundleUri != null && customModUri != null -> {
+                startCustomInstallation(
+                    context, customBundleUri, customModUri, customVersionName, print,
+                    onSetInstalling = { isInstalling = it },
+                    onSetInstallSuccessful = { installationSuccessful = it }
+                )
+            }
+            selectedVersion == null -> showToast(context, "Please select a version first")
+            else -> startInstallation(
+                version = selectedVersion!!,
+                onStarted = { isInstalling = true },
+                onCompleted = { success ->
+                    isInstalling = false
+                    installationSuccessful = success
+                },
+                context = context,
+                print = print
+            )
+        }
+    }
+}
+
+@Composable
+private fun rememberInstallPageState(context: Activity): InstallPageState {
+    val isLSPosedNow = remember { isLSPosed() }
+    return remember(context) { InstallPageState(context, isLSPosedNow) }
+}
+
+@Composable
+fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: InstallScreenViewModel = viewModel()) {
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val versionData = viewModel.versionData
+    val state = rememberInstallPageState(context)
+    val manifestUrl = (Config.get("custom_manifest", DATA_URL) as String).ifBlank { null }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadVersionData(manifestUrl.toString())
+    }
+
+    LaunchedEffect(versionData.size) {
+        if (state.selectedVersion == null && versionData.isNotEmpty()) {
+            state.selectedVersion = versionData.first()
+            addLog("Auto-selected latest version: ${state.selectedVersion?.modVer}", LogType.INFO)
+        }
+    }
+
+    LaunchedEffect(state.selectedVersion) {
+        val version = state.selectedVersion ?: return@LaunchedEffect
+        val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+        state.installation = Installation(
+            context, version.modVer, version.modUrl, version.grindrUrl, mapsApiKey
+        )
+    }
+
     InstallPageDialogs(
         context = context,
-        showCloneDialog = showCloneDialog,
-        showCustomFileDialog = showCustomFileDialog,
-        installation = installation,
-        print = print,
-        onDismissCloneDialog = { showCloneDialog = false },
-        onCloningStarted = { isCloning = true },
-        onCloningFinished = { isCloning = false },
-        onDismissCustomFileDialog = { showCustomFileDialog = false },
-        onCustomFilesSelected = { versionName, bundleUri, modUri ->
-            customVersionName = versionName
-            customBundleUri = bundleUri
-            customModUri = modUri
-            useCustomFiles = true
-            showCustomFileDialog = false
-        }
+        showCloneDialog = state.showCloneDialog,
+        showCustomFileDialog = state.showCustomFileDialog,
+        installation = state.installation,
+        print = state.print,
+        onDismissCloneDialog = { state.showCloneDialog = false },
+        onCloningStarted = { state.isCloning = true },
+        onCloningFinished = { state.isCloning = false },
+        onDismissCustomFileDialog = { state.showCustomFileDialog = false },
+        onCustomFilesSelected = state::applyCustomFiles,
     )
 
     Column(
@@ -145,77 +201,31 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
             .padding(16.dp)
             .fillMaxSize()
     ) {
-        if (isLoading) {
-            LoadingScreen()
-        } else if (errorMessage != null) {
-            ErrorScreen(errorMessage!!) {
+        when {
+            isLoading -> LoadingScreen()
+            errorMessage != null -> ErrorScreen(errorMessage!!) {
                 viewModel.loadVersionData(manifestUrl.toString())
             }
-        } else {
-            InstallPageContent(
-                isLSPosed = isLSPosed,
-                isInstalling = isInstalling,
-                isCloning = isCloning,
-                installationSuccessful = installationSuccessful,
-                warningBannerVisible = warningBannerVisible,
-                lsposedBannerVisible = lsposedBannerVisible,
+            else -> InstallPageContent(
+                isLSPosed = state.isLSPosed,
+                isInstalling = state.isInstalling,
+                isCloning = state.isCloning,
+                installationSuccessful = state.installationSuccessful,
+                warningBannerVisible = state.warningBannerVisible,
+                lsposedBannerVisible = state.lsposedBannerVisible,
                 versionData = versionData,
-                selectedVersion = selectedVersion,
-                useCustomFiles = useCustomFiles,
-                customVersionName = customVersionName,
-                customBundleUri = customBundleUri,
-                customModUri = customModUri,
+                selectedVersion = state.selectedVersion,
+                useCustomFiles = state.useCustomFiles,
+                customVersionName = state.customVersionName,
+                customBundleUri = state.customBundleUri,
+                customModUri = state.customModUri,
                 context = context,
-                onWarningDismiss = { warningBannerVisible = false },
-                onLSPosedDismiss = { lsposedBannerVisible = false },
-                onVersionSelected = { selected ->
-                    if (selected.modVer == customVersionName && useCustomFiles) {
-                    } else if (selected.modVer == "custom") {
-                        showCustomFileDialog = true
-                    } else {
-                        selectedVersion = selected
-                        useCustomFiles = false
-                        addLog("Selected version ${selected.modVer}", LogType.INFO)
-                    }
-                },
-                onCleanUp = {
-                    activityScope.launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                StorageUtils.cleanupOldInstallationFiles(
-                                    context, true, selectedVersion?.modVer
-                                )
-                            }
-                            addLog("Cleaned up old installation files", LogType.SUCCESS)
-                        } catch (e: Exception) {
-                            addLog("Failed to clean up: ${e.localizedMessage}", LogType.ERROR)
-                        }
-                    }
-                },
-                onInstallOrLaunch = {
-                    if (installationSuccessful) {
-                        launchGrindr(context)
-                    } else if (useCustomFiles && customBundleUri != null && customModUri != null) {
-                        startCustomInstallation(
-                            context, customBundleUri, customModUri, customVersionName, print,
-                            onSetInstalling = { isInstalling = it },
-                            onSetInstallSuccessful = { installationSuccessful = it }
-                        )
-                    } else {
-                        if (selectedVersion == null) {
-                            showToast(context, "Please select a version first")
-                            return@InstallPageContent
-                        }
-                        startInstallation(
-                            selectedVersion!!,
-                            onStarted = { isInstalling = true },
-                            onCompleted = { success -> isInstalling = false; installationSuccessful = success },
-                            context,
-                            print
-                        )
-                    }
-                },
-                onShowCloneDialog = { showCloneDialog = true }
+                onWarningDismiss = { state.warningBannerVisible = false },
+                onLSPosedDismiss = { state.lsposedBannerVisible = false },
+                onVersionSelected = state::selectVersion,
+                onCleanUp = state::cleanUp,
+                onInstallOrLaunch = state::installOrLaunch,
+                onShowCloneDialog = { state.showCloneDialog = true },
             )
         }
     }
