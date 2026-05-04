@@ -83,6 +83,9 @@ object GrindrPlus {
     private var isSQLiteDriverHookInitialized = false
     private var sqliteDriverHookStatus = "not attempted"
 
+    private const val ANDROID_SQLITE_DRIVER_CLASS_NAME = "androidx.sqlite.driver.AndroidSQLiteDriver"
+    private const val SQLITE_DRIVER_INTERFACE_NAME = "androidx.sqlite.SQLiteDriver"
+
     var spline = PCHIP(
         listOf(
             1238563200L to 0,          // 2009-04-01
@@ -385,22 +388,39 @@ object GrindrPlus {
                     // failures are visible in our log instead of disappearing silently.
                     runCatching {
                         val builder: Any = param.thisObject()
-                        val cl = builder.javaClass.classLoader
+                        val moduleClassLoader = GrindrPlus::class.java.classLoader
                             ?: Thread.currentThread().contextClassLoader
                             ?: return@runCatching
-                        val androidDriverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
+                        val targetClassLoader = builder.javaClass.classLoader
+                        val androidDriverCls = Class.forName(
+                            ANDROID_SQLITE_DRIVER_CLASS_NAME,
+                            true,
+                            moduleClassLoader
+                        )
+                        val androidDriver = androidDriverCls.getDeclaredConstructor().apply {
+                            isAccessible = true
+                        }.newInstance()
+                        val targetSqliteDriver = runCatching {
+                            targetClassLoader?.loadClass(SQLITE_DRIVER_INTERFACE_NAME)
+                        }.getOrNull()
 
                         // Prefer the setter by type so R8 member renaming does not matter.
-                        val setDriverMethod = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                        val setDriverCandidates = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                             .flatMap { it.declaredMethods.asSequence() }
-                            .firstOrNull {
+                            .filter {
                                 it.parameterCount == 1 &&
-                                    (it.parameterTypes[0].isAssignableFrom(androidDriverCls) || it.name == "setDriver")
+                                    (it.parameterTypes[0].isInstance(androidDriver) ||
+                                        it.parameterTypes[0].name == SQLITE_DRIVER_INTERFACE_NAME ||
+                                        it.name == "setDriver")
                             }
+                            .toList()
+                        val setDriverMethod = setDriverCandidates.firstOrNull {
+                            it.parameterTypes[0].isInstance(androidDriver)
+                        }
 
                         if (setDriverMethod != null) {
                             setDriverMethod.isAccessible = true
-                            setDriverMethod.invoke(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            setDriverMethod.invoke(builder, androidDriver)
                             Logger.d(
                                 "AndroidSQLiteDriver set via ${setDriverMethod.name}(SQLiteDriver)",
                                 LogSource.MODULE
@@ -409,19 +429,40 @@ object GrindrPlus {
                         }
 
                         // Fallback: set the Room 2.7.0 backing field directly by type.
-                        val driverField = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                        val driverFieldCandidates = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                             .flatMap { it.declaredFields.asSequence() }
-                            .firstOrNull {
-                                it.type.isAssignableFrom(androidDriverCls) || it.name == "driver"
+                            .filter {
+                                it.type.isInstance(androidDriver) ||
+                                    it.type.name == SQLITE_DRIVER_INTERFACE_NAME ||
+                                    it.name == "driver"
                             }
+                            .toList()
+                        val driverField = driverFieldCandidates.firstOrNull {
+                            it.type.isInstance(androidDriver)
+                        }
+
                         if (driverField != null) {
                             driverField.isAccessible = true
-                            driverField.set(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            driverField.set(builder, androidDriver)
                             Logger.d(
                                 "AndroidSQLiteDriver set via ${driverField.name}:SQLiteDriver field",
                                 LogSource.MODULE
                             )
                         } else {
+                            val setDriverTypes = setDriverCandidates.joinToString {
+                                "${it.name}:${it.parameterTypes[0].typeLogName()}"
+                            }
+                            val fieldTypes = driverFieldCandidates.joinToString {
+                                "${it.name}:${it.type.typeLogName()}"
+                            }
+                            val targetDriverType = targetSqliteDriver?.typeLogName() ?: "unavailable"
+                            Logger.w(
+                                "AndroidSQLiteDriver not assignable - target SQLiteDriver=$targetDriverType " +
+                                    "module driver=${androidDriverCls.typeLogName()} " +
+                                    "setter candidates=[$setDriverTypes] field candidates=[$fieldTypes]",
+                                LogSource.MODULE
+                            )
+
                             // Neither name found. R8 likely renamed both. Dump visible
                             // members so we can identify real names without jadx.
                             val methods = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
@@ -459,6 +500,13 @@ object GrindrPlus {
             sqliteDriverHookStatus = "failed: ${it.javaClass.simpleName}: ${it.message}"
             Logger.w("Failed to hook RoomDatabase.Builder.build: ${it.message}", LogSource.MODULE)
         }
+    }
+
+    private fun Class<*>.typeLogName(): String {
+        val loader = classLoader?.let {
+            "${it.javaClass.name}@${Integer.toHexString(System.identityHashCode(it))}"
+        } ?: "bootstrap"
+        return "$name<$loader>"
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
