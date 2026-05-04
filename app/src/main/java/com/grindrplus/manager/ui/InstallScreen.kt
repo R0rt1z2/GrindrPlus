@@ -510,6 +510,7 @@ private fun InstallPageContent(
     onInstallOrLaunch: () -> Unit,
     onShowCloneDialog: () -> Unit,
 ) {
+    Column(modifier = Modifier.fillMaxSize()) {
     MessageBanner(
         text = "• Don't close the app while installation is in progress\n• Grindr WILL crash on first launch after installation",
         isVisible = warningBannerVisible,
@@ -584,6 +585,7 @@ private fun InstallPageContent(
             onShowCloneDialog = onShowCloneDialog
         )
     }
+    } // end Column
 }
 
 @Composable

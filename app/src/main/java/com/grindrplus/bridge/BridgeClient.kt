@@ -620,5 +620,5 @@ class BridgeClient(private val context: Context) {
 
 // Thin wrapper so call sites don't need to import kotlinx.coroutines.runBlocking explicitly.
 // Uses the standard implementation — no scope leak, correct CancellationException propagation.
-private fun <T> runBlocking(block: suspend () -> T): T =
+private fun <T> runBlocking(block: suspend CoroutineScope.() -> T): T =
     kotlinx.coroutines.runBlocking(block = block)

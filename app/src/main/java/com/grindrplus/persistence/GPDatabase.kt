@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.grindrplus.persistence.converters.DateConverter
 import com.grindrplus.persistence.dao.AlbumDao
 import com.grindrplus.persistence.dao.SavedPhraseDao
@@ -35,8 +36,8 @@ abstract class GPDatabase : RoomDatabase() {
 
         fun create(context: Context): GPDatabase {
             return Room.databaseBuilder(context, GPDatabase::class.java, DATABASE_NAME)
+                .setDriver(AndroidSQLiteDriver())
                 .fallbackToDestructiveMigration(false)
-                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
         }
     }

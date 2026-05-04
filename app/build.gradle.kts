@@ -1,5 +1,6 @@
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import java.net.URI
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -114,8 +115,12 @@ dependencies {
     implementation(libs.compose.markdown)
     implementation(libs.plausible.android.sdk)
     implementation(libs.timber)
-    implementation(libs.fetch2)
-    implementation(libs.fetch2okhttp)
+    implementation(libs.fetch2) {
+        exclude(group = "io.requery", module = "requery-android-database-sqlite")
+    }
+    implementation(libs.fetch2okhttp) {
+        exclude(group = "io.requery", module = "requery-android-database-sqlite")
+    }
     implementation(libs.zip.android) {
         artifact {
             type = "aar"
@@ -132,37 +137,59 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
 }
 
-// Run with -PlspatchForce=true to re-download even when the committed jar is present.
+// Pinned LSPatch release. Update both values together when upgrading.
+// To re-download: ./gradlew setupLSPatch -PlspatchForce=true
+// To upgrade: set LSPATCH_RELEASE_TAG to the new tag, run with -PlspatchForce=true,
+//             then update LSPATCH_JAR_SHA256 to the value printed by the task.
+val LSPATCH_RELEASE_TAG = "v0.7"
+val LSPATCH_JAR_SHA256  = "668c5e55f392139737cd1a531392d29d1941f9d1fb63c89d526c8e8a30ca1bbc"
+
 tasks.register("setupLSPatch") {
+    description = "Downloads the pinned LSPatch release JAR into libs/ and verifies SHA-256. " +
+        "Pass -PlspatchForce=true to force re-download."
     doLast {
         val existingJar = File("${project.projectDir}/libs/lspatch.jar")
         val forceUpdate = project.findProperty("lspatchForce")?.toString()?.toBoolean() ?: false
 
-        if (existingJar.exists() && !forceUpdate) {
-            println("setupLSPatch: lspatch.jar already present in libs/ — skipping download.")
-            println("  To force a re-download: ./gradlew setupLSPatch -PlspatchForce=true")
-            return@doLast
+        fun sha256(file: File): String {
+            val bytes = MessageDigest.getInstance("SHA-256").digest(file.readBytes())
+            return bytes.fold("") { acc, b -> acc + "%02x".format(b) }
         }
 
-        println("setupLSPatch: downloading latest nightly LSPatch build...")
+        if (existingJar.exists() && !forceUpdate) {
+            val actual = sha256(existingJar)
+            if (actual == LSPATCH_JAR_SHA256) {
+                println("setupLSPatch: lspatch.jar present and SHA-256 verified — skipping download.")
+                return@doLast
+            }
+            println("setupLSPatch: SHA-256 mismatch (got $actual) — re-downloading pinned release $LSPATCH_RELEASE_TAG...")
+        } else {
+            println("setupLSPatch: downloading pinned LSPatch release $LSPATCH_RELEASE_TAG...")
+        }
 
-        val jarUrl = Regex("https://nightly\\.link/JingMatrix/LSPatch/workflows/main/master/lspatch-debug-[^.]+\\.zip").find(
-            URI("https://nightly.link/JingMatrix/LSPatch/workflows/main/master?preview").toURL().readText()
-        )?.value ?: error("setupLSPatch: could not locate download URL on nightly.link — page format may have changed")
+        val releaseJson = URI(
+            "https://api.github.com/repos/JingMatrix/LSPatch/releases/tags/$LSPATCH_RELEASE_TAG"
+        ).toURL().readText()
+
+        val zipUrl = Regex(""""browser_download_url":\s*"([^"]+lspatch[^"]+\.zip)"""")
+            .find(releaseJson)?.groupValues?.get(1)
+            ?: error("setupLSPatch: could not locate lspatch ZIP in GitHub Releases API response for $LSPATCH_RELEASE_TAG")
+
+        val tmpDir = "${System.getProperty("java.io.tmpdir")}/lspatch"
 
         providers.exec {
-            commandLine("mkdir", "-p", "${System.getProperty("java.io.tmpdir")}/lspatch")
+            commandLine("mkdir", "-p", tmpDir)
         }.result.get()
 
         providers.exec {
-            commandLine("wget", jarUrl, "-O", "${System.getProperty("java.io.tmpdir")}/lspatch/lspatch.zip")
+            commandLine("wget", "-q", zipUrl, "-O", "$tmpDir/lspatch.zip")
         }.result.get()
 
         providers.exec {
-            commandLine("unzip", "-o", "${System.getProperty("java.io.tmpdir")}/lspatch/lspatch.zip", "-d", "${System.getProperty("java.io.tmpdir")}/lspatch")
+            commandLine("unzip", "-o", "$tmpDir/lspatch.zip", "-d", tmpDir)
         }.result.get()
 
-        val jarPath = File("${System.getProperty("java.io.tmpdir")}/lspatch").listFiles()?.find { it.name.contains("jar-") }?.absolutePath
+        val jarPath = File(tmpDir).listFiles()?.find { it.name.contains("jar-") }?.absolutePath
             ?: error("setupLSPatch: jar not found inside downloaded zip — zip structure may have changed")
 
         providers.exec {
@@ -180,6 +207,15 @@ tasks.register("setupLSPatch") {
         providers.exec {
             commandLine("zip", "-d", "${project.projectDir}/libs/lspatch.jar", "com/google/errorprone/annotations/*")
         }.result.get()
+
+        val downloadedSha256 = sha256(File("${project.projectDir}/libs/lspatch.jar"))
+        if (downloadedSha256 != LSPATCH_JAR_SHA256) {
+            println("setupLSPatch: WARNING — downloaded JAR SHA-256 ($downloadedSha256) does not match" +
+                " pinned value ($LSPATCH_JAR_SHA256).")
+            println("  If this is an intentional upgrade, update LSPATCH_JAR_SHA256 in app/build.gradle.kts.")
+        } else {
+            println("setupLSPatch: SHA-256 verified.")
+        }
 
         println("setupLSPatch: done — lspatch.jar updated in libs/")
     }
@@ -199,12 +235,13 @@ fun getGitCommitHash(): String? {
         } else {
             null
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }
 
 tasks.register("printVersionInfo") {
+    description = "Prints the current GrindrPlus version name to stdout."
     doLast {
         val versionName = android.defaultConfig.versionName
         println("VERSION_INFO: GrindrPlus v$versionName")

@@ -298,7 +298,7 @@ class LocationSpoofer : Hook(
                         return@setOnClickListener
                     }
 
-                    val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
+                    val coordinates = "${location.latitude}, ${location.longitude}"
                     Config.put("current_location", coordinates)
                     GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to $coordinates")
                 }
@@ -317,7 +317,7 @@ class LocationSpoofer : Hook(
                         return@setOnClickListener
                     }
 
-                    val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
+                    val coordinates = "${location.latitude}, ${location.longitude}"
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:$coordinates")))
                 }
             }
@@ -375,7 +375,7 @@ class LocationSpoofer : Hook(
                     return
                 }
 
-                val coordinates = location.let { "${it.latitude}, ${it.longitude}" }
+                val coordinates = "${location.latitude}, ${location.longitude}"
                 Config.put("current_location", coordinates)
                 Config.put("current_location_name", location.name)
                 GrindrPlus.showToast(Toast.LENGTH_LONG, "Teleported to ${location.name}")
@@ -514,7 +514,7 @@ class LocationSpoofer : Hook(
                 return false
             }
 
-            val location = TeleportLocationEntity(name, lat, lon);
+            val location = TeleportLocationEntity(name, lat!!, lon!!)
             onLocationAdd(location)
 
             return true

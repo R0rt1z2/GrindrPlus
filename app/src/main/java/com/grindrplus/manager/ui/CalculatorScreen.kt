@@ -78,7 +78,7 @@ fun CalculatorScreen(calculatorScreen: MutableState<Boolean>) {
                 ),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            CalculatorDisplay(display = display)
+            CalculatorDisplay(display = display, modifier = Modifier.weight(1f))
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -276,11 +276,10 @@ private fun handleOperation(
 }
 
 @Composable
-private fun CalculatorDisplay(display: String) {
+private fun CalculatorDisplay(display: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .weight(1f)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 24.dp, vertical = 16.dp),
