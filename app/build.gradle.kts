@@ -131,6 +131,8 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.arsclib)
     compileOnly(libs.bcprov.jdk18on)
+
+    testImplementation(libs.junit)
 }
 
 tasks.register("setupLSPatch") {
