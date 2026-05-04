@@ -26,7 +26,9 @@ import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.grindrplus.utils.HookStage
+import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
 import de.robv.android.xposed.XposedHelpers.getObjectField
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -350,8 +352,31 @@ object GrindrPlus {
             Config.put("reset_database", false)
         }
 
+        forceAndroidSQLiteDriver()
         hookManager.init()
         isMainInitialized = true
+    }
+
+    private fun forceAndroidSQLiteDriver() {
+        // LSPatch injects DEX bytes only — the module's META-INF/services resources are not
+        // accessible from the host ClassLoader. ServiceLoader therefore finds Grindr's own
+        // RequerySQLiteOpenHelperFactory registration, whose <clinit> loads libsqlite3x.so
+        // which was removed in Grindr v26.0.1 → UnsatisfiedLinkError/NoClassDefFoundError.
+        // Intercept every RoomDatabase.Builder.build() call and inject AndroidSQLiteDriver
+        // so ServiceLoader is never consulted, for GrindrPlus's and Grindr's databases alike.
+        runCatching {
+            @Suppress("UNCHECKED_CAST")
+            (loadClass("androidx.room.RoomDatabase\$Builder") as Class<Any>)
+                .hook("build", HookStage.BEFORE) { param ->
+                    val builder: Any = param.thisObject()
+                    val driverClass = loadClass("androidx.sqlite.SQLiteDriver")
+                    builder.javaClass.getMethod("setDriver", driverClass)
+                        .invoke(builder, AndroidSQLiteDriver())
+                }
+            Logger.i("RoomDatabase.Builder.build() hooked — AndroidSQLiteDriver forced", LogSource.MODULE)
+        }.onFailure {
+            Logger.w("Failed to hook RoomDatabase.Builder.build: ${it.message}", LogSource.MODULE)
+        }
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
