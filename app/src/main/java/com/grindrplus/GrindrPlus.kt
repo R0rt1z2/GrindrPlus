@@ -409,13 +409,14 @@ object GrindrPlus {
                             .flatMap { it.declaredMethods.asSequence() }
                             .filter {
                                 it.parameterCount == 1 &&
-                                    (it.parameterTypes[0].isInstance(androidDriver) ||
-                                        it.parameterTypes[0].name == SQLITE_DRIVER_INTERFACE_NAME ||
+                                    (it.parameterTypes[0].isSQLiteDriverCandidate(androidDriver, targetSqliteDriver) ||
                                         it.name == "setDriver")
                             }
                             .toList()
                         val setDriverMethod = setDriverCandidates.firstOrNull {
-                            it.parameterTypes[0].isInstance(androidDriver)
+                            it.name == "setDriver" && it.parameterTypes[0].acceptsDriver(androidDriver)
+                        } ?: setDriverCandidates.firstOrNull {
+                            it.parameterTypes[0].acceptsDriver(androidDriver)
                         }
 
                         if (setDriverMethod != null) {
@@ -432,13 +433,14 @@ object GrindrPlus {
                         val driverFieldCandidates = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                             .flatMap { it.declaredFields.asSequence() }
                             .filter {
-                                it.type.isInstance(androidDriver) ||
-                                    it.type.name == SQLITE_DRIVER_INTERFACE_NAME ||
+                                it.type.isSQLiteDriverCandidate(androidDriver, targetSqliteDriver) ||
                                     it.name == "driver"
                             }
                             .toList()
                         val driverField = driverFieldCandidates.firstOrNull {
-                            it.type.isInstance(androidDriver)
+                            it.name == "driver" && it.type.acceptsDriver(androidDriver)
+                        } ?: driverFieldCandidates.firstOrNull {
+                            it.type.acceptsDriver(androidDriver)
                         }
 
                         if (driverField != null) {
@@ -507,6 +509,25 @@ object GrindrPlus {
             "${it.javaClass.name}@${Integer.toHexString(System.identityHashCode(it))}"
         } ?: "bootstrap"
         return "$name<$loader>"
+    }
+
+    private fun Class<*>.isSQLiteDriverCandidate(
+        androidDriver: Any,
+        targetSqliteDriver: Class<*>?
+    ): Boolean {
+        if (isGenericObjectSlot()) return false
+        return name == SQLITE_DRIVER_INTERFACE_NAME ||
+            this == targetSqliteDriver ||
+            isInstance(androidDriver)
+    }
+
+    private fun Class<*>.acceptsDriver(androidDriver: Any): Boolean {
+        if (isGenericObjectSlot()) return false
+        return isInstance(androidDriver)
+    }
+
+    private fun Class<*>.isGenericObjectSlot(): Boolean {
+        return this == Any::class.java || name == "java.lang.Object"
     }
 
     fun runOnMainThread(appContext: Context? = null, block: (Context) -> Unit) {
