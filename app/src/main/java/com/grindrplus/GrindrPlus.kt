@@ -81,6 +81,7 @@ object GrindrPlus {
     private var isMainInitialized = false
     private var isInstanceManagerInitialized = false
     private var isSQLiteDriverHookInitialized = false
+    private var sqliteDriverHookStatus = "not attempted"
 
     var spline = PCHIP(
         listOf(
@@ -163,6 +164,7 @@ object GrindrPlus {
             Logger.e("Failed to connect to the bridge service", LogSource.MODULE)
             shouldShowBridgeConnectionError = true
         }
+        Logger.i("SQLite driver hook status: $sqliteDriverHookStatus", LogSource.MODULE)
 
         Config.initialize(application.packageName)
 
@@ -360,6 +362,7 @@ object GrindrPlus {
     private fun forceAndroidSQLiteDriver() {
         if (isSQLiteDriverHookInitialized) {
             Logger.d("RoomDatabase.Builder build hook already installed", LogSource.MODULE)
+            sqliteDriverHookStatus = "already installed"
             return
         }
 
@@ -441,16 +444,19 @@ object GrindrPlus {
                 val allMethods = builderClass.declaredMethods.joinToString {
                     "${it.name}(${it.parameterCount}):${it.returnType.name}"
                 }
+                sqliteDriverHookStatus = "no build candidates"
                 Logger.w("RoomDatabase.Builder build candidates: 0 - Builder methods: [$allMethods]", LogSource.MODULE)
             } else {
                 val hookedMethods = buildCandidates.joinToString { it.name }
                 isSQLiteDriverHookInitialized = true
+                sqliteDriverHookStatus = "installed ${unhooks.size} method(s): $hookedMethods"
                 Logger.i(
                     "RoomDatabase.Builder build hook installed (${unhooks.size} method(s): $hookedMethods) - AndroidSQLiteDriver forced",
                     LogSource.MODULE
                 )
             }
         }.onFailure {
+            sqliteDriverHookStatus = "failed: ${it.javaClass.simpleName}: ${it.message}"
             Logger.w("Failed to hook RoomDatabase.Builder.build: ${it.message}", LogSource.MODULE)
         }
     }
