@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import com.grindrplus.BuildConfig
+import com.grindrplus.core.Constants
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
 import timber.log.Timber
@@ -27,13 +28,20 @@ class ForceStartActivity : Activity() {
             }
             startService(serviceIntent)
 
+            // Allowlist: only Grindr may be launched via this exported activity.
+            // Without this, any installed app could send pkg=<arbitrary> and use
+            // GrindrPlus as a launcher proxy.
             val pkg = intent.getStringExtra("pkg")
             if (pkg != null) {
-                val launchIntent = packageManager.getLaunchIntentForPackage(pkg)
-                if (launchIntent != null) {
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(launchIntent)
-                    Timber.tag(TAG).d("Launched package: $pkg")
+                if (pkg == Constants.GRINDR_PACKAGE_NAME) {
+                    val launchIntent = packageManager.getLaunchIntentForPackage(pkg)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(launchIntent)
+                        Timber.tag(TAG).d("Launched package: $pkg")
+                    }
+                } else {
+                    Timber.tag(TAG).w("Rejected non-allowlisted launch request: $pkg")
                 }
             }
 
