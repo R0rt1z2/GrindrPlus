@@ -26,7 +26,6 @@ import com.grindrplus.core.http.Interceptor
 import com.grindrplus.persistence.GPDatabase
 import com.grindrplus.utils.HookManager
 import com.grindrplus.utils.PCHIP
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
 import com.grindrplus.utils.hookConstructor
@@ -358,20 +357,52 @@ object GrindrPlus {
     }
 
     private fun forceAndroidSQLiteDriver() {
-        // LSPatch injects DEX bytes only — the module's META-INF/services resources are not
-        // accessible from the host ClassLoader. ServiceLoader therefore finds Grindr's own
-        // RequerySQLiteOpenHelperFactory registration, whose <clinit> loads libsqlite3x.so
-        // which was removed in Grindr v26.0.1 → UnsatisfiedLinkError/NoClassDefFoundError.
-        // Intercept every RoomDatabase.Builder.build() call and inject AndroidSQLiteDriver
-        // so ServiceLoader is never consulted, for GrindrPlus's and Grindr's databases alike.
+        // LSPatch exposes module DEX but not META-INF/services, so ServiceLoader finds
+        // Grindr's RequerySQLiteOpenHelperFactory which loads libsqlite3x.so (removed in
+        // v26.0.1). Hooking build() and injecting AndroidSQLiteDriver bypasses ServiceLoader.
         runCatching {
             @Suppress("UNCHECKED_CAST")
             (loadClass("androidx.room.RoomDatabase\$Builder") as Class<Any>)
                 .hook("build", HookStage.BEFORE) { param ->
-                    val builder: Any = param.thisObject()
-                    val driverClass = loadClass("androidx.sqlite.SQLiteDriver")
-                    builder.javaClass.getMethod("setDriver", driverClass)
-                        .invoke(builder, AndroidSQLiteDriver())
+                    // Xposed swallows exceptions in beforeHookedMethod — wrap explicitly so
+                    // failures are visible in our log instead of disappearing silently.
+                    runCatching {
+                        val builder: Any = param.thisObject()
+                        val cl = builder.javaClass.classLoader
+                            ?: Thread.currentThread().contextClassLoader
+                            ?: return@runCatching
+
+                        // Walk the hierarchy for "setDriver(1 param)" by name only —
+                        // getMethod() requires Class-identity match on the parameter type
+                        // which can fail if driverClass was loaded from a different
+                        // ClassLoader slot, causing a silent NoSuchMethodException.
+                        val setDriverMethod = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                            .flatMap { it.declaredMethods.asSequence() }
+                            .firstOrNull { it.name == "setDriver" && it.parameterCount == 1 }
+
+                        if (setDriverMethod != null) {
+                            setDriverMethod.isAccessible = true
+                            val driverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
+                            setDriverMethod.invoke(builder, driverCls.getDeclaredConstructor().newInstance())
+                            Logger.d("AndroidSQLiteDriver set via setDriver()", LogSource.MODULE)
+                            return@runCatching
+                        }
+
+                        // Fallback: set the Room 2.7.0 backing field "driver" directly.
+                        val driverField = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
+                            .flatMap { it.declaredFields.asSequence() }
+                            .firstOrNull { it.name == "driver" }
+                        if (driverField != null) {
+                            driverField.isAccessible = true
+                            val driverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
+                            driverField.set(builder, driverCls.getDeclaredConstructor().newInstance())
+                            Logger.d("AndroidSQLiteDriver set via field injection", LogSource.MODULE)
+                        } else {
+                            Logger.w("Neither setDriver() nor 'driver' field found on ${builder.javaClass.name}", LogSource.MODULE)
+                        }
+                    }.onFailure { t ->
+                        Logger.w("setDriver callback: ${t.javaClass.simpleName}: ${t.message}", LogSource.MODULE)
+                    }
                 }
             Logger.i("RoomDatabase.Builder.build() hooked — AndroidSQLiteDriver forced", LogSource.MODULE)
         }.onFailure {
