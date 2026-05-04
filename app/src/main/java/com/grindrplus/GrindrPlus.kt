@@ -51,7 +51,7 @@ import timber.log.Timber
 
 @SuppressLint("StaticFieldLeak")
 object GrindrPlus {
-    // applicationContext — process-scoped, safe to hold as a singleton (no leak risk)
+    // applicationContext - process-scoped, safe to hold as a singleton (no leak risk)
     lateinit var context: Context
         private set
     lateinit var classLoader: ClassLoader
@@ -364,44 +364,56 @@ object GrindrPlus {
             @Suppress("UNCHECKED_CAST")
             val builderClass = loadClass("androidx.room.RoomDatabase\$Builder") as Class<Any>
 
-            // Capture the unhook set so we can log how many overloads were actually hooked.
-            // If R8 renamed build() the set will be empty and we intercept nothing — log that.
-            val unhooks = builderClass.hook("build", HookStage.BEFORE) { param ->
-                    // Xposed swallows exceptions in beforeHookedMethod — wrap explicitly so
+            val roomDatabaseClass = loadClass("androidx.room.RoomDatabase")
+            val buildCandidates = builderClass.declaredMethods
+                .filter { method ->
+                    method.parameterCount == 0 && roomDatabaseClass.isAssignableFrom(method.returnType)
+                }
+
+            val unhooks = buildCandidates.map { buildMethod ->
+                buildMethod.hook(HookStage.BEFORE) { param ->
+                    // Xposed swallows exceptions in beforeHookedMethod; wrap explicitly so
                     // failures are visible in our log instead of disappearing silently.
                     runCatching {
                         val builder: Any = param.thisObject()
                         val cl = builder.javaClass.classLoader
                             ?: Thread.currentThread().contextClassLoader
                             ?: return@runCatching
+                        val androidDriverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
 
-                        // Walk the hierarchy for "setDriver(1 param)" by name only —
-                        // getMethod() requires Class-identity match on the parameter type
-                        // which can fail if driverClass was loaded from a different
-                        // ClassLoader slot, causing a silent NoSuchMethodException.
+                        // Prefer the setter by type so R8 member renaming does not matter.
                         val setDriverMethod = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                             .flatMap { it.declaredMethods.asSequence() }
-                            .firstOrNull { it.name == "setDriver" && it.parameterCount == 1 }
+                            .firstOrNull {
+                                it.parameterCount == 1 &&
+                                    (it.parameterTypes[0].isAssignableFrom(androidDriverCls) || it.name == "setDriver")
+                            }
 
                         if (setDriverMethod != null) {
                             setDriverMethod.isAccessible = true
-                            val driverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
-                            setDriverMethod.invoke(builder, driverCls.getDeclaredConstructor().newInstance())
-                            Logger.d("AndroidSQLiteDriver set via setDriver()", LogSource.MODULE)
+                            setDriverMethod.invoke(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            Logger.d(
+                                "AndroidSQLiteDriver set via ${setDriverMethod.name}(SQLiteDriver)",
+                                LogSource.MODULE
+                            )
                             return@runCatching
                         }
 
-                        // Fallback: set the Room 2.7.0 backing field "driver" directly.
+                        // Fallback: set the Room 2.7.0 backing field directly by type.
                         val driverField = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                             .flatMap { it.declaredFields.asSequence() }
-                            .firstOrNull { it.name == "driver" }
+                            .firstOrNull {
+                                it.type.isAssignableFrom(androidDriverCls) || it.name == "driver"
+                            }
                         if (driverField != null) {
                             driverField.isAccessible = true
-                            val driverCls = cl.loadClass("androidx.sqlite.driver.AndroidSQLiteDriver")
-                            driverField.set(builder, driverCls.getDeclaredConstructor().newInstance())
-                            Logger.d("AndroidSQLiteDriver set via field injection", LogSource.MODULE)
+                            driverField.set(builder, androidDriverCls.getDeclaredConstructor().newInstance())
+                            Logger.d(
+                                "AndroidSQLiteDriver set via ${driverField.name}:SQLiteDriver field",
+                                LogSource.MODULE
+                            )
                         } else {
-                            // Neither name found — R8 likely renamed both. Dump visible
+                            // Neither name found. R8 likely renamed both. Dump visible
                             // members so we can identify real names without jadx.
                             val methods = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                                 .flatMap { it.declaredMethods.asSequence() }
@@ -410,21 +422,26 @@ object GrindrPlus {
                             val fields = generateSequence(builder.javaClass as Class<*>?) { it.superclass }
                                 .flatMap { it.declaredFields.asSequence() }
                                 .filter { it.declaringClass.name.startsWith("androidx.room") }
-                                .joinToString { it.name }
-                            Logger.w("Builder members — methods: [$methods] fields: [$fields]", LogSource.MODULE)
+                                .joinToString { "${it.name}:${it.type.name}" }
+                            Logger.w("Builder members - methods: [$methods] fields: [$fields]", LogSource.MODULE)
                         }
                     }.onFailure { t ->
                         Logger.w("setDriver callback: ${t.javaClass.simpleName}: ${t.message}", LogSource.MODULE)
                     }
                 }
+            }
 
             if (unhooks.isEmpty()) {
-                // build() was not found — R8 renamed it. Log all method names on Builder
-                // so we can identify the correct name for the next targeted fix.
-                val allMethods = builderClass.declaredMethods.joinToString { "${it.name}(${it.parameterCount})" }
-                Logger.w("hookAllMethods found 0 'build' overloads — Builder methods: [$allMethods]", LogSource.MODULE)
+                val allMethods = builderClass.declaredMethods.joinToString {
+                    "${it.name}(${it.parameterCount}):${it.returnType.name}"
+                }
+                Logger.w("RoomDatabase.Builder build candidates: 0 - Builder methods: [$allMethods]", LogSource.MODULE)
             } else {
-                Logger.i("RoomDatabase.Builder.build() hooked (${unhooks.size} overload(s)) — AndroidSQLiteDriver forced", LogSource.MODULE)
+                val hookedMethods = buildCandidates.joinToString { it.name }
+                Logger.i(
+                    "RoomDatabase.Builder build hook installed (${unhooks.size} method(s): $hookedMethods) - AndroidSQLiteDriver forced",
+                    LogSource.MODULE
+                )
             }
         }.onFailure {
             Logger.w("Failed to hook RoomDatabase.Builder.build: ${it.message}", LogSource.MODULE)
