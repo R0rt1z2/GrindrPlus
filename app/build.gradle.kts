@@ -97,7 +97,7 @@ dependencies {
     compileOnly(fileTree("libs") { include("*.jar") })
     implementation(fileTree("libs") { include("lspatch.jar") })
 
-    val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
+    val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
 
     implementation(libs.androidx.material3)
