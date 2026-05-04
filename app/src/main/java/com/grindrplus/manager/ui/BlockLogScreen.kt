@@ -184,18 +184,23 @@ fun BlockLogScreen(innerPadding: PaddingValues) {
                         }
                     }
                 } else {
+                    // Date grouping is computed once per filteredEvents change
+                    // instead of on every recomposition inside the LazyColumn
+                    // content lambda. The SimpleDateFormat is kept inside the
+                    // remember block since it's locale-dependent and we want
+                    // it to refresh when the configuration changes.
+                    val groupedEvents = remember(filteredEvents) {
+                        val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+                        filteredEvents.groupBy { dateFormat.format(Date(it.timestamp)) }
+                    }
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
-                        val grouped = filteredEvents.groupBy {
-                            dateFormat.format(Date(it.timestamp))
-                        }
-
-                        grouped.forEach { (date, dateEvents) ->
-                            stickyHeader {
+                        groupedEvents.forEach { (date, dateEvents) ->
+                            stickyHeader(key = "header-$date") {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -210,7 +215,10 @@ fun BlockLogScreen(innerPadding: PaddingValues) {
                                 }
                             }
 
-                            items(dateEvents) { event ->
+                            items(
+                                items = dateEvents,
+                                key = { event -> "${event.profileId}-${event.timestamp}-${event.eventType}" }
+                            ) { event ->
                                 BlockEventItem(
                                     event = event,
                                     onCopyId = {
@@ -311,7 +319,7 @@ fun BlockEventItem(
                 )
             }
 
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
