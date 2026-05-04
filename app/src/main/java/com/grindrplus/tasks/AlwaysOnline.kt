@@ -25,6 +25,10 @@ class AlwaysOnline :
                 GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.grindrLocationProvider)
 
             val location = getObjectField(grindrLocationProviderInstance, "e")
+            if (location == null) {
+                logi("AlwaysOnline: location not available yet, skipping tick")
+                return
+            }
             val latitude = callMethod(location, "getLatitude") as Double
             val longitude = callMethod(location, "getLongitude") as Double
             val geoHash = coordsToGeoHash(latitude, longitude)
