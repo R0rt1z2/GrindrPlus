@@ -80,6 +80,14 @@ android {
                 "GPlus_v${sanitizedVersionName}-${name}.apk"
         }
     }
+
+    // Room compiler emits the schema JSON for each version into this
+    // directory; checking it into VCS lets reviewers see schema diffs and
+    // gives any future migration tests something to compare against.
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
 }
 
 dependencies {
