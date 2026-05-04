@@ -124,27 +124,74 @@ private class InstallPageState(
         }
     }
 
+    fun requestCloneDialog() { showCloneDialog = true }
+    fun dismissCloneDialog() { showCloneDialog = false }
+    fun startCloning() { isCloning = true }
+    fun finishCloning() { isCloning = false }
+    fun dismissCustomFileDialog() { showCustomFileDialog = false }
+    fun dismissWarningBanner() { warningBannerVisible = false }
+    fun dismissLSPosedBanner() { lsposedBannerVisible = false }
+
     fun installOrLaunch() {
         when {
             installationSuccessful -> launchGrindr(context)
-            useCustomFiles && customBundleUri != null && customModUri != null -> {
-                startCustomInstallation(
-                    context, customBundleUri, customModUri, customVersionName, print,
-                    onSetInstalling = { isInstalling = it },
-                    onSetInstallSuccessful = { installationSuccessful = it }
-                )
-            }
+            useCustomFiles && customBundleUri != null && customModUri != null -> startCustomInstallation()
             selectedVersion == null -> showToast(context, "Please select a version first")
-            else -> startInstallation(
-                version = selectedVersion!!,
-                onStarted = { isInstalling = true },
-                onCompleted = { success ->
-                    isInstalling = false
-                    installationSuccessful = success
-                },
-                context = context,
-                print = print
-            )
+            else -> startInstallation(selectedVersion!!)
+        }
+    }
+
+    private fun startInstallation(version: Data) {
+        isInstalling = true
+        addLog("Starting installation for version ${version.modVer}...", LogType.INFO)
+
+        activityScope.launch {
+            try {
+                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+                val install = Installation(
+                    context, version.modVer, version.modUrl, version.grindrUrl, mapsApiKey
+                )
+                withContext(Dispatchers.IO) { install.install(print = print) }
+                addLog("Installation completed successfully!", LogType.SUCCESS)
+                showToast(context, "Installation complete!")
+                installationSuccessful = true
+            } catch (e: Exception) {
+                handleInstallationError(e, context)
+                installationSuccessful = false
+            } finally {
+                isInstalling = false
+            }
+        }
+    }
+
+    private fun startCustomInstallation() {
+        val bundleUri = customBundleUri
+        val modUri = customModUri
+        if (bundleUri == null || modUri == null) {
+            showToast(context, "Please select both bundle and mod files")
+            return
+        }
+
+        isInstalling = true
+        addLog("Starting custom installation with version name: $customVersionName...", LogType.INFO)
+
+        activityScope.launch {
+            try {
+                val bundleFile = createTempFileFromUri(context, bundleUri, "grindr-$customVersionName.zip")
+                val modFile = createTempFileFromUri(context, modUri, "mod-$customVersionName.zip")
+                val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
+                val customInstall = Installation(
+                    context, customVersionName, modFile.absolutePath, bundleFile.absolutePath, mapsApiKey
+                )
+                withContext(Dispatchers.IO) { customInstall.installCustom(bundleFile, modFile, print) }
+                addLog("Custom installation completed successfully!", LogType.SUCCESS)
+                showToast(context, "Installation complete!")
+                installationSuccessful = true
+            } catch (e: Exception) {
+                handleInstallationError(e, context)
+            } finally {
+                isInstalling = false
+            }
         }
     }
 }
@@ -220,12 +267,12 @@ fun InstallPage(context: Activity, innerPadding: PaddingValues, viewModel: Insta
                 customBundleUri = state.customBundleUri,
                 customModUri = state.customModUri,
                 context = context,
-                onWarningDismiss = { state.warningBannerVisible = false },
-                onLSPosedDismiss = { state.lsposedBannerVisible = false },
+                onWarningDismiss = state::dismissWarningBanner,
+                onLSPosedDismiss = state::dismissLSPosedBanner,
                 onVersionSelected = state::selectVersion,
                 onCleanUp = state::cleanUp,
                 onInstallOrLaunch = state::installOrLaunch,
-                onShowCloneDialog = { state.showCloneDialog = true },
+                onShowCloneDialog = state::requestCloneDialog,
             )
         }
     }
@@ -287,43 +334,6 @@ fun ErrorScreen(errorMessage: String, onRetry: () -> Unit) {
     }
 }
 
-private fun startCustomInstallation(
-    context: Activity,
-    customBundleUri: Uri?,
-    customModUri: Uri?,
-    customVersionName: String,
-    print: Print,
-    onSetInstalling: (Boolean) -> Unit,
-    onSetInstallSuccessful: (Boolean) -> Unit,
-) {
-    if (customBundleUri == null || customModUri == null) {
-        showToast(context, "Please select both bundle and mod files")
-        return
-    }
-
-    onSetInstalling(true)
-    addLog("Starting custom installation with version name: $customVersionName...", LogType.INFO)
-
-    activityScope.launch {
-        try {
-            val bundleFile = createTempFileFromUri(context, customBundleUri, "grindr-$customVersionName.zip")
-            val modFile = createTempFileFromUri(context, customModUri, "mod-$customVersionName.zip")
-            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-            val customInstallation = Installation(
-                context, customVersionName, modFile.absolutePath, bundleFile.absolutePath, mapsApiKey
-            )
-            withContext(Dispatchers.IO) { customInstallation.installCustom(bundleFile, modFile, print) }
-            addLog("Custom installation completed successfully!", LogType.SUCCESS)
-            showToast(context, "Installation complete!")
-            onSetInstallSuccessful(true)
-        } catch (e: Exception) {
-            handleInstallationError(e, context)
-        } finally {
-            onSetInstalling(false)
-        }
-    }
-}
-
 @Composable
 private fun InstallPageDialogs(
     context: Activity,
@@ -377,45 +387,6 @@ private fun InstallPageDialogs(
                 onCustomFilesSelected(versionName, bundleUri, modUri)
             }
         )
-    }
-}
-
-private fun startInstallation(
-    version: Data,
-    onStarted: () -> Unit,
-    onCompleted: (Boolean) -> Unit,
-    context: Activity,
-    print: Print
-) {
-    onStarted()
-
-    addLog("Starting installation for version ${version.modVer}...", LogType.INFO)
-
-    activityScope.launch {
-        try {
-            val mapsApiKey = (Config.get("maps_api_key", "") as String).ifBlank { null }
-
-            val installation = Installation(
-                context,
-                version.modVer,
-                version.modUrl,
-                version.grindrUrl,
-                mapsApiKey
-            )
-
-            withContext(Dispatchers.IO) {
-                installation.install(
-                    print = print
-                )
-            }
-
-            addLog("Installation completed successfully!", LogType.SUCCESS)
-            showToast(context, "Installation complete!")
-            onCompleted(true)
-        } catch (e: Exception) {
-            handleInstallationError(e, context)
-            onCompleted(false)
-        }
     }
 }
 
