@@ -6,6 +6,7 @@ bcprovJdk18on = "1.80"
 coilCompose = "3.1.0"
 coilGif = "3.1.0"
 coilNetworkOkhttp = "3.1.0"
+composeBom = "2025.02.00"
 composeMarkdown = "0.5.7"
 fetch2 = "3.4.1"
 fetch2okhttp = "3.4.1"
@@ -30,6 +31,7 @@ shizuku = "13.1.5"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
