@@ -10,7 +10,7 @@ suspend fun uploadAndShare(text: String, context: Context) {
     val response = withContext(Dispatchers.IO) {
         Socket("termbin.com", 9999).use { socket ->
             socket.getOutputStream().write(text.toByteArray())
-            socket.getInputStream().bufferedReader().readText()
+            socket.getInputStream().bufferedReader().use { it.readText() }
         }.trim().replace("\n", "")
     }
 

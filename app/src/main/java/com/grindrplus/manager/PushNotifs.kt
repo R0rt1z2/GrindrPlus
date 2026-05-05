@@ -40,8 +40,9 @@ suspend fun fetchNotifs(context: Context) = withContext(Dispatchers.IO) {
     client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
+        val bodyStr = response.body?.string() ?: throw IOException("Empty response body")
         tgMessages.value =
-            JsonParser.parseString(response.body!!.string()).asJsonArray
+            JsonParser.parseString(bodyStr).asJsonArray
                 .map { it.asJsonObject }
                 .map { obj ->
                     GPlusMessage(

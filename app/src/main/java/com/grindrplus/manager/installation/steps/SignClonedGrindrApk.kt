@@ -11,7 +11,7 @@ class SignClonedGrindrApk(val keyStoreUtils: KeyStoreUtils, val outputDir: File)
         context: Context,
         print: Print,
     ) {
-        for (file in outputDir.listFiles()!!) {
+        for (file in outputDir.listFiles() ?: return) {
             if (!file.name.endsWith(".apk")) {
                 print("Skipping ${file.name} as it is not an APK")
                 continue
