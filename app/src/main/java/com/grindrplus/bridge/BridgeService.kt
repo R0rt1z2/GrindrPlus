@@ -15,6 +15,7 @@ import android.os.Process
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
+import com.grindrplus.core.Constants.GRINDR_PACKAGE_NAME
 import com.grindrplus.core.LogSource
 import com.grindrplus.core.Logger
 import com.grindrplus.manager.fetchNotifs
@@ -51,10 +52,35 @@ class BridgeService : Service() {
         initializeFiles()
     }
 
-    override fun onBind(intent: Intent?): IBinder {
+    override fun onBind(intent: Intent?): IBinder? {
+        if (!isCallerAuthorized()) {
+            return null
+        }
         Logger.i("BridgeService bound", LogSource.BRIDGE)
         startForegroundSafely()
         return binder
+    }
+
+    /**
+     * Reject bind attempts from any UID that isn't this app or Grindr (incl.
+     * cloned variants). Without this, the exported service is callable by
+     * every installed app — they could read/write our config and fire
+     * notifications via the AIDL surface.
+     */
+    private fun isCallerAuthorized(): Boolean {
+        val callerUid = Binder.getCallingUid()
+        if (callerUid == Process.myUid()) return true
+        val callerPackages = packageManager.getPackagesForUid(callerUid) ?: emptyArray()
+        val allowed = callerPackages.any { pkg ->
+            pkg == GRINDR_PACKAGE_NAME || pkg.startsWith("$GRINDR_PACKAGE_NAME.")
+        }
+        if (!allowed) {
+            Logger.w(
+                "BridgeService: refused bind from UID $callerUid (${callerPackages.joinToString()})",
+                LogSource.BRIDGE
+            )
+        }
+        return allowed
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

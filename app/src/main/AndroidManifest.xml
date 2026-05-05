@@ -36,6 +36,13 @@
                 android:name="xposedscope"
                 android:value="com.grindrapp.android" />
 
+        <!--
+          Exported because Grindr's process binds across-app. The service
+          authorises bind attempts in onBind() via Binder.getCallingUid().
+          The previous GET_CONTENT/OPENABLE intent-filter was a discovery
+          hack — the service does not return openable content — so it has
+          been removed; bindings still work via explicit setClassName().
+        -->
         <service
             android:name=".bridge.BridgeService"
             android:exported="true"
@@ -43,10 +50,6 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="xposed_module" />
-            <intent-filter>
-                <action android:name="android.intent.action.GET_CONTENT" />
-                <category android:name="android.intent.category.OPENABLE" />
-            </intent-filter>
         </service>
 
         <activity
