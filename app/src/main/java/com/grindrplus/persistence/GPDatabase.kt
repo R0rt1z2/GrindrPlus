@@ -23,7 +23,7 @@ import com.grindrplus.persistence.model.TeleportLocationEntity
         SavedPhraseEntity::class
     ],
     version = 5,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(DateConverter::class)
 abstract class GPDatabase : RoomDatabase() {
