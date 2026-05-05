@@ -1,7 +1,5 @@
 package com.grindrplus.manager.ui
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grindrplus.BuildConfig
@@ -9,6 +7,10 @@ import com.grindrplus.core.Logger
 import com.grindrplus.core.ShizukuManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -16,7 +18,13 @@ import okhttp3.Request
 import org.json.JSONArray
 import java.time.Instant
 
+data class Contributor(
+    val login: String,
+    val avatarUrl: String,
+)
+
 data class Release(
+    val id: String,
     val name: String,
     val description: String,
     val author: String,
@@ -24,14 +32,18 @@ data class Release(
     val publishedAt: Instant,
 )
 
-class HomeViewModel : ViewModel() {
-    val contributors = mutableStateMapOf<String, String>()
-    val releases = mutableStateMapOf<String, Release>()
-    val isLoading = mutableStateOf(true)
-    val errorMessage = mutableStateOf<String?>(null)
-    val compatResult = mutableStateOf<ShizukuManager.CompatResult?>(null)
+data class HomeUiState(
+    val isLoading: Boolean = false,
+    val contributors: List<Contributor> = emptyList(),
+    val releases: List<Release> = emptyList(),
+    val errorMessage: String? = null,
+)
 
-    // Flag to avoid multiple fetches
+class HomeViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val compatResult = MutableStateFlow<ShizukuManager.CompatResult?>(null)
+
     private var hasFetched = false
 
     companion object {
@@ -39,7 +51,6 @@ class HomeViewModel : ViewModel() {
 
         private const val CONTRIBUTORS_URL = "https://api.github.com/repos/R0rt1z2/GrindrPlus/contributors"
         private const val RELEASES_URL = "https://api.github.com/repos/R0rt1z2/GrindrPlus/releases"
-        // Reuse the HTTP client across requests
         private val client = OkHttpClient()
     }
 
@@ -59,39 +70,38 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    private suspend fun parseContributors(jsonContent: String) = withContext(Dispatchers.Default) {
-        val jsonArray = JSONArray(jsonContent)
-        // Accumulate new data in a temporary map
-        val newContributors = mutableMapOf<String, String>()
-        for (i in 0 until jsonArray.length()) {
-            val contributor = jsonArray.getJSONObject(i)
-            if (contributor.getString("login").contains("bot")) continue
-            newContributors[contributor.getString("login")] = contributor.getString("avatar_url")
+    private suspend fun parseContributors(jsonContent: String): List<Contributor> =
+        withContext(Dispatchers.Default) {
+            val jsonArray = JSONArray(jsonContent)
+            val list = mutableListOf<Contributor>()
+            for (i in 0 until jsonArray.length()) {
+                val contributor = jsonArray.getJSONObject(i)
+                val login = contributor.getString("login")
+                if (login.contains("bot")) continue
+                list += Contributor(login, contributor.getString("avatar_url"))
+            }
+            // Preserve the previous "last contributor first" display order.
+            list.reversed()
         }
-        // Update the state in bulk
-        contributors.clear()
-        contributors.putAll(newContributors)
-    }
 
-    private suspend fun parseReleases(jsonContent: String) = withContext(Dispatchers.Default) {
-        val jsonArray = JSONArray(jsonContent)
-        val newReleases = mutableMapOf<String, Release>()
-        for (i in 0 until jsonArray.length()) {
-            val release = jsonArray.getJSONObject(i)
-            val id = release.getString("id")
-            val name = if (!release.isNull("name"))
-                release.getString("name") else release.getString("tag_name")
-            val description = if (!release.isNull("body"))
-                release.getString("body") else "No description provided"
-            val author = release.getJSONObject("author").getString("login")
-            val avatarUrl = release.getJSONObject("author").getString("avatar_url")
-            val publishedAt = Instant.parse(release.getString("published_at"))
-
-            newReleases[id] = Release(name, description, author, avatarUrl, publishedAt)
+    private suspend fun parseReleases(jsonContent: String): List<Release> =
+        withContext(Dispatchers.Default) {
+            val jsonArray = JSONArray(jsonContent)
+            val list = mutableListOf<Release>()
+            for (i in 0 until jsonArray.length()) {
+                val release = jsonArray.getJSONObject(i)
+                val id = release.getString("id")
+                val name = if (!release.isNull("name"))
+                    release.getString("name") else release.getString("tag_name")
+                val description = if (!release.isNull("body"))
+                    release.getString("body") else "No description provided"
+                val author = release.getJSONObject("author").getString("login")
+                val avatarUrl = release.getJSONObject("author").getString("avatar_url")
+                val publishedAt = Instant.parse(release.getString("published_at"))
+                list += Release(id, name, description, author, avatarUrl, publishedAt)
+            }
+            list.sortedByDescending { it.publishedAt }
         }
-        releases.clear()
-        releases.putAll(newReleases)
-    }
 
     fun checkGrindrCompatibility() {
         viewModelScope.launch {
@@ -107,26 +117,29 @@ class HomeViewModel : ViewModel() {
 
     fun fetchData(forceRefresh: Boolean = false) {
         if (hasFetched && !forceRefresh) return
-        if (forceRefresh) {
-            hasFetched = false
-            errorMessage.value = null
-        }
         hasFetched = true
-        isLoading.value = true
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
             try {
-                // Both requests are made in parallel
                 val contributorsDeferred = async { fetchUrlContent(CONTRIBUTORS_URL) }
                 val releasesDeferred = async { fetchUrlContent(RELEASES_URL) }
-
-                parseContributors(contributorsDeferred.await())
-                parseReleases(releasesDeferred.await())
+                val contributors = parseContributors(contributorsDeferred.await())
+                val releases = parseReleases(releasesDeferred.await())
+                _uiState.value = HomeUiState(
+                    isLoading = false,
+                    contributors = contributors,
+                    releases = releases,
+                    errorMessage = null,
+                )
             } catch (e: Exception) {
                 Logger.e("$TAG: Error fetching data: ${e.message}")
-                errorMessage.value = "An error occurred: ${e.message}"
-            } finally {
-                isLoading.value = false
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "An error occurred: ${e.message}",
+                    )
+                }
             }
         }
     }

@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +38,7 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 @Composable
 fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel()) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchData()
@@ -64,7 +68,7 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel
             )
         }
 
-        viewModel.errorMessage.value?.let { message ->
+        uiState.errorMessage?.let { message ->
             Text(
                 text = message,
                 color = Red,
@@ -82,7 +86,7 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
-            if (viewModel.isLoading.value) {
+            if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(16.dp),
                     strokeWidth = 2.dp
@@ -91,18 +95,20 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(viewModel.contributors.size) { index ->
-                        val (login, avatarUrl) = viewModel.contributors.entries.elementAt(viewModel.contributors.size - index - 1)
+                    items(
+                        items = uiState.contributors,
+                        key = { it.login }
+                    ) { contributor ->
                         AsyncImage(
-                            model = avatarUrl,
-                            contentDescription = "Avatar of $login",
+                            model = contributor.avatarUrl,
+                            contentDescription = "Avatar of ${contributor.login}",
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
                                 .clickable {
                                     Intent(
                                         Intent.ACTION_VIEW,
-                                        "https://github.com/$login".toUri()
+                                        "https://github.com/${contributor.login}".toUri()
                                     ).also { intent ->
                                         context.startActivity(intent)
                                     }
@@ -118,9 +124,10 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            val sortedReleases = viewModel.releases.entries.sortedByDescending { (_, release) -> release.publishedAt }
-            items(sortedReleases.size) { index ->
-                val (_, release) = sortedReleases[index]
+            items(
+                items = uiState.releases,
+                key = { it.id }
+            ) { release ->
                 androidx.compose.material3.Card(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -141,8 +148,9 @@ fun HomeScreen(innerPadding: PaddingValues, viewModel: HomeViewModel = viewModel
                                 contentScale = ContentScale.Crop
                             )
                             Text(
-                                text =
-                                    "${release.author} • ${release.name}", fontSize = 14.sp, fontWeight = FontWeight.Bold
+                                text = "${release.author} • ${release.name}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
