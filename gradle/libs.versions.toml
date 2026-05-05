@@ -28,6 +28,7 @@ zipalignJava = "1.2.1"
 zipAndroid = "2.2.0"
 workRuntimeKtx = "2.10.4"
 shizuku = "13.1.5"
+junit = "4.13.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -64,6 +65,7 @@ zipalign-java = { module = "com.github.iyxan23:zipalign-java", version.ref = "zi
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

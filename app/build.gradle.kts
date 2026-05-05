@@ -103,8 +103,14 @@ dependencies {
     implementation(libs.androidx.runtime.android)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-    compileOnly(fileTree("libs") { include("*.jar") })
-    implementation(fileTree("libs") { include("lspatch.jar") })
+    // LSPosed API: provided at runtime by the Xposed framework, so compile-only.
+    // Exclude javadoc/sources artifacts and lspatch.jar (which is added below as
+    // a runtime dependency — including it here would put it on both classpaths).
+    compileOnly(fileTree("libs") {
+        include("LSPosed-api-*.jar")
+        exclude("*-javadoc.jar", "*-sources.jar")
+    })
+    implementation(files("libs/lspatch.jar"))
 
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
@@ -141,7 +147,7 @@ dependencies {
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
 }
 
