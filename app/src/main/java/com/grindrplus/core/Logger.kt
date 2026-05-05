@@ -25,7 +25,9 @@ object Logger {
     private var bridgeClient: BridgeClient? = null
     private var processName: String = ""
     private val hookPrefixes = ConcurrentHashMap<String, String>()
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    private val dateFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    }
 
     fun initialize(context: Context, bridge: BridgeClient, isModule: Boolean) {
         bridgeClient = bridge
@@ -76,7 +78,7 @@ object Logger {
             LogLevel.SUCCESS -> "S"
         }
 
-        val timestamp = dateFormat.format(Date())
+        val timestamp = dateFormat.get()!!.format(Date())
         val sourceName = source.toString().lowercase()
         val process = processLabel()
         val conciseMessage = if (subName != null) {

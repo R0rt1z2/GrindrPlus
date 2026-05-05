@@ -55,28 +55,37 @@ object DatabaseHelper {
 
     fun insert(table: String, values: ContentValues): Long {
         val database = getDatabase()
-        val rowId = database.insert(table, null, values)
-        database.close()
-        return rowId
+        try {
+            return database.insert(table, null, values)
+        } finally {
+            database.close()
+        }
     }
 
     fun update(table: String, values: ContentValues, whereClause: String?, whereArgs: Array<String>?): Int {
         val database = getDatabase()
-        val rowsAffected = database.update(table, values, whereClause, whereArgs)
-        database.close()
-        return rowsAffected
+        try {
+            return database.update(table, values, whereClause, whereArgs)
+        } finally {
+            database.close()
+        }
     }
 
     fun delete(table: String, whereClause: String?, whereArgs: Array<String>?): Int {
         val database = getDatabase()
-        val rowsDeleted = database.delete(table, whereClause, whereArgs)
-        database.close()
-        return rowsDeleted
+        try {
+            return database.delete(table, whereClause, whereArgs)
+        } finally {
+            database.close()
+        }
     }
 
     fun execute(sql: String) {
         val database = getDatabase()
-        database.execSQL(sql)
-        database.close()
+        try {
+            database.execSQL(sql)
+        } finally {
+            database.close()
+        }
     }
 }

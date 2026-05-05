@@ -69,13 +69,13 @@ object GrindrPlus {
 
     lateinit var hookManager: HookManager
 
-    var shouldTriggerAntiblock = true
-    var blockCaller: String = ""
-    var isImportingSomething = false
-    var myProfileId: String = ""
-    var hasCheckedVersions = false
-    var shouldShowVersionMismatchDialog = false
-    var shouldShowBridgeConnectionError = false
+    @Volatile var shouldTriggerAntiblock = true
+    @Volatile var blockCaller: String = ""
+    @Volatile var isImportingSomething = false
+    @Volatile var myProfileId: String = ""
+    @Volatile var hasCheckedVersions = false
+    @Volatile var shouldShowVersionMismatchDialog = false
+    @Volatile var shouldShowBridgeConnectionError = false
 
     private var isInitialized = false
     private var isMainInitialized = false
