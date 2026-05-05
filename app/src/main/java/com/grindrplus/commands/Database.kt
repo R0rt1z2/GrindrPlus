@@ -72,6 +72,10 @@ class Database(
         }
 
         val tableName = args[0]
+        if (!tableName.matches(Regex("[A-Za-z0-9_]+"))) {
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "Invalid table name.")
+            return
+        }
         try {
             val query = "SELECT * FROM $tableName;"
             val rows = DatabaseHelper.query(query)

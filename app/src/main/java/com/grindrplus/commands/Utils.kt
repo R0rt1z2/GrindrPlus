@@ -30,15 +30,13 @@ class Utils(
 
         try {
             val process = Runtime.getRuntime().exec(command)
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String? = reader.readLine()
-
-            while (line != null) {
-                output.append(line).append("\n")
-                line = reader.readLine()
+            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
+                var line: String? = reader.readLine()
+                while (line != null) {
+                    output.append(line).append("\n")
+                    line = reader.readLine()
+                }
             }
-            reader.close()
-
             process.waitFor()
 
         } catch (e: Exception) {
