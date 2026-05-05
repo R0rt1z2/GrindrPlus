@@ -1,6 +1,7 @@
 package com.grindrplus.hooks
 
 import android.annotation.SuppressLint
+import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedHelpers.callMethod
@@ -19,53 +20,65 @@ import javax.net.ssl.X509TrustManager
 @OptIn(ExperimentalStdlibApi::class)
 @SuppressLint("CustomX509TrustManager", "TrustAllX509TrustManager", "BadHostnameVerifier")
 fun sslUnpinning(param: XC_LoadPackage.LoadPackageParam) {
-    findAndHookConstructor(
-        "okhttp3.OkHttpClient\$Builder",
-        param.classLoader,
-        object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam<*>) {
-                callMethod(
-                    param.thisObject,
-                    "sslSocketFactory",
-                    unsafeSslContext.socketFactory,
-                    unsafeTrustManager
-                )
-                // the builder does not have hostnameVerifier() method
-                setObjectField(
-                    param.thisObject,
-                    "hostnameVerifier",
-                    object : HostnameVerifier {
-                        override fun verify(hostname: String?, session: SSLSession?): Boolean = true
-                    }
-                )
+    try {
+        findAndHookConstructor(
+            "okhttp3.OkHttpClient\$Builder",
+            param.classLoader,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam<*>) {
+                    callMethod(
+                        param.thisObject,
+                        "sslSocketFactory",
+                        unsafeSslContext.socketFactory,
+                        unsafeTrustManager
+                    )
+                    // the builder does not have hostnameVerifier() method
+                    setObjectField(
+                        param.thisObject,
+                        "hostnameVerifier",
+                        object : HostnameVerifier {
+                            override fun verify(hostname: String?, session: SSLSession?): Boolean = true
+                        }
+                    )
+                }
             }
-        }
-    )
+        )
+    } catch (e: Throwable) {
+        Log.e("GrindrPlus", "SSLUnpinning: failed to hook OkHttpClient.Builder constructor: ${e.message}")
+    }
 
-    findAndHookMethod(
-        "okhttp3.OkHttpClient\$Builder",
-        param.classLoader,
-        "certificatePinner",
-        "okhttp3.CertificatePinner",
-        XC_MethodReplacement.DO_NOTHING
-    )
+    try {
+        findAndHookMethod(
+            "okhttp3.OkHttpClient\$Builder",
+            param.classLoader,
+            "certificatePinner",
+            "okhttp3.CertificatePinner",
+            XC_MethodReplacement.DO_NOTHING
+        )
+    } catch (e: Throwable) {
+        Log.e("GrindrPlus", "SSLUnpinning: failed to hook certificatePinner: ${e.message}")
+    }
 
-    findAndHookMethod(
-        "com.android.org.conscrypt.TrustManagerImpl",
-        param.classLoader,
-        "verifyChain",
-        List::class.java, // List<X509Certificate> untrustedChain
-        List::class.java, // List<TrustAnchor> trustAnchorChain
-        String::class.java, // String host
-        Boolean::class.java, // boolean clientAuth
-        ByteArray::class.java, // byte[] ocspData
-        ByteArray::class.java, // byte[] tlsSctData
-        object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam<*>) {
-                param.result = param.args[0]
+    try {
+        findAndHookMethod(
+            "com.android.org.conscrypt.TrustManagerImpl",
+            param.classLoader,
+            "verifyChain",
+            List::class.java, // List<X509Certificate> untrustedChain
+            List::class.java, // List<TrustAnchor> trustAnchorChain
+            String::class.java, // String host
+            Boolean::class.java, // boolean clientAuth
+            ByteArray::class.java, // byte[] ocspData
+            ByteArray::class.java, // byte[] tlsSctData
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam<*>) {
+                    param.result = param.args[0]
+                }
             }
-        }
-    )
+        )
+    } catch (e: Throwable) {
+        Log.e("GrindrPlus", "SSLUnpinning: failed to hook TrustManagerImpl.verifyChain: ${e.message}")
+    }
 }
 
 val unsafeTrustManager = @SuppressLint("CustomX509TrustManager")

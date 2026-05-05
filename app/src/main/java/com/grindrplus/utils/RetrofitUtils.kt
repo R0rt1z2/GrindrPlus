@@ -166,14 +166,14 @@ object RetrofitUtils {
         resultMapper: (result: Any) -> Any
     ): Any? {
         // suspend fun has Continuation as last argument
-        val isSuspendFun = !args.isEmpty() || continuationInterface.isAssignableFrom(args.last()!!.javaClass)
+        val isSuspendFun = args.isNotEmpty() && continuationInterface.isAssignableFrom(args.last()?.javaClass ?: return null)
 
         if (!isSuspendFun) {
             val result = originalHandler.invoke(proxy, method, args)
             return resultMapper.invoke(result)
         }
 
-        val newContinuation = wrapContinuation(args.last()!!, resultMapper)
+        val newContinuation = wrapContinuation(args.last() ?: return null, resultMapper)
 
         val newArgs = args.clone()
         newArgs[newArgs.lastIndex] = newContinuation

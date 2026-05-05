@@ -37,16 +37,24 @@ class DisableUpdates : Hook(
                 param.setResult(false)
             }
 
-        findClass(appUpgradeManager) // showDeprecatedVersionDialog()
-			// search for '.setMessage(R.string.deprecation_message);'
-            .hook("b", HookStage.BEFORE) { param ->
-                param.setResult(null)
-            }
+        try {
+            findClass(appUpgradeManager) // showDeprecatedVersionDialog()
+                // search for '.setMessage(R.string.deprecation_message);'
+                .hook("b", HookStage.BEFORE) { param ->
+                    param.setResult(null)
+                }
+        } catch (e: Throwable) {
+            loge("Failed to hook appUpgradeManager (deprecated version dialog may appear): ${e.message}")
+        }
 
-        findClass(appUpdateZzm) // requestUpdateInfo()
-            .hook("zza", HookStage.BEFORE) { param ->
-                param.setResult(null)
-            }
+        try {
+            findClass(appUpdateZzm) // requestUpdateInfo()
+                .hook("zza", HookStage.BEFORE) { param ->
+                    param.setResult(null)
+                }
+        } catch (e: Throwable) {
+            loge("Failed to hook appUpdateZzm (update requests may not be suppressed): ${e.message}")
+        }
 
         Thread {
             fetchLatestVersionInfo()
@@ -59,18 +67,19 @@ class DisableUpdates : Hook(
             .url(versionInfoEndpoint).build()
 
         try {
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val jsonData = response.body?.string()
-                if (jsonData != null) {
-                    val json = JSONObject(jsonData)
-                    versionCode = json.getInt("versionCode")
-                    versionName = json.getString("versionName")
-                    logd("Successfully fetched version info: $versionName ($versionCode)")
-                    updateVersionInfo()
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val jsonData = response.body?.string()
+                    if (jsonData != null) {
+                        val json = JSONObject(jsonData)
+                        versionCode = json.getInt("versionCode")
+                        versionName = json.getString("versionName")
+                        logd("Successfully fetched version info: $versionName ($versionCode)")
+                        updateVersionInfo()
+                    }
+                } else {
+                    loge("Failed to fetch version info: ${response.message}")
                 }
-            } else {
-                loge("Failed to fetch version info: ${response.message}")
             }
         } catch (e: Exception) {
             loge("Error fetching version info: ${e.message}")

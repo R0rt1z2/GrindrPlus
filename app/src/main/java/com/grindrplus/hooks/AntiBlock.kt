@@ -155,15 +155,15 @@ class AntiBlock : Hook(
     }
 
     private fun fetchProfileData(profileId: String): String {
-        val response = GrindrPlus.httpClient.sendRequest(
+        return GrindrPlus.httpClient.sendRequest(
             url = "https://grindr.mobi/v4/profiles/$profileId",
             method = "GET"
-        )
-
-        if (response.isSuccessful) {
-            return response.body?.string() ?: "Empty response"
-        } else {
-            throw Exception("Failed to fetch profile data: ${response.body?.string()}")
+        ).use { response ->
+            if (response.isSuccessful) {
+                response.body?.string() ?: "Empty response"
+            } else {
+                throw Exception("Failed to fetch profile data: ${response.body?.string()}")
+            }
         }
     }
 

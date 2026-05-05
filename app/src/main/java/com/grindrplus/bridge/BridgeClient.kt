@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 class BridgeClient(private val context: Context) {
-    private var bridgeService: IBridgeService? = null
+    @Volatile private var bridgeService: IBridgeService? = null
     private val isConnecting = AtomicBoolean(false)
     private val isBound = AtomicBoolean(false)
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())

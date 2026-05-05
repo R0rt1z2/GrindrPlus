@@ -74,38 +74,54 @@ class UnlimitedAlbums : Hook("Unlimited albums", "Allow to be able to view unlim
             }
         }
 
-        findClass(albumModel).hookConstructor(HookStage.AFTER) { param ->
-            try {
-                setObjectField(param.thisObject(), "albumViewable", true)
-                setObjectField(param.thisObject(), "viewableUntil", Long.MAX_VALUE)
-            } catch (e: Exception) {
-                loge("Error making album viewable: ${e.message}")
-                Logger.writeRaw(e.stackTraceToString())
-            }
-        }
-
-        findClass(spankBankAlbumModel).hookConstructor(HookStage.AFTER) { param ->
-            try {
-                setObjectField(param.thisObject(), "albumViewable", true)
-                setObjectField(param.thisObject(), "expiresAt", Long.MAX_VALUE)
-            } catch (e: Exception) {
-                loge("Error making album viewable: ${e.message}")
-                Logger.writeRaw(e.stackTraceToString())
-            }
-        }
-
-        listOf(spankBankAlbumContentModel, filteredSpankBankAlbumContent).forEach { clazz ->
-            findClass(clazz).hookConstructor(HookStage.AFTER) { param ->
+        try {
+            findClass(albumModel).hookConstructor(HookStage.AFTER) { param ->
                 try {
                     setObjectField(param.thisObject(), "albumViewable", true)
+                    setObjectField(param.thisObject(), "viewableUntil", Long.MAX_VALUE)
                 } catch (e: Exception) {
                     loge("Error making album viewable: ${e.message}")
                     Logger.writeRaw(e.stackTraceToString())
                 }
             }
+        } catch (e: Throwable) {
+            loge("Failed to hook Album constructor: ${e.message}")
         }
 
-        findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
+        try {
+            findClass(spankBankAlbumModel).hookConstructor(HookStage.AFTER) { param ->
+                try {
+                    setObjectField(param.thisObject(), "albumViewable", true)
+                    setObjectField(param.thisObject(), "expiresAt", Long.MAX_VALUE)
+                } catch (e: Exception) {
+                    loge("Error making album viewable: ${e.message}")
+                    Logger.writeRaw(e.stackTraceToString())
+                }
+            }
+        } catch (e: Throwable) {
+            loge("Failed to hook SpankBankAlbum constructor: ${e.message}")
+        }
+
+        listOf(spankBankAlbumContentModel, filteredSpankBankAlbumContent).forEach { clazz ->
+            try {
+                findClass(clazz).hookConstructor(HookStage.AFTER) { param ->
+                    try {
+                        setObjectField(param.thisObject(), "albumViewable", true)
+                    } catch (e: Exception) {
+                        loge("Error making album viewable: ${e.message}")
+                        Logger.writeRaw(e.stackTraceToString())
+                    }
+                }
+            } catch (e: Throwable) {
+                loge("Failed to hook $clazz constructor: ${e.message}")
+            }
+        }
+
+        try {
+            findClass(albumModel).hook("isValid", HookStage.BEFORE) { param -> param.setResult(true) }
+        } catch (e: Throwable) {
+            loge("Failed to hook Album.isValid: ${e.message}")
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

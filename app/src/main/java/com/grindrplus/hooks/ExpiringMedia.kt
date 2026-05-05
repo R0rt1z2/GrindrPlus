@@ -30,7 +30,7 @@ class ExpiringMedia : Hook(
     )
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val filePathCache = mutableMapOf<Long, String>()
+    private val filePathCache = java.util.concurrent.ConcurrentHashMap<Long, String>()
 
     override fun init() {
         val expiringImageBodyUiData = requireNotNull(classMap["expiringImageBodyUiData"]) {

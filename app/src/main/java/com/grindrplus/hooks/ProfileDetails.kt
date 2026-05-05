@@ -28,7 +28,7 @@ class ProfileDetails : Hook(
 	"Profile details",
 	"Add extra fields and details to profiles"
 ) {
-    private var boostedProfilesList = emptyList<String>()
+    @Volatile private var boostedProfilesList = emptyList<String>()
     private val blockedProfilesObserver = "ze0.n" // search for 'Intrinsics.checkNotNullParameter(dataList, "dataList");' - typically the last match
     private val profileViewHolder = "vb0.m0\$c" // search for 'Intrinsics.checkNotNullParameter(individualUnblockActivityViewModel, "individualUnblockActivityViewModel");'
 

@@ -53,8 +53,8 @@ class LocationSpoofer : Hook(
     private val appConfiguration = "com.grindrapp.android.platform.config.AppConfiguration"
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    var gpsLocationLatitude: Double = 0.0
-    var gpsLocationLongitude: Double = 0.0
+    @Volatile var gpsLocationLatitude: Double = 0.0
+    @Volatile var gpsLocationLongitude: Double = 0.0
 
     override fun init() {
         val locationClass = findClass(location)
@@ -103,7 +103,7 @@ class LocationSpoofer : Hook(
                 }
         }
 
-        findClass(chatBottomToolbar).hookConstructor(HookStage.AFTER) { param ->
+        try { findClass(chatBottomToolbar).hookConstructor(HookStage.AFTER) { param ->
             val chatBottomToolbarLinearLayout = param.thisObject() as LinearLayout
             val exampleButton = chatBottomToolbarLinearLayout.children.first()
 
@@ -167,6 +167,8 @@ class LocationSpoofer : Hook(
             }
 
             chatBottomToolbarLinearLayout.addView(customLocationButton)
+        } } catch (e: Throwable) {
+            loge("Failed to hook ChatBottomToolbar (location button will be unavailable): ${e.message}")
         }
     }
 

@@ -10,7 +10,9 @@ import java.util.Date
 import java.util.Locale
 import java.lang.Long.parseLong
 
-private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+private val dateFormat = ThreadLocal.withInitial {
+    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+}
 
 private const val ALBUM_CLASS = "com.grindrapp.android.chat.domain.model.Album"
 private const val ALBUM_BRIEF_CLASS = "com.grindrapp.android.model.albums.AlbumBrief"
@@ -33,7 +35,7 @@ fun Any.asAlbumToAlbumEntity(): AlbumEntity {
         )
     } catch (e: Throwable) {
         Logger.e("Error converting Album to AlbumEntity: ${e.message}")
-        val currentTime = dateFormat.format(Date())
+        val currentTime = dateFormat.get()!!.format(Date())
         AlbumEntity(
             id = System.currentTimeMillis(),
             albumName = "Unknown Album",
@@ -68,7 +70,7 @@ fun Any.asAlbumBriefToAlbumEntity(): AlbumEntity {
         )
     } catch (e: Throwable) {
         Logger.e("Error converting AlbumBrief to AlbumEntity: ${e.message}")
-        val currentTime = dateFormat.format(Date())
+        val currentTime = dateFormat.get()!!.format(Date())
         AlbumEntity(
             id = System.currentTimeMillis(),
             albumName = "Unknown Album",

@@ -116,8 +116,9 @@ object ShizukuManager {
 
     private fun getVersionCodePrivileged(packageName: String): Long? {
         val process = Runtime.getRuntime().exec(arrayOf("dumpsys", "package", packageName))
-        val output = process.inputStream.bufferedReader().readText()
+        val output = process.inputStream.bufferedReader().use { it.readText() }
         process.waitFor()
+        process.destroy()
         return VERSION_CODE_REGEX.find(output)?.groupValues?.getOrNull(1)?.toLongOrNull()
     }
 

@@ -23,26 +23,34 @@ fun spoofSignatures(param: XC_LoadPackage.LoadPackageParam) {
         configRealtimeHttpClient,
         configFetchHttpClient
     ).forEach { className ->
-        findAndHookMethod(
-            className,
-            param.classLoader,
-            "getFingerprintHashForPackage",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam<*>) {
-                    param.result = packageSignature
-                }
-            })
+        try {
+            findAndHookMethod(
+                className,
+                param.classLoader,
+                "getFingerprintHashForPackage",
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam<*>) {
+                        param.result = packageSignature
+                    }
+                })
+        } catch (e: Throwable) {
+            android.util.Log.e("GrindrPlus", "SignatureSpoofer: failed to hook $className.getFingerprintHashForPackage: ${e.message}")
+        }
     }
 
-    findAndHookMethod(
-        "ly.img.android.c",
-        param.classLoader,
-        "d", // getPackageName
-        object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam<*>) {
-                param.result = GRINDR_PACKAGE_NAME
-            }
-        })
+    try {
+        findAndHookMethod(
+            "ly.img.android.c",
+            param.classLoader,
+            "d", // getPackageName
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam<*>) {
+                    param.result = GRINDR_PACKAGE_NAME
+                }
+            })
+    } catch (e: Throwable) {
+        android.util.Log.e("GrindrPlus", "SignatureSpoofer: failed to hook ly.img.android.c.d: ${e.message}")
+    }
 
     // The Facebook SDK tries to handle the login using the Facebook app in case it is installed.
     // However, the Facebook app does signature checks with the app that is requesting the authentication,
@@ -53,17 +61,21 @@ fun spoofSignatures(param: XC_LoadPackage.LoadPackageParam) {
     // Always return 0 (no Intent was launched) as the result of trying to authorize with the Facebook app to
     // make the login fallback to a web browser window.
     //
-    findAndHookMethod(
-        "com.facebook.login.KatanaProxyLoginMethodHandler",
-        param.classLoader,
-        "tryAuthorize",
-        XposedHelpers.findClass("com.facebook.login.LoginClient\$Request", param.classLoader),
-        object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam<*>) {
-                param.result = 0
+    try {
+        findAndHookMethod(
+            "com.facebook.login.KatanaProxyLoginMethodHandler",
+            param.classLoader,
+            "tryAuthorize",
+            XposedHelpers.findClass("com.facebook.login.LoginClient\$Request", param.classLoader),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam<*>) {
+                    param.result = 0
+                }
             }
-        }
-    )
+        )
+    } catch (e: Throwable) {
+        android.util.Log.e("GrindrPlus", "SignatureSpoofer: failed to hook KatanaProxyLoginMethodHandler.tryAuthorize: ${e.message}")
+    }
 
     if (param.packageName != GRINDR_PACKAGE_NAME) {
         fun isFirebaseInstallationServiceClient() = Thread.currentThread().stackTrace.any {
