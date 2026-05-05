@@ -2,6 +2,7 @@ package com.grindrplus.hooks
 
 import com.grindrplus.GrindrPlus
 import com.grindrplus.core.Config
+import com.grindrplus.core.loge
 import com.grindrplus.ui.Utils
 import com.grindrplus.utils.Feature
 import com.grindrplus.utils.FeatureManager
@@ -32,39 +33,59 @@ class FeatureGranting : Hook(
         initFeatures()
 
 		// search for 'Assignment.Flag'
-        findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
-            val flagKey = callMethod(param.args()[0], "toString") as String
-            if (featureManager.isManaged(flagKey)) {
-                param.setResult(featureManager.isEnabled(flagKey))
+        try {
+            findClass(isFeatureFlagEnabled).hook("a", HookStage.BEFORE) { param ->
+                val flagKey = callMethod(param.args()[0], "toString") as String
+                if (featureManager.isManaged(flagKey)) {
+                    param.setResult(featureManager.isEnabled(flagKey))
+                }
             }
+        } catch (e: Throwable) {
+            loge("FeatureGranting: failed to hook IsFeatureFlagEnabled: ${e.message}")
         }
 
-        findClass(featureModel).hook("isGranted", HookStage.BEFORE) { param ->
-            val disallowedFeatures = setOf("DisableScreenshot")
-            val feature = callMethod(param.thisObject(), "toString") as String
-            param.setResult(feature !in disallowedFeatures)
+        try {
+            findClass(featureModel).hook("isGranted", HookStage.BEFORE) { param ->
+                val disallowedFeatures = setOf("DisableScreenshot")
+                val feature = callMethod(param.thisObject(), "toString") as String
+                param.setResult(feature !in disallowedFeatures)
+            }
+        } catch (e: Throwable) {
+            loge("FeatureGranting: failed to hook Feature.isGranted: ${e.message}")
         }
 
-        findClass(settingDistanceVisibilityViewModel)
-            .hookConstructor(HookStage.BEFORE) { param ->
-                param.setArg(4, false) // hidePreciseDistance
-            }
+        try {
+            findClass(settingDistanceVisibilityViewModel)
+                .hookConstructor(HookStage.BEFORE) { param ->
+                    param.setArg(4, false) // hidePreciseDistance
+                }
+        } catch (e: Throwable) {
+            loge("FeatureGranting: failed to hook SettingDistanceVisibilityViewModel: ${e.message}")
+        }
 
         listOf(upsellsV8Model, insertsModel).forEach { model ->
-            findClass(model)
-                .hook("getMpuFree", HookStage.BEFORE) { param ->
-                    param.setResult(0)
-                }
+            try {
+                findClass(model)
+                    .hook("getMpuFree", HookStage.BEFORE) { param ->
+                        param.setResult(0)
+                    }
 
-            findClass(model)
-                .hook("getMpuXtra", HookStage.BEFORE) { param ->
-                    param.setResult(0)
-                }
+                findClass(model)
+                    .hook("getMpuXtra", HookStage.BEFORE) { param ->
+                        param.setResult(0)
+                    }
+            } catch (e: Throwable) {
+                loge("FeatureGranting: failed to hook $model: ${e.message}")
+            }
         }
 
         listOf(tapModel, tapInboxModel).forEach { model ->
-            findClass(model).hook("isViewable", HookStage.BEFORE) { param ->
-                param.setResult(true)
+            try {
+                findClass(model).hook("isViewable", HookStage.BEFORE) { param ->
+                    param.setResult(true)
+                }
+            } catch (e: Throwable) {
+                loge("FeatureGranting: failed to hook $model: ${e.message}")
             }
         }
 

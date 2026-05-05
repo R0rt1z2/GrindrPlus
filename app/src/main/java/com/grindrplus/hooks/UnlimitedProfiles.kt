@@ -27,98 +27,118 @@ class UnlimitedProfiles : Hook(
     private val profileTagCascadeFragment = "com.grindrapp.android.ui.tagsearch.ProfileTagCascadeFragment"
 
     override fun init() {
-        findClass(serverDrivenCascadeCachedState)
-            .hook("getItems", HookStage.AFTER) { param ->
-                val items = (param.getResult() as List<*>).filter {
-                    it?.javaClass?.name == serverDrivenCascadeCachedProfile
+        try {
+            findClass(serverDrivenCascadeCachedState)
+                .hook("getItems", HookStage.AFTER) { param ->
+                    val items = (param.getResult() as List<*>).filter {
+                        it?.javaClass?.name == serverDrivenCascadeCachedProfile
+                    }
+
+                    param.setResult(items)
                 }
-
-                param.setResult(items)
-            }
-
-        findClass(profileTagCascadeFragment) // search for 'new StringBuilder("cascadeClickEvent/position=");'
-            .hook("R", HookStage.BEFORE) { param ->
-                param.setResult(true)
-            }
-
-        findClass(serverDrivenCascadeCachedProfile)
-            .hook("getUpsellType", HookStage.BEFORE) { param ->
-                param.setResult(null)
-            }
-
-        val profileClass = findClass("com.grindrapp.android.persistence.model.Profile")
-        val profileWithPhotoClass = findClass(profileWithPhoto)
-        val function2Class = findClass(function2)
-        val flowKtClass = findClass("kotlinx.coroutines.flow.FlowKt")
-        val profileRepoClass = findClass("com.grindrapp.android.persistence.repository.ProfileRepo")
-
-        profileRepoClass.hook("getProfilesWithPhotosFlow", HookStage.AFTER) { param ->
-            val requestedProfileIds = param.arg<List<String>>(0)
-            if (requestedProfileIds.isEmpty()) return@hook
-
-            val originalFlow = param.getResult()
-            val profileWithPhotoConstructor = profileWithPhotoClass
-                .getConstructor(profileClass, List::class.java)
-            val profileConstructor = profileClass.getConstructor()
-
-            val proxy = Proxy.newProxyInstance(
-                GrindrPlus.classLoader,
-                arrayOf(function2Class)
-            ) { _, _, args ->
-                @Suppress("UNCHECKED_CAST")
-                val profilesWithPhoto = args[0] as List<Any>
-
-                if (requestedProfileIds.size > profilesWithPhoto.size) {
-                    val profileIds = ArrayList<String>(profilesWithPhoto.size)
-
-                    for (profileWithPhoto in profilesWithPhoto) {
-                        val profile = callMethod(profileWithPhoto, "getProfile")
-                        profileIds.add(callMethod(profile, "getProfileId") as String)
-                    }
-
-                    val profileIdSet = profileIds.toHashSet()
-
-                    val missingProfiles = ArrayList<Any>()
-                    for (profileId in requestedProfileIds) {
-                        if (profileId !in profileIdSet) {
-                            val profile = profileConstructor.newInstance()
-                            callMethod(profile, "setProfileId", profileId)
-                            callMethod(profile, "setRemoteUpdatedTime", 1L)
-                            callMethod(profile, "setLocalUpdatedTime", 0L)
-                            missingProfiles.add(
-                                profileWithPhotoConstructor.newInstance(profile, emptyList<Any>())
-                            )
-                        }
-                    }
-
-                    if (missingProfiles.isNotEmpty()) {
-                        val result = ArrayList<Any>(profilesWithPhoto.size + missingProfiles.size)
-                        result.addAll(profilesWithPhoto)
-                        result.addAll(missingProfiles)
-                        return@newProxyInstance result
-                    }
-                }
-
-                profilesWithPhoto
-            }
-
-            val transformedFlow = callStaticMethod(flowKtClass, "mapLatest", originalFlow, proxy)
-            param.setResult(transformedFlow)
+        } catch (e: Throwable) {
+            loge("UnlimitedProfiles: failed to hook ServerDrivenCascadeCacheState: ${e.message}")
         }
 
-        findClass(onProfileClicked).hook("invokeSuspend", HookStage.BEFORE) { param ->
-            if (Config.get("disable_profile_swipe", false) as Boolean) {
-                getObjectField(param.thisObject(), param.thisObject().javaClass.declaredFields
-                    .firstOrNull { it.type.name.contains("ServerDrivenCascadeCachedProfile") }?.name
-                )?.let { cachedProfile ->
-                    runCatching { getObjectField(cachedProfile, "profileIdLong").toString() }
-                        .onSuccess { profileId ->
-                            openProfile(profileId)
-                            param.setResult(null)
+        try {
+            findClass(profileTagCascadeFragment) // search for 'new StringBuilder("cascadeClickEvent/position=");'
+                .hook("R", HookStage.BEFORE) { param ->
+                    param.setResult(true)
+                }
+        } catch (e: Throwable) {
+            loge("UnlimitedProfiles: failed to hook ProfileTagCascadeFragment: ${e.message}")
+        }
+
+        try {
+            findClass(serverDrivenCascadeCachedProfile)
+                .hook("getUpsellType", HookStage.BEFORE) { param ->
+                    param.setResult(null)
+                }
+        } catch (e: Throwable) {
+            loge("UnlimitedProfiles: failed to hook ServerDrivenCascadeCachedProfile: ${e.message}")
+        }
+
+        try {
+            val profileClass = findClass("com.grindrapp.android.persistence.model.Profile")
+            val profileWithPhotoClass = findClass(profileWithPhoto)
+            val function2Class = findClass(function2)
+            val flowKtClass = findClass("kotlinx.coroutines.flow.FlowKt")
+            val profileRepoClass = findClass("com.grindrapp.android.persistence.repository.ProfileRepo")
+
+            profileRepoClass.hook("getProfilesWithPhotosFlow", HookStage.AFTER) { param ->
+                val requestedProfileIds = param.arg<List<String>>(0)
+                if (requestedProfileIds.isEmpty()) return@hook
+
+                val originalFlow = param.getResult()
+                val profileWithPhotoConstructor = profileWithPhotoClass
+                    .getConstructor(profileClass, List::class.java)
+                val profileConstructor = profileClass.getConstructor()
+
+                val proxy = Proxy.newProxyInstance(
+                    GrindrPlus.classLoader,
+                    arrayOf(function2Class)
+                ) { _, _, args ->
+                    @Suppress("UNCHECKED_CAST")
+                    val profilesWithPhoto = args[0] as List<Any>
+
+                    if (requestedProfileIds.size > profilesWithPhoto.size) {
+                        val profileIds = ArrayList<String>(profilesWithPhoto.size)
+
+                        for (profileWithPhoto in profilesWithPhoto) {
+                            val profile = callMethod(profileWithPhoto, "getProfile")
+                            profileIds.add(callMethod(profile, "getProfileId") as String)
                         }
-                        .onFailure { loge("Profile ID not found in cached profile") }
+
+                        val profileIdSet = profileIds.toHashSet()
+
+                        val missingProfiles = ArrayList<Any>()
+                        for (profileId in requestedProfileIds) {
+                            if (profileId !in profileIdSet) {
+                                val profile = profileConstructor.newInstance()
+                                callMethod(profile, "setProfileId", profileId)
+                                callMethod(profile, "setRemoteUpdatedTime", 1L)
+                                callMethod(profile, "setLocalUpdatedTime", 0L)
+                                missingProfiles.add(
+                                    profileWithPhotoConstructor.newInstance(profile, emptyList<Any>())
+                                )
+                            }
+                        }
+
+                        if (missingProfiles.isNotEmpty()) {
+                            val result = ArrayList<Any>(profilesWithPhoto.size + missingProfiles.size)
+                            result.addAll(profilesWithPhoto)
+                            result.addAll(missingProfiles)
+                            return@newProxyInstance result
+                        }
+                    }
+
+                    profilesWithPhoto
+                }
+
+                val transformedFlow = callStaticMethod(flowKtClass, "mapLatest", originalFlow, proxy)
+                param.setResult(transformedFlow)
+            }
+        } catch (e: Throwable) {
+            loge("UnlimitedProfiles: failed to hook ProfileRepo: ${e.message}")
+        }
+
+        try {
+            findClass(onProfileClicked).hook("invokeSuspend", HookStage.BEFORE) { param ->
+                if (Config.get("disable_profile_swipe", false) as Boolean) {
+                    getObjectField(param.thisObject(), param.thisObject().javaClass.declaredFields
+                        .firstOrNull { it.type.name.contains("ServerDrivenCascadeCachedProfile") }?.name
+                    )?.let { cachedProfile ->
+                        runCatching { getObjectField(cachedProfile, "profileIdLong").toString() }
+                            .onSuccess { profileId ->
+                                openProfile(profileId)
+                                param.setResult(null)
+                            }
+                            .onFailure { loge("Profile ID not found in cached profile") }
+                    }
                 }
             }
+        } catch (e: Throwable) {
+            loge("UnlimitedProfiles: failed to hook onProfileClicked: ${e.message}")
         }
     }
 }

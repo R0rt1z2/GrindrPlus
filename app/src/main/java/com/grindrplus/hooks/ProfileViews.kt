@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils.RETROFIT_NAME
@@ -17,7 +18,12 @@ class ProfileViews : Hook(
     )
 
     override fun init() {
-        val profileRestServiceClass = findClass(profileRestService)
+        val profileRestServiceClass = try {
+            findClass(profileRestService)
+        } catch (e: Throwable) {
+            loge("ProfileViews: failed to hook $profileRestService: ${e.message}")
+            return
+        }
 
         val methodBlacklist =
             blacklistedPaths.mapNotNull { findPOSTMethod(profileRestServiceClass, it)?.name }

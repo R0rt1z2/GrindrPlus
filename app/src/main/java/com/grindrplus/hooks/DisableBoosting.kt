@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -24,49 +25,69 @@ class DisableBoosting : Hook(
 	private val smallPersistentVector = "kotlinx.collections.immutable.implementations.immutableList.SmallPersistentVector"
 
     override fun init() {
-        findClass(drawerProfileUiState).hookConstructor(HookStage.AFTER) { param ->
-            setObjectField(param.thisObject(), "a", false) // showBoostMeButton
-            setObjectField(
-                param.thisObject(),
-                "e",
-                newInstance(findClass(boostStateClass))
-            ) // boostButtonState
-            setObjectField(
-                param.thisObject(),
-                "f",
-                newInstance(findClass(boostStateClass))
-            ) // roamButtonState
-            setObjectField(param.thisObject(), "c", false) // showRNBoostCard
-            setObjectField(param.thisObject(), "i", null) // showDayPassItem
-            setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
-            setObjectField(param.thisObject(), "t", false) // isRightNowAvailable
-			setObjectField(param.thisObject(), "v", false) // showMegaBoost
+        try {
+            findClass(drawerProfileUiState).hookConstructor(HookStage.AFTER) { param ->
+                setObjectField(param.thisObject(), "a", false) // showBoostMeButton
+                setObjectField(
+                    param.thisObject(),
+                    "e",
+                    newInstance(findClass(boostStateClass))
+                ) // boostButtonState
+                setObjectField(
+                    param.thisObject(),
+                    "f",
+                    newInstance(findClass(boostStateClass))
+                ) // roamButtonState
+                setObjectField(param.thisObject(), "c", false) // showRNBoostCard
+                setObjectField(param.thisObject(), "i", null) // showDayPassItem
+                setObjectField(param.thisObject(), "j", null) // unlimitedWeeklySubscriptionItem
+                setObjectField(param.thisObject(), "t", false) // isRightNowAvailable
+                setObjectField(param.thisObject(), "v", false) // showMegaBoost
+            }
+        } catch (e: Throwable) {
+            loge("DisableBoosting: failed to hook DrawerProfileUiState: ${e.message}")
         }
 
-        findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
-            setObjectField(param.thisObject(), "a", null) // boostButton
-            setObjectField(param.thisObject(), "b", null) // roamButton
+        try {
+            findClass(radarUiModel).hookConstructor(HookStage.AFTER) { param ->
+                setObjectField(param.thisObject(), "a", null) // boostButton
+                setObjectField(param.thisObject(), "b", null) // roamButton
+            }
+        } catch (e: Throwable) {
+            loge("DisableBoosting: failed to hook RadarUiModel: ${e.message}")
         }
 
-        findClass(fabUiModel).hookConstructor(HookStage.AFTER) { param ->
-            setObjectField(param.thisObject(), "isVisible", false) // isVisible
+        try {
+            findClass(fabUiModel).hookConstructor(HookStage.AFTER) { param ->
+                setObjectField(param.thisObject(), "isVisible", false) // isVisible
+            }
+        } catch (e: Throwable) {
+            loge("DisableBoosting: failed to hook FabUiModel: ${e.message}")
         }
 
-        findClass(rightNowMicrosFabUiModel).hookConstructor(HookStage.AFTER) { param ->
-            setObjectField(param.thisObject(), "isBoostFabVisible", false) // isBoostFabVisible
-            setObjectField(param.thisObject(), "isClickEnabled", false) // isClickEnabled
-            setObjectField(param.thisObject(), "isFabVisible", false) // isFabVisible
+        try {
+            findClass(rightNowMicrosFabUiModel).hookConstructor(HookStage.AFTER) { param ->
+                setObjectField(param.thisObject(), "isBoostFabVisible", false) // isBoostFabVisible
+                setObjectField(param.thisObject(), "isClickEnabled", false) // isClickEnabled
+                setObjectField(param.thisObject(), "isFabVisible", false) // isFabVisible
+            }
+        } catch (e: Throwable) {
+            loge("DisableBoosting: failed to hook RightNowMicrosFabUiModel: ${e.message}")
         }
 
         val spvConstructor = findClass(smallPersistentVector).constructors[0]
 
-		findClass(navbarClass).hookConstructor(HookStage.BEFORE) { param ->
-			val routeList = param.args()[2] as List<*>
-			val newRouteArray =	routeList.filter { it?.javaClass?.simpleName != "Store" }.toTypedArray()
-			val newRouteList = spvConstructor.newInstance(newRouteArray)
+        try {
+            findClass(navbarClass).hookConstructor(HookStage.BEFORE) { param ->
+                val routeList = param.args()[2] as List<*>
+                val newRouteArray =	routeList.filter { it?.javaClass?.simpleName != "Store" }.toTypedArray()
+                val newRouteList = spvConstructor.newInstance(newRouteArray)
 
-			param.setArg(2, newRouteList)
-		}
+                param.setArg(2, newRouteList)
+            }
+        } catch (e: Throwable) {
+            loge("DisableBoosting: failed to hook HomeScreenBottomNavigationUiModel: ${e.message}")
+        }
 
         // Anonymous functions that invoke the boost/taps tooltip popups.
         // Obfuscated names change every Grindr release — to find the new names open the APK in

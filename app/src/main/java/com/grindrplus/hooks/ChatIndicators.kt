@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.RetrofitUtils
@@ -17,7 +18,12 @@ class ChatIndicators : Hook(
     )
 
     override fun init() {
-        val chatRestServiceClass = findClass(chatRestService)
+        val chatRestServiceClass = try {
+            findClass(chatRestService)
+        } catch (e: Throwable) {
+            loge("ChatIndicators: failed to hook $chatRestService: ${e.message}")
+            return
+        }
 
         val methodBlacklist = blacklistedPaths.mapNotNull {
             RetrofitUtils.findPOSTMethod(chatRestServiceClass, it)?.name

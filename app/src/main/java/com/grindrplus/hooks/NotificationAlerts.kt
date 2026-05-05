@@ -1,5 +1,6 @@
 package com.grindrplus.hooks
 
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -11,9 +12,13 @@ class NotificationAlerts : Hook(
     private val notificationManager = "cy.g" // search for '0L, "notification_reminder_time"'
 
     override fun init() {
-        findClass(notificationManager)
-            .hook("a", HookStage.BEFORE) { param ->
-                param.setResult(null)
-            }
+        try {
+            findClass(notificationManager)
+                .hook("a", HookStage.BEFORE) { param ->
+                    param.setResult(null)
+                }
+        } catch (e: Throwable) {
+            loge("NotificationAlerts: failed to hook NotificationManager: ${e.message}")
+        }
     }
 }

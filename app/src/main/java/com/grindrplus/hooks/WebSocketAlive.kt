@@ -69,7 +69,7 @@ class WebSocketAlive : Hook(
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             loge("Failed to hook SafeDK background detection: $e")
         }
     }
@@ -115,7 +115,7 @@ class WebSocketAlive : Hook(
 
             logi("Successfully hooked WebSocket lifecycle methods")
 
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             loge("Failed to hook WebSocket lifecycle: $e")
         }
     }
@@ -126,7 +126,7 @@ class WebSocketAlive : Hook(
                 val webSocketUrl = param.arg<String>(0)
                 logd("WebSocket connection created to: $webSocketUrl")
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             loge("Failed to hook WebSocket factory: $e")
         }
     }

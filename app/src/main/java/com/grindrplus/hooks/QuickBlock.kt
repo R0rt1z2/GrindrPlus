@@ -4,6 +4,7 @@ import android.view.Menu
 import android.view.MenuItem
 import com.grindrplus.GrindrPlus
 import com.grindrplus.ui.Utils.getId
+import com.grindrplus.core.loge
 import com.grindrplus.utils.Hook
 import com.grindrplus.utils.HookStage
 import com.grindrplus.utils.hook
@@ -18,30 +19,39 @@ class QuickBlock : Hook(
     private val profileViewHolder = "com.grindrapp.android.ui.profileV2.g" // search for 'com.grindrapp.android.ui.profileV2.ProfileViewHolder$onBind$3'
 
     override fun init() {
-        findClass(profileViewHolder).hook("y", HookStage.AFTER) { param ->
-            val arg0 = param.arg(0) as Any
-            val profileId = param.args().getOrNull(1) ?: return@hook
-            val viewBinding = getObjectField(arg0, "b")
-            val profileToolbar = getObjectField(viewBinding, "p")
-            val toolbarMenu = callMethod(profileToolbar, "getMenu") as Menu
-            val menuActions = getId("menu_actions", "id", GrindrPlus.context)
-            val actionsMenuItem = callMethod(toolbarMenu, "findItem", menuActions) as MenuItem
-            actionsMenuItem.setOnMenuItemClickListener { GrindrPlus.httpClient.blockUser(profileId as String); true }
+        try {
+            findClass(profileViewHolder).hook("y", HookStage.AFTER) { param ->
+                val arg0 = param.arg(0) as Any
+                val profileId = param.args().getOrNull(1) ?: return@hook
+                val viewBinding = getObjectField(arg0, "b")
+                val profileToolbar = getObjectField(viewBinding, "p")
+                val toolbarMenu = callMethod(profileToolbar, "getMenu") as Menu
+                val menuActions = getId("menu_actions", "id", GrindrPlus.context)
+                val actionsMenuItem = callMethod(toolbarMenu, "findItem", menuActions) as MenuItem
+                actionsMenuItem.setOnMenuItemClickListener { GrindrPlus.httpClient.blockUser(profileId as String); true }
+            }
+        } catch (e: Throwable) {
+            loge("QuickBlock: failed to hook ProfileViewHolder: ${e.message}")
         }
 
-        findClass(blockViewModel).hook("R", HookStage.BEFORE) { param ->
-            val profileId = param.thisObject().javaClass.declaredFields
-                .asSequence()
-                .filter { it.type == String::class.java }
-                .mapNotNull { field ->
-                    try {
-                        field.isAccessible = true
-                        field.get(param.thisObject()) as? String
-                    } catch (e: Exception) { null }
-                }
-                .firstOrNull { it.isNotEmpty() && it.all { char -> char.isDigit() } }
-            GrindrPlus.httpClient.blockUser(profileId as String)
-            param.setResult(null)
+        try {
+            findClass(blockViewModel).hook("R", HookStage.BEFORE) { param ->
+                val profileId = param.thisObject().javaClass.declaredFields
+                    .asSequence()
+                    .filter { it.type == String::class.java }
+                    .mapNotNull { field ->
+                        try {
+                            field.isAccessible = true
+                            field.get(param.thisObject()) as? String
+                        } catch (e: Exception) { null }
+                    }
+                    .firstOrNull { it.isNotEmpty() && it.all { char -> char.isDigit() } }
+                    ?: return@hook
+                GrindrPlus.httpClient.blockUser(profileId)
+                param.setResult(null)
+            }
+        } catch (e: Throwable) {
+            loge("QuickBlock: failed to hook BlockViewModel: ${e.message}")
         }
     }
 }
