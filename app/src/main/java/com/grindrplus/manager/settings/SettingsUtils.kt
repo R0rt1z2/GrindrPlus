@@ -39,24 +39,28 @@ object SettingsUtils {
                 val result = withContext(Dispatchers.IO) {
                     val url = URL("https://maps.googleapis.com/maps/api/geocode/json?address=USA&key=$apiKey")
                     val connection = url.openConnection() as HttpURLConnection
-                    connection.requestMethod = "GET"
-                    connection.connectTimeout = 10000
-                    connection.readTimeout = 10000
+                    try {
+                        connection.requestMethod = "GET"
+                        connection.connectTimeout = 10000
+                        connection.readTimeout = 10000
 
-                    val responseCode = connection.responseCode
-                    val input = if (responseCode >= 400) {
-                        connection.errorStream
-                    } else {
-                        connection.inputStream
+                        val responseCode = connection.responseCode
+                        val input = if (responseCode >= 400) {
+                            connection.errorStream
+                        } else {
+                            connection.inputStream
+                        }
+
+                        val response = input.bufferedReader().use { it.readText() }
+                        val jsonResponse = JSONObject(response)
+                        val status = jsonResponse.optString("status", "")
+                        val errorMessage = if (jsonResponse.has("error_message"))
+                            jsonResponse.getString("error_message") else ""
+
+                        Triple(status, errorMessage, response)
+                    } finally {
+                        connection.disconnect()
                     }
-
-                    val response = input.bufferedReader().use { it.readText() }
-                    val jsonResponse = JSONObject(response)
-                    val status = jsonResponse.optString("status", "")
-                    val errorMessage = if (jsonResponse.has("error_message"))
-                        jsonResponse.getString("error_message") else ""
-
-                    Triple(status, errorMessage, response)
                 }
 
                 val (status, errorMessage, rawResponse) = result

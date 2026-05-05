@@ -21,8 +21,17 @@ class AlwaysOnline :
         try {
             val serverDrivenCascadeRepoInstance =
                 GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.serverDrivenCascadeRepo)
+            if (serverDrivenCascadeRepoInstance == null) {
+                logi("AlwaysOnline: cascade repo not available yet, skipping tick")
+                return
+            }
+
             val grindrLocationProviderInstance =
                 GrindrPlus.instanceManager.getInstance<Any>(GrindrPlus.grindrLocationProvider)
+            if (grindrLocationProviderInstance == null) {
+                logi("AlwaysOnline: location provider not available yet, skipping tick")
+                return
+            }
 
             val location = getObjectField(grindrLocationProviderInstance, "e")
             if (location == null) {
@@ -35,7 +44,7 @@ class AlwaysOnline :
 
             val methodName = "fetchCascadePage"
             val method =
-                serverDrivenCascadeRepoInstance!!.javaClass.methods.firstOrNull {
+                serverDrivenCascadeRepoInstance.javaClass.methods.firstOrNull {
                     it.name == methodName
                 } ?: throw IllegalStateException("Unable to find $methodName method")
 

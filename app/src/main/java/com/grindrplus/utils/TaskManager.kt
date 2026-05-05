@@ -9,10 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 class TaskManager(private val scheduler: TaskScheduler? = null) {
-    private val tasks = mutableMapOf<KClass<out Task>, Task>()
+    private val tasks = ConcurrentHashMap<KClass<out Task>, Task>()
 
     fun registerTasks(startTasks: Boolean = true) {
         runBlocking(Dispatchers.IO) {
